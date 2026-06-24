@@ -1,0 +1,30 @@
+/* src/app/styles/variables/colors.css */
+:root {
+  --color-bg: #F4F6FB;
+  --color-sidebar: #FFFFFF;
+  --color-card: #FFFFFF;
+  --color-border: #E5E7EB;
+  --color-border-light: #F3F4F6;
+
+  --color-text-primary: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+
+  --color-primary: #3563E9;
+  --color-primary-hover: #2952D6;
+  --color-primary-light: #EEF3FE;
+
+  /* STPS fund-niveauer */
+  --badge-kritisk-bg:  #FEE2E2;
+  --badge-kritisk-text: #B91C1C;
+  --badge-større-bg:   #FFEDD5;
+  --badge-større-text: #C2410C;
+  --badge-mindre-bg:   #FEF9C3;
+  --badge-mindre-text: #A16207;
+  --badge-ingen-bg:    #DCFCE7;
+  --badge-ingen-text:  #15803D;
+  --badge-ukendt-bg:   #F3F4F6;
+  --badge-ukendt-text: #6B7280;
+
+  --sidebar-width: 220px;
+}

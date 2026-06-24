@@ -1,0 +1,124 @@
+// src/features/dashboard/components/DashboardPage/sections/DashboardBottomPanels/DashboardBottomPanels.tsx
+
+import type { DashboardData, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+
+type Props = {
+  data: Pick<DashboardData, 'tilbudsportalen' | 'stpsFordeling' | 'topKommuner'>;
+};
+
+const fundFarver: Record<string, string> = {
+  'Kritiske fund': 'var(--badge-kritisk-text)',
+  'Større fund':   'var(--badge-større-text)',
+  'Mindre fund':   'var(--badge-mindre-text)',
+  'Ingen fund':    'var(--badge-ingen-text)',
+};
+
+export function DashboardBottomPanels({ data }: Props) {
+  const { tilbudsportalen, stpsFordeling, topKommuner } = data;
+
+  return (
+    <div className="dashboard-bottom-panels">
+
+      {/* Tilbudsportalen */}
+      <div className="card">
+        <p className="card-title">Tilbudsportalen overblik</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div>
+            <p style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--fw-bold)', color: 'var(--color-text-primary)' }}>
+              {tilbudsportalen.total}
+            </p>
+            <p className="card-sub">bosteder i alt</p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+            <div>
+              <p style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)' }}>
+                +{tilbudsportalen.nyeSidst}
+              </p>
+              <p className="card-sub">nye siden sidst</p>
+            </div>
+            <div>
+              <p style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-text-primary)' }}>
+                {tilbudsportalen.dækningsgrad}
+              </p>
+              <p className="card-sub">dækning</p>
+            </div>
+          </div>
+          <p className="card-sub" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '0.5rem' }}>
+            Opdateret {tilbudsportalen.sidstOpdateret}
+          </p>
+        </div>
+      </div>
+
+      {/* STPS fund fordeling */}
+      <div className="card">
+        <p className="card-title">STPS fund fordeling</p>
+        <div>
+          {stpsFordeling.map((item) => (
+            <div key={item.label} className="stat-bar-row">
+              <span className="stat-bar-label">{item.label}</span>
+              <div className="stat-bar-track">
+                <div
+                  className="stat-bar-fill"
+                  style={{
+                    width: `${item.pct}%`,
+                    backgroundColor: fundFarver[item.label] ?? 'var(--color-primary)',
+                  }}
+                />
+              </div>
+              <span className="stat-bar-value">{item.antal}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Top kommuner */}
+      <div className="card">
+        <p className="card-title">Top kommuner</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+          {topKommuner.map((k, i) => (
+            <div key={k.navn} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', width: '1rem', textAlign: 'right', flexShrink: 0 }}>
+                {i + 1}
+              </span>
+              <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>
+                {k.navn}
+              </span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                {k.antal} bosteder
+              </span>
+              <span className="badge badge-kritisk" style={{ padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}>
+                {k.medFund} fund
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Datakilder status */}
+      <div className="card">
+        <p className="card-title">Datakilder</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+          {[
+            { navn: 'Tilbudsportalen', status: 'Aktiv', ok: true },
+            { navn: 'STPS',            status: 'Aktiv', ok: true },
+            { navn: 'Danmarks Statistik', status: 'Ikke tilsluttet', ok: false },
+          ].map((kilde) => (
+            <div key={kilde.navn} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
+                {kilde.navn}
+              </span>
+              <span className={`badge ${kilde.ok ? 'badge-ingen' : 'badge-ukendt'}`}>
+                <span className="badge-dot" />
+                {kilde.status}
+              </span>
+            </div>
+          ))}
+        </div>
+        <p className="card-sub" style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.625rem' }}>
+          Mock-data · rigtige API'er kobles på i næste fase
+        </p>
+      </div>
+
+    </div>
+  );
+}

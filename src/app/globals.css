@@ -1,0 +1,28 @@
+/* src/app/globals.css */
+@import "tailwindcss";
+
+@import "./styles/variables/colors.css";
+@import "./styles/variables/typography.css";
+@import "./styles/components/badge.css";
+@import "./styles/components/button.css";
+@import "./styles/components/card.css";
+@import "./styles/components/sidebar.css";
+@import "./styles/layout/dashboard.css";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    -webkit-font-smoothing: antialiased;
+  }
+}

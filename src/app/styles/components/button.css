@@ -1,0 +1,56 @@
+/* src/app/styles/components/button.css */
+@layer components {
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    border: 1px solid transparent;
+    text-decoration: none;
+    line-height: 1;
+  }
+
+  .btn-sm {
+    padding: 0.3rem 0.625rem;
+    font-size: var(--text-xs);
+  }
+
+  .btn-primary {
+    background-color: var(--color-primary);
+    color: #ffffff;
+    border-color: var(--color-primary);
+  }
+  .btn-primary:hover { background-color: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+
+  .btn-outline {
+    background-color: #ffffff;
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+  }
+  .btn-outline:hover {
+    background-color: var(--color-border-light);
+    color: var(--color-text-primary);
+  }
+
+  .btn-ghost {
+    background-color: transparent;
+    color: var(--color-text-secondary);
+    border-color: transparent;
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-border-light);
+    color: var(--color-text-primary);
+  }
+
+  .btn-danger-ghost {
+    background-color: transparent;
+    color: var(--badge-kritisk-text);
+    border-color: transparent;
+  }
+  .btn-danger-ghost:hover { background-color: var(--badge-kritisk-bg); }
+}
