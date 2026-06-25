@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { parsePdfFraUrl } from '@/features/stps/scraper/StpsPdfParser';
+import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 function venteMs(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -57,11 +58,7 @@ export async function POST(request: NextRequest) {
     if (i < rapporter.length - 1) await venteMs(400);
   }
 
-  return NextResponse.json({
-    ok: true,
-    behandlet: rapporter.length,
-    fundet,
-    ingenPNummer,
-    fejl,
-  });
+  const svar = { ok: true, behandlet: rapporter.length, fundet, ingenPNummer, fejl };
+  await logScraperKørsel('stps-pnummer', true, svar);
+  return NextResponse.json(svar);
 }

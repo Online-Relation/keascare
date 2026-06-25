@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper';
+import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 // Simpel nøgle-beskyttelse – sæt SCRAPER_SECRET i .env.local
 function erAutoriseret(request: NextRequest): boolean {
@@ -22,15 +23,12 @@ export async function POST(request: NextRequest) {
 
   try {
     const resultat = await kørStpsScraper({ maxSider, parsePdf });
-
-    return NextResponse.json({
-      ok: true,
-      fundet: resultat.fundet,
-      nye: resultat.nye,
-      fejl: resultat.fejl,
-    });
+    const svar = { ok: true, fundet: resultat.fundet, nye: resultat.nye, fejl: resultat.fejl };
+    await logScraperKørsel('stps-liste', true, svar);
+    return NextResponse.json(svar);
   } catch (err) {
     const besked = err instanceof Error ? err.message : String(err);
+    await logScraperKørsel('stps-liste', false, { error: besked });
     return NextResponse.json({ ok: false, error: besked }, { status: 500 });
   }
 }

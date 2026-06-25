@@ -2,6 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
+import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 export async function POST(request: NextRequest) {
   const secret = request.headers.get('x-scraper-secret');
@@ -14,11 +15,11 @@ export async function POST(request: NextRequest) {
     const batch = typeof body.batch === 'number' ? body.batch : 50;
 
     const resultat = await berigMedCvr(batch);
+    await logScraperKørsel('cvr-berig', true, { ok: true, ...resultat });
     return NextResponse.json({ ok: true, ...resultat });
   } catch (err) {
-    return NextResponse.json(
-      { ok: false, error: err instanceof Error ? err.message : 'Ukendt fejl' },
-      { status: 500 }
-    );
+    const besked = err instanceof Error ? err.message : 'Ukendt fejl';
+    await logScraperKørsel('cvr-berig', false, { error: besked });
+    return NextResponse.json({ ok: false, error: besked }, { status: 500 });
   }
 }

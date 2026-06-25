@@ -2,8 +2,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScraperKort } from './ScraperKort';
+import type { ScraperLog } from '@/lib/db/ScraperLog';
 
 export type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
 
@@ -14,7 +15,7 @@ export type Scraper = {
   endpoint: string;
   body: Record<string, unknown>;
   advarsel?: string;
-  loop?: boolean; // kører automatisk til behandlet === 0
+  loop?: boolean;
 };
 
 type Fremgang = {
@@ -32,7 +33,7 @@ const SCRAPERS: Scraper[] = [
   },
   {
     id: 'stps-detaljer',
-    titel: 'STPS — Parse PDF\'er',
+    titel: "STPS — Parse PDF'er",
     beskrivelse: 'Behandler rapporter der mangler PDF-data (vurdering og fund).',
     endpoint: '/api/scrapers/stps/detaljer',
     body: { batch: 50 },
@@ -92,6 +93,18 @@ export function ScrapersPage() {
   const [statusser, setStatusser] = useState<Record<string, ScraperStatus>>({});
   const [resultater, setResultater] = useState<Record<string, Record<string, unknown>>>({});
   const [fremgang, setFremgang] = useState<Record<string, Fremgang>>({});
+  const [logs, setLogs] = useState<Record<string, ScraperLog>>({});
+
+  useEffect(() => {
+    fetch('/api/scrapers/logs')
+      .then((r) => r.json())
+      .then((data: ScraperLog[]) => {
+        const map: Record<string, ScraperLog> = {};
+        for (const log of data) map[log.scraperId] = log;
+        setLogs(map);
+      })
+      .catch(() => {});
+  }, []);
 
   async function kørScraper(scraper: Scraper) {
     setStatusser((s) => ({ ...s, [scraper.id]: 'kører' }));
@@ -113,7 +126,7 @@ export function ScrapersPage() {
           body: JSON.stringify(scraper.body),
         });
 
-        const data = await res.json() as Record<string, unknown>;
+        const data = (await res.json()) as Record<string, unknown>;
         runder++;
         const behandletDenneRunde = typeof data.behandlet === 'number' ? data.behandlet : 0;
         totalBehandlet += behandletDenneRunde;
@@ -126,12 +139,20 @@ export function ScrapersPage() {
           return;
         }
 
-        // Stop loopet når der ikke er mere at behandle
         if (!scraper.loop || behandletDenneRunde === 0) break;
-
       } while (true);
 
       setStatusser((s) => ({ ...s, [scraper.id]: 'done' }));
+
+      // Opdater log efter vellykket kørsel
+      fetch('/api/scrapers/logs')
+        .then((r) => r.json())
+        .then((data: ScraperLog[]) => {
+          const map: Record<string, ScraperLog> = {};
+          for (const log of data) map[log.scraperId] = log;
+          setLogs(map);
+        })
+        .catch(() => {});
     } catch (err) {
       setResultater((r) => ({ ...r, [scraper.id]: { ok: false, fejl: String(err) } }));
       setStatusser((s) => ({ ...s, [scraper.id]: 'fejl' }));
@@ -143,7 +164,8 @@ export function ScrapersPage() {
       <div className="scrapers-header">
         <h1 className="scrapers-titel">Scrapers</h1>
         <p className="scrapers-beskrivelse">
-          Kør dataindsamling manuelt. STPS-scrapers virker altid. Tilbudsportalen kan kræve lokal kørsel.
+          Kør dataindsamling manuelt. STPS-scrapers virker altid. Tilbudsportalen kan kræve lokal
+          kørsel.
         </p>
       </div>
 
@@ -155,6 +177,7 @@ export function ScrapersPage() {
             status={statusser[scraper.id] ?? 'idle'}
             resultat={resultater[scraper.id]}
             fremgang={fremgang[scraper.id]}
+            log={logs[scraper.id]}
             onKør={() => kørScraper(scraper)}
           />
         ))}

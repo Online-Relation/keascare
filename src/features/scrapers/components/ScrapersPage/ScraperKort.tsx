@@ -2,6 +2,7 @@
 
 import { AlertTriangle, CheckCircle, Loader, Play, XCircle, RefreshCw } from 'lucide-react';
 import type { ScraperStatus, Scraper } from './ScrapersPage';
+import type { ScraperLog } from '@/lib/db/ScraperLog';
 
 type Fremgang = {
   runder: number;
@@ -13,10 +14,22 @@ type ScraperKortProps = {
   status: ScraperStatus;
   resultat?: Record<string, unknown>;
   fremgang?: Fremgang;
+  log?: ScraperLog;
   onKør: () => void;
 };
 
-export function ScraperKort({ scraper, status, resultat, fremgang, onKør }: ScraperKortProps) {
+function formaterDato(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleDateString('da-DK', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+export function ScraperKort({ scraper, status, resultat, fremgang, log, onKør }: ScraperKortProps) {
   const kører = status === 'kører';
 
   return (
@@ -51,6 +64,13 @@ export function ScraperKort({ scraper, status, resultat, fremgang, onKør }: Scr
           <Play size={13} />
           {kører ? 'Kører...' : 'Kør nu'}
         </button>
+
+        {log && !kører && status === 'idle' && (
+          <div className={`scraper-log-status scraper-log-status--${log.ok ? 'ok' : 'fejl'}`}>
+            {log.ok ? <CheckCircle size={12} /> : <XCircle size={12} />}
+            <span>Senest kørt {formaterDato(log.kørtKl)}</span>
+          </div>
+        )}
 
         {kører && fremgang && fremgang.runder > 0 && (
           <div className="scraper-fremgang">

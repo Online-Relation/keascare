@@ -129,6 +129,22 @@
     padding: 0.125rem 0.5rem;
   }
 
+  .scraper-log-status {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  .scraper-log-status--ok {
+    color: var(--color-success, #16a34a);
+  }
+
+  .scraper-log-status--fejl {
+    color: var(--color-danger, #dc2626);
+  }
+
   .scraper-fremgang {
     display: flex;
     align-items: center;

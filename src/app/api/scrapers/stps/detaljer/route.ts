@@ -2,6 +2,7 @@
 
 import { NextResponse } from 'next/server';
 import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper';
+import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 export const maxDuration = 300;
 
@@ -27,8 +28,10 @@ export async function POST(request: Request) {
 
   try {
     const resultat = await kørDetaljerScraper(batch);
+    await logScraperKørsel('stps-detaljer', true, { ok: true, ...resultat });
     return NextResponse.json({ ok: true, ...resultat });
   } catch (err) {
+    await logScraperKørsel('stps-detaljer', false, { error: String(err) });
     return NextResponse.json({ ok: false, fejl: String(err) }, { status: 500 });
   }
 }

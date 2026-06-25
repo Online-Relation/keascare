@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { scraperTilbudsportalenDetaljer } from '@/features/tilbudsportalen/scraper/TilbudsportalenDetaljerScraper';
 import { matchTilbudsportalenTilStps } from '@/features/tilbudsportalen/matcher/TilbudsportalenMatcher';
 import { hentAntalMangler } from '@/features/tilbudsportalen/repository/TilbudsportalenRepository';
+import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 export const maxDuration = 300;
 
@@ -35,8 +36,10 @@ export async function POST(req: NextRequest) {
       matchResultat = await matchTilbudsportalenTilStps();
     }
 
+    await logScraperKørsel('tp-detaljer', true, { ok: true, ...detaljer, match: matchResultat });
     return NextResponse.json({ ok: true, ...detaljer, match: matchResultat });
   } catch (err) {
+    await logScraperKørsel('tp-detaljer', false, { error: String(err) });
     return NextResponse.json({ ok: false, fejl: String(err) }, { status: 500 });
   }
 }

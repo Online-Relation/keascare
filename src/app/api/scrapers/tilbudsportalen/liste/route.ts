@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { scraperTilbudsportalenListe } from '@/features/tilbudsportalen/scraper/TilbudsportalenListScraper';
 import { hentAntalMangler } from '@/features/tilbudsportalen/repository/TilbudsportalenRepository';
+import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 export const maxDuration = 300;
 
@@ -27,8 +28,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const resultat = await scraperTilbudsportalenListe(maxSider);
+    await logScraperKørsel('tp-liste', true, { ok: true, ...resultat });
     return NextResponse.json({ ok: true, ...resultat });
   } catch (err) {
+    await logScraperKørsel('tp-liste', false, { error: String(err) });
     return NextResponse.json({ ok: false, fejl: String(err) }, { status: 500 });
   }
 }
