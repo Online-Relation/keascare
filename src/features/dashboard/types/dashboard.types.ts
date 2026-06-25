@@ -1,17 +1,16 @@
 // src/features/dashboard/types/dashboard.types.ts
 
-export type StpsFundNiveau = 'kritisk' | 'større' | 'mindre' | 'ingen' | 'ukendt';
-
-export type DriftType = 'Privat' | 'Kommunal' | 'Regional';
+export type StpsFundNiveau = 'kritisk' | 'stoerre' | 'mindre' | 'ingen' | 'ukendt';
 
 export type Bosted = {
   id: string;
   navn: string;
-  kommune: string;
-  pladser: number;
-  drift: DriftType;
+  kommune: string | null;
+  region: string | null;
+  tilsynsform: string | null;
+  temaer: string[];
   stpsFund: StpsFundNiveau;
-  rapportDato: string;
+  rapportDato: string | null;
   rapportFokus: string;
   rapportLink: string;
   erNy: boolean;

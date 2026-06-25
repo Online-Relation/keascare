@@ -1,8 +1,9 @@
 // src/app/dashboard/page.tsx
 
 import { DashboardPage } from '@/features/dashboard/components/DashboardPage';
-import { dashboardMockData } from '@/features/dashboard/data/DashboardMockData';
+import { hentDashboardData } from '@/features/dashboard/services/DashboardService';
 
-export default function DashboardRoute() {
-  return <DashboardPage data={dashboardMockData} />;
+export default async function DashboardRoute() {
+  const data = await hentDashboardData();
+  return <DashboardPage data={data} />;
 }
