@@ -1,18 +1,31 @@
 /* src/app/styles/variables/colors.css */
 :root {
-  --color-bg: #F4F6FB;
-  --color-sidebar: #FFFFFF;
+  --color-bg: #F0F5FB;
   --color-card: #FFFFFF;
-  --color-border: #E5E7EB;
-  --color-border-light: #F3F4F6;
+  --color-border: #E0E8F0;
+  --color-border-light: #F0F5FB;
 
   --color-text-primary: #111827;
-  --color-text-secondary: #6B7280;
+  --color-text-secondary: #4B5563;
   --color-text-muted: #9CA3AF;
 
-  --color-primary: #3563E9;
-  --color-primary-hover: #2952D6;
-  --color-primary-light: #EEF3FE;
+  /* KeasCare brand — navy primær */
+  --color-primary: #1E3A5F;
+  --color-primary-hover: #162D4A;
+  --color-primary-light: #E4EDF7;
+
+  /* KeasCare brand — coral accent (CTA) */
+  --color-accent: #E8604A;
+  --color-accent-hover: #D45239;
+  --color-accent-light: #FDECEA;
+
+  /* Sidebar — mørk navy som KeasCare hjemmeside header */
+  --color-sidebar: #1E3A5F;
+  --color-sidebar-hover: #27496F;
+  --color-sidebar-active: #2D5A8E;
+  --color-sidebar-text: rgba(255,255,255,0.75);
+  --color-sidebar-text-active: #FFFFFF;
+  --color-sidebar-border: rgba(255,255,255,0.1);
 
   /* STPS fund-niveauer */
   --badge-kritisk-bg:  #FEE2E2;

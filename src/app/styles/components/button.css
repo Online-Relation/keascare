@@ -21,11 +21,11 @@
   }
 
   .btn-primary {
-    background-color: var(--color-primary);
+    background-color: var(--color-accent);
     color: #ffffff;
-    border-color: var(--color-primary);
+    border-color: var(--color-accent);
   }
-  .btn-primary:hover { background-color: var(--color-primary-hover); border-color: var(--color-primary-hover); }
+  .btn-primary:hover { background-color: var(--color-accent-hover); border-color: var(--color-accent-hover); }
 
   .btn-outline {
     background-color: #ffffff;
