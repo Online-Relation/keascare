@@ -7,9 +7,10 @@ export const TP_AKTIV_MENUPUNKT = 'VOKSNE';
 export const TP_RESULTATER_PR_SIDE = 20;
 export const TP_DELAY_MS = 800;
 
-// §107 + §108 filter — kun botilbud, ikke dagtilbud, §104, plejefamilier mv.
+// §107 + §108 + §108a filter — kun botilbud, ikke dagtilbud, §104, plejefamilier mv.
 export const TP_FILTER_PARAMS =
-  'tilbudstyperVoksne=juridiskgrundlag.voksne.laengerevarendebo.laengerevarendebo' +
+  'tilbudstyperVoksne=juridiskgrundlag.voksne.bo.botilbudmaalrettetunge' +
+  '&tilbudstyperVoksne=juridiskgrundlag.voksne.laengerevarendebo.laengerevarendebo' +
   '&tilbudstyperVoksne=juridiskgrundlag.voksne.laengerevarendebo.midlertidigtbo' +
   '&sortering=RELEVANS';
 
