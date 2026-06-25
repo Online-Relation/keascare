@@ -7,8 +7,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="dashboard-layout">
       <DashboardSidebar />
-      <MobileNav />
       <div className="dashboard-main">
+        <MobileNav />
         {children}
       </div>
     </div>
