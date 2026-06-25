@@ -34,7 +34,22 @@ export function BostedFundsoversigt({ bosted }: BostedFundsoversigtProps) {
   const harVurdering = !!bosted.pdfVurdering;
   const harFund = !!bosted.pdfFund;
 
-  if (!harVurdering && !harFund) return null;
+  if (!harVurdering && !harFund) {
+    return (
+      <div className="bosted-detail-kort" style={{ marginBottom: '1.25rem' }}>
+        <div className="bosted-detail-kort-header">
+          <ShieldAlert size={15} />
+          <span className="bosted-detail-kort-titel">Fundsoversigt fra rapporten</span>
+        </div>
+        <div className="bosted-detail-kort-body">
+          <div className="bosted-detail-mangler-boks">
+            <Info size={14} style={{ flexShrink: 0, marginTop: '0.1rem', color: 'var(--color-primary)' }} />
+            <span>Indhold kunne ikke udtrækkes automatisk fra PDF. Åbn PDF direkte for at se fund og vurdering.</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bosted-detail-kort" style={{ marginBottom: '1.25rem' }}>

@@ -51,12 +51,18 @@ function udtraekFund(tekst: string): string | null {
   const muligStart = [
     tekst.indexOf('2. Fund ved tilsynet'),
     tekst.indexOf('Fund ved tilsynsbesøget'),
+    tekst.indexOf('2. Henstillinger'),
+    tekst.indexOf('Henstillinger\n'),
   ].find((i) => i !== -1);
   if (muligStart === undefined) return null;
 
-  const slut = tekst.indexOf('3. Baggrundsoplysninger', muligStart);
-  const afsnit = slut !== -1
-    ? tekst.substring(muligStart, slut)
+  const muligSlut = [
+    tekst.indexOf('3. Baggrundsoplysninger', muligStart),
+    tekst.indexOf('Baggrundsoplysninger\n', muligStart),
+  ].find((i) => i > muligStart);
+
+  const afsnit = muligSlut !== undefined
+    ? tekst.substring(muligStart, muligSlut)
     : tekst.substring(muligStart, muligStart + 3000);
 
   return afsnit.trim() || null;
