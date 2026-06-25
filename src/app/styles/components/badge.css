@@ -31,6 +31,12 @@
   }
   .badge-større .badge-dot { background-color: var(--badge-større-text); }
 
+  .badge-stoerre {
+    background-color: var(--badge-større-bg);
+    color: var(--badge-større-text);
+  }
+  .badge-stoerre .badge-dot { background-color: var(--badge-større-text); }
+
   .badge-mindre {
     background-color: var(--badge-mindre-bg);
     color: var(--badge-mindre-text);

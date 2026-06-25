@@ -44,6 +44,23 @@ export type TilbudsportalenStats = {
   sidstOpdateret: string;
 };
 
+export type BostedDetail = {
+  id: string;
+  navn: string;
+  rapportTitel: string;
+  rapportDato: string | null;
+  rapportUrl: string;
+  pdfUrl: string | null;
+  stpsKonklusion: string | null;
+  fundNiveau: StpsFundNiveau;
+  fokusOmraader: string[];
+  kommune: string | null;
+  region: string | null;
+  tilsynsform: string | null;
+  temaer: string[];
+  scraperDato: string | null;
+};
+
 export type DashboardData = {
   kpis: KpiItem[];
   bosteder: Bosted[];

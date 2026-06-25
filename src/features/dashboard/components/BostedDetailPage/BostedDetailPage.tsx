@@ -1,0 +1,26 @@
+// src/features/dashboard/components/BostedDetailPage/BostedDetailPage.tsx
+
+import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
+import { BostedHeader } from './sections/BostedHeader';
+import { BostedTilsynKort } from './sections/BostedTilsynKort';
+import { BostedOrganisationKort } from './sections/BostedOrganisationKort';
+import { BostedHandlinger } from './sections/BostedHandlinger';
+
+type BostedDetailPageProps = {
+  bosted: BostedDetail;
+};
+
+export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
+  return (
+    <div className="bosted-detail-layout">
+      <BostedHeader bosted={bosted} />
+
+      <div className="bosted-detail-grid">
+        <BostedTilsynKort bosted={bosted} />
+        <BostedOrganisationKort />
+      </div>
+
+      <BostedHandlinger />
+    </div>
+  );
+}

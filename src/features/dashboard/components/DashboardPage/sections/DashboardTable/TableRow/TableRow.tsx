@@ -1,5 +1,6 @@
 // src/features/dashboard/components/DashboardPage/sections/DashboardTable/TableRow/TableRow.tsx
 
+import Link from 'next/link';
 import type { Bosted, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 import { ExternalLink } from 'lucide-react';
 
@@ -32,7 +33,12 @@ export function TableRow({ bosted }: TableRowProps) {
     <tr>
       <td className="data-table td table-cell-bold">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          {bosted.navn}
+          <Link
+            href={`/dashboard/bosteder/${bosted.id}`}
+            style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 'var(--fw-medium)' }}
+          >
+            {bosted.navn}
+          </Link>
           {bosted.erNy && (
             <span className="badge badge-kritisk btn-sm" style={{ padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}>
               Ny
