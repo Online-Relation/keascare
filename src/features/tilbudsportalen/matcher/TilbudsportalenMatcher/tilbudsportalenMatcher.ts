@@ -13,7 +13,7 @@ type TpTilbud = {
 type StpsRapport = {
   id: number;
   cvr: string | null;
-  navn: string | null;
+  stps_tilbud_navn: string | null;
 };
 
 type TpData = { tilbudstype: string | null; pladser: number | null };
@@ -59,7 +59,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const { data: rapporter, error: stpsFejl } = await supabase
     .from('stps_rapporter')
-    .select('id, cvr, navn');
+    .select('id, cvr, stps_tilbud_navn');
 
   if (stpsFejl) throw new Error(`STPS fejl: ${stpsFejl.message}`);
 
@@ -76,8 +76,8 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
       ingenCvr++;
     }
 
-    if (!match && rapport.navn) {
-      match = findNavnMatch(rapport.navn, navnMap);
+    if (!match && rapport.stps_tilbud_navn) {
+      match = findNavnMatch(rapport.stps_tilbud_navn, navnMap);
     }
 
     if (!match) { ingenMatch++; continue; }
