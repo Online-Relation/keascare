@@ -8,6 +8,11 @@ type TpTilbud = {
   navn: string | null;
   tilbudstype: string | null;
   pladser: number | null;
+  p_nummer: string | null;
+  kommune: string | null;
+  kontaktperson: string | null;
+  telefon: string | null;
+  email: string | null;
 };
 
 type StpsRapport = {
@@ -16,7 +21,15 @@ type StpsRapport = {
   stps_tilbud_navn: string | null;
 };
 
-type TpData = { tilbudstype: string | null; pladser: number | null };
+type TpData = {
+  tilbudstype: string | null;
+  pladser: number | null;
+  p_nummer: string | null;
+  kommune: string | null;
+  kontaktperson: string | null;
+  telefon: string | null;
+  email: string | null;
+};
 
 function normaliserNavn(navn: string): string {
   return navn
@@ -28,9 +41,7 @@ function normaliserNavn(navn: string): string {
 
 function findNavnMatch(stpsNavn: string, navnMap: Map<string, TpData>): TpData | undefined {
   const normStps = normaliserNavn(stpsNavn);
-  // Eksakt normaliseret match
   if (navnMap.has(normStps)) return navnMap.get(normStps);
-  // Starter-med match (TP-navn indeholder STPS-navn som præfiks)
   for (const [tpNavn, data] of navnMap) {
     if (tpNavn.startsWith(normStps) || normStps.startsWith(tpNavn)) {
       return data;
@@ -44,7 +55,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const { data: tilbud, error: tilbudFejl } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('cvr, navn, tilbudstype, pladser');
+    .select('cvr, navn, tilbudstype, pladser, p_nummer, kommune, kontaktperson, telefon, email');
 
   if (tilbudFejl) throw new Error(`Tilbudsportalen fejl: ${tilbudFejl.message}`);
 
@@ -52,7 +63,15 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
   const navnMap = new Map<string, TpData>();
 
   for (const t of (tilbud ?? []) as TpTilbud[]) {
-    const data: TpData = { tilbudstype: t.tilbudstype, pladser: t.pladser };
+    const data: TpData = {
+      tilbudstype: t.tilbudstype,
+      pladser: t.pladser,
+      p_nummer: t.p_nummer,
+      kommune: t.kommune,
+      kontaktperson: t.kontaktperson,
+      telefon: t.telefon,
+      email: t.email,
+    };
     if (t.cvr) cvrMap.set(t.cvr.trim(), data);
     if (t.navn) navnMap.set(normaliserNavn(t.navn), data);
   }
@@ -87,6 +106,11 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
       .update({
         tp_tilbudstype: match.tilbudstype,
         tp_pladser: match.pladser?.toString() ?? null,
+        tp_p_nummer: match.p_nummer,
+        tp_kommune: match.kommune,
+        tp_kontaktperson: match.kontaktperson,
+        tp_telefon: match.telefon,
+        tp_email: match.email,
       })
       .eq('id', rapport.id);
 

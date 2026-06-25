@@ -26,6 +26,11 @@ type DbRapport = {
   pdf_behandlet: boolean | null;
   tp_tilbudstype: string | null;
   tp_pladser: string | null;
+  tp_p_nummer: string | null;
+  tp_kommune: string | null;
+  tp_kontaktperson: string | null;
+  tp_telefon: string | null;
+  tp_email: string | null;
 };
 
 function mapTilBostedDetail(r: DbRapport): BostedDetail {
@@ -52,6 +57,11 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     pdfBehandlet: r.pdf_behandlet ?? false,
     tpTilbudstype: r.tp_tilbudstype,
     tpPladser: r.tp_pladser,
+    tpPNummer: r.tp_p_nummer,
+    tpKommune: r.tp_kommune,
+    tpKontaktperson: r.tp_kontaktperson,
+    tpTelefon: r.tp_telefon,
+    tpEmail: r.tp_email,
   };
 }
 
@@ -59,7 +69,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email')
     .eq('id', id)
     .single();
 

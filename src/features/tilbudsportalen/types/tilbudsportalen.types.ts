@@ -13,6 +13,11 @@ export type TilbudsportalenDetalje = {
   cvr: string | null;
   tilbudstype: string | null;
   pladser: number | null;
+  pNummer: string | null;
+  kommune: string | null;
+  kontaktperson: string | null;
+  telefon: string | null;
+  email: string | null;
 };
 
 export type TilbudsportalenMatchResultat = {

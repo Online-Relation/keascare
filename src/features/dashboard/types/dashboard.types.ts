@@ -69,6 +69,11 @@ export type BostedDetail = {
   // Tilbudsportalen-berigede felter
   tpTilbudstype: string | null;
   tpPladser: string | null;
+  tpPNummer: string | null;
+  tpKommune: string | null;
+  tpKontaktperson: string | null;
+  tpTelefon: string | null;
+  tpEmail: string | null;
 };
 
 export type DashboardData = {

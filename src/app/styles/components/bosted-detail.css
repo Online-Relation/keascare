@@ -128,6 +128,19 @@
     font-style: italic;
   }
 
+  .bosted-kontakt-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--color-primary);
+    text-decoration: none;
+    transition: opacity 0.15s;
+  }
+
+  .bosted-kontakt-link:hover {
+    opacity: 0.75;
+  }
+
   .bosted-detail-tags {
     display: flex;
     flex-wrap: wrap;
