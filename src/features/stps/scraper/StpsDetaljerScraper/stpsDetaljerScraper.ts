@@ -76,6 +76,7 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
         cvr: detaljer.cvr,
         adresse: detaljer.adresse,
         pladser: detaljer.pladser,
+        p_nummer: detaljer.pNummer,
         pdf_behandlet: true,
       }).eq('id', id);
 

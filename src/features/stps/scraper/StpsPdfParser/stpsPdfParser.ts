@@ -7,10 +7,11 @@ export type PdfDetaljer = {
   cvr: string | null;
   adresse: string | null;
   pladser: string | null;
+  pNummer: string | null;
 };
 
 export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
-  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null };
+  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null };
   try {
     // pdf-parse v2 API: URL-based, works in Node.js
     const { PDFParse } = await import('pdf-parse');
@@ -25,6 +26,7 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
       cvr: udtraekCvr(tekst),
       adresse: udtraekAdresse(tekst),
       pladser: udtraekPladser(tekst),
+      pNummer: udtraekPNummer(tekst),
     };
   } catch {
     return tom;
@@ -96,6 +98,14 @@ function udtraekAdresse(tekst: string): string | null {
   if (gade && by) return `${gade.trim()}, ${by.trim()}`;
   if (gade) return gade.trim();
   return null;
+}
+
+function udtraekPNummer(tekst: string): string | null {
+  const match =
+    tekst.match(/P-?\s*nummer:?\s*(\d{10})/i) ??
+    tekst.match(/Produktionsenhed:?\s*(\d{10})/i) ??
+    tekst.match(/P\.?nr\.?:?\s*(\d{10})/i);
+  return match?.[1] ?? null;
 }
 
 function udtraekPladser(tekst: string): string | null {

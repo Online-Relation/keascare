@@ -1,0 +1,254 @@
+/* src/app/styles/components/global-search.css */
+@layer components {
+
+  .gs-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+  }
+
+  /* ── Inputfelt ── */
+  .gs-felt {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #F4F7FC;
+    border: 1.5px solid #E0E8F0;
+    border-radius: 9999px;
+    padding: 0.5rem 0.875rem;
+    transition:
+      background 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease,
+      transform 0.15s ease;
+    cursor: text;
+  }
+
+  .gs-wrap.gs-fokus .gs-felt {
+    background: #FFFFFF;
+    border-color: var(--color-primary);
+    box-shadow:
+      0 0 0 4px rgba(30, 58, 95, 0.10),
+      0 4px 20px rgba(30, 58, 95, 0.12);
+    transform: scale(1.015);
+  }
+
+  .gs-ikon {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+    transition: color 0.2s;
+  }
+
+  .gs-wrap.gs-fokus .gs-ikon {
+    color: var(--color-primary);
+  }
+
+  .gs-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    outline: none;
+    font-size: var(--text-sm);
+    font-family: inherit;
+    color: var(--color-text-primary);
+    min-width: 0;
+  }
+
+  .gs-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  /* ⌘K badge */
+  .gs-genvej {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    background: #FFFFFF;
+    border: 1px solid var(--color-border);
+    border-radius: 0.375rem;
+    padding: 0.125rem 0.375rem;
+    font-size: 0.65rem;
+    font-family: inherit;
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+  }
+
+  .gs-ryd {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    font-size: 0.7rem;
+    padding: 0.125rem 0.25rem;
+    border-radius: 9999px;
+    transition: background 0.15s, color 0.15s;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .gs-ryd:hover {
+    background: var(--color-border);
+    color: var(--color-text-primary);
+  }
+
+  /* ── Dropdown ── */
+  .gs-dropdown {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(560px, 90vw);
+    background: #FFFFFF;
+    border: 1px solid #E0E8F0;
+    border-radius: 1rem;
+    box-shadow:
+      0 4px 6px rgba(0,0,0,0.04),
+      0 12px 40px rgba(30, 58, 95, 0.14);
+    z-index: 200;
+    overflow: hidden;
+    animation: gs-åbn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes gs-åbn {
+    from { opacity: 0; transform: translateX(-50%) translateY(-6px) scale(0.98); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0)     scale(1);    }
+  }
+
+  .gs-label {
+    font-size: 0.65rem;
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--color-text-muted);
+    padding: 0.75rem 1rem 0.375rem;
+  }
+
+  .gs-liste {
+    list-style: none;
+    margin: 0;
+    padding: 0 0.375rem;
+  }
+
+  .gs-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .gs-item:hover,
+  .gs-item.gs-aktiv {
+    background: #F0F5FB;
+  }
+
+  .gs-item-ikon {
+    font-size: 1rem;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    background: var(--color-primary-light);
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .gs-item-tekst {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .gs-item-navn {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .gs-item-meta {
+    display: flex;
+    gap: 0.375rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .gs-item-meta span + span::before {
+    content: '·';
+    margin-right: 0.375rem;
+  }
+
+  /* Status: loading / ingen resultater */
+  .gs-status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    padding: 2rem 1rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    flex-direction: column;
+  }
+
+  .gs-ingen {
+    gap: 0.5rem;
+  }
+
+  .gs-spinner {
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-primary);
+    border-radius: 9999px;
+    animation: gs-spin 0.6s linear infinite;
+  }
+
+  @keyframes gs-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Footer med genvejstaster */
+  .gs-footer {
+    display: flex;
+    gap: 1rem;
+    padding: 0.625rem 1rem;
+    border-top: 1px solid var(--color-border-light);
+    margin-top: 0.375rem;
+  }
+
+  .gs-footer span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.65rem;
+    color: var(--color-text-muted);
+  }
+
+  .gs-footer kbd {
+    background: var(--color-border-light);
+    border: 1px solid var(--color-border);
+    border-radius: 0.25rem;
+    padding: 0.0625rem 0.3rem;
+    font-size: 0.6rem;
+    font-family: inherit;
+    color: var(--color-text-secondary);
+    box-shadow: 0 1px 0 var(--color-border);
+  }
+
+  /* Mobil: skjul */
+  @media (max-width: 768px) {
+    .gs-wrap {
+      display: none;
+    }
+  }
+}

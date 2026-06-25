@@ -15,14 +15,31 @@
   .dashboard-topbar {
     background-color: var(--color-card);
     border-bottom: 1px solid var(--color-border);
-    padding: 0.875rem 1.5rem;
-    display: flex;
+    padding: 0.75rem 1.5rem;
+    display: grid;
+    grid-template-columns: 1fr minmax(0, 520px) 1fr;
     align-items: center;
-    justify-content: space-between;
+    gap: 1rem;
     position: sticky;
     top: 0;
     z-index: 10;
     flex-shrink: 0;
+  }
+
+  .dashboard-topbar-venstre {
+    /* spacer */
+  }
+
+  .dashboard-topbar-center {
+    display: flex;
+    justify-content: center;
+  }
+
+  .dashboard-topbar-højre {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
   }
 
   .dashboard-content {

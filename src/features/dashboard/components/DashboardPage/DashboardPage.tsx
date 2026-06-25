@@ -13,10 +13,7 @@ type DashboardPageProps = {
 export function DashboardPage({ data }: DashboardPageProps) {
   return (
     <main className="dashboard-main">
-      <DashboardHeader
-        title="Dashboard"
-        subtitle="Oversigt over markedssignaler og tilsynsrapporter"
-      />
+      <DashboardHeader />
       <div className="dashboard-content">
         <DashboardKpis kpis={data.kpis} />
         <DashboardTable bosteder={data.bosteder} />

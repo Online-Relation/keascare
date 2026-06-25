@@ -56,6 +56,20 @@ const SCRAPERS: Scraper[] = [
     endpoint: '/api/scrapers/tilbudsportalen/match',
     body: {},
   },
+  {
+    id: 'stps-pnummer',
+    titel: 'STPS — Udtræk P-numre fra PDFer',
+    beskrivelse: 'Gennemgår eksisterende PDFer og udtrækker P-nummer for rapporter der mangler det. Rører ikke fund eller vurdering.',
+    endpoint: '/api/scrapers/stps/pnummer',
+    body: { batch: 50 },
+  },
+  {
+    id: 'cvr-berig',
+    titel: 'CVR-register — Berig med CVR og adresse',
+    beskrivelse: 'Slår P-nummer op i CVR-registret (cvrapi.dk) for rapporter der mangler CVR-nummer. Henter CVR og adresse.',
+    endpoint: '/api/scrapers/cvr',
+    body: { batch: 50 },
+  },
 ];
 
 export function ScrapersPage() {
