@@ -1,37 +1,40 @@
 // src/features/scrapers/components/ScrapersPage/ScraperKort.tsx
 
-import { AlertTriangle, CheckCircle, Loader, Play, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader, Play, XCircle, RefreshCw } from 'lucide-react';
+import type { ScraperStatus, Scraper } from './ScrapersPage';
 
-type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
-
-type Scraper = {
-  id: string;
-  titel: string;
-  beskrivelse: string;
-  advarsel?: string;
+type Fremgang = {
+  runder: number;
+  totalBehandlet: number;
 };
 
 type ScraperKortProps = {
   scraper: Scraper;
   status: ScraperStatus;
   resultat?: Record<string, unknown>;
+  fremgang?: Fremgang;
   onKør: () => void;
 };
 
-const statusIkon = {
-  idle: null,
-  kører: <Loader size={16} className="scraper-ikon-kører" />,
-  done: <CheckCircle size={16} color="var(--color-success, #16a34a)" />,
-  fejl: <XCircle size={16} color="var(--color-danger, #dc2626)" />,
-};
+export function ScraperKort({ scraper, status, resultat, fremgang, onKør }: ScraperKortProps) {
+  const kører = status === 'kører';
 
-export function ScraperKort({ scraper, status, resultat, onKør }: ScraperKortProps) {
   return (
     <div className="scraper-kort">
       <div className="scraper-kort-header">
         <div className="scraper-kort-titel-række">
           <span className="scraper-kort-titel">{scraper.titel}</span>
-          {statusIkon[status]}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {scraper.loop && (
+              <span className="scraper-loop-badge">
+                <RefreshCw size={10} />
+                Auto-loop
+              </span>
+            )}
+            {status === 'kører' && <Loader size={16} className="scraper-ikon-kører" />}
+            {status === 'done' && <CheckCircle size={16} color="var(--color-success, #16a34a)" />}
+            {status === 'fejl' && <XCircle size={16} color="var(--color-danger, #dc2626)" />}
+          </div>
         </div>
         <p className="scraper-kort-beskrivelse">{scraper.beskrivelse}</p>
 
@@ -44,17 +47,26 @@ export function ScraperKort({ scraper, status, resultat, onKør }: ScraperKortPr
       </div>
 
       <div className="scraper-kort-footer">
-        <button
-          className="scraper-knap"
-          onClick={onKør}
-          disabled={status === 'kører'}
-        >
+        <button className="scraper-knap" onClick={onKør} disabled={kører}>
           <Play size={13} />
-          {status === 'kører' ? 'Kører...' : 'Kør nu'}
+          {kører ? 'Kører...' : 'Kør nu'}
         </button>
 
-        {resultat && Object.keys(resultat).length > 0 && (
+        {kører && fremgang && fremgang.runder > 0 && (
+          <div className="scraper-fremgang">
+            <span>Runde {fremgang.runder}</span>
+            <span>·</span>
+            <span>{fremgang.totalBehandlet} behandlet</span>
+          </div>
+        )}
+
+        {!kører && resultat && Object.keys(resultat).length > 0 && (
           <div className="scraper-resultat">
+            {fremgang && fremgang.runder > 1 && (
+              <div className="scraper-fremgang-total">
+                {fremgang.runder} runder · {fremgang.totalBehandlet} behandlet i alt
+              </div>
+            )}
             <pre>{JSON.stringify(resultat, null, 2)}</pre>
           </div>
         )}

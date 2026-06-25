@@ -5,17 +5,21 @@
 import { useState } from 'react';
 import { ScraperKort } from './ScraperKort';
 
-type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
+export type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
 
-type Resultat = Record<string, unknown>;
-
-type Scraper = {
+export type Scraper = {
   id: string;
   titel: string;
   beskrivelse: string;
   endpoint: string;
   body: Record<string, unknown>;
   advarsel?: string;
+  loop?: boolean; // kører automatisk til behandlet === 0
+};
+
+type Fremgang = {
+  runder: number;
+  totalBehandlet: number;
 };
 
 const SCRAPERS: Scraper[] = [
@@ -32,6 +36,23 @@ const SCRAPERS: Scraper[] = [
     beskrivelse: 'Behandler rapporter der mangler PDF-data (vurdering og fund).',
     endpoint: '/api/scrapers/stps/detaljer',
     body: { batch: 50 },
+    loop: true,
+  },
+  {
+    id: 'stps-pnummer',
+    titel: 'STPS — Udtræk P-numre fra PDFer',
+    beskrivelse: 'Gennemgår eksisterende PDFer og udtrækker P-nummer for rapporter der mangler det.',
+    endpoint: '/api/scrapers/stps/pnummer',
+    body: { batch: 50 },
+    loop: true,
+  },
+  {
+    id: 'cvr-berig',
+    titel: 'CVR-register — Berig med CVR og adresse',
+    beskrivelse: 'Slår P-nummer op i CVR-registret for rapporter der mangler CVR. Henter CVR og adresse.',
+    endpoint: '/api/scrapers/cvr',
+    body: { batch: 50 },
+    loop: true,
   },
   {
     id: 'tp-liste',
@@ -47,53 +68,62 @@ const SCRAPERS: Scraper[] = [
     beskrivelse: 'Henter CVR, tilbudstype og pladser for hvert tilbud og matcher mod STPS-rapporter.',
     endpoint: '/api/scrapers/tilbudsportalen/detaljer',
     body: { batch: 30 },
+    loop: true,
     advarsel: 'Kan fejle på live-serveren pga. Cloudflare. Kør lokalt hvis det fejler.',
   },
   {
     id: 'tp-match',
     titel: 'Tilbudsportalen — Kør matcher',
-    beskrivelse: 'Matcher Tilbudsportalen-data mod STPS-rapporter via CVR og navn. Opdaterer tilbudstype og pladser.',
+    beskrivelse: 'Matcher Tilbudsportalen-data mod STPS-rapporter via CVR og navn.',
     endpoint: '/api/scrapers/tilbudsportalen/match',
     body: {},
-  },
-  {
-    id: 'stps-pnummer',
-    titel: 'STPS — Udtræk P-numre fra PDFer',
-    beskrivelse: 'Gennemgår eksisterende PDFer og udtrækker P-nummer for rapporter der mangler det. Rører ikke fund eller vurdering.',
-    endpoint: '/api/scrapers/stps/pnummer',
-    body: { batch: 50 },
-  },
-  {
-    id: 'cvr-berig',
-    titel: 'CVR-register — Berig med CVR og adresse',
-    beskrivelse: 'Slår P-nummer op i CVR-registret (cvrapi.dk) for rapporter der mangler CVR-nummer. Henter CVR og adresse.',
-    endpoint: '/api/scrapers/cvr',
-    body: { batch: 50 },
   },
 ];
 
 export function ScrapersPage() {
   const [statusser, setStatusser] = useState<Record<string, ScraperStatus>>({});
-  const [resultater, setResultater] = useState<Record<string, Resultat>>({});
+  const [resultater, setResultater] = useState<Record<string, Record<string, unknown>>>({});
+  const [fremgang, setFremgang] = useState<Record<string, Fremgang>>({});
 
   async function kørScraper(scraper: Scraper) {
     setStatusser((s) => ({ ...s, [scraper.id]: 'kører' }));
     setResultater((r) => ({ ...r, [scraper.id]: {} }));
+    setFremgang((f) => ({ ...f, [scraper.id]: { runder: 0, totalBehandlet: 0 } }));
+
+    const secret = process.env.NEXT_PUBLIC_SCRAPER_SECRET;
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (secret) headers['x-scraper-secret'] = secret;
+
+    let runder = 0;
+    let totalBehandlet = 0;
 
     try {
-      const secret = process.env.NEXT_PUBLIC_SCRAPER_SECRET;
-      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (secret) headers['x-scraper-secret'] = secret;
+      do {
+        const res = await fetch(scraper.endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(scraper.body),
+        });
 
-      const res = await fetch(scraper.endpoint, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(scraper.body),
-      });
+        const data = await res.json() as Record<string, unknown>;
+        runder++;
+        const behandletDenneRunde = typeof data.behandlet === 'number' ? data.behandlet : 0;
+        totalBehandlet += behandletDenneRunde;
 
-      const data = await res.json() as Resultat;
-      setResultater((r) => ({ ...r, [scraper.id]: data }));
-      setStatusser((s) => ({ ...s, [scraper.id]: data.ok ? 'done' : 'fejl' }));
+        setResultater((r) => ({ ...r, [scraper.id]: data }));
+        setFremgang((f) => ({ ...f, [scraper.id]: { runder, totalBehandlet } }));
+
+        if (!data.ok) {
+          setStatusser((s) => ({ ...s, [scraper.id]: 'fejl' }));
+          return;
+        }
+
+        // Stop loopet når der ikke er mere at behandle
+        if (!scraper.loop || behandletDenneRunde === 0) break;
+
+      } while (true);
+
+      setStatusser((s) => ({ ...s, [scraper.id]: 'done' }));
     } catch (err) {
       setResultater((r) => ({ ...r, [scraper.id]: { ok: false, fejl: String(err) } }));
       setStatusser((s) => ({ ...s, [scraper.id]: 'fejl' }));
@@ -116,6 +146,7 @@ export function ScrapersPage() {
             scraper={scraper}
             status={statusser[scraper.id] ?? 'idle'}
             resultat={resultater[scraper.id]}
+            fremgang={fremgang[scraper.id]}
             onKør={() => kørScraper(scraper)}
           />
         ))}
