@@ -6,7 +6,10 @@ import type { TilbudsportalenListeItem, TilbudsportalenDetalje } from '@/feature
 export async function gemListeItems(items: TilbudsportalenListeItem[]): Promise<number> {
   const supabase = getSupabaseServerClient();
 
-  const rækker = items.map((item) => ({
+  const unikke = new Map<string, TilbudsportalenListeItem>();
+  for (const item of items) unikke.set(item.afdelingsid, item);
+
+  const rækker = Array.from(unikke.values()).map((item) => ({
     tilbudsid: item.tilbudsid,
     afdelingsid: item.afdelingsid,
     navn: item.navn,
