@@ -49,6 +49,13 @@ const SCRAPERS: Scraper[] = [
     body: { batch: 30 },
     advarsel: 'Kan fejle på live-serveren pga. Cloudflare. Kør lokalt hvis det fejler.',
   },
+  {
+    id: 'tp-match',
+    titel: 'Tilbudsportalen — Kør matcher',
+    beskrivelse: 'Matcher Tilbudsportalen-data mod STPS-rapporter via CVR og navn. Opdaterer tilbudstype og pladser.',
+    endpoint: '/api/scrapers/tilbudsportalen/match',
+    body: {},
+  },
 ];
 
 export function ScrapersPage() {
