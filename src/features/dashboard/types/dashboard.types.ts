@@ -66,6 +66,9 @@ export type BostedDetail = {
   pladser: string | null;
   cvr: string | null;
   pdfBehandlet: boolean;
+  // Tilbudsportalen-berigede felter
+  tpTilbudstype: string | null;
+  tpPladser: string | null;
 };
 
 export type DashboardData = {

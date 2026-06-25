@@ -24,6 +24,8 @@ type DbRapport = {
   pladser: string | null;
   cvr: string | null;
   pdf_behandlet: boolean | null;
+  tp_tilbudstype: string | null;
+  tp_pladser: string | null;
 };
 
 function mapTilBostedDetail(r: DbRapport): BostedDetail {
@@ -48,6 +50,8 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     pladser: r.pladser,
     cvr: r.cvr,
     pdfBehandlet: r.pdf_behandlet ?? false,
+    tpTilbudstype: r.tp_tilbudstype,
+    tpPladser: r.tp_pladser,
   };
 }
 
@@ -55,7 +59,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser')
     .eq('id', id)
     .single();
 
