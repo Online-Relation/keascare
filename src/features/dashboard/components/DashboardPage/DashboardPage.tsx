@@ -1,7 +1,6 @@
 // src/features/dashboard/components/DashboardPage/DashboardPage.tsx
 
 import type { DashboardData } from '@/features/dashboard/types/dashboard.types';
-import { DashboardHeader } from './sections/DashboardHeader';
 import { DashboardKpis } from './sections/DashboardKpis';
 import { DashboardTable } from './sections/DashboardTable';
 import { DashboardBottomPanels } from './sections/DashboardBottomPanels';
@@ -13,7 +12,6 @@ type DashboardPageProps = {
 export function DashboardPage({ data }: DashboardPageProps) {
   return (
     <main className="dashboard-main">
-      <DashboardHeader />
       <div className="dashboard-content">
         <DashboardKpis kpis={data.kpis} />
         <DashboardTable bosteder={data.bosteder} />
