@@ -10,6 +10,7 @@ import {
   TP_RESULTATER_PR_SIDE,
   TP_DELAY_MS,
   TP_BROWSER_HEADERS,
+  TP_FILTER_PARAMS,
 } from '@/features/tilbudsportalen/constants/TilbudsportalenConstants';
 
 export type ListeResultat = {
@@ -61,8 +62,8 @@ export async function scraperTilbudsportalenListe(maxSider = 50): Promise<ListeR
   const fejl: string[] = [];
   let cookieStr = '';
 
-  // Hent cookies fra første request
-  const init = await client.get<string>(TP_LISTE_URL, { responseType: 'text' });
+  // Hent cookies fra første request (med §107+§108 filter)
+  const init = await client.get<string>(`${TP_LISTE_URL}?${TP_FILTER_PARAMS}&offset=0`, { responseType: 'text' });
   const rawCookies = init.headers['set-cookie'] ?? [];
   cookieStr = rawCookies.map((c: string) => c.split(';')[0]).join('; ');
 
@@ -83,7 +84,7 @@ export async function scraperTilbudsportalenListe(maxSider = 50): Promise<ListeR
     const offset = (side - 1) * TP_RESULTATER_PR_SIDE;
     try {
       const res = await client.get<string>(
-        `${TP_LISTE_URL}?sortering=RELEVANS&offset=${offset}`,
+        `${TP_LISTE_URL}?${TP_FILTER_PARAMS}&offset=${offset}`,
         { responseType: 'text', headers: { Cookie: cookieStr } },
       );
       alle.push(...parseListeSide(res.data));
