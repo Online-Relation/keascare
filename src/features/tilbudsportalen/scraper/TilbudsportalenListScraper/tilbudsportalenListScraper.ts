@@ -9,7 +9,7 @@ import {
   TP_AKTIV_MENUPUNKT,
   TP_RESULTATER_PR_SIDE,
   TP_DELAY_MS,
-  TP_USER_AGENT,
+  TP_BROWSER_HEADERS,
 } from '@/features/tilbudsportalen/constants/TilbudsportalenConstants';
 
 export type ListeResultat = {
@@ -48,7 +48,7 @@ function parseListeSide(html: string): TilbudsportalenListeItem[] {
 export async function scraperTilbudsportalenListe(maxSider = 50): Promise<ListeResultat> {
   const client = axios.create({
     timeout: 20_000,
-    headers: { 'User-Agent': TP_USER_AGENT, Accept: 'text/html' },
+    headers: TP_BROWSER_HEADERS,
     maxRedirects: 5,
   });
 

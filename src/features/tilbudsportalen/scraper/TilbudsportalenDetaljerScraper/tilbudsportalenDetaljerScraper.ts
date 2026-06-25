@@ -3,7 +3,7 @@
 import axios from 'axios';
 import { load } from 'cheerio';
 import type { TilbudsportalenDetalje } from '@/features/tilbudsportalen/types/tilbudsportalen.types';
-import { TP_DELAY_MS, TP_USER_AGENT } from '@/features/tilbudsportalen/constants/TilbudsportalenConstants';
+import { TP_DELAY_MS, TP_BROWSER_HEADERS } from '@/features/tilbudsportalen/constants/TilbudsportalenConstants';
 import {
   hentUbehandledeAfdelinger,
   gemDetaljer,
@@ -55,7 +55,7 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
 export async function scraperTilbudsportalenDetaljer(batch = 30): Promise<DetaljerResultat> {
   const client = axios.create({
     timeout: 20_000,
-    headers: { 'User-Agent': TP_USER_AGENT, Accept: 'text/html' },
+    headers: TP_BROWSER_HEADERS,
     maxRedirects: 5,
   });
 

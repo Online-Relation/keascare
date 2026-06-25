@@ -11,6 +11,7 @@ import {
   BarChart2,
   Settings,
   FileText,
+  RefreshCw,
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +20,7 @@ const navItems = [
   { label: 'Tilsynsrapporter', href: '/dashboard/tilsynsrapporter', icon: ClipboardList },
   { label: 'Rapporter',        href: '/dashboard/rapporter',     icon: FileText },
   { label: 'Markedsdata',      href: '/dashboard/markedsdata',   icon: BarChart2 },
+  { label: 'Scrapers',         href: '/dashboard/scrapers',      icon: RefreshCw },
   { label: 'Indstillinger',    href: '/dashboard/indstillinger', icon: Settings },
 ];
 
