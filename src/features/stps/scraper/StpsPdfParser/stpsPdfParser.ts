@@ -1,5 +1,15 @@
 // src/features/stps/scraper/StpsPdfParser/stpsPdfParser.ts
 
+export type FundStatus = 'opfyldt' | 'ikke_opfyldt' | 'ikke_aktuelt' | 'ukendt';
+
+export type FundItem = {
+  sektion: string;
+  nummer: number;
+  målepunkt: string;
+  status: FundStatus;
+  kommentar: string | null;
+};
+
 export type PdfDetaljer = {
   pdfUrl: string;
   vurdering: string | null;
@@ -8,10 +18,11 @@ export type PdfDetaljer = {
   adresse: string | null;
   pladser: string | null;
   pNummer: string | null;
+  fundItems: FundItem[];
 };
 
 export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
-  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null };
+  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null, fundItems: [] };
   try {
     // pdf-parse v2 API: URL-based, works in Node.js
     const { PDFParse } = await import('pdf-parse');
@@ -27,6 +38,7 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
       adresse: udtraekAdresse(tekst),
       pladser: udtraekPladser(tekst),
       pNummer: udtraekPNummer(tekst),
+      fundItems: udtraekFundItems(tekst),
     };
   } catch {
     return tom;
@@ -106,6 +118,82 @@ function udtraekPNummer(tekst: string): string | null {
     tekst.match(/Produktionsenhed:?\s*(\d{10})/i) ??
     tekst.match(/P\.?nr\.?:?\s*(\d{10})/i);
   return match?.[1] ?? null;
+}
+
+function udtraekFundItems(tekst: string): FundItem[] {
+  // Find fund-sektionen
+  const fundStart = tekst.search(/\b2\.\s*Fund ved tilsynet\b/i);
+  if (fundStart === -1) return [];
+
+  const efter = tekst.substring(fundStart);
+  const fundSlut = efter.search(/\n3\.\s+Baggrundsoplysninger/i);
+  const fundTekst = fundSlut !== -1 ? efter.substring(0, fundSlut) : efter;
+
+  // Fjern støj: tabelhoveder og sidetal
+  const renset = fundTekst
+    .replace(/2\.\s*Fund ved tilsynet\s*/gi, '')
+    .replace(/Num\s*\n?\s*mer\s+Målepunkt\s+Opfyldt\s+Ikke\s*\n?\s*opfyldt\s+Ikke\s*\n?\s*aktuelt\s+Fund og kommentarer\s*/gi, '')
+    .replace(/Nummer\s+Målepunkt\s+Opfyldt\s+Ikke opfyldt\s+Ikke aktuelt\s+Fund og kommentarer\s*/gi, '')
+    .replace(/Tilsynsrapport[\s\S]{0,80}?Side \d+ af \d+\s*/g, '')
+    .replace(/--\s*\d+\s*(?:of|af)\s*\d+\s*--/gi, '')
+    .replace(/\n{3,}/g, '\n')
+    .trim();
+
+  const linjer = renset.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  const items: FundItem[] = [];
+  let aktivSektion = 'Fund ved tilsynet';
+  let aktivNummer = 0;
+  let målepunktLinjer: string[] = [];
+  let kommentarLinjer: string[] = [];
+  let harX = false;
+  let efterX = false;
+
+  const TABEL_STØJ = /^(Opfyldt|Ikke opfyldt|Ikke aktuelt|Fund og kommentarer|Num|mer|Nummer|Målepunkt)$/i;
+
+  function gemItem() {
+    if (aktivNummer === 0 || målepunktLinjer.length === 0) return;
+    const målepunkt = målepunktLinjer.join(' ').replace(/\s+/g, ' ').trim();
+    const kommentar = kommentarLinjer.join(' ').replace(/\s+/g, ' ').trim() || null;
+    let status: FundStatus;
+    if (!harX) status = 'ikke_aktuelt';
+    else if (kommentar) status = 'ikke_opfyldt';
+    else status = 'opfyldt';
+    items.push({ sektion: aktivSektion, nummer: aktivNummer, målepunkt, status, kommentar });
+    aktivNummer = 0;
+    målepunktLinjer = [];
+    kommentarLinjer = [];
+    harX = false;
+    efterX = false;
+  }
+
+  for (const linje of linjer) {
+    if (TABEL_STØJ.test(linje)) continue;
+
+    const nummerMatch = linje.match(/^(\d+)\.\s+(.+)/);
+    const erX = linje === 'X';
+
+    if (nummerMatch) {
+      gemItem();
+      aktivNummer = parseInt(nummerMatch[1]);
+      målepunktLinjer = [nummerMatch[2]];
+      efterX = false;
+    } else if (erX && aktivNummer > 0) {
+      harX = true;
+      efterX = true;
+    } else if (aktivNummer > 0 && efterX) {
+      kommentarLinjer.push(linje);
+    } else if (aktivNummer > 0 && !efterX) {
+      målepunktLinjer.push(linje);
+    } else if (!nummerMatch && linje.length > 5) {
+      // Sektionsoverskrift
+      gemItem();
+      aktivSektion = linje;
+    }
+  }
+
+  gemItem();
+  return items;
 }
 
 function udtraekPladser(tekst: string): string | null {

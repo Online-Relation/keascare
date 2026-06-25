@@ -39,6 +39,14 @@ const SCRAPERS: Scraper[] = [
     loop: true,
   },
   {
+    id: 'stps-fund-items',
+    titel: 'STPS — Udtræk strukturerede fund-items',
+    beskrivelse: 'Parser eksisterende PDFer og gemmer hvert målepunkt som struktureret data med status (opfyldt/ikke opfyldt/ikke aktuelt).',
+    endpoint: '/api/scrapers/stps/fund-items',
+    body: { batch: 30 },
+    loop: true,
+  },
+  {
     id: 'stps-pnummer',
     titel: 'STPS — Udtræk P-numre fra PDFer',
     beskrivelse: 'Gennemgår eksisterende PDFer og udtrækker P-nummer for rapporter der mangler det.',

@@ -2,6 +2,16 @@
 
 export type StpsFundNiveau = 'kritisk' | 'stoerre' | 'mindre' | 'ingen' | 'ukendt';
 
+export type FundStatus = 'opfyldt' | 'ikke_opfyldt' | 'ikke_aktuelt' | 'ukendt';
+
+export type FundItem = {
+  sektion: string;
+  nummer: number;
+  målepunkt: string;
+  status: FundStatus;
+  kommentar: string | null;
+};
+
 export type Bosted = {
   id: string;
   navn: string;
@@ -74,6 +84,7 @@ export type BostedDetail = {
   tpKontaktperson: string | null;
   tpTelefon: string | null;
   tpEmail: string | null;
+  fundItems: FundItem[] | null;
 };
 
 export type DashboardData = {

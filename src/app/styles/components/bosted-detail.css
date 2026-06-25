@@ -199,39 +199,139 @@
   }
 
   .bosted-fundsoversigt-body {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
+    display: flex;
+    flex-direction: column;
   }
 
   .bosted-fundsoversigt-sektion {
-    padding: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-border-light);
   }
 
-  .bosted-fundsoversigt-sektion--fund {
-    border-left: 1px solid var(--color-border);
+  .fund-oversigt-badges {
+    display: flex;
+    gap: 0.375rem;
+    margin-left: auto;
+    flex-wrap: wrap;
   }
 
-  .bosted-fundsoversigt-sektion-header {
+  .fund-badge {
+    font-size: 0.65rem;
+    font-weight: var(--fw-semibold);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  .fund-badge--opfyldt      { background: var(--badge-ingen-bg); color: var(--badge-ingen-text); }
+  .fund-badge--ikke-opfyldt { background: var(--badge-kritisk-bg); color: var(--badge-kritisk-text); }
+  .fund-badge--ikke-aktuelt { background: var(--badge-ukendt-bg); color: var(--badge-ukendt-text); }
+
+  .fund-vurdering-tekst {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.75;
+    white-space: pre-line;
+    margin: 0;
+  }
+
+  /* Fund items */
+  .fund-items-wrapper {
+    padding: 1rem 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .fund-sektion-titel {
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-text-muted);
+    margin: 0 0 0.625rem;
+  }
+
+  .fund-sektion-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  .fund-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    padding: 0.625rem 0.75rem;
+    border-radius: 0.5rem;
+    border: 1px solid transparent;
+  }
+
+  .fund-item--opfyldt      { background: #F0FDF4; border-color: #BBF7D0; }
+  .fund-item--ikke-opfyldt { background: #FFF7F6; border-color: #FECACA; }
+  .fund-item--ikke-aktuelt { background: var(--color-border-light); border-color: transparent; }
+  .fund-item--ukendt       { background: var(--color-border-light); border-color: transparent; }
+
+  .fund-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+
+  .fund-status-ikon {
+    width: 1.375rem;
+    height: 1.375rem;
+    border-radius: 9999px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .fund-status-opfyldt      { background: #16a34a; color: white; }
+  .fund-status-ikke-opfyldt { background: #dc2626; color: white; }
+  .fund-status-ikke-aktuelt { background: var(--color-text-muted); color: white; }
+  .fund-status-ukendt       { background: var(--color-border); color: var(--color-text-muted); }
+
+  .fund-item-status {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    font-size: var(--text-xs);
-    font-weight: var(--fw-semibold);
-    color: var(--color-text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.875rem;
+    flex-shrink: 0;
+    padding-top: 0.1rem;
   }
 
-  .bosted-fundsoversigt-tekst {
+  .fund-item-status-label {
+    font-size: 0.65rem;
+    font-weight: var(--fw-semibold);
+    white-space: nowrap;
+    color: var(--color-text-muted);
+  }
+
+  .fund-item-tekst {
     font-size: var(--text-sm);
-    color: var(--color-text-secondary);
-    line-height: 1.7;
-    white-space: pre-line;
+    color: var(--color-text-primary);
+    line-height: 1.5;
     margin: 0;
-    max-height: 280px;
-    overflow-y: auto;
+  }
+
+  .fund-item-nummer {
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-muted);
+    margin-right: 0.25rem;
+  }
+
+  .fund-item-kommentar {
+    display: flex;
+    gap: 0.5rem;
+    align-items: flex-start;
+    margin-left: 2rem;
+    font-size: var(--text-xs);
+    color: var(--badge-kritisk-text);
+    background: var(--badge-kritisk-bg);
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.375rem;
+    line-height: 1.5;
   }
 
   /* Responsive */

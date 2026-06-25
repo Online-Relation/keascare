@@ -1,7 +1,7 @@
 // src/features/dashboard/services/BostedService/bostedService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+import type { BostedDetail, FundItem, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 
 type DbRapport = {
   id: string;
@@ -31,6 +31,7 @@ type DbRapport = {
   tp_kontaktperson: string | null;
   tp_telefon: string | null;
   tp_email: string | null;
+  fund_items: FundItem[] | null;
 };
 
 function mapTilBostedDetail(r: DbRapport): BostedDetail {
@@ -62,6 +63,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     tpKontaktperson: r.tp_kontaktperson,
     tpTelefon: r.tp_telefon,
     tpEmail: r.tp_email,
+    fundItems: (r.fund_items as FundItem[] | null) ?? null,
   };
 }
 
@@ -69,7 +71,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, fund_items')
     .eq('id', id)
     .single();
 
