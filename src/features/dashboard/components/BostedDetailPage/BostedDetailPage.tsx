@@ -16,12 +16,12 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
     <div className="bosted-detail-layout">
       <BostedHeader bosted={bosted} />
 
-      <BostedFundsoversigt bosted={bosted} />
-
       <div className="bosted-detail-grid">
         <BostedTilsynKort bosted={bosted} />
         <BostedOrganisationKort bosted={bosted} />
       </div>
+
+      <BostedFundsoversigt bosted={bosted} />
 
       <BostedHandlinger />
     </div>
