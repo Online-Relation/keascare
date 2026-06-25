@@ -12,8 +12,7 @@
 @import "./styles/layout/dashboard.css";
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-work-sans);
 }
 
 @layer base {
@@ -24,7 +23,7 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text-primary);
-    font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+    font-family: var(--font-work-sans, 'Work Sans', ui-sans-serif, system-ui, sans-serif);
     -webkit-font-smoothing: antialiased;
   }
 }
