@@ -59,6 +59,13 @@ export type BostedDetail = {
   tilsynsform: string | null;
   temaer: string[];
   scraperDato: string | null;
+  // PDF-berigede felter
+  pdfVurdering: string | null;
+  pdfFund: string | null;
+  adresse: string | null;
+  pladser: string | null;
+  cvr: string | null;
+  pdfBehandlet: boolean;
 };
 
 export type DashboardData = {

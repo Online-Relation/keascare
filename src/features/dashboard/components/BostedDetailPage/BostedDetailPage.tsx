@@ -2,6 +2,7 @@
 
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import { BostedHeader } from './sections/BostedHeader';
+import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
 import { BostedTilsynKort } from './sections/BostedTilsynKort';
 import { BostedOrganisationKort } from './sections/BostedOrganisationKort';
 import { BostedHandlinger } from './sections/BostedHandlinger';
@@ -15,9 +16,11 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
     <div className="bosted-detail-layout">
       <BostedHeader bosted={bosted} />
 
+      <BostedFundsoversigt bosted={bosted} />
+
       <div className="bosted-detail-grid">
         <BostedTilsynKort bosted={bosted} />
-        <BostedOrganisationKort />
+        <BostedOrganisationKort bosted={bosted} />
       </div>
 
       <BostedHandlinger />

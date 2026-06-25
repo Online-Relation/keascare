@@ -1,40 +1,101 @@
 // src/features/stps/scraper/StpsPdfParser/stpsPdfParser.ts
 
-import axios from 'axios';
-import {
-  STPS_HTTP_CONFIG,
-  MAX_PDF_BYTES,
-  MAX_RAA_TEKST_LAENGDE,
-} from '@/features/stps/constants/StpsConstants';
-
-export type PdfParseResultat = {
-  raaText: string | null;
-  sider: number | null;
+export type PdfDetaljer = {
+  pdfUrl: string;
+  vurdering: string | null;
+  fund: string | null;
+  cvr: string | null;
+  adresse: string | null;
+  pladser: string | null;
 };
 
-export async function downloadOgParserPdf(pdfUrl: string): Promise<PdfParseResultat> {
+export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
+  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null };
   try {
-    const response = await axios.get<ArrayBuffer>(pdfUrl, {
-      ...STPS_HTTP_CONFIG,
-      responseType: 'arraybuffer',
-      maxContentLength: MAX_PDF_BYTES,
-      timeout: 30_000,
-    });
-
-    const buffer = Buffer.from(response.data);
-
-    // Dynamisk import undgår bundling-problemer med pdf-parse i Next.js
-    // pdf-parse er et CommonJS-modul uden default export
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string; numpages: number }>;
-    const resultat = await pdfParse(buffer);
+    // pdf-parse v2 API: URL-based, works in Node.js
+    const { PDFParse } = await import('pdf-parse');
+    const parser = new PDFParse({ url: pdfUrl });
+    const resultat = await parser.getText();
+    const tekst: string = resultat.text ?? '';
 
     return {
-      raaText: (resultat.text ?? '').substring(0, MAX_RAA_TEKST_LAENGDE) || null,
-      sider: resultat.numpages ?? null,
+      pdfUrl,
+      vurdering: udtraekVurdering(tekst),
+      fund: udtraekFund(tekst),
+      cvr: udtraekCvr(tekst),
+      adresse: udtraekAdresse(tekst),
+      pladser: udtraekPladser(tekst),
     };
   } catch {
-    // PDF-fejl er ikke fatale – vi gemmer URL'en og fortsætter uden tekst
-    return { raaText: null, sider: null };
+    return tom;
   }
+}
+
+function udtraekVurdering(tekst: string): string | null {
+  const start = tekst.indexOf('Samlet vurdering efter tilsyn');
+  if (start === -1) return null;
+
+  const muligeSlut = [
+    tekst.indexOf('Vi afslutter tilsynet', start),
+    tekst.indexOf('2. Fund ved tilsynet', start),
+    tekst.indexOf('Fund ved tilsynsbesøget', start),
+  ].filter((i) => i > start);
+
+  const slut = muligeSlut.length > 0 ? Math.min(...muligeSlut) : -1;
+  if (slut === -1) return tekst.substring(start, start + 2000).trim();
+
+  return tekst.substring(start, slut).trim();
+}
+
+function udtraekFund(tekst: string): string | null {
+  const muligStart = [
+    tekst.indexOf('2. Fund ved tilsynet'),
+    tekst.indexOf('Fund ved tilsynsbesøget'),
+  ].find((i) => i !== -1);
+  if (muligStart === undefined) return null;
+
+  const slut = tekst.indexOf('3. Baggrundsoplysninger', muligStart);
+  const afsnit = slut !== -1
+    ? tekst.substring(muligStart, slut)
+    : tekst.substring(muligStart, muligStart + 3000);
+
+  return afsnit.trim() || null;
+}
+
+function udtraekCvr(tekst: string): string | null {
+  const match = tekst.match(/CVR-?\s*nummer:\s*(\d{8})/i);
+  return match?.[1] ?? null;
+}
+
+function udtraekAdresse(tekst: string): string | null {
+  // Adressen sidder typisk som 2-3 linjer inden CVR-nummer på side 1
+  const cvrIdx = tekst.search(/CVR-?\s*nummer:/i);
+  if (cvrIdx === -1) return null;
+
+  const foerCvr = tekst.substring(0, cvrIdx);
+  const linjer = foerCvr.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  // Find gadenavn: linje der matcher "Vejnavn 123" mønster
+  const vejRegex = /^[A-Za-zÆØÅæøå\s\-]+\s+\d+[A-Za-z]?,?\s*$/;
+  const postnrRegex = /^\d{4}\s+[A-Za-zÆØÅæøå\s]+$/;
+
+  let gade: string | null = null;
+  let by: string | null = null;
+
+  for (let i = linjer.length - 1; i >= 0; i--) {
+    if (!by && postnrRegex.test(linjer[i])) { by = linjer[i]; continue; }
+    if (!gade && vejRegex.test(linjer[i])) { gade = linjer[i]; break; }
+  }
+
+  if (gade && by) return `${gade.trim()}, ${by.trim()}`;
+  if (gade) return gade.trim();
+  return null;
+}
+
+function udtraekPladser(tekst: string): string | null {
+  const match =
+    tekst.match(/plads til (\d+) borgere/i) ??
+    tekst.match(/(\d+) pladser\b/i) ??
+    tekst.match(/kapacitet(?:en)? (?:er )?(?:på )?(\d+)/i);
+  return match?.[1] ?? null;
 }

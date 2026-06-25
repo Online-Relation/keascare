@@ -18,6 +18,12 @@ type DbRapport = {
   tilsynsform: string | null;
   temaer: string[] | null;
   scraper_dato: string | null;
+  pdf_vurdering: string | null;
+  pdf_fund: string | null;
+  adresse: string | null;
+  pladser: string | null;
+  cvr: string | null;
+  pdf_behandlet: boolean | null;
 };
 
 function mapTilBostedDetail(r: DbRapport): BostedDetail {
@@ -36,6 +42,12 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     tilsynsform: r.tilsynsform,
     temaer: r.temaer ?? [],
     scraperDato: r.scraper_dato,
+    pdfVurdering: r.pdf_vurdering,
+    pdfFund: r.pdf_fund,
+    adresse: r.adresse,
+    pladser: r.pladser,
+    cvr: r.cvr,
+    pdfBehandlet: r.pdf_behandlet ?? false,
   };
 }
 
@@ -43,7 +55,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet')
     .eq('id', id)
     .single();
 
