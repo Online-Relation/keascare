@@ -26,7 +26,12 @@ function parseListeSide(html: string): TilbudsportalenListeItem[] {
   const $ = load(html);
   const items: TilbudsportalenListeItem[] = [];
 
-  $('a.linkUdenUnderstreg[href*="tilbudDetaljeside"]').each((_, el) => {
+  // Prøv specifik klasse, fall back til enhver link med tilbudDetaljeside i href
+  const selector = $('a.linkUdenUnderstreg[href*="tilbudDetaljeside"]').length > 0
+    ? 'a.linkUdenUnderstreg[href*="tilbudDetaljeside"]'
+    : 'a[href*="tilbudDetaljeside"], a[href*="tilbudsid"]';
+
+  $(selector).each((_, el) => {
     const href = $(el).attr('href') ?? '';
     const url = new URL(href, 'https://tilbudsportalen.dk');
     const tilbudsid = url.searchParams.get('tilbudsid') ?? '';
@@ -61,20 +66,26 @@ export async function scraperTilbudsportalenListe(maxSider = 50): Promise<ListeR
   const rawCookies = init.headers['set-cookie'] ?? [];
   cookieStr = rawCookies.map((c: string) => c.split(';')[0]).join('; ');
 
-  const totalHTML = load(init.data);
-  const totalTekst = totalHTML('input[name="totalResultater"]').first().val() as string;
-  const total = parseInt(totalTekst ?? '0', 10);
+  const initHtml = load(init.data);
+  // Prøv hidden input, ellers parse fra synlig tekst "X resultater"
+  const hiddenTotal = initHtml('input[name="totalResultater"]').first().val() as string | undefined;
+  let total = hiddenTotal ? parseInt(hiddenTotal, 10) : 0;
+  if (!total) {
+    const match = (init.data as string).match(/(\d[\d.]+)\s+resultater/);
+    if (match) total = parseInt(match[1].replace(/\./g, ''), 10);
+  }
   const antalSider = Math.min(maxSider, Math.ceil(total / TP_RESULTATER_PR_SIDE));
 
   const items = parseListeSide(init.data);
   alle.push(...items);
 
   for (let side = 2; side <= antalSider; side++) {
+    const offset = (side - 1) * TP_RESULTATER_PR_SIDE;
     try {
-      const res = await client.get<string>(`${TP_LISTE_URL}?page=${side}`, {
-        responseType: 'text',
-        headers: { Cookie: cookieStr },
-      });
+      const res = await client.get<string>(
+        `${TP_LISTE_URL}?sortering=RELEVANS&offset=${offset}`,
+        { responseType: 'text', headers: { Cookie: cookieStr } },
+      );
       alle.push(...parseListeSide(res.data));
       await venteMs(TP_DELAY_MS);
     } catch (err) {
