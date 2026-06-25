@@ -180,10 +180,11 @@
 
   @media (max-width: 768px) {
     .mobil-topbar {
-      display: flex;
+      display: grid;
+      grid-template-columns: auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      padding: 0.875rem 1rem;
+      gap: 0.75rem;
+      padding: 0.625rem 1rem;
       background: var(--color-sidebar);
       border-bottom: 1px solid var(--color-sidebar-border);
       position: fixed;
@@ -197,13 +198,8 @@
       padding-top: 57px;
     }
 
-    .mobil-topbar-logo {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-weight: var(--fw-bold);
-      font-size: var(--text-base);
-      color: #FFFFFF;
+    .mobil-topbar-search {
+      min-width: 0;
     }
 
     .mobil-hamburger {
@@ -214,6 +210,7 @@
       display: flex;
       align-items: center;
       padding: 0.25rem;
+      flex-shrink: 0;
     }
 
     .mobil-overlay {

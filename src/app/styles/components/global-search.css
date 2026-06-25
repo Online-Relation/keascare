@@ -245,9 +245,49 @@
     box-shadow: 0 1px 0 var(--color-border);
   }
 
-  /* Mobil: skjul */
+  /* Mobil: skjul i desktop-header, vis i mobil-topbar */
   @media (max-width: 768px) {
-    .gs-wrap {
+    .dashboard-topbar .gs-wrap {
+      display: none;
+    }
+
+    .mobil-topbar-search .gs-felt {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .mobil-topbar-search .gs-wrap.gs-fokus .gs-felt {
+      background: rgba(255, 255, 255, 0.95);
+      border-color: #FFFFFF;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.2);
+      transform: none;
+    }
+
+    .mobil-topbar-search .gs-ikon {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .mobil-topbar-search .gs-input {
+      color: #FFFFFF;
+    }
+
+    .mobil-topbar-search .gs-input::placeholder {
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .mobil-topbar-search .gs-wrap.gs-fokus .gs-input {
+      color: var(--color-text-primary);
+    }
+
+    .mobil-topbar-search .gs-wrap.gs-fokus .gs-input::placeholder {
+      color: var(--color-text-muted);
+    }
+
+    .mobil-topbar-search .gs-wrap.gs-fokus .gs-ikon {
+      color: var(--color-primary);
+    }
+
+    .mobil-topbar-search .gs-genvej {
       display: none;
     }
   }

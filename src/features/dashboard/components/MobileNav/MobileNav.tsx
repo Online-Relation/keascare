@@ -9,6 +9,7 @@ import {
   Menu, X, LayoutDashboard, ClipboardList,
   TrendingUp, BarChart2, Settings, FileText, RefreshCw,
 } from 'lucide-react';
+import { GlobalSearch } from '@/features/dashboard/components/GlobalSearch';
 
 const navItems = [
   { label: 'Dashboard',        href: '/dashboard',                 icon: LayoutDashboard },
@@ -27,10 +28,6 @@ export function MobileNav() {
   return (
     <>
       <header className="mobil-topbar">
-        <div className="mobil-topbar-logo">
-          <div className="sidebar-logo-icon">KC</div>
-          KeasCare
-        </div>
         <button
           className="mobil-hamburger"
           onClick={() => setÅben(true)}
@@ -38,6 +35,9 @@ export function MobileNav() {
         >
           <Menu size={22} />
         </button>
+        <div className="mobil-topbar-search">
+          <GlobalSearch />
+        </div>
       </header>
 
       {åben && (
