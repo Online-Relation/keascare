@@ -11,10 +11,6 @@
 @import "./styles/components/scrapers.css";
 @import "./styles/layout/dashboard.css";
 
-@theme inline {
-  --font-sans: var(--font-work-sans);
-}
-
 @layer base {
   *, *::before, *::after {
     box-sizing: border-box;
@@ -23,7 +19,6 @@
   body {
     background-color: var(--color-bg);
     color: var(--color-text-primary);
-    font-family: var(--font-work-sans, 'Work Sans', ui-sans-serif, system-ui, sans-serif);
     -webkit-font-smoothing: antialiased;
   }
 }

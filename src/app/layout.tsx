@@ -20,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="da" className={`${workSans.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className={`${workSans.className} min-h-full flex flex-col`}>{children}</body>
     </html>
   );
 }
