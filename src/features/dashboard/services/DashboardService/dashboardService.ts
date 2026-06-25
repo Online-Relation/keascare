@@ -142,9 +142,12 @@ function beregnTopKommuner(rapporter: DbRapport[]): KommuneStat[] {
 export async function hentDashboardData(): Promise<DashboardData> {
   const supabase = getSupabaseServerClient();
 
+  // Kun §107, §108 og §108a — filtrerer §105 og andre irrelevante typer fra.
+  // Rækker uden Tilbudsportalen-match (tp_tilbudstype IS NULL) beholdes, da vi ikke kender typen endnu.
   const { data, error } = await supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato')
+    .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
