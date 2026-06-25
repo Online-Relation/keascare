@@ -1,23 +1,12 @@
 // src/features/dashboard/components/DashboardPage/sections/DashboardTable/DashboardTable.tsx
 
 import type { Bosted } from '@/features/dashboard/types/dashboard.types';
-import { TableRow } from './TableRow';
+import { DashboardTableClient } from './DashboardTableClient';
 import { Filter } from 'lucide-react';
 
 type DashboardTableProps = {
   bosteder: Bosted[];
 };
-
-const kolonner = [
-  'Bosted',
-  'Kommune',
-  'Pladser',
-  'Drift',
-  'STPS fund',
-  'Rapportdato',
-  'Fokus i rapporten',
-  'Handling',
-];
 
 export function DashboardTable({ bosteder }: DashboardTableProps) {
   return (
@@ -35,22 +24,7 @@ export function DashboardTable({ bosteder }: DashboardTableProps) {
         </button>
       </div>
 
-      <div style={{ overflowX: 'auto' }}>
-        <table className="data-table">
-          <thead>
-            <tr>
-              {kolonner.map((kol) => (
-                <th key={kol}>{kol}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {bosteder.map((bosted) => (
-              <TableRow key={bosted.id} bosted={bosted} />
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <DashboardTableClient bosteder={bosteder} />
     </div>
   );
 }
