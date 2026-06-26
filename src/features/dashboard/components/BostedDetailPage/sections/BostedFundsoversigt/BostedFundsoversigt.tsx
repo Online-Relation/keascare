@@ -1,5 +1,6 @@
 // src/features/dashboard/components/BostedDetailPage/sections/BostedFundsoversigt/BostedFundsoversigt.tsx
 
+import React from 'react';
 import { ShieldAlert, Info, Check, X, Minus, HelpCircle } from 'lucide-react';
 import type { BostedDetail, FundItem, FundStatus } from '@/features/dashboard/types/dashboard.types';
 
@@ -13,6 +14,55 @@ function rensVurdering(tekst: string): string {
     .replace(/Tilsynsrapport[\s\S]{0,80}?Side \d+ af \d+\s*/g, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
+
+function erOverskrift(linje: string): boolean {
+  // Kort linje uden afsluttende punktum — typisk en sektionsoverskrift
+  return linje.length > 0 && linje.length <= 65 && !/[.!?,]$/.test(linje) && /^[A-ZÆØÅ]/.test(linje);
+}
+
+function formatVurdering(tekst: string): React.ReactNode[] {
+  const renset = rensVurdering(tekst);
+
+  // Split på dobbelt linjeskift = naturlige afsnit
+  const afsnit = renset.split(/\n\n+/);
+  const elementer: React.ReactNode[] = [];
+
+  for (const afsnit_ of afsnit) {
+    // Saml PDF-brudte linjer inden for et afsnit til én sammenhængende tekst
+    const linjer = afsnit_.split('\n').map((l) => l.trim()).filter(Boolean);
+    const sammensatte: string[] = [];
+    let nuværende = '';
+
+    for (const linje of linjer) {
+      if (!nuværende) {
+        nuværende = linje;
+      } else if (/[.!?:]$/.test(nuværende)) {
+        // Forrige linje sluttede en sætning → nyt punkt
+        sammensatte.push(nuværende);
+        nuværende = linje;
+      } else {
+        // Fortsæt på samme linje
+        nuværende += ' ' + linje;
+      }
+    }
+    if (nuværende) sammensatte.push(nuværende);
+
+    for (let i = 0; i < sammensatte.length; i++) {
+      const linje = sammensatte[i];
+      if (erOverskrift(linje)) {
+        elementer.push(
+          <strong key={`${afsnit_}-${i}`} className="fund-vurdering-overskrift">{linje}</strong>
+        );
+      } else {
+        elementer.push(
+          <p key={`${afsnit_}-${i}`} className="fund-vurdering-afsnit">{linje}</p>
+        );
+      }
+    }
+  }
+
+  return elementer;
 }
 
 const STATUS_IKON: Record<FundStatus, React.ReactNode> = {
@@ -103,8 +153,8 @@ export function BostedFundsoversigt({ bosted }: BostedFundsoversigtProps) {
 
       <div className="bosted-fundsoversigt-body">
         {bosted.pdfVurdering && (
-          <div className="bosted-fundsoversigt-sektion">
-            <p className="fund-vurdering-tekst">{rensVurdering(bosted.pdfVurdering)}</p>
+          <div className="bosted-fundsoversigt-sektion fund-vurdering-wrapper">
+            {formatVurdering(bosted.pdfVurdering)}
           </div>
         )}
 

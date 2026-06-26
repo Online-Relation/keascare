@@ -234,6 +234,31 @@
     margin: 0;
   }
 
+  .fund-vurdering-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .fund-vurdering-overskrift {
+    display: block;
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin-top: 0.75rem;
+  }
+
+  .fund-vurdering-overskrift:first-child {
+    margin-top: 0;
+  }
+
+  .fund-vurdering-afsnit {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    line-height: 1.75;
+    margin: 0;
+  }
+
   /* Fund items */
   .fund-items-wrapper {
     padding: 1rem 1.5rem 1.5rem;
