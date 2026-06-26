@@ -1,0 +1,274 @@
+/* src/app/styles/components/rapporter.css */
+@layer components {
+
+  .rap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .rap-titel {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.2rem;
+  }
+
+  .rap-undertitel {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .rap-total-badge {
+    background: var(--color-primary);
+    color: #fff;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+
+  /* KPI stribe */
+  .rap-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .rap-kpi {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 1.125rem 1.25rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .rap-kpi::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    border-radius: 0.875rem 0 0 0.875rem;
+  }
+
+  .rap-kpi-kritisk::before { background: #EF4444; }
+  .rap-kpi-mindre::before  { background: #F59E0B; }
+  .rap-kpi-ingen::before   { background: #10B981; }
+  .rap-kpi-total::before   { background: var(--color-primary); }
+
+  .rap-kpi-ikon {
+    flex-shrink: 0;
+    opacity: 0.7;
+  }
+
+  .rap-kpi-kritisk .rap-kpi-ikon { color: #EF4444; }
+  .rap-kpi-mindre .rap-kpi-ikon  { color: #F59E0B; }
+  .rap-kpi-ingen .rap-kpi-ikon   { color: #10B981; }
+  .rap-kpi-total .rap-kpi-ikon   { color: var(--color-primary); }
+
+  .rap-kpi-tal {
+    font-size: var(--text-2xl);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-primary);
+    line-height: 1.1;
+  }
+
+  .rap-kpi-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-top: 0.125rem;
+  }
+
+  .rap-kpi-ny {
+    position: absolute;
+    top: 0.625rem;
+    right: 0.875rem;
+    font-size: 10px;
+    font-weight: var(--fw-semibold);
+    background: #FEE2E2;
+    color: #B91C1C;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+  }
+
+  /* Chart grid */
+  .rap-chart-grid {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .rap-chart-bred {
+    /* bruger fuld kolonnebredde i grid */
+  }
+
+  .rap-chart-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    overflow: hidden;
+  }
+
+  .rap-chart-header {
+    margin-bottom: 1.25rem;
+  }
+
+  .rap-chart-titel {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  .rap-chart-beskrivelse {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  /* Temaer / fokusområder */
+  .rap-temaer-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .rap-temaer-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .rap-tema-række {
+    display: grid;
+    grid-template-columns: 180px 1fr 90px;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .rap-tema-navn {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rap-tema-bar-wrap {
+    height: 8px;
+    background: var(--color-border);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .rap-tema-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #6366F1, #8B5CF6);
+    border-radius: 9999px;
+    transition: width 0.4s ease;
+  }
+
+  .rap-tema-tal {
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .rap-tema-pct {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  /* Tabel */
+  .rap-tabel-antal {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .rap-tabel-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rap-tabel-scroll .data-table {
+    min-width: 600px;
+  }
+
+  .rap-kritisk-række {
+    background: #FFF5F5;
+  }
+
+  .rap-kritisk-række:hover {
+    background: #FEE2E2 !important;
+  }
+
+  .rap-bosted-link {
+    color: var(--color-primary);
+    font-weight: var(--fw-medium);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .rap-bosted-link:hover {
+    text-decoration: underline;
+  }
+
+  .rap-tema-celle {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .rap-pdf-link {
+    display: inline-flex;
+    color: var(--color-text-muted);
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: color 0.1s;
+  }
+
+  .rap-pdf-link:hover {
+    color: var(--color-primary);
+  }
+
+  /* Responsive */
+  @media (max-width: 1024px) {
+    .rap-chart-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 768px) {
+    .rap-kpis {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .rap-tema-række {
+      grid-template-columns: 130px 1fr 70px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .rap-kpis {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
