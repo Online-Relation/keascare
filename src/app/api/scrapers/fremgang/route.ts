@@ -11,6 +11,16 @@ export type FremgangItem = {
   mål: number;
   pct: number;
   scraperId: string;
+  deltaSidsteDøgn: number | null;
+};
+
+type Snapshot = {
+  pdf: number;
+  fund: number;
+  cvr: number;
+  tp: number;
+  pnr: number;
+  total: number;
 };
 
 async function count(supabase: ReturnType<typeof getSupabaseServerClient>, filter: string): Promise<number> {
@@ -24,6 +34,7 @@ async function count(supabase: ReturnType<typeof getSupabaseServerClient>, filte
 export async function GET() {
   const supabase = getSupabaseServerClient();
 
+  // Hent aktuelle tal parallelt
   const [total, pdfOk, pnrOk, cvrOk, tpOk, fundOk] = await Promise.all([
     supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }).then(r => r.count ?? 0),
     count(supabase, 'pdf_vurdering'),
@@ -32,6 +43,46 @@ export async function GET() {
     count(supabase, 'tp_tilbudstype'),
     count(supabase, 'fund_items'),
   ]);
+
+  // Daglig snapshot-logik — sammenlign med gårsdagens snapshot
+  const midnatIdag = new Date();
+  midnatIdag.setHours(0, 0, 0, 0);
+  const midnatIgår = new Date(midnatIdag);
+  midnatIgår.setDate(midnatIgår.getDate() - 1);
+
+  // Hent gårsdagens snapshot (gemmes under scraper_id = 'fremgang-snapshot')
+  const { data: gårRows } = await supabase
+    .from('scraper_logs')
+    .select('resultat')
+    .eq('scraper_id', 'fremgang-snapshot')
+    .gte('kørt_kl', midnatIgår.toISOString())
+    .lt('kørt_kl', midnatIdag.toISOString())
+    .order('kørt_kl', { ascending: false })
+    .limit(1);
+
+  const gårSnapshot = (gårRows?.[0]?.resultat ?? null) as Snapshot | null;
+
+  // Gem dagens snapshot hvis der ikke allerede er et
+  const { data: idagRows } = await supabase
+    .from('scraper_logs')
+    .select('id')
+    .eq('scraper_id', 'fremgang-snapshot')
+    .gte('kørt_kl', midnatIdag.toISOString())
+    .limit(1);
+
+  if (!idagRows?.length) {
+    await supabase.from('scraper_logs').insert({
+      scraper_id: 'fremgang-snapshot',
+      ok: true,
+      resultat: { pdf: pdfOk, fund: fundOk, cvr: cvrOk, tp: tpOk, pnr: pnrOk, total },
+    });
+  }
+
+  const delta = (key: keyof Snapshot, nuværende: number): number | null => {
+    if (!gårSnapshot) return null;
+    const diff = nuværende - gårSnapshot[key];
+    return diff;
+  };
 
   const pct = (n: number) => total > 0 ? Math.round((n / total) * 100) : 0;
 
@@ -44,6 +95,7 @@ export async function GET() {
       mål: total,
       pct: pct(pdfOk),
       scraperId: 'stps-detaljer',
+      deltaSidsteDøgn: delta('pdf', pdfOk),
     },
     {
       id: 'fund-items',
@@ -53,6 +105,7 @@ export async function GET() {
       mål: total,
       pct: pct(fundOk),
       scraperId: 'stps-fund-items',
+      deltaSidsteDøgn: delta('fund', fundOk),
     },
     {
       id: 'cvr',
@@ -62,6 +115,7 @@ export async function GET() {
       mål: total,
       pct: pct(cvrOk),
       scraperId: 'cvr-berig',
+      deltaSidsteDøgn: delta('cvr', cvrOk),
     },
     {
       id: 'tp-match',
@@ -71,6 +125,7 @@ export async function GET() {
       mål: total,
       pct: pct(tpOk),
       scraperId: 'tp-detaljer',
+      deltaSidsteDøgn: delta('tp', tpOk),
     },
     {
       id: 'pnummer',
@@ -80,6 +135,7 @@ export async function GET() {
       mål: total,
       pct: pct(pnrOk),
       scraperId: 'stps-pnummer',
+      deltaSidsteDøgn: delta('pnr', pnrOk),
     },
   ];
 

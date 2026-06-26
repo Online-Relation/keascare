@@ -24,6 +24,9 @@ type Props = { item: FremgangItem };
 function FremgangKort({ item }: Props) {
   const cls = farveklasse(item.pct);
   const mangler = item.mål - item.nuværende;
+  const delta = item.deltaSidsteDøgn;
+  const deltaPositiv = delta !== null && delta > 0;
+  const deltaNul = delta === 0;
 
   return (
     <div className="fremgang-kort">
@@ -51,6 +54,21 @@ function FremgangKort({ item }: Props) {
           {mangler > 0 ? `${mangler.toLocaleString('da-DK')} mangler` : statusLabel(item.pct)}
         </span>
       </div>
+
+      {delta !== null && (
+        <div className={`fremgang-delta ${deltaPositiv ? 'fremgang-delta--op' : deltaNul ? 'fremgang-delta--nul' : 'fremgang-delta--ned'}`}>
+          <span className="fremgang-delta-pil">
+            {deltaPositiv ? '↑' : deltaNul ? '→' : '↓'}
+          </span>
+          <span className="fremgang-delta-tekst">
+            {deltaPositiv
+              ? `+${delta.toLocaleString('da-DK')} siden i går`
+              : deltaNul
+              ? 'Ingen ændring siden i går'
+              : `${delta.toLocaleString('da-DK')} siden i går`}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

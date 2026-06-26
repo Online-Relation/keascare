@@ -292,6 +292,25 @@
   .fremgang-badge--gul  { background: #fef9c3; color: #92400e; }
   .fremgang-badge--rød  { background: #fee2e2; color: #991b1b; }
 
+  .fremgang-delta {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    padding-top: 0.375rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .fremgang-delta--op  { color: #16a34a; }
+  .fremgang-delta--nul { color: var(--color-text-muted); }
+  .fremgang-delta--ned { color: #dc2626; }
+
+  .fremgang-delta-pil {
+    font-size: var(--text-sm);
+    line-height: 1;
+  }
+
   @media (max-width: 768px) {
     .fremgang-grid {
       grid-template-columns: repeat(2, 1fr);
