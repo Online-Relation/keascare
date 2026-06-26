@@ -31,6 +31,12 @@ type DbRapport = {
   tp_kontaktperson: string | null;
   tp_telefon: string | null;
   tp_email: string | null;
+  tp_adresse: string | null;
+  tp_leder: string | null;
+  tp_website: string | null;
+  tp_virksomheds_navn: string | null;
+  tp_tilsynsmyndighed: string | null;
+  tp_pladser_pr_paragraf: string | null;
   fund_items: FundItem[] | null;
 };
 
@@ -63,6 +69,12 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     tpKontaktperson: r.tp_kontaktperson,
     tpTelefon: r.tp_telefon,
     tpEmail: r.tp_email,
+    tpAdresse: r.tp_adresse,
+    tpLeder: r.tp_leder,
+    tpWebsite: r.tp_website,
+    tpVirksomhedsNavn: r.tp_virksomheds_navn,
+    tpTilsynsmyndighed: r.tp_tilsynsmyndighed,
+    tpPladsePrParagraf: r.tp_pladser_pr_paragraf,
     fundItems: (r.fund_items as FundItem[] | null) ?? null,
   };
 }
@@ -71,7 +83,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, fund_items')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items')
     .eq('id', id)
     .single();
 

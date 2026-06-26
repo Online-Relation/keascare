@@ -1,6 +1,6 @@
 // src/features/dashboard/components/BostedDetailPage/sections/BostedOrganisationKort/BostedOrganisationKort.tsx
 
-import { Building2, Phone, Mail, User } from 'lucide-react';
+import { Building2, Phone, Mail, User, Globe, MapPin, Shield } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 
 type Props = { bosted: BostedDetail };
@@ -19,10 +19,13 @@ function FeltRække({ label, value }: Felt) {
 }
 
 export function BostedOrganisationKort({ bosted }: Props) {
-  const pladser = bosted.pladser ?? bosted.tpPladser ?? null;
+  // Fallback: Tilbudsportalen-adresse er den fysiske adresse, CVR-adresse er juridisk
+  const adresse = bosted.tpAdresse ?? bosted.adresse ?? null;
+  // Pladser pr. paragraf foretrækkes over total
+  const pladser = bosted.tpPladsePrParagraf ?? bosted.tpPladser ?? bosted.pladser ?? null;
   const kommune = bosted.tpKommune ?? bosted.kommune ?? null;
 
-  const harKontakt = bosted.tpKontaktperson || bosted.tpTelefon || bosted.tpEmail;
+  const harKontakt = bosted.tpLeder || bosted.tpKontaktperson || bosted.tpTelefon || bosted.tpEmail;
 
   return (
     <>
@@ -34,10 +37,25 @@ export function BostedOrganisationKort({ bosted }: Props) {
         <div className="bosted-detail-kort-body">
           <FeltRække label="CVR-nummer" value={bosted.cvr} />
           {bosted.tpPNummer && <FeltRække label="P-nummer" value={bosted.tpPNummer} />}
-          <FeltRække label="Adresse" value={bosted.adresse} />
+          {adresse && (
+            <div className="bosted-detail-field">
+              <span className="bosted-detail-field-label">Adresse</span>
+              <a
+                href={`https://maps.google.com/?q=${encodeURIComponent(adresse)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bosted-detail-field-value bosted-kontakt-link"
+              >
+                <MapPin size={12} />
+                {adresse}
+              </a>
+            </div>
+          )}
+          {!adresse && <FeltRække label="Adresse" value={null} />}
           <FeltRække label="Kommune" value={kommune} />
-          <FeltRække label="Antal pladser" value={pladser} />
+          <FeltRække label="Pladser" value={pladser} />
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
+          {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
         </div>
       </div>
 
@@ -45,10 +63,12 @@ export function BostedOrganisationKort({ bosted }: Props) {
         <div className="bosted-detail-kort">
           <div className="bosted-detail-kort-header">
             <User size={15} />
-            <span className="bosted-detail-kort-titel">Kontaktperson</span>
+            <span className="bosted-detail-kort-titel">Kontakt</span>
           </div>
           <div className="bosted-detail-kort-body">
-            {bosted.tpKontaktperson && <FeltRække label="Navn" value={bosted.tpKontaktperson} />}
+            {(bosted.tpLeder ?? bosted.tpKontaktperson) && (
+              <FeltRække label="Leder" value={bosted.tpLeder ?? bosted.tpKontaktperson} />
+            )}
             {bosted.tpTelefon && (
               <div className="bosted-detail-field">
                 <span className="bosted-detail-field-label">Telefon</span>
@@ -67,6 +87,27 @@ export function BostedOrganisationKort({ bosted }: Props) {
                 </a>
               </div>
             )}
+            {bosted.tpWebsite && (
+              <div className="bosted-detail-field">
+                <span className="bosted-detail-field-label">Website</span>
+                <a href={bosted.tpWebsite} target="_blank" rel="noopener noreferrer" className="bosted-detail-field-value bosted-kontakt-link">
+                  <Globe size={12} />
+                  {bosted.tpWebsite.replace(/^https?:\/\//, '')}
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {bosted.tpTilsynsmyndighed && (
+        <div className="bosted-detail-kort">
+          <div className="bosted-detail-kort-header">
+            <Shield size={15} />
+            <span className="bosted-detail-kort-titel">Tilsyn</span>
+          </div>
+          <div className="bosted-detail-kort-body">
+            <FeltRække label="Tilsynsførende" value={bosted.tpTilsynsmyndighed} />
           </div>
         </div>
       )}

@@ -84,6 +84,12 @@ export type BostedDetail = {
   tpKontaktperson: string | null;
   tpTelefon: string | null;
   tpEmail: string | null;
+  tpAdresse: string | null;
+  tpLeder: string | null;
+  tpWebsite: string | null;
+  tpVirksomhedsNavn: string | null;
+  tpTilsynsmyndighed: string | null;
+  tpPladsePrParagraf: string | null;
   fundItems: FundItem[] | null;
 };
 

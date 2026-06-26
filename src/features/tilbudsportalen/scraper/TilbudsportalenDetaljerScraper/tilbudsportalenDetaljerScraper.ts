@@ -108,7 +108,44 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
   // Driftsform — "Virksomhedsform" på detaljeside (Primærkommune, Selvejende institution, Privat, Region…)
   const driftsform: string | null = findLabelVærdi($, 'Virksomhedsform');
 
-  return { tilbudsid, afdelingsid, cvr, tilbudstype, pladser, pNummer, kommune, kontaktperson, telefon, email, driftsform };
+  // Tilbuddets adresse — div efter h4 "Tilbuddets adresse" (kan indeholde <br>)
+  let tilbuddetsAdresse: string | null = null;
+  $('h4').each((_, el) => {
+    if ($(el).text().trim() === 'Tilbuddets adresse') {
+      const div = $(el).next('div');
+      const linjer = div.text().split('\n').map((l: string) => l.trim()).filter(Boolean);
+      if (linjer.length) tilbuddetsAdresse = linjer.join(', ');
+      return false;
+    }
+  });
+
+  // Website — <a> i div.hjemmesideOeverigeOplysninger
+  const website: string | null = $('div.hjemmesideOeverigeOplysninger a').first().attr('href') ?? null;
+
+  // Tilbuddets leder
+  let leder: string | null = findLabelVærdi($, 'Tilbuddets leder');
+  if (leder && leder.length > 80) leder = null;
+
+  // Virksomhedens navn
+  const virksomhedsNavn: string | null = findLabelVærdi($, 'Virksomhedens navn');
+
+  // Tilsynsførende myndighed
+  const tilsynsmyndighed: string | null = findLabelVærdi($, 'Tilsynsførende myndighed');
+
+  // Pladser pr. paragraf — parse #pladser sektionen
+  const pladsePoster: string[] = [];
+  $('#pladser').find('div.lh-1').each((_, el) => {
+    const paragraf = $(el).find('h3').text().match(/§\s*(\d+\w*)/i);
+    const antal = $(el).find('div').first().text().match(/(\d+)\s+pladser/i);
+    if (paragraf && antal) pladsePoster.push(`${antal[1]} §${paragraf[1]}`);
+  });
+  const pladsePrParagraf: string | null = pladsePoster.length ? pladsePoster.join(', ') : null;
+
+  return {
+    tilbudsid, afdelingsid, cvr, tilbudstype, pladser, pNummer, kommune,
+    kontaktperson, telefon, email, driftsform,
+    tilbuddetsAdresse, leder, website, virksomhedsNavn, tilsynsmyndighed, pladsePrParagraf,
+  };
 }
 
 export async function scraperTilbudsportalenDetaljer(batch = 30): Promise<DetaljerResultat> {
@@ -134,7 +171,7 @@ export async function scraperTilbudsportalenDetaljer(batch = 30): Promise<Detalj
       fejl++;
       fejlBeskeder.push(`${navn}: ${err instanceof Error ? err.message : String(err)}`);
       // Marker som behandlet selv ved fejl
-      await gemDetaljer({ tilbudsid, afdelingsid, cvr: null, tilbudstype: null, pladser: null, pNummer: null, kommune: null, kontaktperson: null, telefon: null, email: null, driftsform: null });
+      await gemDetaljer({ tilbudsid, afdelingsid, cvr: null, tilbudstype: null, pladser: null, pNummer: null, kommune: null, kontaktperson: null, telefon: null, email: null, driftsform: null, tilbuddetsAdresse: null, leder: null, website: null, virksomhedsNavn: null, tilsynsmyndighed: null, pladsePrParagraf: null });
     }
 
     if (i < rækker.length - 1) await venteMs(TP_DELAY_MS);

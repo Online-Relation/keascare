@@ -19,6 +19,12 @@ export type TilbudsportalenDetalje = {
   telefon: string | null;
   email: string | null;
   driftsform: string | null;
+  tilbuddetsAdresse: string | null;
+  leder: string | null;
+  website: string | null;
+  virksomhedsNavn: string | null;
+  tilsynsmyndighed: string | null;
+  pladsePrParagraf: string | null;
 };
 
 export type TilbudsportalenMatchResultat = {
