@@ -102,7 +102,15 @@ ${rapport.fund_items ? JSON.stringify(rapport.fund_items, null, 2) : 'Ikke tilg�
     });
 
     const råTekst = besked.content[0].type === 'text' ? besked.content[0].text : '';
-    const anbefalinger: SalgsAnbefalinger = JSON.parse(råTekst);
+    console.log('Anthropic råsvar:', råTekst.slice(0, 300));
+
+    // Strip markdown-kodeblok hvis Claude pakkede svaret i ```json ... ```
+    const rensetTekst = råTekst
+      .replace(/^```(?:json)?\s*/m, '')
+      .replace(/\s*```\s*$/m, '')
+      .trim();
+
+    const anbefalinger: SalgsAnbefalinger = JSON.parse(rensetTekst);
 
     // Gem i DB så næste kald er øjeblikkeligt
     await supabase
@@ -112,7 +120,8 @@ ${rapport.fund_items ? JSON.stringify(rapport.fund_items, null, 2) : 'Ikke tilg�
 
     return NextResponse.json({ anbefalinger });
   } catch (err) {
-    console.error('Anthropic fejl:', err);
-    return NextResponse.json({ fejl: 'Kunne ikke generere anbefalinger' }, { status: 500 });
+    const besked = err instanceof Error ? err.message : String(err);
+    console.error('Anthropic fejl:', besked);
+    return NextResponse.json({ fejl: `Fejl: ${besked}` }, { status: 500 });
   }
 }
