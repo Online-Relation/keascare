@@ -270,5 +270,22 @@
     .rap-kpis {
       grid-template-columns: 1fr 1fr;
     }
+    .rap-tema-række {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+    }
+    .rap-tema-navn {
+      grid-column: 1 / -1;
+      white-space: normal;
+      overflow: visible;
+      text-overflow: unset;
+    }
+    .rap-tema-bar-wrap {
+      grid-column: 1;
+      align-self: center;
+    }
+    .rap-tema-tal {
+      grid-column: 2;
+    }
   }
 }
