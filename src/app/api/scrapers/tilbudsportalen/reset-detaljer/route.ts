@@ -10,7 +10,7 @@ export async function POST() {
   const { error } = await supabase
     .from('tilbudsportalen_tilbud')
     .update({ detaljer_hentet: false, driftsform: null })
-    .neq('id', 0);
+    .not('id', 'is', null);
 
   if (error) {
     return NextResponse.json({ ok: false, fejl: error.message }, { status: 500 });
