@@ -1,0 +1,259 @@
+/* src/app/styles/components/markedsforing.css */
+@layer components {
+
+  /* Platform header */
+  .mf-platform-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 0.875rem;
+    margin-bottom: 1.5rem;
+    color: #fff;
+  }
+
+  .mf-meta-header     { background: linear-gradient(135deg, #1877F2 0%, #0E5FC7 100%); }
+  .mf-google-header   { background: linear-gradient(135deg, #4285F4 0%, #1A6BE8 50%, #34A853 100%); }
+  .mf-linkedin-header { background: linear-gradient(135deg, #0A66C2 0%, #084E96 100%); }
+
+  .mf-platform-logo {
+    width: 2.75rem;
+    height: 2.75rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .mf-platform-titel {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-bold);
+    margin: 0 0 0.125rem;
+    color: #fff;
+  }
+
+  .mf-platform-subtitle {
+    font-size: var(--text-xs);
+    color: rgba(255,255,255,0.75);
+    margin: 0;
+  }
+
+  .mf-periode-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    color: #fff;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+    padding: 0.3rem 0.875rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+
+  /* Metrik kort række */
+  .mf-metrikker {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .mk-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 1.125rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    transition: box-shadow 0.15s;
+  }
+
+  .mk-kort:hover {
+    box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+  }
+
+  .mk-kort-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+    margin-bottom: 0.125rem;
+  }
+
+  .mk-kort-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    font-weight: var(--fw-medium);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .mk-kort-tal {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-primary);
+    line-height: 1.1;
+  }
+
+  .mk-kort-underværdi {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .mk-kort-tendens {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    margin-top: 0.25rem;
+  }
+
+  .mk-tendens-op  { color: #16A34A; }
+  .mk-tendens-ned { color: #DC2626; }
+  .mk-tendens-neutral { color: var(--color-text-muted); }
+
+  /* Chart grid */
+  .mf-chart-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .mf-chart-full {
+    grid-column: 1 / -1;
+  }
+
+  .mf-chart-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    overflow: hidden;
+  }
+
+  .mf-chart-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .mf-chart-titel {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  .mf-chart-beskrivelse {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+    max-width: 420px;
+  }
+
+  /* Kampagne tabel */
+  .mf-tabel-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+
+  .mf-cpl-badge {
+    display: inline-block;
+    padding: 0.2rem 0.625rem;
+    border-radius: 9999px;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+  }
+
+  .mf-cpl-god  { background: #DCFCE7; color: #15803D; }
+  .mf-cpl-ok   { background: #FEF3C7; color: #B45309; }
+  .mf-cpl-høj  { background: #FEE2E2; color: #B91C1C; }
+
+  /* Info tooltip */
+  .info-tooltip-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .info-tooltip-ikon {
+    color: var(--color-text-muted);
+    cursor: help;
+    opacity: 0.6;
+    transition: opacity 0.1s;
+  }
+
+  .info-tooltip-wrap:hover .info-tooltip-ikon {
+    opacity: 1;
+  }
+
+  .info-tooltip-boble {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    width: 240px;
+    background: #1F2937;
+    color: #F9FAFB;
+    font-size: 12px;
+    line-height: 1.5;
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+    z-index: 50;
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.15s, transform 0.15s;
+    white-space: normal;
+  }
+
+  .info-tooltip-wrap:hover .info-tooltip-boble {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Responsive */
+  @media (max-width: 1100px) {
+    .mf-metrikker {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .mf-metrikker {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .mf-chart-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .mf-chart-full {
+      grid-column: 1;
+    }
+
+    .mf-platform-header {
+      flex-wrap: wrap;
+    }
+
+    .mf-periode-badge {
+      margin-left: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .mf-metrikker {
+      grid-template-columns: 1fr;
+    }
+  }
+}

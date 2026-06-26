@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone,
 } from 'lucide-react';
 
 const navItems = [
@@ -19,6 +19,12 @@ const navItems = [
   { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
   { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
   { label: 'Indstillinger',    href: '/dashboard/indstillinger',    icon: Settings },
+];
+
+const markedsforingItems = [
+  { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
+  { label: 'Google Ads', href: '/dashboard/markedsforing/google' },
+  { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
 ];
 
 type Søgeresultat = {
@@ -142,6 +148,18 @@ export function MobileNav() {
               onClick={() => setMenuÅben(false)}
             >
               <Icon className="sidebar-nav-item-icon" size={16} />
+              {label}
+            </Link>
+          ))}
+          <p className="sidebar-section-label" style={{ marginTop: '0.75rem' }}>Markedsføring</p>
+          {markedsforingItems.map(({ label, href }) => (
+            <Link
+              key={href}
+              href={href}
+              className={`sidebar-nav-item${pathname === href ? ' active' : ''}`}
+              onClick={() => setMenuÅben(false)}
+            >
+              <Megaphone className="sidebar-nav-item-icon" size={16} />
               {label}
             </Link>
           ))}
