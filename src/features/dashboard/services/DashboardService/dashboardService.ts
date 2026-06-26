@@ -16,6 +16,13 @@ type DbRapport = {
   tilsynsform: string | null;
   scraper_dato: string | null;
   tp_tilbudstype: string | null;
+  cvr: string | null;
+  pdf_vurdering: string | null;
+  tp_p_nummer: string | null;
+  tp_email: string | null;
+  tp_telefon: string | null;
+  adresse: string | null;
+  tp_adresse: string | null;
 };
 
 const NY_RAPPORT_DAGE = 60;
@@ -27,23 +34,36 @@ function erNyRapport(rapportDato: string | null): boolean {
   return new Date(rapportDato) >= grænse;
 }
 
+function beregnDataKvalitet(row: DbRapport) {
+  const point = [
+    !!row.pdf_vurdering,
+    !!row.cvr,
+    !!row.tp_p_nummer,
+    !!row.tp_tilbudstype,
+    !!(row.tp_email || row.tp_telefon),
+    !!(row.tp_adresse || row.adresse),
+  ];
+  return { score: point.filter(Boolean).length, max: point.length };
+}
+
 function mapTilBosted(row: DbRapport): Bosted {
   const temaer = row.temaer ?? [];
   const fokus = row.fokus_omraader ?? [];
   const rapportFokus = temaer.length > 0 ? temaer.join(', ') : fokus.join(', ') || '—';
 
   return {
-    id:          row.id,
-    navn:        row.stps_tilbud_navn,
-    kommune:     row.kommune,
-    region:      row.region,
-    tilsynsform: row.tilsynsform,
+    id:           row.id,
+    navn:         row.stps_tilbud_navn,
+    kommune:      row.kommune,
+    region:       row.region,
+    tilsynsform:  row.tilsynsform,
     temaer,
-    stpsFund:    (row.fund_niveau as Bosted['stpsFund']) ?? 'ukendt',
-    rapportDato: row.rapport_dato,
+    stpsFund:     (row.fund_niveau as Bosted['stpsFund']) ?? 'ukendt',
+    rapportDato:  row.rapport_dato,
     rapportFokus,
-    rapportLink: row.rapport_url,
-    erNy:        erNyRapport(row.rapport_dato),
+    rapportLink:  row.rapport_url,
+    erNy:         erNyRapport(row.rapport_dato),
+    dataKvalitet: beregnDataKvalitet(row),
   };
 }
 
@@ -159,7 +179,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   // Rækker uden Tilbudsportalen-match (tp_tilbudstype IS NULL) beholdes, da vi ikke kender typen endnu.
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 

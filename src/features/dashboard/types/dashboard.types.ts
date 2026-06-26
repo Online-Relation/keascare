@@ -12,6 +12,11 @@ export type FundItem = {
   kommentar: string | null;
 };
 
+export type DataKvalitet = {
+  score: number;
+  max: number;
+};
+
 export type Bosted = {
   id: string;
   navn: string;
@@ -24,6 +29,7 @@ export type Bosted = {
   rapportFokus: string;
   rapportLink: string;
   erNy: boolean;
+  dataKvalitet: DataKvalitet;
 };
 
 export type KpiItem = {
@@ -90,6 +96,7 @@ export type BostedDetail = {
   tpVirksomhedsNavn: string | null;
   tpTilsynsmyndighed: string | null;
   tpPladsePrParagraf: string | null;
+  dataKvalitet: DataKvalitet;
   fundItems: FundItem[] | null;
 };
 

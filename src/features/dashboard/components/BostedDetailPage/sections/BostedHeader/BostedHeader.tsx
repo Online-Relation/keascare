@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { ChevronLeft, MapPin, Globe, ClipboardList, Star } from 'lucide-react';
 import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
+import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
 
 type BostedHeaderProps = {
   bosted: BostedDetail;
@@ -83,6 +84,7 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+            <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} vis="fuld" />
             <button
               className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
               onClick={() => toggleFavorit({

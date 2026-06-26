@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { Bosted, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 import { ExternalLink } from 'lucide-react';
+import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
 
 type TableRowProps = {
   bosted: Bosted;
@@ -60,6 +61,9 @@ export function TableRow({ bosted }: TableRowProps) {
         <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
           {bosted.rapportFokus}
         </span>
+      </td>
+      <td className="data-table td">
+        <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} />
       </td>
       <td className="data-table td">
         <a

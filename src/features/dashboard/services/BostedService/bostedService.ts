@@ -1,7 +1,7 @@
 // src/features/dashboard/services/BostedService/bostedService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import type { BostedDetail, FundItem, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+import type { BostedDetail, FundItem, StpsFundNiveau, DataKvalitet } from '@/features/dashboard/types/dashboard.types';
 
 type DbRapport = {
   id: string;
@@ -40,6 +40,18 @@ type DbRapport = {
   fund_items: FundItem[] | null;
 };
 
+function beregnDataKvalitet(r: DbRapport): DataKvalitet {
+  const point = [
+    !!r.pdf_vurdering,
+    !!r.cvr,
+    !!r.tp_p_nummer,
+    !!r.tp_tilbudstype,
+    !!(r.tp_email || r.tp_telefon),
+    !!(r.tp_adresse || r.adresse),
+  ];
+  return { score: point.filter(Boolean).length, max: point.length };
+}
+
 function mapTilBostedDetail(r: DbRapport): BostedDetail {
   return {
     id: r.id,
@@ -75,6 +87,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     tpVirksomhedsNavn: r.tp_virksomheds_navn,
     tpTilsynsmyndighed: r.tp_tilsynsmyndighed,
     tpPladsePrParagraf: r.tp_pladser_pr_paragraf,
+    dataKvalitet: beregnDataKvalitet(r),
     fundItems: (r.fund_items as FundItem[] | null) ?? null,
   };
 }
