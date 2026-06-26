@@ -15,6 +15,7 @@ type DbRapport = {
   region: string | null;
   tilsynsform: string | null;
   scraper_dato: string | null;
+  tp_tilbudstype: string | null;
 };
 
 const NY_RAPPORT_DAGE = 60;
@@ -139,6 +140,34 @@ function beregnTopKommuner(rapporter: DbRapport[]): KommuneStat[] {
     .slice(0, 5);
 }
 
+function beregnTilbudsportalen(rapporter: DbRapport[]) {
+  const matchede = rapporter.filter((r) => r.tp_tilbudstype);
+  const total = rapporter.length;
+  const dækningsgrad = total > 0 ? `${Math.round((matchede.length / total) * 100)}%` : '0%';
+
+  const grænse30 = new Date();
+  grænse30.setDate(grænse30.getDate() - 30);
+  const nyeSidst = rapporter.filter(
+    (r) => r.tp_tilbudstype && r.rapport_dato && new Date(r.rapport_dato) >= grænse30
+  ).length;
+
+  const senesteScraper = matchede
+    .map((r) => r.scraper_dato)
+    .filter(Boolean)
+    .sort()
+    .at(-1);
+  const sidstOpdateret = senesteScraper
+    ? new Date(senesteScraper).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })
+    : '—';
+
+  return {
+    total:   matchede.length,
+    nyeSidst,
+    dækningsgrad,
+    sidstOpdateret,
+  };
+}
+
 export async function hentDashboardData(): Promise<DashboardData> {
   const supabase = getSupabaseServerClient();
 
@@ -146,7 +175,7 @@ export async function hentDashboardData(): Promise<DashboardData> {
   // Rækker uden Tilbudsportalen-match (tp_tilbudstype IS NULL) beholdes, da vi ikke kender typen endnu.
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 
@@ -160,11 +189,6 @@ export async function hentDashboardData(): Promise<DashboardData> {
     bosteder,
     stpsFordeling:   beregnFordeling(rapporter),
     topKommuner:     beregnTopKommuner(rapporter),
-    tilbudsportalen: {
-      total:          0,
-      nyeSidst:       0,
-      dækningsgrad:   'Ikke koblet',
-      sidstOpdateret: '—',
-    },
+    tilbudsportalen: beregnTilbudsportalen(rapporter),
   };
 }
