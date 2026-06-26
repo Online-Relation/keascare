@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star,
 } from 'lucide-react';
 
 const navItems = [
@@ -93,9 +93,14 @@ export function MobileNav() {
             <button className="mobil-hamburger" onClick={() => setMenuÅben(true)} aria-label="Åbn menu">
               <Menu size={22} />
             </button>
-            <button className="mobil-søg-ikon" onClick={() => setSøgningÅben(true)} aria-label="Søg">
-              <Search size={20} />
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+              <Link href="/dashboard/favoritter" className="mobil-søg-ikon" aria-label="Fulgte bosteder">
+                <Star size={20} />
+              </Link>
+              <button className="mobil-søg-ikon" onClick={() => setSøgningÅben(true)} aria-label="Søg">
+                <Search size={20} />
+              </button>
+            </div>
           </>
         )}
       </header>

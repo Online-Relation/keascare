@@ -1,0 +1,147 @@
+/* src/app/styles/components/favoritter.css */
+
+@layer components {
+  .favoritter-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .favoritter-titel {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  .favoritter-beskrivelse {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    margin: 0;
+  }
+
+  .favoritter-tom {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 4rem 2rem;
+    color: var(--color-text-muted);
+    text-align: center;
+  }
+
+  .favoritter-tom p {
+    margin: 0;
+    font-size: var(--text-sm);
+  }
+
+  .favoritter-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .favorit-kort {
+    display: flex;
+    align-items: center;
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .favorit-kort-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1rem 1rem 1.25rem;
+    text-decoration: none;
+    gap: 1rem;
+  }
+
+  .favorit-kort-link:hover {
+    background: var(--color-bg-subtle);
+  }
+
+  .favorit-kort-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .favorit-navn {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .favorit-kommune {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .favorit-dato {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .favorit-kort-højre {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .favorit-pil {
+    color: var(--color-text-muted);
+  }
+
+  .favorit-fjern {
+    padding: 1rem 1rem;
+    background: none;
+    border: none;
+    border-left: 1px solid var(--color-border);
+    cursor: pointer;
+    color: #f59e0b;
+    display: flex;
+    align-items: center;
+    align-self: stretch;
+    transition: background 0.15s;
+  }
+
+  .favorit-fjern:hover {
+    background: #fef3c7;
+  }
+
+  /* Stjerne-knap på bosted-detalje */
+  .favorit-stjerne-knap {
+    background: none;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.375rem 0.5rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .favorit-stjerne-knap:hover {
+    color: #f59e0b;
+    border-color: #f59e0b;
+    background: #fef3c7;
+  }
+
+  .favorit-stjerne-knap.aktiv {
+    color: #f59e0b;
+    border-color: #f59e0b;
+    background: #fef3c7;
+  }
+}

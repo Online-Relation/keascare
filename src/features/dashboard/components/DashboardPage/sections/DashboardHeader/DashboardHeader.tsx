@@ -1,6 +1,7 @@
 // src/features/dashboard/components/DashboardPage/sections/DashboardHeader/DashboardHeader.tsx
 
-import { Bell } from 'lucide-react';
+import { Bell, Star } from 'lucide-react';
+import Link from 'next/link';
 import { GlobalSearch } from '@/features/dashboard/components/GlobalSearch';
 
 export function DashboardHeader() {
@@ -13,6 +14,9 @@ export function DashboardHeader() {
       </div>
 
       <div className="dashboard-topbar-højre">
+        <Link href="/dashboard/favoritter" className="btn btn-ghost btn-sm" aria-label="Fulgte bosteder">
+          <Star size={15} />
+        </Link>
         <button className="btn btn-ghost btn-sm" aria-label="Notifikationer">
           <Bell size={15} />
         </button>

@@ -1,8 +1,11 @@
 // src/features/dashboard/components/BostedDetailPage/sections/BostedHeader/BostedHeader.tsx
 
+'use client';
+
 import Link from 'next/link';
-import { ChevronLeft, MapPin, Globe, ClipboardList } from 'lucide-react';
+import { ChevronLeft, MapPin, Globe, ClipboardList, Star } from 'lucide-react';
 import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
 
 type BostedHeaderProps = {
   bosted: BostedDetail;
@@ -25,6 +28,9 @@ const fundBadgeKlasse: Record<StpsFundNiveau, string> = {
 };
 
 export function BostedHeader({ bosted }: BostedHeaderProps) {
+  const { erFavorit, toggleFavorit } = useFavoritter();
+  const erStjernet = erFavorit(bosted.id);
+
   const dato = bosted.rapportDato
     ? new Date(bosted.rapportDato).toLocaleDateString('da-DK', {
         day: 'numeric', month: 'long', year: 'numeric',
@@ -76,7 +82,22 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
             </div>
           </div>
 
-          <div style={{ flexShrink: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+            <button
+              className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
+              onClick={() => toggleFavorit({
+                id: bosted.id,
+                navn: bosted.navn,
+                kommune: bosted.kommune ?? null,
+                fundNiveau: bosted.fundNiveau,
+                rapportDato: bosted.rapportDato,
+              })}
+              aria-label={erStjernet ? 'Fjern fra fulgte' : 'Tilføj til fulgte'}
+              title={erStjernet ? 'Følger dette bosted' : 'Følg dette bosted'}
+            >
+              <Star size={18} fill={erStjernet ? 'currentColor' : 'none'} />
+            </button>
+
             <span className={`badge ${fundBadgeKlasse[bosted.fundNiveau]}`}>
               <span className="badge-dot" />
               {fundLabels[bosted.fundNiveau]}
