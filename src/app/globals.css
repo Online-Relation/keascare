@@ -17,6 +17,7 @@
 @import "./styles/components/global-search.css";
 @import "./styles/components/datovælger.css";
 @import "./styles/components/datakvalitet.css";
+@import "./styles/components/salg.css";
 @import "./styles/layout/dashboard.css";
 
 @layer base {

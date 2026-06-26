@@ -1,4 +1,5 @@
 // src/features/dashboard/types/dashboard.types.ts
+import type { SalgsAnbefalinger } from './salg.types';
 
 export type StpsFundNiveau = 'kritisk' | 'stoerre' | 'mindre' | 'ingen' | 'ukendt';
 
@@ -98,6 +99,7 @@ export type BostedDetail = {
   tpPladsePrParagraf: string | null;
   dataKvalitet: DataKvalitet;
   fundItems: FundItem[] | null;
+  salgsAnbefalinger: SalgsAnbefalinger | null;
 };
 
 export type DashboardData = {

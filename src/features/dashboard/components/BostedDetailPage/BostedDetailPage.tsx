@@ -6,6 +6,7 @@ import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
 import { BostedTilsynKort } from './sections/BostedTilsynKort';
 import { BostedOrganisationKort } from './sections/BostedOrganisationKort';
 import { BostedHandlinger } from './sections/BostedHandlinger';
+import { BostedSalgsAfsnit } from './sections/BostedSalgsAfsnit';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
@@ -20,6 +21,8 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
         <BostedTilsynKort bosted={bosted} />
         <BostedOrganisationKort bosted={bosted} />
       </div>
+
+      <BostedSalgsAfsnit bostedId={bosted.id} cachetAnbefalinger={bosted.salgsAnbefalinger} />
 
       <BostedFundsoversigt bosted={bosted} />
 

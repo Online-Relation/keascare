@@ -2,6 +2,7 @@
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { BostedDetail, FundItem, StpsFundNiveau, DataKvalitet } from '@/features/dashboard/types/dashboard.types';
+import type { SalgsAnbefalinger } from '@/features/dashboard/types/salg.types';
 
 type DbRapport = {
   id: string;
@@ -38,6 +39,7 @@ type DbRapport = {
   tp_tilsynsmyndighed: string | null;
   tp_pladser_pr_paragraf: string | null;
   fund_items: FundItem[] | null;
+  salgs_anbefalinger: unknown | null;
 };
 
 function beregnDataKvalitet(r: DbRapport): DataKvalitet {
@@ -90,6 +92,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     tpPladsePrParagraf: r.tp_pladser_pr_paragraf,
     dataKvalitet: beregnDataKvalitet(r),
     fundItems: (r.fund_items as FundItem[] | null) ?? null,
+    salgsAnbefalinger: (r.salgs_anbefalinger as SalgsAnbefalinger | null) ?? null,
   };
 }
 
@@ -97,7 +100,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger')
     .eq('id', id)
     .single();
 
