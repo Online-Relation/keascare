@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { ScraperKort } from './ScraperKort';
+import { ScraperHistorik } from './ScraperHistorik';
 import type { ScraperLog } from '@/lib/db/ScraperLog';
 
 export type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
@@ -168,6 +169,8 @@ export function ScrapersPage() {
           kørsel.
         </p>
       </div>
+
+      <ScraperHistorik />
 
       <div className="scrapers-grid">
         {SCRAPERS.map((scraper) => (

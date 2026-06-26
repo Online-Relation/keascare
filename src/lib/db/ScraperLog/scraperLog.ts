@@ -22,6 +22,35 @@ export type ScraperLog = {
   resultat: Record<string, unknown> | null;
 };
 
+export type ScraperLogHistorik = {
+  id: number;
+  scraperId: string;
+  ok: boolean;
+  kørtKl: string;
+  resultat: Record<string, unknown> | null;
+};
+
+export async function hentAlleLog(): Promise<ScraperLogHistorik[]> {
+  const supabase = getSupabaseServerClient();
+  type LogRække = { id: number; scraper_id: string; ok: boolean; kørt_kl: string; resultat: Record<string, unknown> | null };
+
+  const { data } = await supabase
+    .from('scraper_logs')
+    .select('id, scraper_id, ok, kørt_kl, resultat')
+    .order('kørt_kl', { ascending: true })
+    .limit(500);
+
+  if (!data) return [];
+
+  return (data as unknown as LogRække[]).map((row) => ({
+    id: row.id,
+    scraperId: row.scraper_id,
+    ok: row.ok,
+    kørtKl: row.kørt_kl,
+    resultat: row.resultat,
+  }));
+}
+
 export async function hentSenesteLog(): Promise<ScraperLog[]> {
   const supabase = getSupabaseServerClient();
   type LogRække = { scraper_id: string; ok: boolean; kørt_kl: string; resultat: Record<string, unknown> | null };
