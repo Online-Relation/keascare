@@ -1,0 +1,226 @@
+/* src/app/styles/components/kommuner.css */
+@layer components {
+  /* Oversigt */
+  .kommuner-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  .kommuner-titel {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  .kommuner-undertitel {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .kommuner-kpi-mini {
+    display: flex;
+    gap: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .kommuner-kpi-mini-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+
+  .kommuner-kpi-mini-tal {
+    font-size: var(--text-lg);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    line-height: 1.2;
+  }
+
+  .kommuner-kpi-mini-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .tal-kolonne {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .kommuner-navn-celle {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: var(--fw-medium);
+  }
+
+  .kommuner-pin-ikon {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  .kommuner-total-tal {
+    font-weight: var(--fw-semibold);
+    color: var(--color-primary);
+  }
+
+  .kommuner-bosteder-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.375rem;
+    border-radius: 9999px;
+    background: var(--color-primary);
+    color: #fff;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+  }
+
+  .kommuner-se-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    color: var(--color-primary);
+    text-decoration: none;
+    padding: 0.25rem 0.625rem;
+    border-radius: 0.375rem;
+    border: 1px solid var(--color-primary);
+    white-space: nowrap;
+    transition: background 0.1s;
+  }
+
+  .kommuner-se-link:hover {
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  }
+
+  /* Detail */
+  .kommune-detail-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .kommune-detail-titel-række {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .kommune-detail-pin {
+    color: var(--color-primary);
+  }
+
+  .kommune-detail-titel {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0;
+  }
+
+  .kommune-detail-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+
+  .kommune-stat-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .kommune-stat-kort-total {
+    border-color: var(--color-primary);
+  }
+
+  .kommune-stat-tal {
+    font-size: var(--text-2xl);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-primary);
+    line-height: 1.1;
+  }
+
+  .kommune-stat-kort-total .kommune-stat-tal {
+    color: var(--color-primary);
+  }
+
+  .kommune-stat-label {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+  }
+
+  .kommune-stat-sub {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .kommuner-bosted-link {
+    color: var(--color-primary);
+    font-weight: var(--fw-medium);
+    text-decoration: none;
+  }
+
+  .kommuner-bosted-link:hover {
+    text-decoration: underline;
+  }
+
+  .kommuner-rapport-link {
+    display: inline-flex;
+    color: var(--color-text-muted);
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+    transition: color 0.1s;
+  }
+
+  .kommuner-rapport-link:hover {
+    color: var(--color-primary);
+  }
+
+  .kommuner-ingen-bosteder {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 2rem;
+    text-align: center;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  @media (max-width: 768px) {
+    .kommuner-header {
+      flex-direction: column;
+    }
+
+    .kommuner-kpi-mini {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .kommuner-kpi-mini-item {
+      align-items: flex-start;
+    }
+
+    .kommune-detail-stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .kommune-detail-stats {
+      grid-template-columns: 1fr;
+    }
+  }
+}

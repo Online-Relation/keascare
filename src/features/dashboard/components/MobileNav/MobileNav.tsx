@@ -7,13 +7,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin,
 } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard',        href: '/dashboard',                  icon: LayoutDashboard },
   { label: 'Markedssignaler',  href: '/dashboard/markedssignaler',  icon: TrendingUp },
   { label: 'Tilsynsrapporter', href: '/dashboard/tilsynsrapporter', icon: ClipboardList },
+  { label: 'Kommuner',         href: '/dashboard/kommuner',         icon: MapPin },
   { label: 'Rapporter',        href: '/dashboard/rapporter',        icon: FileText },
   { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
   { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
