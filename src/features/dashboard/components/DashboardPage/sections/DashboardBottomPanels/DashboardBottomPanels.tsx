@@ -101,7 +101,7 @@ export function DashboardBottomPanels({ data }: Props) {
           {[
             { navn: 'Tilbudsportalen', status: 'Aktiv', ok: true },
             { navn: 'STPS',            status: 'Aktiv', ok: true },
-            { navn: 'Danmarks Statistik', status: 'Ikke tilsluttet', ok: false },
+            { navn: 'Danmarks Statistik', status: 'Aktiv', ok: true },
           ].map((kilde) => (
             <div key={kilde.navn} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
