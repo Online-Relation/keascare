@@ -1,6 +1,6 @@
 // src/features/rapporter/types/rapporter.types.ts
 
-export type FundNiveau = 'kritisk' | 'mindre' | 'ingen' | 'ukendt';
+export type FundNiveau = 'kritisk' | 'stoerre' | 'mindre' | 'ingen' | 'ukendt';
 
 export type RapportRække = {
   id: string;

@@ -250,6 +250,301 @@
     color: var(--color-primary);
   }
 
+  /* Større fund tabelrække */
+  .rap-stoerre-række {
+    background: #FFFBEB;
+  }
+
+  .rap-stoerre-række:hover {
+    background: #FEF3C7 !important;
+  }
+
+  /* ── RapporterListeSektion ─────────────────────── */
+
+  .rl-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Fokus-banner */
+  .rl-fokus-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: linear-gradient(135deg, #FFF1F2 0%, #FFF7ED 100%);
+    border: 1px solid #FECACA;
+    border-radius: 0.875rem;
+    padding: 1rem 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .rl-fokus-banner-venstre {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .rl-fokus-ikon {
+    color: #EF4444;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .rl-fokus-titel {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: #991B1B;
+    margin: 0 0 0.15rem;
+  }
+
+  .rl-fokus-beskrivelse {
+    font-size: var(--text-xs);
+    color: #B45309;
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .rl-fokus-tal-gruppe {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .rl-fokus-tal {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem 1rem;
+    border-radius: 0.625rem;
+    gap: 0.1rem;
+  }
+
+  .rl-fokus-tal span:first-child {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-bold);
+    line-height: 1;
+  }
+
+  .rl-fokus-tal span:last-child {
+    font-size: 10px;
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .rl-fokus-tal-kritisk {
+    background: rgba(239, 68, 68, 0.1);
+    color: #DC2626;
+  }
+
+  .rl-fokus-tal-stoerre {
+    background: rgba(245, 158, 11, 0.12);
+    color: #D97706;
+  }
+
+  /* Kontroller */
+  .rl-kontroller {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .rl-filter-chips {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    flex: 1;
+  }
+
+  .rl-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 9999px;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    border: 1px solid var(--color-border);
+    background: var(--color-card);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .rl-chip:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .rl-chip--aktiv {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+
+  .rl-chip--kritisk.rl-chip--aktiv {
+    background: #EF4444;
+    border-color: #EF4444;
+  }
+
+  .rl-chip--stoerre.rl-chip--aktiv {
+    background: #F59E0B;
+    border-color: #F59E0B;
+  }
+
+  .rl-chip--mindre.rl-chip--aktiv {
+    background: #6366F1;
+    border-color: #6366F1;
+  }
+
+  .rl-chip--ingen.rl-chip--aktiv {
+    background: #10B981;
+    border-color: #10B981;
+  }
+
+  .rl-chip-tal {
+    background: rgba(255,255,255,0.25);
+    border-radius: 9999px;
+    padding: 0 0.4rem;
+    font-size: 10px;
+    font-weight: var(--fw-bold);
+    line-height: 1.5;
+  }
+
+  .rl-chip:not(.rl-chip--aktiv) .rl-chip-tal {
+    background: var(--color-border);
+    color: var(--color-text-muted);
+  }
+
+  /* Søgefelt */
+  .rl-søgning-wrapper {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .rl-søgning-ikon {
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-text-muted);
+    pointer-events: none;
+  }
+
+  .rl-søgning-input {
+    padding: 0.4rem 0.75rem 0.4rem 2rem;
+    border: 1px solid var(--color-border);
+    border-radius: 9999px;
+    font-size: var(--text-xs);
+    color: var(--color-text-primary);
+    background: var(--color-card);
+    width: 220px;
+    transition: border-color 0.15s;
+  }
+
+  .rl-søgning-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+  }
+
+  .rl-søgning-input::placeholder {
+    color: var(--color-text-muted);
+  }
+
+  /* Ingen resultater */
+  .rl-ingen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 2.5rem;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  /* Pagination */
+  .rl-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 1rem 1.25rem;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .rl-page-knap {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    background: var(--color-card);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .rl-page-knap:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+  }
+
+  .rl-page-knap:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .rl-page-numre {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .rl-page-num {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 0.5rem;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-secondary);
+    background: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .rl-page-num:hover {
+    border-color: var(--color-border);
+    color: var(--color-text-primary);
+  }
+
+  .rl-page-num--aktiv {
+    background: var(--color-primary);
+    color: #fff;
+    border-color: var(--color-primary);
+  }
+
+  .rl-page-ellipsis {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+    padding: 0 0.25rem;
+  }
+
+  .rl-page-info {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-left: 0.5rem;
+  }
+
   /* Responsive */
   @media (max-width: 1024px) {
     .rap-chart-grid {
@@ -263,6 +558,20 @@
     }
     .rap-tema-række {
       grid-template-columns: 130px 1fr 70px;
+    }
+    .rl-kontroller {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .rl-søgning-input {
+      width: 100%;
+    }
+    .rl-fokus-tal-gruppe {
+      width: 100%;
+      justify-content: center;
+    }
+    .rl-page-info {
+      display: none;
     }
   }
 

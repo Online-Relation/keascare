@@ -116,15 +116,13 @@ function beregnTemaer(alle: DbRapport[]): TemaStat[] {
 }
 
 function mapFundRapporter(alle: DbRapport[]): RapportRække[] {
-  return alle
-    .filter((r) => r.fund_niveau === 'kritisk' || r.fund_niveau === 'mindre')
-    .map((r) => ({
-      id:          r.id,
-      navn:        r.stps_tilbud_navn,
-      kommune:     r.kommune,
-      fundNiveau:  r.fund_niveau as FundNiveau,
-      rapportDato: r.rapport_dato,
-      rapportLink: r.rapport_url,
-      temaer:      r.temaer ?? [],
-    }));
+  return alle.map((r) => ({
+    id:          r.id,
+    navn:        r.stps_tilbud_navn,
+    kommune:     r.kommune,
+    fundNiveau:  r.fund_niveau as FundNiveau,
+    rapportDato: r.rapport_dato,
+    rapportLink: r.rapport_url,
+    temaer:      r.temaer ?? [],
+  }));
 }
