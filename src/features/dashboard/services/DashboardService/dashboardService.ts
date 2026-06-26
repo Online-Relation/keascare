@@ -23,6 +23,7 @@ type DbRapport = {
   tp_telefon: string | null;
   adresse: string | null;
   tp_adresse: string | null;
+  tp_website: string | null;
 };
 
 const NY_RAPPORT_DAGE = 60;
@@ -42,6 +43,7 @@ function beregnDataKvalitet(row: DbRapport) {
     !!row.tp_tilbudstype,
     !!(row.tp_email || row.tp_telefon),
     !!(row.tp_adresse || row.adresse),
+    !!row.tp_website,
   ];
   return { score: point.filter(Boolean).length, max: point.length };
 }
@@ -179,7 +181,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   // Rækker uden Tilbudsportalen-match (tp_tilbudstype IS NULL) beholdes, da vi ikke kender typen endnu.
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse, tp_website')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 
