@@ -22,7 +22,9 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
         <BostedOrganisationKort bosted={bosted} />
       </div>
 
-      <BostedSalgsAfsnit bostedId={bosted.id} cachetAnbefalinger={bosted.salgsAnbefalinger} />
+      {bosted.fundNiveau !== 'ingen' && bosted.fundNiveau !== 'ukendt' && (
+        <BostedSalgsAfsnit bostedId={bosted.id} cachetAnbefalinger={bosted.salgsAnbefalinger} />
+      )}
 
       <BostedFundsoversigt bosted={bosted} />
 
