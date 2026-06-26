@@ -236,7 +236,7 @@
       border: none;
       outline: none;
       color: #FFFFFF;
-      font-size: var(--text-sm);
+      font-size: 16px;
       font-family: inherit;
     }
 
