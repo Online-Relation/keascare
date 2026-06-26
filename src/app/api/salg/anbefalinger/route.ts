@@ -96,7 +96,7 @@ ${rapport.fund_items ? JSON.stringify(rapport.fund_items, null, 2) : 'Ikke tilg√
     const anthropic = getAnthropicClient();
     const besked = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1024,
+      max_tokens: 2048,
       system: SYSTEM_PROMPT,
       messages: [{ role: 'user', content: brugerBesked }],
     });
