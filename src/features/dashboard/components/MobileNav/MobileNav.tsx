@@ -15,9 +15,8 @@ import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 const navItems = [
   { label: 'Dashboard',        href: '/dashboard',                  icon: LayoutDashboard },
   { label: 'Markedssignaler',  href: '/dashboard/markedssignaler',  icon: TrendingUp },
-  { label: 'Tilsynsrapporter', href: '/dashboard/tilsynsrapporter', icon: ClipboardList },
+  { label: 'Tilsynsrapporter', href: '/dashboard/rapporter',        icon: ClipboardList },
   { label: 'Kommuner',         href: '/dashboard/kommuner',         icon: MapPin },
-  { label: 'Rapporter',        href: '/dashboard/rapporter',        icon: FileText },
   { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
   { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
   { label: 'Indstillinger',    href: '/dashboard/indstillinger',    icon: Settings },
