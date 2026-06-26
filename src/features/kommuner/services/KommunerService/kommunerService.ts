@@ -71,7 +71,9 @@ async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbK
 
   const tæller = new Map<string, number>();
   for (const row of data as { kommune: string }[]) {
-    tæller.set(row.kommune, (tæller.get(row.kommune) ?? 0) + 1);
+    // STPS gemmer "Ballerup Kommune", DST bruger "Ballerup" — strip suffix
+    const nøgle = row.kommune.replace(/\s+[Kk]ommune$/, '').trim();
+    tæller.set(nøgle, (tæller.get(nøgle) ?? 0) + 1);
   }
 
   return Array.from(tæller.entries()).map(([kommune, antal]) => ({ kommune, antal }));
