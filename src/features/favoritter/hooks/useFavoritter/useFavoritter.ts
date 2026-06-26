@@ -67,5 +67,5 @@ export function useFavoritter() {
     [erFavorit, fjernFavorit, tilføjFavorit]
   );
 
-  return { favoritter, erFavorit, toggleFavorit, antal: favoritter.length };
+  return { favoritter, erFavorit, toggleFavorit, fjernFavorit, antal: favoritter.length };
 }

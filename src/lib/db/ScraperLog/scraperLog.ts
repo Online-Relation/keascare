@@ -24,6 +24,8 @@ export type ScraperLog = {
 
 export async function hentSenesteLog(): Promise<ScraperLog[]> {
   const supabase = getSupabaseServerClient();
+  type LogRække = { scraper_id: string; ok: boolean; kørt_kl: string; resultat: Record<string, unknown> | null };
+
   const { data } = await supabase
     .from('scraper_logs')
     .select('scraper_id, ok, kørt_kl, resultat')
@@ -32,15 +34,15 @@ export async function hentSenesteLog(): Promise<ScraperLog[]> {
 
   if (!data) return [];
 
-  // Én post per scraper_id — den seneste
+  const rækker = data as unknown as LogRække[];
   const seneste = new Map<string, ScraperLog>();
-  for (const row of data) {
+  for (const row of rækker) {
     if (!seneste.has(row.scraper_id)) {
       seneste.set(row.scraper_id, {
         scraperId: row.scraper_id,
         ok: row.ok,
         kørtKl: row.kørt_kl,
-        resultat: row.resultat as Record<string, unknown> | null,
+        resultat: row.resultat,
       });
     }
   }
