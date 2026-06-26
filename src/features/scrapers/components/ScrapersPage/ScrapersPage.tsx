@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { ScraperKort } from './ScraperKort';
 import { ScraperHistorik } from './ScraperHistorik';
+import { ScraperFremgang } from './ScraperFremgang';
 import type { ScraperLog } from '@/lib/db/ScraperLog';
 
 export type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
@@ -170,6 +171,7 @@ export function ScrapersPage() {
         </p>
       </div>
 
+      <ScraperFremgang />
       <ScraperHistorik />
 
       <div className="scrapers-grid">

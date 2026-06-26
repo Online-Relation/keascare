@@ -162,6 +162,148 @@
     margin-bottom: 0.5rem;
   }
 
+  /* Fremgang-sektion */
+  .scraper-fremgang-sektion {
+    margin-bottom: 2.5rem;
+  }
+
+  .scraper-fremgang-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .fremgang-samlet {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+  }
+
+  .fremgang-samlet-tal {
+    font-size: var(--text-2xl);
+    font-weight: var(--fw-bold);
+    color: var(--color-primary);
+    line-height: 1;
+  }
+
+  .fremgang-samlet-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+  }
+
+  .fremgang-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+  }
+
+  .fremgang-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.875rem;
+    padding: 1rem 1.125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .fremgang-kort-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .fremgang-label {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.2rem;
+  }
+
+  .fremgang-beskrivelse {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .fremgang-pct-wrap {
+    flex-shrink: 0;
+  }
+
+  .fremgang-pct {
+    font-size: var(--text-lg);
+    font-weight: var(--fw-bold);
+    line-height: 1;
+  }
+
+  .fremgang-pct--grøn  { color: #16a34a; }
+  .fremgang-pct--blå   { color: #0EA5E9; }
+  .fremgang-pct--gul   { color: #d97706; }
+  .fremgang-pct--rød   { color: #dc2626; }
+
+  .fremgang-bar-wrap {
+    height: 6px;
+    background: var(--color-border);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .fremgang-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.6s ease;
+  }
+
+  .fremgang-bar--grøn { background: #16a34a; }
+  .fremgang-bar--blå  { background: #0EA5E9; }
+  .fremgang-bar--gul  { background: #d97706; }
+  .fremgang-bar--rød  { background: #dc2626; }
+
+  .fremgang-tal-række {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .fremgang-tal-aktuel {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+    font-weight: var(--fw-medium);
+  }
+
+  .fremgang-status-badge {
+    font-size: 10px;
+    font-weight: var(--fw-semibold);
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+  }
+
+  .fremgang-badge--grøn { background: #dcfce7; color: #15803d; }
+  .fremgang-badge--blå  { background: #e0f2fe; color: #0369a1; }
+  .fremgang-badge--gul  { background: #fef9c3; color: #92400e; }
+  .fremgang-badge--rød  { background: #fee2e2; color: #991b1b; }
+
+  @media (max-width: 768px) {
+    .fremgang-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .fremgang-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* Historik-sektion */
   .scraper-historik {
     margin-bottom: 2.5rem;
