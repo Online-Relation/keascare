@@ -1,0 +1,195 @@
+/* src/app/styles/components/datovælger.css */
+@layer components {
+
+  /* Desktop datovælger */
+  .datovælger-wrap {
+    position: relative;
+  }
+
+  .datovælger-knap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    white-space: nowrap;
+  }
+
+  .datovælger-knap:hover,
+  .datovælger-knap.åben {
+    border-color: var(--color-primary);
+    background: var(--color-primary-light, #f0f4ff);
+  }
+
+  .datovælger-ikon {
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+
+  .datovælger-label {
+    color: var(--color-text-primary);
+  }
+
+  .datovælger-pil {
+    color: var(--color-text-muted);
+    transition: transform 0.15s;
+    flex-shrink: 0;
+  }
+
+  .datovælger-pil.roteret {
+    transform: rotate(180deg);
+  }
+
+  .datovælger-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 200px;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+    z-index: 200;
+    overflow: hidden;
+    animation: dato-fade-in 0.12s ease;
+  }
+
+  @keyframes dato-fade-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .datovælger-dropdown-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem 0.5rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .datovælger-dropdown-titel {
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .datovælger-luk {
+    display: flex;
+    align-items: center;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0.125rem;
+  }
+
+  .datovælger-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0.625rem 1rem;
+    font-size: var(--text-sm);
+    color: var(--color-text-primary);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+  }
+
+  .datovælger-option:hover {
+    background: var(--color-border-light, #f8f9fa);
+  }
+
+  .datovælger-option.aktiv {
+    color: var(--color-primary);
+    font-weight: var(--fw-semibold);
+    background: var(--color-primary-light, #f0f4ff);
+  }
+
+  .datovælger-check {
+    font-size: var(--text-xs);
+    color: var(--color-primary);
+  }
+
+  /* Mobil bottom sheet */
+  .dato-bottom-sheet {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--color-card);
+    border-top: 1px solid var(--color-border);
+    border-radius: 1.25rem 1.25rem 0 0;
+    z-index: 300;
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dato-bottom-sheet.åben {
+    transform: translateY(0);
+  }
+
+  .dato-bottom-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .dato-bottom-sheet-titel {
+    font-size: var(--text-base);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+  }
+
+  /* Mobil preset liste */
+  .datovælger-mobil {
+    padding: 1rem 1.25rem;
+  }
+
+  .datovælger-mobil-titel {
+    display: none; /* håndteres af bottom sheet header */
+  }
+
+  .datovælger-presets {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .datovælger-preset-knap {
+    width: 100%;
+    padding: 0.875rem 1rem;
+    font-size: var(--text-base);
+    color: var(--color-text-primary);
+    background: none;
+    border: none;
+    border-radius: 0.625rem;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+  }
+
+  .datovælger-preset-knap:hover {
+    background: var(--color-border-light, #f8f9fa);
+  }
+
+  .datovælger-preset-knap.aktiv {
+    background: var(--color-primary-light, #f0f4ff);
+    color: var(--color-primary);
+    font-weight: var(--fw-semibold);
+  }
+}

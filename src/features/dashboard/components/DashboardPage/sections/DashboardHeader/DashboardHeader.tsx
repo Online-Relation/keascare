@@ -2,12 +2,18 @@
 
 import { Bell, Star } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { GlobalSearch } from '@/features/dashboard/components/GlobalSearch';
+import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 
 export function DashboardHeader() {
   return (
     <header className="dashboard-topbar">
-      <div className="dashboard-topbar-venstre" />
+      <div className="dashboard-topbar-venstre">
+        <Suspense>
+          <DatoVælger variant="desktop" />
+        </Suspense>
+      </div>
 
       <div className="dashboard-topbar-center">
         <GlobalSearch />

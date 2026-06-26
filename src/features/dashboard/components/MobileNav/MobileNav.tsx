@@ -7,8 +7,10 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar,
 } from 'lucide-react';
+import { Suspense } from 'react';
+import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 
 const navItems = [
   { label: 'Dashboard',        href: '/dashboard',                  icon: LayoutDashboard },
@@ -37,6 +39,7 @@ type Søgeresultat = {
 export function MobileNav() {
   const [menuÅben, setMenuÅben] = useState(false);
   const [søgningÅben, setSøgningÅben] = useState(false);
+  const [datoÅben, setDatoÅben] = useState(false);
   const [søgeTekst, setSøgeTekst] = useState('');
   const [resultater, setResultater] = useState<Søgeresultat[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -104,6 +107,9 @@ export function MobileNav() {
               <Link href="/dashboard/favoritter" className="mobil-søg-ikon" aria-label="Fulgte bosteder">
                 <Star size={20} />
               </Link>
+              <button className="mobil-søg-ikon" onClick={() => setDatoÅben(true)} aria-label="Vælg periode">
+                <Calendar size={20} />
+              </button>
               <button className="mobil-søg-ikon" onClick={() => setSøgningÅben(true)} aria-label="Søg">
                 <Search size={20} />
               </button>
@@ -126,6 +132,21 @@ export function MobileNav() {
       {menuÅben && (
         <div className="mobil-overlay" onClick={() => setMenuÅben(false)} />
       )}
+
+      {datoÅben && (
+        <div className="mobil-overlay" onClick={() => setDatoÅben(false)} />
+      )}
+      <div className={`dato-bottom-sheet${datoÅben ? ' åben' : ''}`}>
+        <div className="dato-bottom-sheet-header">
+          <span className="dato-bottom-sheet-titel">Vælg periode</span>
+          <button className="mobil-hamburger" onClick={() => setDatoÅben(false)} aria-label="Luk">
+            <X size={20} />
+          </button>
+        </div>
+        <Suspense>
+          <DatoVælger variant="mobil" onLuk={() => setDatoÅben(false)} />
+        </Suspense>
+      </div>
 
       <nav className={`mobil-drawer${menuÅben ? ' åben' : ''}`}>
         <div className="mobil-drawer-header">
