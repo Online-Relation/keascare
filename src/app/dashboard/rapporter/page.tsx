@@ -3,9 +3,12 @@
 import { RapporterPage } from '@/features/rapporter/components/RapporterPage';
 import { hentRapporterData } from '@/features/rapporter/services/RapporterService';
 
-export const revalidate = 3600;
+type Props = {
+  searchParams: Promise<{ fra?: string; til?: string }>;
+};
 
-export default async function RapporterSide() {
-  const data = await hentRapporterData();
+export default async function RapporterSide({ searchParams }: Props) {
+  const { fra, til } = await searchParams;
+  const data = await hentRapporterData(fra, til);
   return <RapporterPage data={data} />;
 }

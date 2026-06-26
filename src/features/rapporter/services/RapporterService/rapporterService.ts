@@ -15,14 +15,19 @@ type DbRapport = {
   temaer: string[] | null;
 };
 
-export async function hentRapporterData(): Promise<RapporterData> {
+export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
   const supabase = getSupabaseServerClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
+
+  if (fra) query = query.gte('rapport_dato', fra);
+  if (til) query = query.lte('rapport_dato', til);
+
+  const { data, error } = await query;
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 

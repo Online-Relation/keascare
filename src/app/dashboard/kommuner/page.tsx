@@ -3,9 +3,12 @@
 import { KommunerPage } from '@/features/kommuner/components/KommunerPage';
 import { hentKommunerOversigt } from '@/features/kommuner/services/KommunerService';
 
-export const revalidate = 86400;
+type Props = {
+  searchParams: Promise<{ fra?: string; til?: string }>;
+};
 
-export default async function KommunerSide() {
-  const kommuner = await hentKommunerOversigt();
+export default async function KommunerSide({ searchParams }: Props) {
+  const { fra, til } = await searchParams;
+  const kommuner = await hentKommunerOversigt(fra, til);
   return <KommunerPage kommuner={kommuner} />;
 }

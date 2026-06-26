@@ -48,15 +48,7 @@ function mapTilBosted(row: DbRapport): Bosted {
 }
 
 function beregnKpis(rapporter: DbRapport[]): KpiItem[] {
-  const nyeSidste90 = rapporter.filter((r) => {
-    if (!r.rapport_dato) return false;
-    const grænse = new Date();
-    grænse.setDate(grænse.getDate() - 90);
-    return new Date(r.rapport_dato) >= grænse;
-  }).length;
-
   const kritiske = rapporter.filter((r) => r.fund_niveau === 'kritisk').length;
-
   const kommuner = new Set(rapporter.map((r) => r.kommune).filter(Boolean)).size;
 
   const sidstScraped = rapporter
@@ -75,7 +67,6 @@ function beregnKpis(rapporter: DbRapport[]): KpiItem[] {
       label: 'Bosteder med rapport',
       value: String(rapporter.length),
       sub: 'fra STPS tilsynsrapporter',
-      trend: `${nyeSidste90} nye seneste 90 dage`,
       trendPositive: true,
     },
     {
@@ -83,13 +74,6 @@ function beregnKpis(rapporter: DbRapport[]): KpiItem[] {
       label: 'Kommuner dækket',
       value: String(kommuner),
       sub: 'ud af 98 kommuner',
-    },
-    {
-      id: 'nye-stps',
-      label: 'Nye rapporter (90 dage)',
-      value: String(nyeSidste90),
-      sub: 'seneste 90 dage',
-      trendPositive: true,
     },
     {
       id: 'kritiske-fund',
@@ -168,16 +152,21 @@ function beregnTilbudsportalen(rapporter: DbRapport[]) {
   };
 }
 
-export async function hentDashboardData(): Promise<DashboardData> {
+export async function hentDashboardData(fra?: string, til?: string): Promise<DashboardData> {
   const supabase = getSupabaseServerClient();
 
   // Kun §107, §108 og §108a — filtrerer §105 og andre irrelevante typer fra.
   // Rækker uden Tilbudsportalen-match (tp_tilbudstype IS NULL) beholdes, da vi ikke kender typen endnu.
-  const { data, error } = await supabase
+  let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
+
+  if (fra) query = query.gte('rapport_dato', fra);
+  if (til) query = query.lte('rapport_dato', til);
+
+  const { data, error } = await query;
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 

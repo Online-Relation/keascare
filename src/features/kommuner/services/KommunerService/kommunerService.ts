@@ -19,10 +19,10 @@ type DbBosted = {
   temaer: string[] | null;
 };
 
-export async function hentKommunerOversigt(): Promise<KommuneOversigt[]> {
+export async function hentKommunerOversigt(fra?: string, til?: string): Promise<KommuneOversigt[]> {
   const [dstData, bostedTæller] = await Promise.all([
     hentDstKommuneData(),
-    hentBostedAntalPrKommune(),
+    hentBostedAntalPrKommune(fra, til),
   ]);
 
   const bostedMap = new Map(bostedTæller.map((b) => [b.kommune, b.antal]));
@@ -53,14 +53,19 @@ export async function hentKommuneDetail(kommuneNavn: string): Promise<KommuneDet
   };
 }
 
-async function hentBostedAntalPrKommune(): Promise<DbKommuneCount[]> {
+async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbKommuneCount[]> {
   const supabase = getSupabaseServerClient();
 
-  const { data } = await supabase
+  let query = supabase
     .from('stps_rapporter')
     .select('kommune')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .not('kommune', 'is', null);
+
+  if (fra) query = query.gte('rapport_dato', fra);
+  if (til) query = query.lte('rapport_dato', til);
+
+  const { data } = await query;
 
   if (!data) return [];
 
