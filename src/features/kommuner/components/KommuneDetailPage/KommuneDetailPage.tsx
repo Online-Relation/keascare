@@ -1,7 +1,7 @@
 // src/features/kommuner/components/KommuneDetailPage/KommuneDetailPage.tsx
 
 import Link from 'next/link';
-import { ChevronLeft, MapPin, ExternalLink } from 'lucide-react';
+import { MapPin, ExternalLink } from 'lucide-react';
 import type { KommuneDetail } from '@/features/kommuner/types/kommuner.types';
 
 const fundLabels: Record<string, string> = {
@@ -20,11 +20,6 @@ type Props = {
 export function KommuneDetailPage({ detail }: Props) {
   return (
     <div className="dashboard-content">
-      <Link href="/dashboard/kommuner" className="bosted-tilbage-link">
-        <ChevronLeft size={16} />
-        Alle kommuner
-      </Link>
-
       <div className="kommune-detail-header">
         <div className="kommune-detail-titel-række">
           <MapPin size={20} className="kommune-detail-pin" />

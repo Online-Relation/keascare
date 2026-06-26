@@ -2,8 +2,7 @@
 
 'use client';
 
-import Link from 'next/link';
-import { ChevronLeft, MapPin, Globe, ClipboardList, Star } from 'lucide-react';
+import { MapPin, Globe, ClipboardList, Star } from 'lucide-react';
 import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
 import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
@@ -40,11 +39,6 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
 
   return (
     <div>
-      <Link href="/dashboard" className="bosted-detail-back">
-        <ChevronLeft size={16} />
-        Tilbage til oversigt
-      </Link>
-
       <div className="bosted-detail-header">
         <div className="bosted-detail-header-top">
           <div>
