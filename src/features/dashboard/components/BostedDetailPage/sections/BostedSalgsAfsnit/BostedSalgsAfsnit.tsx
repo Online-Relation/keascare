@@ -44,7 +44,7 @@ function KopiérKnap({ tekst }: { tekst: string }) {
 }
 
 function AnbefalingerVisning({ data }: { data: SalgsAnbefalinger }) {
-  const [åbneSignaler, setÅbneSignaler] = useState<Set<number>>(new Set([0]));
+  const [åbneSignaler, setÅbneSignaler] = useState<Set<number>>(new Set());
 
   function toggleSignal(i: number) {
     setÅbneSignaler(prev => {
