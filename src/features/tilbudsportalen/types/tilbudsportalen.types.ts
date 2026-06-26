@@ -18,6 +18,7 @@ export type TilbudsportalenDetalje = {
   kontaktperson: string | null;
   telefon: string | null;
   email: string | null;
+  driftsform: string | null;
 };
 
 export type TilbudsportalenMatchResultat = {

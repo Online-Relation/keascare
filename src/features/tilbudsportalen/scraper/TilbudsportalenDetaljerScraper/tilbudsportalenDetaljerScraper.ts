@@ -105,7 +105,10 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
   let kontaktperson: string | null = findLabelVærdi($, 'Kontaktperson');
   if (kontaktperson && kontaktperson.length > 60) kontaktperson = null;
 
-  return { tilbudsid, afdelingsid, cvr, tilbudstype, pladser, pNummer, kommune, kontaktperson, telefon, email };
+  // Driftsform — "Virksomhedsform" på detaljeside (Primærkommune, Selvejende institution, Privat, Region…)
+  const driftsform: string | null = findLabelVærdi($, 'Virksomhedsform');
+
+  return { tilbudsid, afdelingsid, cvr, tilbudstype, pladser, pNummer, kommune, kontaktperson, telefon, email, driftsform };
 }
 
 export async function scraperTilbudsportalenDetaljer(batch = 30): Promise<DetaljerResultat> {
@@ -131,7 +134,7 @@ export async function scraperTilbudsportalenDetaljer(batch = 30): Promise<Detalj
       fejl++;
       fejlBeskeder.push(`${navn}: ${err instanceof Error ? err.message : String(err)}`);
       // Marker som behandlet selv ved fejl
-      await gemDetaljer({ tilbudsid, afdelingsid, cvr: null, tilbudstype: null, pladser: null, pNummer: null, kommune: null, kontaktperson: null, telefon: null, email: null });
+      await gemDetaljer({ tilbudsid, afdelingsid, cvr: null, tilbudstype: null, pladser: null, pNummer: null, kommune: null, kontaktperson: null, telefon: null, email: null, driftsform: null });
     }
 
     if (i < rækker.length - 1) await venteMs(TP_DELAY_MS);

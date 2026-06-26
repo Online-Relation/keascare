@@ -51,6 +51,7 @@ export async function gemDetaljer(detalje: TilbudsportalenDetalje): Promise<void
       kontaktperson: detalje.kontaktperson,
       telefon: detalje.telefon,
       email: detalje.email,
+      driftsform: detalje.driftsform,
       detaljer_hentet: true,
     })
     .eq('tilbudsid', detalje.tilbudsid)
