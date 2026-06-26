@@ -3,6 +3,7 @@
 import { Database, Info } from 'lucide-react';
 import { KommuneBarChart } from './charts/KommuneBarChart';
 import { ParagrafDonut } from './charts/ParagrafDonut';
+import { InfoTooltip } from '@/features/markedsforing/components/shared/InfoTooltip';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 
 type Props = {
@@ -72,10 +73,7 @@ export function MarkedsdataPage({ data }: Props) {
           <div key={kpi.label} className="dst-kpi-kort">
             <div className="dst-kpi-top">
               <span className="dst-kpi-label">{kpi.label}</span>
-              <span className="info-tooltip-wrap">
-                <Info size={12} className="info-tooltip-ikon" />
-                <span className="info-tooltip-boble">{kpi.forklaring}</span>
-              </span>
+              <InfoTooltip tekst={kpi.forklaring} />
             </div>
             <div className="dst-kpi-tal">{kpi.værdi}</div>
           </div>
@@ -92,12 +90,7 @@ export function MarkedsdataPage({ data }: Props) {
                 Sorteret efter samlet antal borgere i botilbud. Jo større kommune, desto større potentielt marked for KeasCare.
               </p>
             </div>
-            <span className="info-tooltip-wrap">
-              <Info size={13} className="info-tooltip-ikon" />
-              <span className="info-tooltip-boble">
-                Stablede søjler viser §108 (mørk) og §107 (lys). Kommuner med mange borgere har typisk også mange botilbud, dvs. potentielle KeasCare-kunder.
-              </span>
-            </span>
+            <InfoTooltip tekst="Stablede søjler viser §108 (mørk) og §107 (lys). Kommuner med mange borgere har typisk også mange botilbud, dvs. potentielle KeasCare-kunder." />
           </div>
           <KommuneBarChart data={data} />
         </div>
@@ -108,12 +101,7 @@ export function MarkedsdataPage({ data }: Props) {
               <h2 className="mf-chart-titel">§107 vs. §108 nationalt</h2>
               <p className="mf-chart-beskrivelse">Fordeling på tværs af alle 97 kommuner</p>
             </div>
-            <span className="info-tooltip-wrap">
-              <Info size={13} className="info-tooltip-ikon" />
-              <span className="info-tooltip-boble">
-                Nationalt har §107 (midlertidigt) og §108 (længerevarende) nogenlunde samme størrelse. §108-pladser er typisk dyrere og kræver mere støtte.
-              </span>
-            </span>
+            <InfoTooltip tekst="Nationalt har §107 (midlertidigt) og §108 (længerevarende) nogenlunde samme størrelse. §108-pladser er typisk dyrere og kræver mere støtte." />
           </div>
           <ParagrafDonut p107Total={totalP107} p108Total={totalP108} />
           <div className="dst-donut-tal">
