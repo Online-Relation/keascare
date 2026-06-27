@@ -86,8 +86,10 @@ async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
     cursor = næste.next_items_page.cursor;
   }
 
-  // Filtrer: kun aktive grupper (alle items her er bosteder)
+  // Filtrer: kun Type=Bosted og kun aktive grupper
   return items.filter((item) => {
+    const type = findKolonneVærdi(item, 'Type')?.toLowerCase();
+    if (type !== 'bosted') return false;
     const gruppeNorm = item.group.title.toLowerCase();
     return AKTIVE_GRUPPE_NAVNE.some((g) => gruppeNorm === g);
   });
