@@ -18,6 +18,8 @@ export type DataKvalitet = {
   max: number;
 };
 
+export type MondayKundeStatus = 'kunde' | 'ingen';
+
 export type Bosted = {
   id: string;
   navn: string;
@@ -31,6 +33,9 @@ export type Bosted = {
   rapportLink: string;
   erNy: boolean;
   dataKvalitet: DataKvalitet;
+  mondayKunde: MondayKundeStatus;
+  mondayGruppe: string | null;
+  mondayItemId: string | null;
 };
 
 export type KpiItem = {

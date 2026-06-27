@@ -21,6 +21,7 @@ const kolonner = [
   'STPS fund',
   'Rapportdato',
   'Fokus i rapporten',
+  'Monday',
   'Data',
   'Handling',
 ];

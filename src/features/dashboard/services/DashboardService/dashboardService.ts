@@ -25,6 +25,8 @@ type DbRapport = {
   adresse: string | null;
   tp_adresse: string | null;
   tp_website: string | null;
+  monday_item_id: string | null;
+  monday_gruppe: string | null;
 };
 
 const NY_RAPPORT_DAGE = 60;
@@ -67,6 +69,9 @@ function mapTilBosted(row: DbRapport): Bosted {
     rapportLink:  row.rapport_url,
     erNy:         erNyRapport(row.rapport_dato),
     dataKvalitet: beregnDataKvalitet(row),
+    mondayKunde:  row.monday_item_id ? 'kunde' : 'ingen',
+    mondayGruppe: row.monday_gruppe ?? null,
+    mondayItemId: row.monday_item_id ?? null,
   };
 }
 
@@ -181,7 +186,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse, tp_website, tp_driftsform')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse, tp_website, tp_driftsform, monday_item_id, monday_gruppe')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 
