@@ -1,7 +1,8 @@
 // src/features/dashboard/components/BostedDetailPage/sections/BostedFundsoversigt/BostedFundsoversigt.tsx
 
-import React from 'react';
-import { ShieldAlert, Info, Check, X, Minus, HelpCircle } from 'lucide-react';
+'use client';
+import React, { useState } from 'react';
+import { ShieldAlert, Info, Check, X, Minus, HelpCircle, ChevronDown, ChevronUp } from 'lucide-react';
 import type { BostedDetail, FundItem, FundStatus } from '@/features/dashboard/types/dashboard.types';
 
 type BostedFundsoversigtProps = {
@@ -109,6 +110,26 @@ function grupperItems(items: FundItem[]): Record<string, FundItem[]> {
   }, {});
 }
 
+function IkkeAktueltGruppe({ items }: { items: FundItem[] }) {
+  const [åben, setÅben] = useState(false);
+  return (
+    <div className="fund-ikke-aktuelt-gruppe">
+      <button className="fund-ikke-aktuelt-toggle" onClick={() => setÅben((v) => !v)}>
+        <span className="fund-status-ikon fund-status-ikke-aktuelt"><Minus size={12} strokeWidth={3} /></span>
+        <span>{items.length} ikke aktuelt</span>
+        {åben ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+      </button>
+      {åben && (
+        <div className="fund-ikke-aktuelt-liste">
+          {items.map((item) => (
+            <FundItemRække key={item.nummer} item={item} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function BostedFundsoversigt({ bosted }: BostedFundsoversigtProps) {
   if (!bosted.pdfBehandlet) {
     return (
@@ -128,7 +149,9 @@ export function BostedFundsoversigt({ bosted }: BostedFundsoversigtProps) {
   }
 
   const harFundItems = bosted.fundItems && bosted.fundItems.length > 0;
-  const sektioner = harFundItems ? grupperItems(bosted.fundItems!) : null;
+  const aktiveItems    = harFundItems ? bosted.fundItems!.filter((i) => i.status !== 'ikke_aktuelt') : [];
+  const ikkeAktuelt    = harFundItems ? bosted.fundItems!.filter((i) => i.status === 'ikke_aktuelt') : [];
+  const sektioner      = aktiveItems.length > 0 ? grupperItems(aktiveItems) : null;
 
   return (
     <div className="bosted-fundsoversigt-kort">
@@ -158,9 +181,9 @@ export function BostedFundsoversigt({ bosted }: BostedFundsoversigtProps) {
           </div>
         )}
 
-        {harFundItems && sektioner && (
+        {harFundItems && (
           <div className="fund-items-wrapper">
-            {Object.entries(sektioner).map(([sektion, items]) => (
+            {sektioner && Object.entries(sektioner).map(([sektion, items]) => (
               <div key={sektion} className="fund-sektion">
                 <h4 className="fund-sektion-titel">{sektion}</h4>
                 <div className="fund-sektion-items">
@@ -170,6 +193,9 @@ export function BostedFundsoversigt({ bosted }: BostedFundsoversigtProps) {
                 </div>
               </div>
             ))}
+            {ikkeAktuelt.length > 0 && (
+              <IkkeAktueltGruppe items={ikkeAktuelt} />
+            )}
           </div>
         )}
 
