@@ -13,4 +13,5 @@ export const dashboardMockData: DashboardData = {
   },
   stpsFordeling: [],
   topKommuner: [],
+  salgsFunnel: { trin: [] },
 };
