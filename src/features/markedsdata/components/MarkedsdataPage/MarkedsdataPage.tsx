@@ -123,6 +123,7 @@ export function MarkedsdataPage({ data }: Props) {
         <div className="dashboard-section-header">
           <span className="dashboard-section-title">Alle kommuner – rangeret efter markedsstørrelse</span>
         </div>
+        <div style={{ overflowX: 'auto' }}>
         <table className="data-table">
           <thead>
             <tr>
@@ -161,6 +162,7 @@ export function MarkedsdataPage({ data }: Props) {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
     </div>
