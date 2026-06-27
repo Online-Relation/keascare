@@ -23,8 +23,7 @@ import {
 
 const navItems = [
   { label: 'Dashboard',           href: '/dashboard',                       icon: LayoutDashboard },
-  { label: 'Markedssignaler',     href: '/dashboard/markedssignaler',       icon: TrendingUp },
-  { label: 'Markedspotentiale',   href: '/dashboard/markedspotentiale',     icon: Target },
+  { label: 'Markedssignaler',     href: '/dashboard/markedspotentiale',     icon: TrendingUp },
   { label: 'Tilsynsrapporter',    href: '/dashboard/rapporter',             icon: ClipboardList },
   { label: 'Alle rapporter',      href: '/dashboard/alle-rapporter',        icon: FileText },
   { label: 'Kommuner',            href: '/dashboard/kommuner',              icon: MapPin },
