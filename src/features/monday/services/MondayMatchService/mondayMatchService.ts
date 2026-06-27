@@ -7,7 +7,7 @@ import type { MondayKundeItem, MondayMatchResultat, MondayGruppe } from '@/featu
 const BOARD_ID = process.env.MONDAY_BOARD_ID;
 
 // Gruppenavne der betragtes som aktive kunder
-const AKTIVE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb', 'nye forloeb', 'aktive forloeb'];
+const AKTIVE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb'];
 
 type RåMondayItem = {
   id: string;
@@ -86,12 +86,10 @@ async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
     cursor = næste.next_items_page.cursor;
   }
 
-  // Filtrer: kun Type=Bosted og kun aktive grupper
+  // Filtrer: kun aktive grupper (alle items her er bosteder)
   return items.filter((item) => {
-    const type = findKolonneVærdi(item, 'Type')?.toLowerCase();
-    if (type !== 'bosted') return false;
     const gruppeNorm = item.group.title.toLowerCase();
-    return AKTIVE_GRUPPE_NAVNE.some((g) => gruppeNorm.includes(g.replace(' ', '')));
+    return AKTIVE_GRUPPE_NAVNE.some((g) => gruppeNorm === g);
   });
 }
 
