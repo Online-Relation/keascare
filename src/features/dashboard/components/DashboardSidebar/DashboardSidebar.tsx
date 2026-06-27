@@ -18,18 +18,20 @@ import {
   ChevronDown,
   ChevronRight,
   FlaskConical,
+  Target,
 } from 'lucide-react';
 
 const navItems = [
-  { label: 'Dashboard',        href: '/dashboard',                  icon: LayoutDashboard },
-  { label: 'Markedssignaler',  href: '/dashboard/markedssignaler',  icon: TrendingUp },
-  { label: 'Tilsynsrapporter', href: '/dashboard/rapporter',        icon: ClipboardList },
-  { label: 'Alle rapporter',   href: '/dashboard/alle-rapporter',   icon: FileText },
-  { label: 'Kommuner',         href: '/dashboard/kommuner',         icon: MapPin },
-  { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
-  { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
-  { label: 'Monday test',      href: '/dashboard/monday-test',      icon: FlaskConical },
-  { label: 'Indstillinger',    href: '/dashboard/indstillinger',    icon: Settings },
+  { label: 'Dashboard',           href: '/dashboard',                       icon: LayoutDashboard },
+  { label: 'Markedssignaler',     href: '/dashboard/markedssignaler',       icon: TrendingUp },
+  { label: 'Markedspotentiale',   href: '/dashboard/markedspotentiale',     icon: Target },
+  { label: 'Tilsynsrapporter',    href: '/dashboard/rapporter',             icon: ClipboardList },
+  { label: 'Alle rapporter',      href: '/dashboard/alle-rapporter',        icon: FileText },
+  { label: 'Kommuner',            href: '/dashboard/kommuner',              icon: MapPin },
+  { label: 'Markedsdata',         href: '/dashboard/markedsdata',           icon: BarChart2 },
+  { label: 'Scrapers',            href: '/dashboard/scrapers',              icon: RefreshCw },
+  { label: 'Monday test',         href: '/dashboard/monday-test',           icon: FlaskConical },
+  { label: 'Indstillinger',       href: '/dashboard/indstillinger',         icon: Settings },
 ];
 
 const markedsforingItems = [
