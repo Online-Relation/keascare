@@ -16,4 +16,3 @@ export default async function MarkedspotentialeSide({ searchParams }: Props) {
   ]);
   return <MarkedspotentialePage funnel={dashboardData.salgsFunnel} dstData={dstData} />;
 }
-# Sat Jun 27 15:27:31 UTC 2026
