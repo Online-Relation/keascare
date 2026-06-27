@@ -56,8 +56,8 @@
   .badge-ukendt .badge-dot { background-color: var(--badge-ukendt-text); }
 
   .badge-kunde {
-    background-color: #dcfce7;
-    color: #15803d;
+    background-color: #dbeafe;
+    color: #1d4ed8;
   }
-  .badge-kunde .badge-dot { background-color: #15803d; }
+  .badge-kunde .badge-dot { background-color: #1d4ed8; }
 }

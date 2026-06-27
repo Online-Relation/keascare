@@ -41,7 +41,7 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
     <div>
       <div className="bosted-detail-header">
         <div className="bosted-detail-header-top">
-          <div>
+          <div style={{ flex: 1, minWidth: 0 }}>
             <h1 className="bosted-detail-navn">{bosted.navn}</h1>
             <div className="bosted-detail-meta">
               {bosted.kommune && (
@@ -77,37 +77,35 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
-            {bosted.mondayKunde === 'kunde' && (
-              <span
-                className="badge badge-kunde"
-                title={`Monday: ${bosted.mondayGruppe ?? ''}`}
-              >
-                <span className="badge-dot" />
-                Kunde
-              </span>
-            )}
-            <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} vis="fuld" />
-            <button
-              className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
-              onClick={() => toggleFavorit({
-                id: bosted.id,
-                navn: bosted.navn,
-                kommune: bosted.kommune ?? null,
-                fundNiveau: bosted.fundNiveau,
-                rapportDato: bosted.rapportDato,
-              })}
-              aria-label={erStjernet ? 'Fjern fra fulgte' : 'Tilføj til fulgte'}
-              title={erStjernet ? 'Følger dette bosted' : 'Følg dette bosted'}
-            >
-              <Star size={18} fill={erStjernet ? 'currentColor' : 'none'} />
-            </button>
+          <button
+            className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
+            onClick={() => toggleFavorit({
+              id: bosted.id,
+              navn: bosted.navn,
+              kommune: bosted.kommune ?? null,
+              fundNiveau: bosted.fundNiveau,
+              rapportDato: bosted.rapportDato,
+            })}
+            aria-label={erStjernet ? 'Fjern fra fulgte' : 'Tilføj til fulgte'}
+            title={erStjernet ? 'Følger dette bosted' : 'Følg dette bosted'}
+            style={{ flexShrink: 0 }}
+          >
+            <Star size={18} fill={erStjernet ? 'currentColor' : 'none'} />
+          </button>
+        </div>
 
-            <span className={`badge ${fundBadgeKlasse[bosted.fundNiveau]}`}>
+        <div className="bosted-detail-header-badges">
+          <span className={`badge ${fundBadgeKlasse[bosted.fundNiveau]}`}>
+            <span className="badge-dot" />
+            {fundLabels[bosted.fundNiveau]}
+          </span>
+          {bosted.mondayKunde === 'kunde' && (
+            <span className="badge badge-kunde" title={`Monday: ${bosted.mondayGruppe ?? ''}`}>
               <span className="badge-dot" />
-              {fundLabels[bosted.fundNiveau]}
+              Kunde i Monday
             </span>
-          </div>
+          )}
+          <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} vis="fuld" />
         </div>
       </div>
     </div>
