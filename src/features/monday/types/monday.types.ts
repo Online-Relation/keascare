@@ -16,6 +16,7 @@ export type MondayKundeItem = {
 export type MondayMatchResultat = {
   hentetFraMonday: number;
   matchetTilStps: number;
+  matchetTilTp: number;
   ingenMatch: number;
   ukendte: MondayKundeItem[];
 };

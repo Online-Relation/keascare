@@ -14,6 +14,7 @@ type UkendtItem = {
 type MatchResultat = {
   hentetFraMonday: number;
   matchetTilStps: number;
+  matchetTilTp: number;
   ingenMatch: number;
   ukendte: UkendtItem[];
 };
@@ -89,10 +90,16 @@ export function MondayOversigt() {
             </div>
             <div className="mon-kpi">
               <div>
+                <div className="mon-kpi-tal" style={{ color: '#2563eb' }}>{resultat.matchetTilTp}</div>
+                <div className="mon-kpi-label">Matchet i Tilbudsportalen</div>
+              </div>
+            </div>
+            <div className="mon-kpi">
+              <div>
                 <div className="mon-kpi-tal" style={{ color: resultat.ingenMatch > 0 ? '#b45309' : 'inherit' }}>
                   {resultat.ingenMatch}
                 </div>
-                <div className="mon-kpi-label">Ingen STPS-match</div>
+                <div className="mon-kpi-label">Ingen match</div>
               </div>
             </div>
           </div>

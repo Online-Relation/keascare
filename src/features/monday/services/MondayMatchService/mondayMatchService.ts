@@ -137,60 +137,118 @@ function findStpsMatch(
   return null;
 }
 
+type TpTilbud = {
+  id: string;
+  navn: string | null;
+  cvr: string | null;
+};
+
+function findNavn<T extends { id: string }>(
+  mondayNavn: string,
+  navnMap: Map<string, T>
+): T | null {
+  const norm = normaliserNavn(mondayNavn);
+  if (navnMap.has(norm)) return navnMap.get(norm)!;
+  for (const [key, val] of navnMap) {
+    if (norm.startsWith(key) || key.startsWith(norm)) return val;
+  }
+  return null;
+}
+
 export async function kørMondayMatch(): Promise<MondayMatchResultat> {
   const supabase = getSupabaseServerClient();
+  const nu = new Date().toISOString();
 
   // Hent Monday-kunder
   const mondayItems = await hentAlleMondayBostedItems();
   const kundeItems = mondayItems.map(mapTilKundeItem);
 
-  // Hent alle STPS-rapporter med navn
-  const { data: rapporter, error } = await supabase
+  // Hent STPS-rapporter
+  const { data: stpsData, error: stpsFejl } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, tp_adresse');
+    .select('id, stps_tilbud_navn, tp_adresse, cvr');
+  if (stpsFejl) throw new Error(`Supabase STPS fejl: ${stpsFejl.message}`);
 
-  if (error) throw new Error(`Supabase fejl: ${error.message}`);
+  // Hent Tilbudsportalen-tilbud
+  const { data: tpData, error: tpFejl } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .select('id, navn, cvr');
+  if (tpFejl) throw new Error(`Supabase TP fejl: ${tpFejl.message}`);
 
-  const stpsRapporter = (rapporter ?? []) as StpsRapport[];
+  const stpsRapporter = (stpsData ?? []) as (StpsRapport & { cvr: string | null })[];
+  const tpTilbud = (tpData ?? []) as TpTilbud[];
 
-  // Byg navnemap: normaliseret navn → rapport id
-  const navnMap = new Map<string, string>();
+  // Byg navnemaps
+  const stpsNavnMap = new Map<string, { id: string }>();
   for (const r of stpsRapporter) {
-    if (r.stps_tilbud_navn) {
-      navnMap.set(normaliserNavn(r.stps_tilbud_navn), r.id);
-    }
+    if (r.stps_tilbud_navn) stpsNavnMap.set(normaliserNavn(r.stps_tilbud_navn), { id: r.id });
   }
 
-  // Nulstil eksisterende Monday-felter på alle rapporter
+  const tpNavnMap = new Map<string, TpTilbud>();
+  for (const t of tpTilbud) {
+    if (t.navn) tpNavnMap.set(normaliserNavn(t.navn), t);
+  }
+
+  // CVR-map: cvr → stps rapport id
+  const stpsCvrMap = new Map<string, string>();
+  for (const r of stpsRapporter) {
+    if (r.cvr) stpsCvrMap.set(r.cvr.trim(), r.id);
+  }
+
+  // Nulstil eksisterende matches
   await supabase
     .from('stps_rapporter')
     .update({ monday_item_id: null, monday_gruppe: null, monday_match_dato: null })
     .not('monday_item_id', 'is', null);
+  await supabase
+    .from('tilbudsportalen_tilbud')
+    .update({ monday_item_id: null, monday_gruppe: null, monday_match_dato: null })
+    .not('monday_item_id', 'is', null);
 
   let matchetTilStps = 0;
+  let matchetTilTp = 0;
   const ukendte: MondayKundeItem[] = [];
 
   for (const kunde of kundeItems) {
-    const stpsId = findStpsMatch(kunde, stpsRapporter, navnMap);
+    const mondayData = {
+      monday_item_id:    kunde.mondayId,
+      monday_gruppe:     kunde.gruppe,
+      monday_match_dato: nu,
+    };
 
-    if (stpsId) {
-      await supabase
-        .from('stps_rapporter')
-        .update({
-          monday_item_id:   kunde.mondayId,
-          monday_gruppe:    kunde.gruppe,
-          monday_match_dato: new Date().toISOString(),
-        })
-        .eq('id', stpsId);
+    // 1. Forsøg: match mod STPS på navn
+    const stpsMatch = findNavn(kunde.navn, stpsNavnMap);
+    if (stpsMatch) {
+      await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsMatch.id);
       matchetTilStps++;
-    } else {
-      ukendte.push(kunde);
+      continue;
     }
+
+    // 2. Forsøg: match mod Tilbudsportalen på navn
+    const tpMatch = findNavn(kunde.navn, tpNavnMap);
+    if (tpMatch) {
+      // Hvis TP-tilbuddet har CVR der matcher en STPS-rapport, opdater den i stedet
+      if (tpMatch.cvr) {
+        const stpsViaCvr = stpsCvrMap.get(tpMatch.cvr.trim());
+        if (stpsViaCvr) {
+          await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsViaCvr);
+          matchetTilStps++;
+          continue;
+        }
+      }
+      // Ellers gem på Tilbudsportalen-rækken
+      await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('id', tpMatch.id);
+      matchetTilTp++;
+      continue;
+    }
+
+    ukendte.push(kunde);
   }
 
   return {
     hentetFraMonday: kundeItems.length,
     matchetTilStps,
+    matchetTilTp,
     ingenMatch: ukendte.length,
     ukendte,
   };

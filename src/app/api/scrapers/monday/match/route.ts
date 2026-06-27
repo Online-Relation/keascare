@@ -11,6 +11,7 @@ export async function POST() {
       ok: true,
       hentetFraMonday: resultat.hentetFraMonday,
       matchetTilStps:  resultat.matchetTilStps,
+      matchetTilTp:    resultat.matchetTilTp,
       ingenMatch:      resultat.ingenMatch,
       ukendte:         resultat.ukendte.map((u) => ({
         navn:      u.navn,
