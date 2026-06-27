@@ -105,6 +105,9 @@ export type BostedDetail = {
   dataKvalitet: DataKvalitet;
   fundItems: FundItem[] | null;
   salgsAnbefalinger: SalgsAnbefalinger | null;
+  mondayKunde: MondayKundeStatus;
+  mondayGruppe: string | null;
+  mondayItemId: string | null;
 };
 
 export type DashboardData = {

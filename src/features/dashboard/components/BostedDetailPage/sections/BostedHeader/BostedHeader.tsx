@@ -78,6 +78,15 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+            {bosted.mondayKunde === 'kunde' && (
+              <span
+                className="badge badge-kunde"
+                title={`Monday: ${bosted.mondayGruppe ?? ''}`}
+              >
+                <span className="badge-dot" />
+                Kunde
+              </span>
+            )}
             <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} vis="fuld" />
             <button
               className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
