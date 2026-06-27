@@ -1,6 +1,7 @@
 // src/features/dashboard/services/DashboardService/dashboardService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { getVisFilter, driftsformFilterStreng } from '@/lib/config/GlobalFilter';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
 type DbRapport = {
@@ -176,14 +177,17 @@ function beregnTilbudsportalen(rapporter: DbRapport[]) {
 
 export async function hentDashboardData(fra?: string, til?: string): Promise<DashboardData> {
   const supabase = getSupabaseServerClient();
+  const visFilter = await getVisFilter();
 
-  // Kun §107, §108 og §108a — filtrerer §105 og andre irrelevante typer fra.
-  // Rækker uden Tilbudsportalen-match (tp_tilbudstype IS NULL) beholdes, da vi ikke kender typen endnu.
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse, tp_website')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, tp_adresse, tp_website, tp_driftsform')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
+
+  if (visFilter === 'privat') {
+    query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+  }
 
   if (fra) query = query.gte('rapport_dato', fra);
   if (til) query = query.lte('rapport_dato', til);

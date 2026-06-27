@@ -2,6 +2,7 @@
 
 import { hentDstKommuneData } from '@/lib/api/DstClient';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { getVisFilter, driftsformFilterStreng } from '@/lib/config/GlobalFilter';
 import type { KommuneOversigt, KommuneDetail, KommuneBosted } from '@/features/kommuner/types/kommuner.types';
 
 type DbKommuneCount = {
@@ -55,13 +56,16 @@ export async function hentKommuneDetail(kommuneNavn: string): Promise<KommuneDet
 
 async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbKommuneCount[]> {
   const supabase = getSupabaseServerClient();
+  const visFilter = await getVisFilter();
 
-  let query = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = supabase
     .from('stps_rapporter')
     .select('kommune')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .not('kommune', 'is', null);
 
+  if (visFilter === 'privat') query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
   if (fra) query = query.gte('rapport_dato', fra);
   if (til) query = query.lte('rapport_dato', til);
 
@@ -81,13 +85,19 @@ async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbK
 
 async function hentBostedForKommune(kommuneNavn: string): Promise<KommuneBosted[]> {
   const supabase = getSupabaseServerClient();
+  const visFilter = await getVisFilter();
 
-  const { data } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, fund_niveau, rapport_dato, rapport_url, tilsynsform, temaer')
     .eq('kommune', kommuneNavn)
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
+
+  if (visFilter === 'privat') query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+
+  const { data } = await query;
 
   if (!data) return [];
 

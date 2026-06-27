@@ -270,6 +270,184 @@
     font-style: italic;
   }
 
+  /* ── Driftsform filter banner ─────────────────────── */
+  .driftsform-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: #EFF6FF;
+    border-bottom: 1px solid #BFDBFE;
+    padding: 0.5rem 1.5rem;
+    font-size: var(--text-xs);
+    color: #1D4ED8;
+    font-weight: var(--fw-medium);
+  }
+
+  .driftsform-banner-fjern {
+    margin-left: auto;
+    font-size: var(--text-xs);
+    color: #1D4ED8;
+    background: none;
+    border: 1px solid #BFDBFE;
+    border-radius: var(--radius-md);
+    padding: 0.2rem 0.6rem;
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  .driftsform-banner-fjern:hover {
+    background: #DBEAFE;
+  }
+
+  /* ── Indstillinger ─────────────────────────────────── */
+  .ind-header {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    margin-bottom: 2rem;
+  }
+
+  .ind-header-ikon { color: var(--color-text-muted); }
+
+  .ind-titel {
+    font-size: var(--text-xl);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.15rem;
+  }
+
+  .ind-undertitel {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+    margin: 0;
+  }
+
+  .ind-sektion { max-width: 640px; }
+
+  .ind-sektion-titel {
+    font-size: var(--text-xs);
+    font-weight: var(--fw-semibold);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--color-text-muted);
+    margin: 0 0 0.875rem;
+  }
+
+  .ind-toggle-kort {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1.25rem;
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: 1.25rem;
+    transition: border-color 0.15s;
+  }
+
+  .ind-toggle-kort--aktiv {
+    border-color: #3B82F6;
+    background: #F0F9FF;
+  }
+
+  .ind-toggle-venstre {
+    display: flex;
+    gap: 0.875rem;
+    flex: 1;
+  }
+
+  .ind-toggle-ikon {
+    color: var(--color-primary);
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+
+  .ind-toggle-label {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 0.375rem;
+  }
+
+  .ind-toggle-beskrivelse {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    line-height: 1.6;
+    margin: 0 0 0.75rem;
+  }
+
+  .ind-driftsform-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .ind-chip {
+    font-size: 10px;
+    font-weight: var(--fw-semibold);
+    padding: 2px 8px;
+    border-radius: 9999px;
+  }
+
+  .ind-chip--ekskluderet {
+    background: #FEE2E2;
+    color: #991B1B;
+    text-decoration: line-through;
+    opacity: 0.7;
+  }
+
+  .ind-chip--inkluderet {
+    background: #D1FAE5;
+    color: #065F46;
+  }
+
+  .ind-toggle-knap {
+    width: 44px;
+    height: 24px;
+    border-radius: 9999px;
+    background: var(--color-border);
+    border: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    position: relative;
+    transition: background 0.2s;
+    margin-top: 0.1rem;
+  }
+
+  .ind-toggle-knap--til {
+    background: #3B82F6;
+  }
+
+  .ind-toggle-knap-cirkel {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3B82F6;
+    transition: transform 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  .ind-toggle-knap--til .ind-toggle-knap-cirkel {
+    transform: translateX(20px);
+  }
+
+  .ind-aktiv-note {
+    margin-top: 0.75rem;
+    font-size: var(--text-xs);
+    color: #1D4ED8;
+    background: #EFF6FF;
+    border: 1px solid #BFDBFE;
+    border-radius: var(--radius-md);
+    padding: 0.5rem 0.875rem;
+  }
+
   @media (max-width: 768px) {
     .mon-kpi-grid { grid-template-columns: repeat(2, 1fr); }
     .mon-grid     { grid-template-columns: 1fr; }

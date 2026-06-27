@@ -19,6 +19,7 @@ type TpTilbud = {
   virksomheds_navn: string | null;
   tilsynsmyndighed: string | null;
   pladser_pr_paragraf: string | null;
+  driftsform: string | null;
 };
 
 type StpsRapport = {
@@ -41,6 +42,7 @@ type TpData = {
   virksomheds_navn: string | null;
   tilsynsmyndighed: string | null;
   pladser_pr_paragraf: string | null;
+  driftsform: string | null;
 };
 
 function normaliserNavn(navn: string): string {
@@ -67,7 +69,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const { data: tilbud, error: tilbudFejl } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('cvr, navn, tilbudstype, pladser, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf');
+    .select('cvr, navn, tilbudstype, pladser, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform');
 
   if (tilbudFejl) throw new Error(`Tilbudsportalen fejl: ${tilbudFejl.message}`);
 
@@ -89,6 +91,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
       virksomheds_navn: t.virksomheds_navn,
       tilsynsmyndighed: t.tilsynsmyndighed,
       pladser_pr_paragraf: t.pladser_pr_paragraf,
+      driftsform: t.driftsform,
     };
     if (t.cvr) cvrMap.set(t.cvr.trim(), data);
     if (t.navn) navnMap.set(normaliserNavn(t.navn), data);
@@ -135,6 +138,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
         tp_virksomheds_navn: match.virksomheds_navn,
         tp_tilsynsmyndighed: match.tilsynsmyndighed,
         tp_pladser_pr_paragraf: match.pladser_pr_paragraf,
+        tp_driftsform: match.driftsform,
       })
       .eq('id', rapport.id);
 

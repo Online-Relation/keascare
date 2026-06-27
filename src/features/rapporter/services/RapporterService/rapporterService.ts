@@ -1,6 +1,7 @@
 // src/features/rapporter/services/RapporterService/rapporterService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { getVisFilter, driftsformFilterStreng } from '@/lib/config/GlobalFilter';
 import type {
   RapporterData, RapportRække, MånedligTrend, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
@@ -17,12 +18,17 @@ type DbRapport = {
 
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
   const supabase = getSupabaseServerClient();
+  const visFilter = await getVisFilter();
 
   let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
+
+  if (visFilter === 'privat') {
+    query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+  }
 
   if (fra) query = query.gte('rapport_dato', fra);
   if (til) query = query.lte('rapport_dato', til);
