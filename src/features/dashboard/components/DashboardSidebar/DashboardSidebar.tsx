@@ -17,6 +17,7 @@ import {
   Megaphone,
   ChevronDown,
   ChevronRight,
+  FlaskConical,
 } from 'lucide-react';
 
 const navItems = [
@@ -27,6 +28,7 @@ const navItems = [
   { label: 'Kommuner',         href: '/dashboard/kommuner',         icon: MapPin },
   { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
   { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
+  { label: 'Monday test',      href: '/dashboard/monday-test',      icon: FlaskConical },
   { label: 'Indstillinger',    href: '/dashboard/indstillinger',    icon: Settings },
 ];
 
