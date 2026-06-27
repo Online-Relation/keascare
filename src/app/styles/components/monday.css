@@ -150,6 +150,14 @@
     font-family: monospace;
   }
 
+  .mon-gruppe-antal {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-bold);
+    color: var(--color-text-primary);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
   /* Kolonner */
   .mon-kolonne-liste {
     display: flex;
