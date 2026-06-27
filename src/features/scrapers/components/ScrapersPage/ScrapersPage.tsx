@@ -3,6 +3,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ScraperKort } from './ScraperKort';
 import { ScraperHistorik } from './ScraperHistorik';
 import { ScraperFremgang } from './ScraperFremgang';
@@ -177,6 +178,12 @@ export function ScrapersPage() {
           Kør dataindsamling manuelt. STPS-scrapers virker altid. Tilbudsportalen kan kræve lokal
           kørsel.
         </p>
+      </div>
+
+      <div style={{ marginBottom: '1rem' }}>
+        <Link href="/dashboard/markedspotentiale" className="btn btn-outline btn-sm">
+          → Test: Gå til Markedspotentiale
+        </Link>
       </div>
 
       <ScraperFremgang />
