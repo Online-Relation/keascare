@@ -42,9 +42,9 @@ export function IndstillingerPage({ aktivtFilter }: Props) {
                 tabeller, grafer, KPI'er og søgning viser kun private og selvejende tilbud.
               </p>
               <div className="ind-driftsform-chips">
-                <span className="ind-chip ind-chip--ekskluderet">Primærkommune</span>
-                <span className="ind-chip ind-chip--ekskluderet">Region</span>
-                <span className="ind-chip ind-chip--ekskluderet">Statslig enhed</span>
+                <span className={`ind-chip ind-chip--ekskluderet ${erPrivat ? 'ind-chip--strikethrough' : ''}`}>Primærkommune</span>
+                <span className={`ind-chip ind-chip--ekskluderet ${erPrivat ? 'ind-chip--strikethrough' : ''}`}>Region</span>
+                <span className={`ind-chip ind-chip--ekskluderet ${erPrivat ? 'ind-chip--strikethrough' : ''}`}>Statslig enhed</span>
                 <span className="ind-chip ind-chip--inkluderet">ApS / A/S</span>
                 <span className="ind-chip ind-chip--inkluderet">Selvejende</span>
                 <span className="ind-chip ind-chip--inkluderet">Fond / Forening</span>

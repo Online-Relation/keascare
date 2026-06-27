@@ -392,6 +392,9 @@
   .ind-chip--ekskluderet {
     background: #FEE2E2;
     color: #991B1B;
+  }
+
+  .ind-chip--strikethrough {
     text-decoration: line-through;
     opacity: 0.7;
   }
