@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical,
 } from 'lucide-react';
 import { Suspense } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
@@ -20,6 +20,7 @@ const navItems = [
   { label: 'Kommuner',         href: '/dashboard/kommuner',         icon: MapPin },
   { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
   { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
+  { label: 'Monday test',      href: '/dashboard/monday-test',      icon: FlaskConical },
   { label: 'Indstillinger',    href: '/dashboard/indstillinger',    icon: Settings },
 ];
 
