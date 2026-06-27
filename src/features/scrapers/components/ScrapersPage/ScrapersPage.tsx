@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { ScraperKort } from './ScraperKort';
 import { ScraperHistorik } from './ScraperHistorik';
 import { ScraperFremgang } from './ScraperFremgang';
+import { MondayOversigt } from '@/features/monday/components/MondayOversigt';
 import type { ScraperLog } from '@/lib/db/ScraperLog';
 
 export type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
@@ -87,6 +88,13 @@ const SCRAPERS: Scraper[] = [
     titel: 'Tilbudsportalen — Kør matcher',
     beskrivelse: 'Matcher Tilbudsportalen-data mod STPS-rapporter via CVR og navn.',
     endpoint: '/api/scrapers/tilbudsportalen/match',
+    body: {},
+  },
+  {
+    id: 'monday-match',
+    titel: 'Monday — Synkroniser kunder',
+    beskrivelse: 'Henter Bosted-kunder fra Monday (Nye + Aktive Forløb) og matcher mod STPS-bosteder på navn. Sætter "Kunde"-badge i dashboardet.',
+    endpoint: '/api/scrapers/monday/match',
     body: {},
   },
 ];
@@ -173,6 +181,7 @@ export function ScrapersPage() {
 
       <ScraperFremgang />
       <ScraperHistorik />
+      <MondayOversigt />
 
       <div className="scrapers-grid">
         {SCRAPERS.map((scraper) => (

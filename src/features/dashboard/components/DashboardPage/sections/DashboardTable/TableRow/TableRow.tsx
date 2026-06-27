@@ -63,6 +63,16 @@ export function TableRow({ bosted }: TableRowProps) {
         </span>
       </td>
       <td className="data-table td">
+        {bosted.mondayKunde === 'kunde' ? (
+          <span className="badge badge-kunde" title={`Monday: ${bosted.mondayGruppe ?? ''}`}>
+            <span className="badge-dot" />
+            Kunde
+          </span>
+        ) : (
+          <span className="badge badge-ukendt">—</span>
+        )}
+      </td>
+      <td className="data-table td">
         <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} />
       </td>
       <td className="data-table td">
