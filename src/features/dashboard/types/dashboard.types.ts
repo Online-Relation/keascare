@@ -110,10 +110,21 @@ export type BostedDetail = {
   mondayItemId: string | null;
 };
 
+export type SalgsFunnelTrin = {
+  label: string;
+  antal: number;
+  beskrivelse: string;
+};
+
+export type SalgsFunnel = {
+  trin: SalgsFunnelTrin[];
+};
+
 export type DashboardData = {
   kpis: KpiItem[];
   bosteder: Bosted[];
   tilbudsportalen: TilbudsportalenStats;
   stpsFordeling: StpsFordeling[];
   topKommuner: KommuneStat[];
+  salgsFunnel: SalgsFunnel;
 };

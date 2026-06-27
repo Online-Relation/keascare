@@ -180,6 +180,24 @@ function beregnTilbudsportalen(rapporter: DbRapport[]) {
   };
 }
 
+function beregnSalgsFunnel(rapporter: DbRapport[]) {
+  const total = rapporter.length;
+  const medFund = rapporter.filter((r) => r.fund_niveau && !['ingen', 'ukendt'].includes(r.fund_niveau)).length;
+  const varme = rapporter.filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '')).length;
+  const ubearbejdede = rapporter.filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id).length;
+  const kunder = rapporter.filter((r) => !!r.monday_item_id).length;
+
+  return {
+    trin: [
+      { label: 'Alle bosteder', antal: total, beskrivelse: 'Totalt antal bosteder i det valgte udsnit' },
+      { label: 'Med tilsynsfund', antal: medFund, beskrivelse: 'Har kritisk, større eller mindre fund fra STPS' },
+      { label: 'Kritisk / større fund', antal: varme, beskrivelse: 'Varmeste signaler — størst behov for KeasCare' },
+      { label: 'Ikke bearbejdet endnu', antal: ubearbejdede, beskrivelse: 'Kritisk/større fund og ikke allerede kunde' },
+      { label: 'Kunder i Monday', antal: kunder, beskrivelse: 'Matchet som aktiv kunde eller nyt forløb i Monday' },
+    ],
+  };
+}
+
 export async function hentDashboardData(fra?: string, til?: string): Promise<DashboardData> {
   const supabase = getSupabaseServerClient();
   const visFilter = await getVisFilter();
@@ -210,5 +228,6 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     stpsFordeling:   beregnFordeling(rapporter),
     topKommuner:     beregnTopKommuner(rapporter),
     tilbudsportalen: beregnTilbudsportalen(rapporter),
+    salgsFunnel:     beregnSalgsFunnel(rapporter),
   };
 }

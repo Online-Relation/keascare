@@ -4,6 +4,7 @@ import type { DashboardData } from '@/features/dashboard/types/dashboard.types';
 import { DashboardKpis } from './sections/DashboardKpis';
 import { DashboardTable } from './sections/DashboardTable';
 import { DashboardBottomPanels } from './sections/DashboardBottomPanels';
+import { SalgsFunnel } from './sections/SalgsFunnel';
 
 type DashboardPageProps = {
   data: DashboardData;
@@ -14,6 +15,7 @@ export function DashboardPage({ data }: DashboardPageProps) {
     <main className="dashboard-main">
       <div className="dashboard-content">
         <DashboardKpis kpis={data.kpis} />
+        <SalgsFunnel funnel={data.salgsFunnel} />
         <DashboardTable bosteder={data.bosteder} />
         <DashboardBottomPanels
           data={{
