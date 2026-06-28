@@ -4,24 +4,26 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical, Target,
 } from 'lucide-react';
 import { Suspense } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 
 const navItems = [
-  { label: 'Dashboard',        href: '/dashboard',                  icon: LayoutDashboard },
-  { label: 'Markedssignaler',  href: '/dashboard/markedssignaler',  icon: TrendingUp },
-  { label: 'Tilsynsrapporter', href: '/dashboard/rapporter',        icon: ClipboardList },
-  { label: 'Alle rapporter',   href: '/dashboard/alle-rapporter',   icon: FileText },
-  { label: 'Kommuner',         href: '/dashboard/kommuner',         icon: MapPin },
-  { label: 'Markedsdata',      href: '/dashboard/markedsdata',      icon: BarChart2 },
-  { label: 'Scrapers',         href: '/dashboard/scrapers',         icon: RefreshCw },
-  { label: 'Monday test',      href: '/dashboard/monday-test',      icon: FlaskConical },
-  { label: 'Indstillinger',    href: '/dashboard/indstillinger',    icon: Settings },
+  { label: 'Dashboard',         href: '/dashboard',                      icon: LayoutDashboard },
+  { label: 'Markedssignaler',   href: '/dashboard/markedspotentiale',    icon: TrendingUp },
+  { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale',    icon: Target },
+  { label: 'Tilsynsrapporter',  href: '/dashboard/rapporter',            icon: ClipboardList },
+  { label: 'Alle rapporter',    href: '/dashboard/alle-rapporter',       icon: FileText },
+  { label: 'Kommuner',          href: '/dashboard/kommuner',             icon: MapPin },
+  { label: 'Markedsdata',       href: '/dashboard/markedsdata',          icon: BarChart2 },
+  { label: 'Scrapers',          href: '/dashboard/scrapers',             icon: RefreshCw },
+  { label: 'Monday test',       href: '/dashboard/monday-test',          icon: FlaskConical },
+  { label: 'Indstillinger',     href: '/dashboard/indstillinger',        icon: Settings },
 ];
 
 const markedsforingItems = [
@@ -152,8 +154,14 @@ export function MobileNav() {
       <nav className={`mobil-drawer${menuÅben ? ' åben' : ''}`}>
         <div className="mobil-drawer-header">
           <div className="sidebar-logo">
-            <div className="sidebar-logo-icon">KC</div>
-            KeasCare
+            <Image
+              src="/images/logo/logo.webp"
+              alt="KeasCare"
+              width={120}
+              height={36}
+              style={{ objectFit: 'contain', maxHeight: '36px', width: 'auto' }}
+              priority
+            />
           </div>
           <button className="mobil-hamburger" onClick={() => setMenuÅben(false)} aria-label="Luk menu">
             <X size={20} />
