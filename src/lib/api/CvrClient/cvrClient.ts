@@ -6,6 +6,10 @@ export type CvrOpslag = {
   adresse: string | null;
   postnummer: string | null;
   by: string | null;
+  ansatte: number | null;
+  branche: string | null;
+  virksomhedstype: string | null;
+  stiftet: string | null;
 };
 
 type CvrApiSvar = {
@@ -14,6 +18,10 @@ type CvrApiSvar = {
   address?: string;
   zipcode?: string;
   city?: string;
+  employees?: number;
+  industrydesc?: string;
+  companydesc?: string;
+  startdate?: string;
   error?: string;
 };
 
@@ -44,6 +52,10 @@ async function forespørgCvr(params: Record<string, string>): Promise<CvrOpslag 
     adresse: adresseDele || null,
     postnummer: data.zipcode ?? null,
     by: data.city ?? null,
+    ansatte: typeof data.employees === 'number' ? data.employees : null,
+    branche: data.industrydesc ?? null,
+    virksomhedstype: data.companydesc ?? null,
+    stiftet: data.startdate ?? null,
   };
 }
 

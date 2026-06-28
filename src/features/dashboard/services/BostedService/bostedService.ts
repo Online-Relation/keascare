@@ -24,6 +24,11 @@ type DbRapport = {
   adresse: string | null;
   pladser: string | null;
   cvr: string | null;
+  cvr_ansatte: number | null;
+  cvr_branche: string | null;
+  cvr_virksomhedstype: string | null;
+  cvr_stiftet: string | null;
+  cvr_opdateret: string | null;
   pdf_behandlet: boolean | null;
   tp_tilbudstype: string | null;
   tp_pladser: string | null;
@@ -79,6 +84,11 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     adresse: r.adresse,
     pladser: r.pladser,
     cvr: r.cvr,
+    cvrAnsatte: r.cvr_ansatte,
+    cvrBranche: r.cvr_branche,
+    cvrVirksomhedstype: r.cvr_virksomhedstype,
+    cvrStiftet: r.cvr_stiftet,
+    cvrOpdateret: r.cvr_opdateret,
     pdfBehandlet: r.pdf_behandlet ?? false,
     tpTilbudstype: r.tp_tilbudstype,
     tpPladser: r.tp_pladser,
@@ -106,7 +116,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe')
     .eq('id', id)
     .single();
 

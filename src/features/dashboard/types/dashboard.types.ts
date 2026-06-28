@@ -87,6 +87,12 @@ export type BostedDetail = {
   adresse: string | null;
   pladser: string | null;
   cvr: string | null;
+  // CVR-berigede felter (opdateres dagligt)
+  cvrAnsatte: number | null;
+  cvrBranche: string | null;
+  cvrVirksomhedstype: string | null;
+  cvrStiftet: string | null;
+  cvrOpdateret: string | null;
   pdfBehandlet: boolean;
   // Tilbudsportalen-berigede felter
   tpTilbudstype: string | null;

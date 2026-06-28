@@ -68,6 +68,14 @@ const SCRAPERS: Scraper[] = [
     loop: true,
   },
   {
+    id: 'cvr-ansatte',
+    titel: 'CVR-register — Opdater ansatte og virksomhedsdata',
+    beskrivelse: 'Henter antal ansatte, branche og virksomhedstype fra CVR for alle bosteder. Kør dagligt. Prioriterer dem der er ældst opdateret.',
+    endpoint: '/api/scrapers/cvr/ansatte',
+    body: { batch: 100 },
+    loop: false,
+  },
+  {
     id: 'tp-liste',
     titel: 'Tilbudsportalen — Hent tilbudsliste',
     beskrivelse: 'Henter alle voksne tilbud fra Tilbudsportalen og gemmer i databasen.',

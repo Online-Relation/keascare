@@ -1,6 +1,6 @@
 // src/features/dashboard/components/BostedDetailPage/sections/BostedOrganisationKort/BostedOrganisationKort.tsx
 
-import { Building2, Phone, Mail, User, Globe, MapPin, Shield } from 'lucide-react';
+import { Building2, Phone, Mail, User, Globe, MapPin, Shield, TrendingUp } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 
 type Props = { bosted: BostedDetail };
@@ -97,6 +97,31 @@ export function BostedOrganisationKort({ bosted }: Props) {
                   <Globe size={12} />
                   {bosted.tpWebsite.replace(/^https?:\/\//, '')}
                 </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {bosted.cvr && (
+        <div className="bosted-detail-kort">
+          <div className="bosted-detail-kort-header">
+            <TrendingUp size={15} />
+            <span className="bosted-detail-kort-titel">Økonomi &amp; virksomhed</span>
+          </div>
+          <div className="bosted-detail-kort-body">
+            <FeltRække label="Antal ansatte" value={bosted.cvrAnsatte != null ? `${bosted.cvrAnsatte} ansatte` : null} placeholder="Ikke oplyst i CVR" />
+            <FeltRække label="Virksomhedstype" value={bosted.cvrVirksomhedstype} placeholder="Ikke oplyst i CVR" />
+            <FeltRække label="Branche" value={bosted.cvrBranche} placeholder="Ikke oplyst i CVR" />
+            {bosted.cvrStiftet && (
+              <FeltRække label="Stiftet" value={new Date(bosted.cvrStiftet).toLocaleDateString('da-DK', { year: 'numeric', month: 'long', day: 'numeric' })} />
+            )}
+            {bosted.cvrOpdateret && (
+              <div className="bosted-detail-field">
+                <span className="bosted-detail-field-label">CVR sidst hentet</span>
+                <span className="bosted-detail-placeholder" style={{ fontStyle: 'normal', fontSize: '0.7rem' }}>
+                  {new Date(bosted.cvrOpdateret).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
               </div>
             )}
           </div>
