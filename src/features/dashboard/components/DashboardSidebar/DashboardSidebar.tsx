@@ -3,6 +3,7 @@
 // src/features/dashboard/components/DashboardSidebar/DashboardSidebar.tsx
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
@@ -47,8 +48,14 @@ export function DashboardSidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <div className="sidebar-logo-icon">KC</div>
-        KeasCare
+        <Image
+          src="/images/logo/logo.webp"
+          alt="KeasCare"
+          width={130}
+          height={40}
+          style={{ objectFit: 'contain', maxHeight: '40px', width: 'auto' }}
+          priority
+        />
       </div>
 
       <nav className="sidebar-section" style={{ flex: 1 }}>
