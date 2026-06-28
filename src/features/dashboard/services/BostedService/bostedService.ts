@@ -53,6 +53,7 @@ function beregnDataKvalitet(r: DbRapport): DataKvalitet {
     !!(r.tp_email || r.tp_telefon),
     !!(r.tp_adresse || r.adresse),
     !!r.tp_website,
+    !!(r.tp_pladser || r.pladser),
   ];
   return { score: point.filter(Boolean).length, max: point.length };
 }
