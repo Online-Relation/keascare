@@ -17,8 +17,8 @@ export const metadata: Metadata = {
     googleBot: { index: false, follow: false },
   },
   icons: {
-    icon: '/images/icons/favicon.png',
-    apple: '/images/icons/favicon.png',
+    icon: '/images/logo/favicon.png',
+    apple: '/images/logo/favicon.png',
   },
 };
 
