@@ -73,12 +73,22 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
     }
   });
 
-  // Pladser — find første "N pladser" i tekst
+  // Pladser — prøv struktureret #pladser-sektion først, derefter regex på brødtekst
   let pladser: number | null = null;
-  const pladsMatch = bodyTekst.match(/(\d+)\s+pladser/i);
-  if (pladsMatch) {
-    const parsed = parseInt(pladsMatch[1], 10);
-    if (!isNaN(parsed) && parsed > 0 && parsed < 1000) pladser = parsed;
+  let pladsTotal = 0;
+  $('#pladser').find('div.lh-1').each((_, el) => {
+    const antalTekst = $(el).find('div').first().text();
+    const m = antalTekst.match(/(\d+)/);
+    if (m) pladsTotal += parseInt(m[1], 10);
+  });
+  if (pladsTotal > 0 && pladsTotal < 2000) {
+    pladser = pladsTotal;
+  } else {
+    const pladsMatch = bodyTekst.match(/(\d+)\s+pladser/i);
+    if (pladsMatch) {
+      const parsed = parseInt(pladsMatch[1], 10);
+      if (!isNaN(parsed) && parsed > 0 && parsed < 1000) pladser = parsed;
+    }
   }
 
   // Kommune — fra "Driftsaftale med" tekst
