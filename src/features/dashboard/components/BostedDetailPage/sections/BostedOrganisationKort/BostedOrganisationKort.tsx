@@ -4,15 +4,15 @@ import { Building2, Phone, Mail, User, Globe, MapPin, Shield } from 'lucide-reac
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 
 type Props = { bosted: BostedDetail };
-type Felt = { label: string; value: string | null };
+type Felt = { label: string; value: string | null; placeholder?: string };
 
-function FeltRække({ label, value }: Felt) {
+function FeltRække({ label, value, placeholder = 'Mangler data' }: Felt) {
   return (
     <div className="bosted-detail-field">
       <span className="bosted-detail-field-label">{label}</span>
       {value
         ? <span className="bosted-detail-field-value">{value}</span>
-        : <span className="bosted-detail-placeholder">Mangler data</span>
+        : <span className="bosted-detail-placeholder">{placeholder}</span>
       }
     </div>
   );
@@ -22,7 +22,10 @@ export function BostedOrganisationKort({ bosted }: Props) {
   // Fallback: Tilbudsportalen-adresse er den fysiske adresse, CVR-adresse er juridisk
   const adresse = bosted.tpAdresse ?? bosted.adresse ?? null;
   // Pladser pr. paragraf foretrækkes over total
-  const pladser = bosted.tpPladsePrParagraf ?? bosted.tpPladser ?? bosted.pladser ?? null;
+  const pladserVærdi = bosted.tpPladsePrParagraf ?? bosted.tpPladser ?? bosted.pladser ?? null;
+  const erTpMatchet = !!bosted.tpTilbudstype || !!bosted.tpPNummer;
+  const pladserPlaceholder = erTpMatchet ? 'Ikke oplyst på Tilbudsportalen' : 'Mangler data';
+  const pladser = pladserVærdi;
   const kommune = bosted.tpKommune ?? bosted.kommune ?? null;
 
   const harKontakt = bosted.tpLeder || bosted.tpKontaktperson || bosted.tpTelefon || bosted.tpEmail;
@@ -53,7 +56,7 @@ export function BostedOrganisationKort({ bosted }: Props) {
           )}
           {!adresse && <FeltRække label="Adresse" value={null} />}
           <FeltRække label="Kommune" value={kommune} />
-          <FeltRække label="Pladser" value={pladser} />
+          <FeltRække label="Pladser" value={pladser} placeholder={pladserPlaceholder} />
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
         </div>
