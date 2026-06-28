@@ -2,10 +2,15 @@
 
 import { MarkedsdataPage } from '@/features/markedsdata/components/MarkedsdataPage';
 import { hentDstKommuneData } from '@/lib/api/DstClient';
+import { hentDashboardData } from '@/features/dashboard/services/DashboardService/dashboardService';
 
-export const revalidate = 86400;
+export const revalidate = 0;
 
 export default async function MarkedsdataSide() {
-  const data = await hentDstKommuneData();
-  return <MarkedsdataPage data={data} />;
+  const [dstData, dashboardData] = await Promise.all([
+    hentDstKommuneData(),
+    hentDashboardData(),
+  ]);
+
+  return <MarkedsdataPage data={dstData} antalBosteder={dashboardData.bosteder.length} />;
 }

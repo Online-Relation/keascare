@@ -8,15 +8,21 @@ import type { DstKommuneRå } from '@/lib/api/DstClient';
 
 type Props = {
   data: DstKommuneRå[];
+  antalBosteder: number;
 };
 
-export function MarkedsdataPage({ data }: Props) {
+export function MarkedsdataPage({ data, antalBosteder }: Props) {
   const totalBorgere = data.reduce((s, k) => s + k.total, 0);
   const totalP107 = data.reduce((s, k) => s + k.p107, 0);
   const totalP108 = data.reduce((s, k) => s + k.p108, 0);
   const størsteKommune = data[0];
 
   const kpis = [
+    {
+      label: 'Bosteder i Danmark',
+      værdi: antalBosteder.toLocaleString('da-DK'),
+      forklaring: 'Antal §107/§108 bosteder fundet via STPS-tilsynsrapporter. Tallet afspejler det valgte filter for driftsform (kommunal/privat) og datoperiode.',
+    },
     {
       label: 'Borgere i §107/§108 i alt',
       værdi: totalBorgere.toLocaleString('da-DK'),
