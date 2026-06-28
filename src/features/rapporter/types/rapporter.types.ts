@@ -15,6 +15,7 @@ export type RapportRække = {
 export type MånedligTrend = {
   måned: string;       // "jun 25"
   kritisk: number;
+  kritiskLinje: number;
   mindre: number;
   ingen: number;
 };

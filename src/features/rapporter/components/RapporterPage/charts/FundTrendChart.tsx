@@ -20,6 +20,7 @@ export function FundTrendChart({ data }: Props) {
         <Tooltip
           contentStyle={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: 12 }}
           formatter={(val, name) => {
+            if (name === 'kritiskLinje') return null as unknown as [number, string];
             const labels: Record<string, string> = { kritisk: 'Kritiske fund', mindre: 'Mindre fund', ingen: 'Ingen fund' };
             const key = String(name);
             return [val, labels[key] ?? key];
@@ -28,6 +29,7 @@ export function FundTrendChart({ data }: Props) {
         <Legend
           wrapperStyle={{ fontSize: 12 }}
           formatter={(val) => {
+            if (val === 'kritiskLinje') return null;
             const labels: Record<string, string> = { kritisk: 'Kritiske fund', mindre: 'Mindre fund', ingen: 'Ingen fund' };
             return labels[String(val)] ?? String(val);
           }}
@@ -35,7 +37,7 @@ export function FundTrendChart({ data }: Props) {
         <Bar dataKey="ingen" stackId="a" fill="#E5E7EB" radius={[0, 0, 0, 0]} />
         <Bar dataKey="mindre" stackId="a" fill="#F59E0B" radius={[0, 0, 0, 0]} />
         <Bar dataKey="kritisk" stackId="a" fill="#EF4444" radius={[4, 4, 0, 0]} />
-        <Line type="monotone" dataKey="kritisk" stroke="#DC2626" strokeWidth={2.5} dot={{ r: 3, fill: '#DC2626' }} />
+        <Line type="monotone" dataKey="kritiskLinje" stroke="#DC2626" strokeWidth={2.5} dot={{ r: 3, fill: '#DC2626' }} legendType="none" />
       </ComposedChart>
     </ResponsiveContainer>
   );

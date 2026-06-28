@@ -75,11 +75,13 @@ function beregnTrend(alle: DbRapport[]): MånedligTrend[] {
     const label = d.toLocaleDateString('da-DK', { month: 'short', year: '2-digit' });
 
     const iMåned = alle.filter((r) => r.rapport_dato?.startsWith(nøgle));
+    const kritiskAntal = iMåned.filter((r) => r.fund_niveau === 'kritisk').length;
     måneder.push({
-      måned:   label,
-      kritisk: iMåned.filter((r) => r.fund_niveau === 'kritisk').length,
-      mindre:  iMåned.filter((r) => r.fund_niveau === 'mindre').length,
-      ingen:   iMåned.filter((r) => r.fund_niveau === 'ingen').length,
+      måned:        label,
+      kritisk:      kritiskAntal,
+      kritiskLinje: kritiskAntal,
+      mindre:       iMåned.filter((r) => r.fund_niveau === 'mindre').length,
+      ingen:        iMåned.filter((r) => r.fund_niveau === 'ingen').length,
     });
   }
   return måneder;
