@@ -9,8 +9,37 @@ type BostedFundsoversigtProps = {
   bosted: BostedDetail;
 };
 
+// STPS-rapporter indsætter ofte sektionsoverskrifter midt i en linje uden linjeskift,
+// fx "...vurderet, at der på Perlen er: Mindre problemer ... Journalføring Vi konstaterede ...".
+// Disse kendte overskrifter brydes derfor eksplicit ud, så de ikke flyder sammen med brødtekst.
+const KENDTE_OVERSKRIFTER = [
+  'Samlet vurdering efter tilsyn',
+  'Journalføring',
+  'Medicinhåndtering',
+  'Instrukser',
+  'Hygiejne',
+  'Utilsigtede hændelser',
+  'Magtanvendelse',
+  'Patientrettigheder og inddragelse',
+  'Patientrettigheder',
+  'Selvbestemmelse',
+  'Vi afslutter tilsynet',
+];
+
+function bryOverskrifterUd(tekst: string): string {
+  let resultat = tekst;
+  for (const overskrift of KENDTE_OVERSKRIFTER) {
+    const regex = new RegExp(`(^|[^\\n])\\s*(${overskrift})(?=\\s+[A-ZÆØÅ])`, 'g');
+    resultat = resultat.replace(regex, (_match, foran, fundet) => {
+      const adskiller = foran && foran !== '\n' ? `${foran}\n\n` : foran;
+      return `${adskiller}${fundet}\n`;
+    });
+  }
+  return resultat;
+}
+
 function rensVurdering(tekst: string): string {
-  return tekst
+  return bryOverskrifterUd(tekst)
     .replace(/--\s*\d+\s*of\s*\d+\s*--/gi, '')
     .replace(/Tilsynsrapport[\s\S]{0,80}?Side \d+ af \d+\s*/g, '')
     .replace(/\n{3,}/g, '\n\n')
@@ -18,8 +47,33 @@ function rensVurdering(tekst: string): string {
 }
 
 function erOverskrift(linje: string): boolean {
+  if (KENDTE_OVERSKRIFTER.includes(linje)) return true;
   // Kort linje uden afsluttende punktum — typisk en sektionsoverskrift
   return linje.length > 0 && linje.length <= 65 && !/[.!?,]$/.test(linje) && /^[A-ZÆØÅ]/.test(linje);
+}
+
+// Deler meget lange afsnit op i mindre stykker af nogle få sætninger ad gangen,
+// så brødteksten bliver læsbar i stedet for én lang mur af tekst.
+const MAX_AFSNIT_LÆNGDE = 380;
+
+function delLangtAfsnitOp(tekst: string): string[] {
+  if (tekst.length <= MAX_AFSNIT_LÆNGDE) return [tekst];
+
+  const sætninger = tekst.match(/[^.!?]+[.!?]+(\s+|$)/g) ?? [tekst];
+  const stykker: string[] = [];
+  let nuværende = '';
+
+  for (const sætning of sætninger) {
+    if (nuværende && (nuværende + sætning).length > MAX_AFSNIT_LÆNGDE) {
+      stykker.push(nuværende.trim());
+      nuværende = sætning;
+    } else {
+      nuværende += sætning;
+    }
+  }
+  if (nuværende.trim()) stykker.push(nuværende.trim());
+
+  return stykker.length > 0 ? stykker : [tekst];
 }
 
 function formatVurdering(tekst: string): React.ReactNode[] {
@@ -38,8 +92,8 @@ function formatVurdering(tekst: string): React.ReactNode[] {
     for (const linje of linjer) {
       if (!nuværende) {
         nuværende = linje;
-      } else if (/[.!?:]$/.test(nuværende)) {
-        // Forrige linje sluttede en sætning → nyt punkt
+      } else if (/[.!?:]$/.test(nuværende) || KENDTE_OVERSKRIFTER.includes(nuværende)) {
+        // Forrige linje sluttede en sætning, eller var en kendt overskrift → nyt punkt
         sammensatte.push(nuværende);
         nuværende = linje;
       } else {
@@ -56,9 +110,12 @@ function formatVurdering(tekst: string): React.ReactNode[] {
           <strong key={`${afsnit_}-${i}`} className="fund-vurdering-overskrift">{linje}</strong>
         );
       } else {
-        elementer.push(
-          <p key={`${afsnit_}-${i}`} className="fund-vurdering-afsnit">{linje}</p>
-        );
+        const stykker = delLangtAfsnitOp(linje);
+        stykker.forEach((stykke, j) => {
+          elementer.push(
+            <p key={`${afsnit_}-${i}-${j}`} className="fund-vurdering-afsnit">{stykke}</p>
+          );
+        });
       }
     }
   }
