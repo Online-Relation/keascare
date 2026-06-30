@@ -38,7 +38,7 @@ export async function slaaCvrOp(cvr: string): Promise<CvrOpslag | null> {
     cache: 'no-store',
   });
 
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error(`distribution.virk.dk HTTP ${res.status}: ${res.statusText}`);
 
   const json = await res.json();
   const hit = json?.hits?.hits?.[0]?._source?.Vrvirksomhed;

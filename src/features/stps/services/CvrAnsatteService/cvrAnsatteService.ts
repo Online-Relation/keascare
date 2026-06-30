@@ -44,7 +44,7 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
     try {
       const opslag = await slaaCvrOp(cvr);
 
-      if (opslag) {
+      if (opslag && (opslag.ansatte !== null || opslag.branche !== null || opslag.virksomhedstype !== null)) {
         const { error: updateError } = await supabase
           .from('stps_rapporter')
           .update({
@@ -61,8 +61,17 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
         } else {
           opdateret++;
         }
+      } else if (opslag) {
+        // Opslag lykkedes men ingen nyttige felter (ansatte/branche/type er alle null)
+        const { error: updateError } = await supabase
+          .from('stps_rapporter')
+          .update({ cvr_opdateret: new Date().toISOString() })
+          .eq('id', id);
+        if (!updateError) opdateret++;
+        else fejl++;
+        if (fejlBeskeder.length < 3) fejlBeskeder.push(`CVR ${cvr}: fundet men ingen ansatte/branche data`);
       } else {
-        if (fejlBeskeder.length < 3) fejlBeskeder.push(`Ingen data fra cvrapi.dk for CVR ${cvr}`);
+        if (fejlBeskeder.length < 3) fejlBeskeder.push(`Ingen data fra distribution.virk.dk for CVR ${cvr}`);
         ingenData++;
       }
     } catch (e) {
