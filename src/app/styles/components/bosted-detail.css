@@ -437,3 +437,119 @@
     }
   }
 }
+
+/* MailChimp signup-boks */
+.mailchimp-boks {
+  background: linear-gradient(135deg, var(--color-primary) 0%, #2D5A8E 100%);
+  border-radius: 12px;
+  padding: 1.5rem;
+  color: #fff;
+  margin-top: 1.5rem;
+}
+
+.mailchimp-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.mailchimp-titel {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+}
+
+.mailchimp-beskrivelse {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+
+.mailchimp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mailchimp-felter {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.mailchimp-felt-gruppe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.mailchimp-label {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.8);
+  font-weight: var(--fw-medium);
+}
+
+.mailchimp-input {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 7px;
+  padding: 0.55rem 0.75rem;
+  font-size: var(--text-sm);
+  color: #fff;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  width: 100%;
+}
+
+.mailchimp-input::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
+.mailchimp-input:focus {
+  border-color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.18);
+}
+
+.mailchimp-knap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.65rem 1.25rem;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background 0.15s;
+  align-self: flex-start;
+}
+
+.mailchimp-knap:hover {
+  background: var(--color-accent-hover);
+}
+
+.mailchimp-kvittering {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  font-size: var(--text-sm);
+  color: rgba(255,255,255,0.9);
+}
+
+@media (max-width: 600px) {
+  .mailchimp-felter {
+    grid-template-columns: 1fr;
+  }
+
+  .mailchimp-knap {
+    width: 100%;
+  }
+}

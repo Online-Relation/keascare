@@ -7,6 +7,7 @@ import { BostedTilsynKort } from './sections/BostedTilsynKort';
 import { BostedOrganisationKort } from './sections/BostedOrganisationKort';
 import { BostedHandlinger } from './sections/BostedHandlinger';
 import { BostedSalgsAfsnit } from './sections/BostedSalgsAfsnit';
+import { MailchimpSignup } from './sections/MailchimpSignup';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
@@ -27,6 +28,8 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
       )}
 
       <BostedFundsoversigt bosted={bosted} />
+
+      <MailchimpSignup bostedNavn={bosted.navn} />
 
       <BostedHandlinger />
     </div>
