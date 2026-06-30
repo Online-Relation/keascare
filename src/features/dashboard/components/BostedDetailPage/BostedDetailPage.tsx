@@ -29,7 +29,7 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
 
       <BostedFundsoversigt bosted={bosted} />
 
-      <MailchimpSignup bostedNavn={bosted.navn} />
+      <MailchimpSignup bostedNavn={bosted.navn} foreslåetEmail={bosted.tpEmail ?? undefined} />
 
       <BostedHandlinger />
     </div>

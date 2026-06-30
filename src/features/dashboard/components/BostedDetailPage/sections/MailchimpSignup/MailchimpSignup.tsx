@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { Mail, Send } from 'lucide-react';
 
-type Props = { bostedNavn?: string };
+type Props = { bostedNavn?: string; foreslåetEmail?: string };
 
-export function MailchimpSignup({ bostedNavn = '' }: Props) {
+export function MailchimpSignup({ bostedNavn = '', foreslåetEmail = '' }: Props) {
   const [bosted, setBosted] = useState(bostedNavn);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(foreslåetEmail);
   const [sendt, setSendt] = useState(false);
 
   function handleSubmit(e: React.FormEvent) {
