@@ -9,6 +9,8 @@ export type CvrAnsatteResultat = {
   opdateret: number;
   ingenData: number;
   fejl: number;
+  fejlBeskeder: string[];
+  førsteCvr?: string;
 };
 
 function venteMs(ms: number) {
@@ -32,6 +34,8 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
   let opdateret = 0;
   let ingenData = 0;
   let fejl = 0;
+  const fejlBeskeder: string[] = [];
+  const førsteCvr = rækker[0]?.cvr ?? undefined;
 
   for (let i = 0; i < rækker.length; i++) {
     const { id, cvr } = rækker[i];
@@ -41,7 +45,7 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
       const opslag = await slaaCvrOp(cvr);
 
       if (opslag) {
-        await supabase
+        const { error: updateError } = await supabase
           .from('stps_rapporter')
           .update({
             cvr_ansatte: opslag.ansatte,
@@ -51,11 +55,20 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
             cvr_opdateret: new Date().toISOString(),
           })
           .eq('id', id);
-        opdateret++;
+        if (updateError) {
+          console.error(`Supabase update fejl for ${cvr}:`, updateError.message);
+          fejl++;
+        } else {
+          opdateret++;
+        }
       } else {
+        if (fejlBeskeder.length < 3) fejlBeskeder.push(`Ingen data fra cvrapi.dk for CVR ${cvr}`);
         ingenData++;
       }
-    } catch {
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (fejlBeskeder.length < 3) fejlBeskeder.push(`Fejl for CVR ${cvr}: ${msg}`);
+      console.error(`CVR opslag fejl for ${cvr}:`, e);
       fejl++;
     }
 
@@ -63,5 +76,5 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
     if (i < rækker.length - 1) await venteMs(400);
   }
 
-  return { behandlet: rækker.length, opdateret, ingenData, fejl };
+  return { behandlet: rækker.length, opdateret, ingenData, fejl, fejlBeskeder, førsteCvr };
 }
