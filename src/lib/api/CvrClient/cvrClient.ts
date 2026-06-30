@@ -1,4 +1,6 @@
 // src/lib/api/CvrClient/cvrClient.ts
+// Bruger Erhvervsstyrelsens officielle gratis CVR ElasticSearch API (http://distribution.virk.dk)
+// til grunddata. Kræver ingen API-nøgle.
 
 export type CvrOpslag = {
   cvr: string;
@@ -12,58 +14,105 @@ export type CvrOpslag = {
   stiftet: string | null;
 };
 
-type CvrApiSvar = {
-  vat?: string;
-  name?: string;
-  address?: string;
-  zipcode?: string;
-  city?: string;
-  employees?: number;
-  industrydesc?: string;
-  companydesc?: string;
-  startdate?: string;
-  error?: string;
-};
+const ERST_URL = 'http://distribution.virk.dk/cvr-permanent/virksomhed/_search';
 
-const BASE_URL = 'https://cvrapi.dk/api';
-const USER_AGENT = 'KeasCare Markedssignaler - mads@onlinerelation.dk';
+export async function slaaCvrOp(cvr: string): Promise<CvrOpslag | null> {
+  const body = {
+    _source: [
+      'Vrvirksomhed.cvrNummer',
+      'Vrvirksomhed.virksomhedMetadata.nyesteNavn.navn',
+      'Vrvirksomhed.virksomhedMetadata.nyesteBeliggenhedsadresse',
+      'Vrvirksomhed.virksomhedMetadata.nyesteAarsbeskaeftigelse.antalAnsatte',
+      'Vrvirksomhed.virksomhedMetadata.nyesteHovedbranche.branchetekst',
+      'Vrvirksomhed.virksomhedMetadata.nyesteVirksomhedsform.kortBeskrivelse',
+      'Vrvirksomhed.livsforloeb',
+    ],
+    query: { term: { 'Vrvirksomhed.cvrNummer': parseInt(cvr, 10) } },
+    size: 1,
+  };
 
-async function forespørgCvr(params: Record<string, string>): Promise<CvrOpslag | null> {
-  const qs = new URLSearchParams({ country: 'dk', ...params }).toString();
-  const url = `${BASE_URL}?${qs}`;
-
-  const res = await fetch(url, {
-    headers: { 'User-Agent': USER_AGENT },
+  const res = await fetch(ERST_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    // @ts-expect-error Next.js cache option
     next: { revalidate: 0 },
   });
 
   if (!res.ok) return null;
 
-  const data: CvrApiSvar = await res.json();
-  if (data.error || !data.vat) return null;
+  const json = await res.json();
+  const hit = json?.hits?.hits?.[0]?._source?.Vrvirksomhed;
+  if (!hit) return null;
 
-  const adresseDele = [data.address, data.zipcode && data.city ? `${data.zipcode} ${data.city}` : null]
-    .filter(Boolean)
-    .join(', ');
+  const meta = hit.virksomhedMetadata ?? {};
+  const adresseObj = meta.nyesteBeliggenhedsadresse ?? {};
+  const vejnavn = adresseObj.vejnavn ?? '';
+  const husnr = adresseObj.husnummerFra ?? '';
+  const postnr = adresseObj.postnummer ? String(adresseObj.postnummer) : null;
+  const by = adresseObj.postdistrikt ?? null;
+  const adresse = vejnavn ? `${vejnavn} ${husnr}`.trim() : null;
+
+  const ansatte = meta.nyesteAarsbeskaeftigelse?.antalAnsatte ?? null;
+  const branche = meta.nyesteHovedbranche?.branchetekst ?? null;
+  const virksomhedstype = meta.nyesteVirksomhedsform?.kortBeskrivelse ?? null;
+
+  const startDato = hit.livsforloeb?.[0]?.periode?.gyldigFra ?? null;
 
   return {
-    cvr: data.vat,
-    navn: data.name ?? '',
-    adresse: adresseDele || null,
-    postnummer: data.zipcode ?? null,
-    by: data.city ?? null,
-    ansatte: typeof data.employees === 'number' ? data.employees : null,
-    branche: data.industrydesc ?? null,
-    virksomhedstype: data.companydesc ?? null,
-    stiftet: data.startdate ?? null,
+    cvr,
+    navn: meta.nyesteNavn?.navn ?? '',
+    adresse: adresse && postnr && by ? `${adresse}, ${postnr} ${by}` : adresse,
+    postnummer: postnr,
+    by,
+    ansatte: typeof ansatte === 'number' ? ansatte : null,
+    branche,
+    virksomhedstype,
+    stiftet: startDato,
   };
 }
 
-export async function slaaCvrOp(cvr: string): Promise<CvrOpslag | null> {
-  return forespørgCvr({ vat: cvr });
-}
-
 export async function slaaPNummerOp(pNummer: string): Promise<CvrOpslag | null> {
-  // cvrapi.dk bruger 'produ' parameteren til P-nummer (produktionsenhed)
-  return forespørgCvr({ produ: pNummer });
+  const body = {
+    _source: [
+      'Vrproduktionsenhed.pNummer',
+      'Vrproduktionsenhed.virksomhedMetadata.nyesteNavn.navn',
+      'Vrproduktionsenhed.beliggenhedsadresse',
+    ],
+    query: { term: { 'Vrproduktionsenhed.pNummer': parseInt(pNummer, 10) } },
+    size: 1,
+  };
+
+  const res = await fetch('http://distribution.virk.dk/cvr-permanent/produktionsenhed/_search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+    // @ts-expect-error Next.js cache option
+    next: { revalidate: 0 },
+  });
+
+  if (!res.ok) return null;
+
+  const json = await res.json();
+  const hit = json?.hits?.hits?.[0]?._source?.Vrproduktionsenhed;
+  if (!hit) return null;
+
+  const adresseObj = hit.beliggenhedsadresse?.[0] ?? {};
+  const vejnavn = adresseObj.vejnavn ?? '';
+  const husnr = adresseObj.husnummerFra ?? '';
+  const postnr = adresseObj.postnummer ? String(adresseObj.postnummer) : null;
+  const by = adresseObj.postdistrikt ?? null;
+  const adresse = vejnavn ? `${vejnavn} ${husnr}`.trim() : null;
+
+  return {
+    cvr: String(hit.pNummer ?? pNummer),
+    navn: hit.virksomhedMetadata?.nyesteNavn?.navn ?? '',
+    adresse: adresse && postnr && by ? `${adresse}, ${postnr} ${by}` : adresse,
+    postnummer: postnr,
+    by,
+    ansatte: null,
+    branche: null,
+    virksomhedstype: null,
+    stiftet: null,
+  };
 }
