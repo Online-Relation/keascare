@@ -35,8 +35,7 @@ export async function slaaCvrOp(cvr: string): Promise<CvrOpslag | null> {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    // @ts-expect-error Next.js cache option
-    next: { revalidate: 0 },
+    cache: 'no-store',
   });
 
   if (!res.ok) return null;
@@ -87,8 +86,7 @@ export async function slaaPNummerOp(pNummer: string): Promise<CvrOpslag | null> 
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    // @ts-expect-error Next.js cache option
-    next: { revalidate: 0 },
+    cache: 'no-store',
   });
 
   if (!res.ok) return null;
