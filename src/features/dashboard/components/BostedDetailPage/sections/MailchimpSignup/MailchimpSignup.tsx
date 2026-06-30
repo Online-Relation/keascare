@@ -20,11 +20,8 @@ export function MailchimpSignup({ bostedNavn = '' }: Props) {
     <div className="mailchimp-boks">
       <div className="mailchimp-header">
         <Mail size={16} />
-        <span className="mailchimp-titel">Hold dig opdateret om dette bosted</span>
+        <span className="mailchimp-titel">Tilmeld {bostedNavn ? `${bostedNavn}` : 'bostedet'} til nyhedsbrevet</span>
       </div>
-      <p className="mailchimp-beskrivelse">
-        Modtag besked når der kommer nye tilsynsrapporter eller væsentlige ændringer.
-      </p>
 
       {sendt ? (
         <div className="mailchimp-kvittering">
