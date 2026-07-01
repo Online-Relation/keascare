@@ -131,35 +131,36 @@ export function ProfilPage() {
             <User size={15} />
             <span className="bosted-detail-kort-titel">Profilbillede og navn</span>
           </div>
-          <div className="profil-avatar-sektion">
-            <div className="profil-avatar-wrapper">
-              {avatarUrl
-                ? <img src={avatarUrl} alt="Profilbillede" className="profil-avatar-billede" />
-                : <div className="profil-avatar-initialer">{initialer}</div>
-              }
-              <button
-                className="profil-avatar-kamera"
-                onClick={() => filInputRef.current?.click()}
-                disabled={uploaderBillede}
-                title="Skift profilbillede"
-              >
-                <Camera size={14} />
-              </button>
-              <input
-                ref={filInputRef}
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                style={{ display: 'none' }}
-                onChange={uploadBillede}
-              />
+          <div className="bosted-detail-kort-body">
+            <div className="profil-avatar-sektion">
+              <div className="profil-avatar-wrapper">
+                {avatarUrl
+                  ? <img src={avatarUrl} alt="Profilbillede" className="profil-avatar-billede" />
+                  : <div className="profil-avatar-initialer">{initialer}</div>
+                }
+                <button
+                  className="profil-avatar-kamera"
+                  onClick={() => filInputRef.current?.click()}
+                  disabled={uploaderBillede}
+                  title="Skift profilbillede"
+                >
+                  <Camera size={14} />
+                </button>
+                <input
+                  ref={filInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  style={{ display: 'none' }}
+                  onChange={uploadBillede}
+                />
+              </div>
+              <p className="profil-avatar-info">
+                {uploaderBillede ? 'Uploader…' : 'Klik på kameraet for at skifte billede'}
+              </p>
+              {billedBesked && <StatusBesked besked={billedBesked} />}
             </div>
-            <p className="profil-avatar-info">
-              {uploaderBillede ? 'Uploader…' : 'Klik på kameraet for at skifte billede'}
-            </p>
-            {billedBesked && <StatusBesked besked={billedBesked} />}
-          </div>
 
-          <form className="profil-form" onSubmit={gemNavn}>
+            <form className="profil-form" onSubmit={gemNavn}>
             <div className="login-felt-gruppe">
               <label className="login-label">Navn</label>
               <input
@@ -170,11 +171,12 @@ export function ProfilPage() {
                 onChange={(e) => setNavn(e.target.value)}
               />
             </div>
-            {navnBesked && <StatusBesked besked={navnBesked} />}
-            <button className="btn btn-primary btn-sm" type="submit" disabled={gemmerNavn}>
-              {gemmerNavn ? 'Gemmer…' : 'Gem navn'}
-            </button>
-          </form>
+              {navnBesked && <StatusBesked besked={navnBesked} />}
+              <button className="btn btn-primary btn-sm" type="submit" disabled={gemmerNavn}>
+                {gemmerNavn ? 'Gemmer…' : 'Gem navn'}
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Skift kodeord */}
@@ -183,7 +185,7 @@ export function ProfilPage() {
             <KeyRound size={15} />
             <span className="bosted-detail-kort-titel">Skift kodeord</span>
           </div>
-          <form className="profil-form" onSubmit={skiftKodeord}>
+          <form className="profil-form bosted-detail-kort-body" onSubmit={skiftKodeord}>
             <div className="login-felt-gruppe">
               <label className="login-label">Nyt kodeord</label>
               <input
