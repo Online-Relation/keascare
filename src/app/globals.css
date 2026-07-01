@@ -32,4 +32,11 @@
     color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
   }
+
+  /* Forhindrer iOS Safari i at zoome ind på inputfelter */
+  @media (max-width: 768px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
 }
