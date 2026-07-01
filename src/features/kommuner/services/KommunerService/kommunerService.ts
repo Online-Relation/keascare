@@ -43,7 +43,8 @@ export async function hentKommuneDetail(kommuneNavn: string): Promise<KommuneDet
     hentBostedForKommune(kommuneNavn),
   ]);
 
-  const dst = dstData.find((d) => d.kommune === kommuneNavn);
+  const dstNavn = kommuneNavn.replace(/\s+[Kk]ommune$/, '').trim();
+  const dst = dstData.find((d) => d.kommune === dstNavn || d.kommune === kommuneNavn);
 
   return {
     navn: kommuneNavn,

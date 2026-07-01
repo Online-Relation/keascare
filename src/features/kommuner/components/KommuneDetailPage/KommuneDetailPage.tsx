@@ -23,7 +23,9 @@ export function KommuneDetailPage({ detail }: Props) {
       <div className="kommune-detail-header">
         <div className="kommune-detail-titel-række">
           <MapPin size={20} className="kommune-detail-pin" />
-          <h1 className="kommune-detail-titel">{detail.navn} Kommune</h1>
+          <h1 className="kommune-detail-titel">
+            {detail.navn.replace(/\s+[Kk]ommune$/, '')} Kommune
+          </h1>
         </div>
 
         <div className="kommune-detail-stats">
