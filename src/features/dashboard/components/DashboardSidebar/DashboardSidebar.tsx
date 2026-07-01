@@ -113,16 +113,16 @@ export function DashboardSidebar() {
         )}
       </nav>
 
-      <div className="sidebar-footer">
+      <Link href="/dashboard/profil" className="sidebar-footer">
         <div className="sidebar-avatar">KC</div>
         <div style={{ flex: 1 }}>
-          <p className="sidebar-user-name">KeasCare</p>
-          <p className="sidebar-user-role">Administrator</p>
+          <p className="sidebar-user-name">Min profil</p>
+          <p className="sidebar-user-role">Klik for at redigere</p>
         </div>
-        <button className="sidebar-logud-knap" onClick={logUd} title="Log ud">
+        <button className="sidebar-logud-knap" onClick={(e) => { e.preventDefault(); logUd(); }} title="Log ud">
           <LogOut size={15} />
         </button>
-      </div>
+      </Link>
     </aside>
   );
 }
