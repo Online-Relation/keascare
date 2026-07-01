@@ -351,6 +351,11 @@
       display: none;
     }
 
+    .dashboard-table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .dashboard-content {
       padding: 1rem;
     }
