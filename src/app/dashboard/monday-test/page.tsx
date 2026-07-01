@@ -1,5 +1,7 @@
 // src/app/dashboard/monday-test/page.tsx
 
+export const revalidate = 300; // Cache i 5 minutter
+
 import { mondayQuery } from '@/lib/api/MondayClient';
 import { AlertCircle, CheckCircle, Hash, Layout, Users } from 'lucide-react';
 
@@ -37,42 +39,45 @@ async function hentAlleItems(): Promise<{ board: BoardMeta['boards'][0]; items: 
   if (!BOARD_ID) return null;
 
   try {
-    // Hent board-meta og første side
-    const [meta, side1] = await Promise.all([
-      mondayQuery<BoardMeta>(`
-        query ($boardId: ID!) {
-          boards(ids: [$boardId]) {
-            name
-            items_count
-            groups { id title color }
-            columns { id title type }
-          }
+    // Hent board-meta inkl. kolonner for at finde Type kolonne-ID
+    const meta = await mondayQuery<BoardMeta>(`
+      query ($boardId: ID!) {
+        boards(ids: [$boardId]) {
+          name
+          items_count
+          groups { id title color }
+          columns { id title type }
         }
-      `, { boardId: BOARD_ID }),
-
-      mondayQuery<ItemsPage>(`
-        query ($boardId: ID!) {
-          boards(ids: [$boardId]) {
-            items_page(limit: 500) {
-              cursor
-              items {
-                id name
-                group { id title }
-                column_values { id text type column { title } }
-              }
-            }
-          }
-        }
-      `, { boardId: BOARD_ID }),
-    ]);
+      }
+    `, { boardId: BOARD_ID });
 
     const board = meta.boards[0];
     if (!board) return null;
 
+    // Find Type kolonne-ID og filtrer direkte i Monday — henter kun Type=Bosted
+    const typeKolonne = board.columns.find((k) => k.title.toLowerCase() === 'type');
+    const queryParams = typeKolonne
+      ? `query_params: { rules: [{ column_id: "${typeKolonne.id}", compare_value: ["Bosted"] }] }`
+      : '';
+
+    const side1 = await mondayQuery<ItemsPage>(`
+      query ($boardId: ID!) {
+        boards(ids: [$boardId]) {
+          items_page(limit: 500, ${queryParams}) {
+            cursor
+            items {
+              id name
+              group { id title }
+              column_values { id text type column { title } }
+            }
+          }
+        }
+      }
+    `, { boardId: BOARD_ID });
+
     let items = side1.boards[0]?.items_page.items ?? [];
     let cursor = side1.boards[0]?.items_page.cursor;
 
-    // Hent resterende sider
     while (cursor) {
       const næste = await mondayQuery<NextPage>(`
         query ($cursor: String!) {
@@ -129,8 +134,8 @@ export default async function MondayTestSide() {
 
   const { board, items } = resultat;
 
-  // Kun bosted-items — Privatforløb og øvrige typer ignoreres
-  const bostedItems = items.filter((i) => findTypeVærdi(i)?.toLowerCase() === 'bosted');
+  // items er allerede filtreret til Type=Bosted i Monday API-queryen
+  const bostedItems = items;
 
   // Antal pr. gruppe — kun bosted-items
   const gruppeMap = new Map<string, { titel: string; farve: string; antal: number }>();
