@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { GlobalSearch } from '@/features/dashboard/components/GlobalSearch';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
+import { UserAvatar } from '@/features/auth/components/UserAvatar';
 
 export function DashboardHeader() {
   return (
@@ -26,9 +27,9 @@ export function DashboardHeader() {
         <button className="btn btn-ghost btn-sm" aria-label="Notifikationer">
           <Bell size={15} />
         </button>
-        <div className="sidebar-avatar" style={{ width: '1.875rem', height: '1.875rem', fontSize: '0.65rem' }}>
-          MK
-        </div>
+        <Link href="/dashboard/profil" aria-label="Min profil">
+          <UserAvatar size={30} fontSize="0.65rem" />
+        </Link>
       </div>
     </header>
   );

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
+import { UserAvatar } from '@/features/auth/components/UserAvatar';
 
 const navItems = [
   { label: 'Dashboard',           href: '/dashboard',                       icon: LayoutDashboard },
@@ -114,7 +115,7 @@ export function DashboardSidebar() {
       </nav>
 
       <Link href="/dashboard/profil" className="sidebar-footer">
-        <div className="sidebar-avatar">KC</div>
+        <UserAvatar size={32} fontSize="0.7rem" />
         <div style={{ flex: 1 }}>
           <p className="sidebar-user-name">Min profil</p>
           <p className="sidebar-user-role">Klik for at redigere</p>
