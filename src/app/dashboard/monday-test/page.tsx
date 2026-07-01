@@ -1,7 +1,7 @@
 // src/app/dashboard/monday-test/page.tsx
 
 import { mondayQuery } from '@/lib/api/MondayClient';
-import { AlertCircle, CheckCircle, Hash, Columns, Layout, Users } from 'lucide-react';
+import { AlertCircle, CheckCircle, Hash, Layout, Users } from 'lucide-react';
 
 const BOARD_ID = process.env.MONDAY_BOARD_ID;
 
@@ -129,14 +129,8 @@ export default async function MondayTestSide() {
 
   const { board, items } = resultat;
 
-  // Opdel på type
-  const bostedItems      = items.filter((i) => findTypeVærdi(i)?.toLowerCase() === 'bosted');
-  const privatItems      = items.filter((i) => findTypeVærdi(i)?.toLowerCase().includes('privat'));
-  const udenTypeItems    = items.filter((i) => !findTypeVærdi(i));
-  const øvrigeItems      = items.filter((i) => {
-    const v = findTypeVærdi(i)?.toLowerCase() ?? '';
-    return v && v !== 'bosted' && !v.includes('privat');
-  });
+  // Kun bosted-items — Privatforløb og øvrige typer ignoreres
+  const bostedItems = items.filter((i) => findTypeVærdi(i)?.toLowerCase() === 'bosted');
 
   // Antal pr. gruppe — kun bosted-items
   const gruppeMap = new Map<string, { titel: string; farve: string; antal: number }>();
@@ -148,12 +142,6 @@ export default async function MondayTestSide() {
     if (g) g.antal++;
   }
 
-  // Unikke type-værdier i boardet
-  const typeVærdier = new Map<string, number>();
-  for (const item of items) {
-    const v = findTypeVærdi(item) ?? '(ingen)';
-    typeVærdier.set(v, (typeVærdier.get(v) ?? 0) + 1);
-  }
 
   return (
     <div className="dashboard-content">
@@ -174,8 +162,8 @@ export default async function MondayTestSide() {
         <div className="mon-kpi">
           <Hash size={18} className="mon-kpi-ikon" />
           <div>
-            <div className="mon-kpi-tal">{items.length}</div>
-            <div className="mon-kpi-label">Items i alt</div>
+            <div className="mon-kpi-tal">{bostedItems.length}</div>
+            <div className="mon-kpi-label">Bosteder i alt</div>
           </div>
         </div>
         <div className="mon-kpi">
@@ -183,13 +171,6 @@ export default async function MondayTestSide() {
           <div>
             <div className="mon-kpi-tal">{bostedItems.length}</div>
             <div className="mon-kpi-label">Type: Bosted</div>
-          </div>
-        </div>
-        <div className="mon-kpi">
-          <Users size={18} className="mon-kpi-ikon" style={{ color: '#EF4444' }} />
-          <div>
-            <div className="mon-kpi-tal">{privatItems.length}</div>
-            <div className="mon-kpi-label">Type: Privatforløb</div>
           </div>
         </div>
         <div className="mon-kpi">
@@ -219,32 +200,8 @@ export default async function MondayTestSide() {
           </div>
         </div>
 
-        {/* Type-fordeling + kolonner */}
+        {/* Kolonner */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-          {/* Type-værdier */}
-          <div className="mon-kort">
-            <h2 className="mon-kort-titel">Alle type-værdier i boardet</h2>
-            <div className="mon-gruppe-liste">
-              {Array.from(typeVærdier.entries())
-                .sort((a, b) => b[1] - a[1])
-                .map(([type, antal]) => (
-                  <div key={type} className="mon-gruppe-række">
-                    <span
-                      className="mon-gruppe-farve"
-                      style={{
-                        background: type === '(ingen)' ? '#9CA3AF'
-                          : type.toLowerCase() === 'bosted' ? '#10B981'
-                          : type.toLowerCase().includes('privat') ? '#EF4444'
-                          : '#6366F1',
-                      }}
-                    />
-                    <span className="mon-gruppe-navn">{type}</span>
-                    <span className="mon-gruppe-antal">{antal}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
 
           {/* Kolonner */}
           <div className="mon-kort">
