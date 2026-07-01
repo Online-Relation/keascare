@@ -112,3 +112,14 @@ async function hentBostedForKommune(kommuneNavn: string): Promise<KommuneBosted[
     temaer: row.temaer ?? [],
   }));
 }
+
+export async function hentAlleKommuneNavne(): Promise<string[]> {
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase
+    .from('stps_rapporter')
+    .select('kommune')
+    .not('kommune', 'is', null);
+  if (!data) return [];
+  const unikke = new Set((data as { kommune: string }[]).map((r) => r.kommune));
+  return [...unikke];
+}
