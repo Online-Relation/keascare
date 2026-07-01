@@ -151,6 +151,7 @@ function beregnTopKommuner(rapporter: DbRapport[]): KommuneStat[] {
 
   return Array.from(map.entries())
     .map(([navn, stat]) => ({ navn, ...stat }))
+    .filter((k) => k.antal > 2)
     .sort((a, b) => b.antal - a.antal)
     .slice(0, 5);
 }

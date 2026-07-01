@@ -1,5 +1,6 @@
 // src/features/dashboard/components/DashboardPage/sections/DashboardBottomPanels/DashboardBottomPanels.tsx
 
+import Link from 'next/link';
 import type { DashboardData, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 
 type Props = {
@@ -72,27 +73,34 @@ export function DashboardBottomPanels({ data }: Props) {
       </div>
 
       {/* Top kommuner */}
-      <div className="card">
-        <p className="card-title">Top kommuner</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-          {topKommuner.map((k, i) => (
-            <div key={k.navn} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', width: '1rem', textAlign: 'right', flexShrink: 0 }}>
-                {i + 1}
-              </span>
-              <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>
-                {k.navn}
-              </span>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
-                {k.antal} bosteder
-              </span>
-              <span className="badge badge-kritisk" style={{ padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}>
-                {k.medFund} fund
-              </span>
-            </div>
-          ))}
+      {topKommuner.length > 0 && (
+        <div className="card">
+          <p className="card-title">Top kommuner</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            {topKommuner.map((k, i) => (
+              <Link
+                key={k.navn}
+                href={`/dashboard/kommuner/${encodeURIComponent(k.navn)}`}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.35rem 0', borderBottom: i < topKommuner.length - 1 ? '1px solid var(--color-border-light)' : 'none', textDecoration: 'none' }}
+                className="top-kommune-række"
+              >
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', width: '1rem', textAlign: 'right', flexShrink: 0 }}>
+                  {i + 1}
+                </span>
+                <span style={{ flex: 1, fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)', fontWeight: 'var(--fw-medium)' }}>
+                  {k.navn}
+                </span>
+                <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                  {k.antal} bosteder
+                </span>
+                <span className={`badge ${k.medFund > 0 ? 'badge-kritisk' : 'badge-ingen'}`} style={{ padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}>
+                  {k.medFund} fund
+                </span>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Datakilder status */}
       <div className="card">
