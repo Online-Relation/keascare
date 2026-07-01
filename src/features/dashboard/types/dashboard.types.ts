@@ -53,10 +53,13 @@ export type StpsFordeling = {
   pct: number;
 };
 
+export type KommuneFundNiveau = 'kritisk' | 'mindre' | 'ingen';
+
 export type KommuneStat = {
   navn: string;
   antal: number;
   medFund: number;
+  højesteFund: KommuneFundNiveau;
 };
 
 export type TilbudsportalenStats = {

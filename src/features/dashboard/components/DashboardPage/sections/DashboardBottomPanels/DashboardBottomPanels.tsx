@@ -93,7 +93,10 @@ export function DashboardBottomPanels({ data }: Props) {
                 <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
                   {k.antal} bosteder
                 </span>
-                <span className={`badge ${k.medFund > 0 ? 'badge-kritisk' : 'badge-ingen'}`} style={{ padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}>
+                <span
+                  className={`badge ${k.højesteFund === 'kritisk' ? 'badge-kritisk' : k.højesteFund === 'mindre' ? 'badge-mindre' : 'badge-ingen'}`}
+                  style={{ padding: '0.1rem 0.4rem', fontSize: '0.65rem' }}
+                >
                   {k.medFund} fund
                 </span>
               </Link>

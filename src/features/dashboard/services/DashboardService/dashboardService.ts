@@ -138,19 +138,35 @@ function beregnFordeling(rapporter: DbRapport[]): StpsFordeling[] {
   ].filter((f) => f.antal > 0);
 }
 
+const FUND_PRIORITET: Record<string, number> = { kritisk: 3, stoerre: 2, større: 2, mindre: 1, ingen: 0 };
+
+function højesteFundNiveau(niveau: string | null | undefined): import('@/features/dashboard/types/dashboard.types').KommuneFundNiveau {
+  const n = (niveau ?? '').toLowerCase();
+  if (n === 'kritisk') return 'kritisk';
+  if (n === 'mindre' || n === 'stoerre' || n === 'større') return 'mindre';
+  return 'ingen';
+}
+
 function beregnTopKommuner(rapporter: DbRapport[]): KommuneStat[] {
-  const map = new Map<string, { antal: number; medFund: number }>();
+  const map = new Map<string, { antal: number; medFund: number; prioritet: number }>();
 
   for (const r of rapporter) {
     const k = r.kommune ?? 'Ukendt';
-    const eksist = map.get(k) ?? { antal: 0, medFund: 0 };
+    const eksist = map.get(k) ?? { antal: 0, medFund: 0, prioritet: 0 };
     eksist.antal++;
-    if (r.fund_niveau && r.fund_niveau !== 'ingen') eksist.medFund++;
+    const p = FUND_PRIORITET[r.fund_niveau?.toLowerCase() ?? ''] ?? 0;
+    if (p > 0) eksist.medFund++;
+    if (p > eksist.prioritet) eksist.prioritet = p;
     map.set(k, eksist);
   }
 
   return Array.from(map.entries())
-    .map(([navn, stat]) => ({ navn, ...stat }))
+    .map(([navn, stat]) => ({
+      navn,
+      antal: stat.antal,
+      medFund: stat.medFund,
+      højesteFund: stat.prioritet >= 3 ? 'kritisk' : stat.prioritet >= 1 ? 'mindre' : 'ingen' as import('@/features/dashboard/types/dashboard.types').KommuneFundNiveau,
+    }))
     .filter((k) => k.antal > 2)
     .sort((a, b) => b.antal - a.antal)
     .slice(0, 5);
