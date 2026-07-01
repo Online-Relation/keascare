@@ -86,7 +86,7 @@ export function BrugerAdminPage() {
             <UserPlus size={15} />
             <span className="bosted-detail-kort-titel">Opret ny bruger</span>
           </div>
-          <form className="bruger-opret-form" onSubmit={opretBruger}>
+          <form className="bruger-opret-form bosted-detail-kort-body" onSubmit={opretBruger}>
             <div className="login-felt-gruppe">
               <label className="login-label">Navn</label>
               <input className="login-input" type="text" placeholder="Fornavn Efternavn" value={navn} onChange={(e) => setNavn(e.target.value)} />
@@ -127,7 +127,7 @@ export function BrugerAdminPage() {
             <Users size={15} />
             <span className="bosted-detail-kort-titel">Aktive brugere ({brugere.length})</span>
           </div>
-          <div className="bruger-liste">
+          <div className="bruger-liste bosted-detail-kort-body">
             {loader && <p className="bruger-loading">Henter brugere…</p>}
             {!loader && brugere.length === 0 && <p className="bruger-loading">Ingen brugere endnu.</p>}
             {brugere.map((b) => (

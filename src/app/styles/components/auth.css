@@ -169,7 +169,6 @@
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  padding: 0.25rem 0;
 }
 
 .bruger-succes {
@@ -184,7 +183,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 0.25rem 0;
 }
 
 .bruger-loading {
