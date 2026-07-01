@@ -2,16 +2,18 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical, Target,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical, Target, LogOut,
 } from 'lucide-react';
-import { Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
+import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
+import { UserAvatar } from '@/features/auth/components/UserAvatar';
 
 const navItems = [
   { label: 'Dashboard',         href: '/dashboard',                      icon: LayoutDashboard },
@@ -43,6 +45,24 @@ export function MobileNav() {
   const [menuÅben, setMenuÅben] = useState(false);
   const [søgningÅben, setSøgningÅben] = useState(false);
   const [datoÅben, setDatoÅben] = useState(false);
+  const [brugerNavn, setBrugerNavn] = useState('');
+  const [brugerEmail, setBrugerEmail] = useState('');
+
+  useEffect(() => {
+    const supabase = getSupabaseAuthBrowserClient();
+    supabase.auth.getUser().then(({ data }) => {
+      const user = data.user;
+      if (!user) return;
+      setBrugerNavn(user.user_metadata?.navn ?? '');
+      setBrugerEmail(user.email ?? '');
+    });
+  }, []);
+
+  async function logUd() {
+    const supabase = getSupabaseAuthBrowserClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
   const [søgeTekst, setSøgeTekst] = useState('');
   const [resultater, setResultater] = useState<Søgeresultat[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -195,13 +215,20 @@ export function MobileNav() {
           ))}
         </div>
 
-        <div className="sidebar-footer">
-          <div className="sidebar-avatar">MK</div>
-          <div>
-            <p className="sidebar-user-name">Mads Kristensen</p>
-            <p className="sidebar-user-role">Administrator</p>
+        <Link href="/dashboard/profil" className="sidebar-footer" onClick={() => setMenuÅben(false)}>
+          <UserAvatar size={32} fontSize="0.7rem" />
+          <div style={{ flex: 1 }}>
+            <p className="sidebar-user-name">{brugerNavn || brugerEmail || 'Min profil'}</p>
+            <p className="sidebar-user-role">Klik for at redigere</p>
           </div>
-        </div>
+          <button
+            className="sidebar-logud-knap"
+            onClick={(e) => { e.preventDefault(); logUd(); }}
+            title="Log ud"
+          >
+            <LogOut size={15} />
+          </button>
+        </Link>
       </nav>
     </>
   );
