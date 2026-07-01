@@ -1,0 +1,1 @@
+export { hentAlleMondayKunder } from './mondayKunderService';

@@ -129,14 +129,17 @@ async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
 
 function mapTilKundeItem(item: RåMondayItem): MondayKundeItem {
   return {
-    mondayId:    item.id,
-    navn:        item.name,
-    gruppe:      mapGruppe(item.group.title),
-    gruppeNavn:  item.group.title,
-    adresse:     findKolonneVærdi(item, 'Forløb Adresse'),
-    email:       findKolonneVærdi(item, 'Kontakt Mail'),
-    website:     findKolonneVærdi(item, 'Forløb Website'),
-    oprettetDato: findKolonneVærdi(item, 'Oprettelsesdato'),
+    mondayId:         item.id,
+    navn:             item.name,
+    gruppe:           mapGruppe(item.group.title),
+    gruppeNavn:       item.group.title,
+    adresse:          findKolonneVærdi(item, 'Forløb Adresse'),
+    email:            findKolonneVærdi(item, 'Kontakt Mail'),
+    website:          findKolonneVærdi(item, 'Forløb Website'),
+    oprettetDato:     findKolonneVærdi(item, 'Oprettelsesdato'),
+    forløbsansvarlig: findKolonneVærdi(item, 'Forløbsansvarlig'),
+    opfølgningsdato:  findKolonneVærdi(item, 'Opfølgningsdato'),
+    status:           findKolonneVærdi(item, 'Status'),
   };
 }
 

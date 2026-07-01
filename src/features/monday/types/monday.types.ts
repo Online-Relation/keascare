@@ -11,6 +11,9 @@ export type MondayKundeItem = {
   email: string | null;
   website: string | null;
   oprettetDato: string | null;
+  forløbsansvarlig: string | null;
+  opfølgningsdato: string | null;
+  status: string | null;
 };
 
 export type MondayMatchResultat = {

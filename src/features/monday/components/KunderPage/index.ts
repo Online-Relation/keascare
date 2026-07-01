@@ -1,0 +1,1 @@
+export { KunderPage } from './KunderPage';

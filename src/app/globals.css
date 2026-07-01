@@ -21,6 +21,7 @@
 @import "./styles/components/monday.css";
 @import "./styles/layout/dashboard.css";
 @import "./styles/components/auth.css";
+@import "./styles/components/kunder.css";
 
 @layer base {
   *, *::before, *::after {

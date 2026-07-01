@@ -19,9 +19,9 @@ import {
   ChevronDown,
   ChevronRight,
   FlaskConical,
-  Target,
   Users,
   LogOut,
+  Building2,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -33,6 +33,7 @@ const navItems = [
   { label: 'Tilsynsrapporter',    href: '/dashboard/rapporter',             icon: ClipboardList },
   { label: 'Alle rapporter',      href: '/dashboard/alle-rapporter',        icon: FileText },
   { label: 'Kommuner',            href: '/dashboard/kommuner',              icon: MapPin },
+  { label: 'Kunder',              href: '/dashboard/kunder',                icon: Building2 },
   { label: 'Markedsdata',         href: '/dashboard/markedsdata',           icon: BarChart2 },
   { label: 'Scrapers',            href: '/dashboard/scrapers',              icon: RefreshCw },
   { label: 'Monday test',         href: '/dashboard/monday-test',           icon: FlaskConical },
