@@ -27,7 +27,9 @@ type BoardMeta = {
 
 type ItemsPage = {
   boards: Array<{
-    items_page: { cursor: string | null; items: MondayItem[] };
+    groups: Array<{
+      items_page: { cursor: string | null; items: MondayItem[] };
+    }>;
   }>;
 };
 
@@ -54,31 +56,36 @@ async function hentAlleItems(): Promise<{ board: BoardMeta['boards'][0]; items: 
     const board = meta.boards[0];
     if (!board) return null;
 
-    // Find Type kolonne-ID og filtrer direkte i Monday — henter kun Type=Bosted
-    const typeKolonne = board.columns.find((k) => k.title.toLowerCase() === 'type');
-    const queryParams = typeKolonne
-      ? `query_params: { rules: [{ column_id: "${typeKolonne.id}", compare_value: ["Bosted"] }] }`
-      : '';
+    // Find aktive gruppe-ID'er og hent kun items fra dem
+    const AKTIVE = ['nye forløb', 'aktive forløb'];
+    const aktiveGruppeIds = board.groups
+      .filter((g) => AKTIVE.some((navn) => g.title.toLowerCase() === navn))
+      .map((g) => g.id);
+
+    const gruppeIdStr = aktiveGruppeIds.map((id) => `"${id}"`).join(', ');
 
     const side1 = await mondayQuery<ItemsPage>(`
       query ($boardId: ID!) {
         boards(ids: [$boardId]) {
-          items_page(limit: 500, ${queryParams}) {
-            cursor
-            items {
-              id name
-              group { id title }
-              column_values { id text type column { title } }
+          groups(ids: [${gruppeIdStr}]) {
+            items_page(limit: 500) {
+              cursor
+              items {
+                id name
+                group { id title }
+                column_values { id text type column { title } }
+              }
             }
           }
         }
       }
     `, { boardId: BOARD_ID });
 
-    let items = side1.boards[0]?.items_page.items ?? [];
-    let cursor = side1.boards[0]?.items_page.cursor;
+    const grupper = side1.boards[0]?.groups ?? [];
+    let items: MondayItem[] = grupper.flatMap((g) => g.items_page.items);
+    const cursors = grupper.map((g) => g.items_page.cursor).filter((c): c is string => !!c);
 
-    while (cursor) {
+    for (const cursor of cursors) {
       const næste = await mondayQuery<NextPage>(`
         query ($cursor: String!) {
           next_items_page(limit: 500, cursor: $cursor) {
@@ -92,10 +99,12 @@ async function hentAlleItems(): Promise<{ board: BoardMeta['boards'][0]; items: 
         }
       `, { cursor });
       items = [...items, ...(næste.next_items_page.items ?? [])];
-      cursor = næste.next_items_page.cursor;
     }
 
-    return { board, items };
+    // Filtrer til kun Type=Bosted
+    const bostedItems = items.filter((i) => findTypeVærdi(i)?.toLowerCase() === 'bosted');
+
+    return { board, items: bostedItems };
   } catch {
     return null;
   }
@@ -134,7 +143,6 @@ export default async function MondayTestSide() {
 
   const { board, items } = resultat;
 
-  // items er allerede filtreret til Type=Bosted i Monday API-queryen
   const bostedItems = items;
 
   // Antal pr. gruppe — kun bosted-items

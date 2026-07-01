@@ -48,54 +48,63 @@ function findKolonneVærdi(item: RåMondayItem, kolonneTitel: string): string | 
   return felt?.text ?? null;
 }
 
-type BoardKolonner = {
-  boards: Array<{ columns: Array<{ id: string; title: string }> }>;
+type BoardMedGrupper = {
+  boards: Array<{ groups: Array<{ id: string; title: string }> }>;
 };
 
-// Finder kolonne-ID for Type-kolonnen én gang, så vi kan filtrere i Monday API-queryen
-async function findTypeKolonneId(): Promise<string | null> {
-  const data = await mondayQuery<BoardKolonner>(`
-    query ($boardId: ID!) {
-      boards(ids: [$boardId]) {
-        columns { id title }
-      }
-    }
-  `, { boardId: BOARD_ID });
-  const kolonne = data.boards[0]?.columns.find(
-    (k) => k.title.toLowerCase() === 'type'
-  );
-  return kolonne?.id ?? null;
-}
+type GruppeItemsPage = {
+  boards: Array<{
+    groups: Array<{
+      items_page: { cursor: string | null; items: RåMondayItem[] };
+    }>;
+  }>;
+};
 
 async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
   if (!BOARD_ID) throw new Error('MONDAY_BOARD_ID mangler');
 
-  // Hent Type kolonne-ID så vi kan filtrere direkte i Monday — undgår at hente Privatforløb
-  const typeKolonneId = await findTypeKolonneId();
-
-  const queryParams = typeKolonneId
-    ? `query_params: { rules: [{ column_id: "${typeKolonneId}", compare_value: ["Bosted"] }] }`
-    : '';
-
-  const side1 = await mondayQuery<ItemsPage>(`
+  // Hent gruppenavne for at finde ID'erne på de aktive grupper
+  const gruppeData = await mondayQuery<BoardMedGrupper>(`
     query ($boardId: ID!) {
       boards(ids: [$boardId]) {
-        items_page(limit: 500, ${queryParams}) {
-          cursor
-          items {
-            id name
-            group { id title }
-            column_values { id text type column { title } }
+        groups { id title }
+      }
+    }
+  `, { boardId: BOARD_ID });
+
+  const aktiveGruppeIds = (gruppeData.boards[0]?.groups ?? [])
+    .filter((g) => AKTIVE_GRUPPE_NAVNE.some((navn) => g.title.toLowerCase() === navn))
+    .map((g) => g.id);
+
+  if (aktiveGruppeIds.length === 0) return [];
+
+  // Hent kun items fra de aktive grupper — undgår Privatforløb og afsluttede/tabte grupper
+  const gruppeIdStr = aktiveGruppeIds.map((id) => `"${id}"`).join(', ');
+
+  const side1 = await mondayQuery<GruppeItemsPage>(`
+    query ($boardId: ID!) {
+      boards(ids: [$boardId]) {
+        groups(ids: [${gruppeIdStr}]) {
+          items_page(limit: 500) {
+            cursor
+            items {
+              id name
+              group { id title }
+              column_values { id text type column { title } }
+            }
           }
         }
       }
     }
   `, { boardId: BOARD_ID });
 
-  let items = side1.boards[0]?.items_page.items ?? [];
-  let cursor = side1.boards[0]?.items_page.cursor;
+  const grupper = side1.boards[0]?.groups ?? [];
+  let items: RåMondayItem[] = grupper.flatMap((g) => g.items_page.items);
+  const cursors = grupper
+    .map((g) => g.items_page.cursor)
+    .filter((c): c is string => !!c);
 
-  while (cursor) {
+  for (const cursor of cursors) {
     const næste = await mondayQuery<NextPage>(`
       query ($cursor: String!) {
         next_items_page(limit: 500, cursor: $cursor) {
@@ -109,13 +118,12 @@ async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
       }
     `, { cursor });
     items = [...items, ...(næste.next_items_page.items ?? [])];
-    cursor = næste.next_items_page.cursor;
   }
 
-  // Sekundær filtrering: kun aktive grupper
+  // Filtrer til kun Type=Bosted
   return items.filter((item) => {
-    const gruppeNorm = item.group.title.toLowerCase();
-    return AKTIVE_GRUPPE_NAVNE.some((g) => gruppeNorm === g);
+    const type = findKolonneVærdi(item, 'Type')?.toLowerCase();
+    return type === 'bosted';
   });
 }
 
