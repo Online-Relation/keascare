@@ -129,6 +129,15 @@ export type SalgsFunnel = {
   trin: SalgsFunnelTrin[];
 };
 
+export type DatakildeStatus = 'aktiv' | 'ikke_implementeret' | 'fejl';
+
+export type Datakilde = {
+  navn: string;
+  status: DatakildeStatus;
+  sidstOpdateret: string | null;
+  note: string | null;
+};
+
 export type DashboardData = {
   kpis: KpiItem[];
   bosteder: Bosted[];
@@ -136,4 +145,5 @@ export type DashboardData = {
   stpsFordeling: StpsFordeling[];
   topKommuner: KommuneStat[];
   salgsFunnel: SalgsFunnel;
+  datakilder: Datakilde[];
 };

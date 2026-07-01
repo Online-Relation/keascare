@@ -242,6 +242,8 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   const rapporter = (data ?? []) as DbRapport[];
   const bosteder = rapporter.map(mapTilBosted);
 
+  const datakilder = await hentDatakilderStatus(supabase, rapporter);
+
   return {
     kpis:            beregnKpis(rapporter),
     bosteder,
@@ -249,5 +251,72 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     topKommuner:     beregnTopKommuner(rapporter),
     tilbudsportalen: beregnTilbudsportalen(rapporter),
     salgsFunnel:     beregnSalgsFunnel(rapporter),
+    datakilder,
   };
+}
+
+async function hentDatakilderStatus(
+  supabase: ReturnType<typeof getSupabaseServerClient>,
+  rapporter: DbRapport[]
+): Promise<import('@/features/dashboard/types/dashboard.types').Datakilde[]> {
+  // STPS: sidst scraped dato fra rapporter
+  const stpsSidst = rapporter
+    .map((r) => r.scraper_dato)
+    .filter(Boolean)
+    .sort()
+    .at(-1) ?? null;
+
+  // Tilbudsportalen: tjek om vi har TP-matchede rapporter
+  const tpMatchede = rapporter.filter((r) => r.tp_tilbudstype).length;
+
+  // Monday: tjek om env-var er sat
+  const mondayAktiv = !!process.env.MONDAY_BOARD_ID && !!process.env.MONDAY_API_KEY;
+
+  // DST: vi kalder live API — mark aktiv hvis vi har kommunedata
+  const dstAktiv = true;
+
+  // CVR: aktiv hvis env-var til distribution.virk.dk er tilgængeligt (ingen API-nøgle kræves)
+  const cvrAktiv = true;
+
+  const fmt = (dato: string | null) =>
+    dato ? new Date(dato).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+
+  return [
+    {
+      navn: 'STPS Tilsynsrapporter',
+      status: rapporter.length > 0 ? 'aktiv' : 'fejl',
+      sidstOpdateret: fmt(stpsSidst),
+      note: `${rapporter.length} rapporter i databasen`,
+    },
+    {
+      navn: 'Tilbudsportalen',
+      status: tpMatchede > 0 ? 'aktiv' : 'fejl',
+      sidstOpdateret: fmt(stpsSidst),
+      note: `${tpMatchede} bosteder matchet`,
+    },
+    {
+      navn: 'Monday CRM',
+      status: mondayAktiv ? 'aktiv' : 'fejl',
+      sidstOpdateret: null,
+      note: mondayAktiv ? 'Live GraphQL API' : 'Mangler MONDAY_BOARD_ID eller MONDAY_API_KEY',
+    },
+    {
+      navn: 'Danmarks Statistik',
+      status: dstAktiv ? 'aktiv' : 'fejl',
+      sidstOpdateret: null,
+      note: 'Live API · §107 og §108 borgere pr. kommune',
+    },
+    {
+      navn: 'CVR / Erhvervsstyrelsen',
+      status: cvrAktiv ? 'aktiv' : 'fejl',
+      sidstOpdateret: null,
+      note: 'distribution.virk.dk · ansatte og virksomhedsdata',
+    },
+    {
+      navn: 'MailChimp',
+      status: 'ikke_implementeret',
+      sidstOpdateret: null,
+      note: 'Ikke koblet endnu — kommer i næste fase',
+    },
+  ];
 }

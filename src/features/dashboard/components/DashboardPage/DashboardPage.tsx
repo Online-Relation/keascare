@@ -20,6 +20,7 @@ export function DashboardPage({ data }: DashboardPageProps) {
             tilbudsportalen: data.tilbudsportalen,
             stpsFordeling: data.stpsFordeling,
             topKommuner: data.topKommuner,
+            datakilder: data.datakilder,
           }}
         />
       </div>

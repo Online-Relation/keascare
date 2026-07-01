@@ -1,11 +1,17 @@
 // src/features/dashboard/components/DashboardPage/sections/DashboardBottomPanels/DashboardBottomPanels.tsx
 
 import Link from 'next/link';
-import type { DashboardData, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+import type { DashboardData, Datakilde } from '@/features/dashboard/types/dashboard.types';
 
 type Props = {
-  data: Pick<DashboardData, 'tilbudsportalen' | 'stpsFordeling' | 'topKommuner'>;
+  data: Pick<DashboardData, 'tilbudsportalen' | 'stpsFordeling' | 'topKommuner' | 'datakilder'>;
 };
+
+function statusBadge(status: Datakilde['status']) {
+  if (status === 'aktiv') return { cls: 'badge-ingen', label: 'Aktiv' };
+  if (status === 'ikke_implementeret') return { cls: 'badge-ukendt', label: 'Ikke koblet' };
+  return { cls: 'badge-kritisk', label: 'Fejl' };
+}
 
 const fundFarver: Record<string, string> = {
   'Kritiske fund': 'var(--badge-kritisk-text)',
@@ -15,7 +21,7 @@ const fundFarver: Record<string, string> = {
 };
 
 export function DashboardBottomPanels({ data }: Props) {
-  const { tilbudsportalen, stpsFordeling, topKommuner } = data;
+  const { tilbudsportalen, stpsFordeling, topKommuner, datakilder } = data;
 
   return (
     <div className="dashboard-bottom-panels">
@@ -108,26 +114,29 @@ export function DashboardBottomPanels({ data }: Props) {
       {/* Datakilder status */}
       <div className="card">
         <p className="card-title">Datakilder</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-          {[
-            { navn: 'Tilbudsportalen', status: 'Aktiv', ok: true },
-            { navn: 'STPS',            status: 'Aktiv', ok: true },
-            { navn: 'Danmarks Statistik', status: 'Aktiv', ok: true },
-          ].map((kilde) => (
-            <div key={kilde.navn} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-secondary)' }}>
-                {kilde.navn}
-              </span>
-              <span className={`badge ${kilde.ok ? 'badge-ingen' : 'badge-ukendt'}`}>
-                <span className="badge-dot" />
-                {kilde.status}
-              </span>
-            </div>
-          ))}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+          {datakilder.map((kilde) => {
+            const { cls, label } = statusBadge(kilde.status);
+            return (
+              <div key={kilde.navn}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 'var(--text-sm)', color: kilde.status === 'ikke_implementeret' ? 'var(--color-text-muted)' : 'var(--color-text-secondary)' }}>
+                    {kilde.navn}
+                  </span>
+                  <span className={`badge ${cls}`} style={{ opacity: kilde.status === 'ikke_implementeret' ? 0.7 : 1 }}>
+                    <span className="badge-dot" />
+                    {label}
+                  </span>
+                </div>
+                {kilde.note && (
+                  <p style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', margin: '0.1rem 0 0' }}>
+                    {kilde.note}{kilde.sidstOpdateret ? ` · ${kilde.sidstOpdateret}` : ''}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
-        <p className="card-sub" style={{ marginTop: '1rem', borderTop: '1px solid var(--color-border)', paddingTop: '0.625rem' }}>
-          Mock-data · rigtige API'er kobles på i næste fase
-        </p>
       </div>
 
     </div>
