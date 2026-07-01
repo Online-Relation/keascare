@@ -20,6 +20,7 @@
 @import "./styles/components/salg.css";
 @import "./styles/components/monday.css";
 @import "./styles/layout/dashboard.css";
+@import "./styles/components/auth.css";
 
 @layer base {
   *, *::before, *::after {

@@ -20,7 +20,11 @@ import {
   ChevronRight,
   FlaskConical,
   Target,
+  Users,
+  LogOut,
 } from 'lucide-react';
+import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
+import { useRouter } from 'next/navigation';
 
 const navItems = [
   { label: 'Dashboard',           href: '/dashboard',                       icon: LayoutDashboard },
@@ -32,6 +36,7 @@ const navItems = [
   { label: 'Scrapers',            href: '/dashboard/scrapers',              icon: RefreshCw },
   { label: 'Monday test',         href: '/dashboard/monday-test',           icon: FlaskConical },
   { label: 'Indstillinger',       href: '/dashboard/indstillinger',         icon: Settings },
+  { label: 'Brugere',             href: '/dashboard/admin/brugere',         icon: Users },
 ];
 
 const markedsforingItems = [
@@ -42,8 +47,15 @@ const markedsforingItems = [
 
 export function DashboardSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const erMarkedsforingAktiv = pathname.startsWith('/dashboard/markedsforing');
   const [markedsforingÅben, setMarkedsforingÅben] = useState(erMarkedsforingAktiv);
+
+  async function logUd() {
+    const supabase = getSupabaseAuthBrowserClient();
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
 
   return (
     <aside className="sidebar">
@@ -102,11 +114,14 @@ export function DashboardSidebar() {
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-avatar">MK</div>
-        <div>
-          <p className="sidebar-user-name">Mads Kristensen</p>
+        <div className="sidebar-avatar">KC</div>
+        <div style={{ flex: 1 }}>
+          <p className="sidebar-user-name">KeasCare</p>
           <p className="sidebar-user-role">Administrator</p>
         </div>
+        <button className="sidebar-logud-knap" onClick={logUd} title="Log ud">
+          <LogOut size={15} />
+        </button>
       </div>
     </aside>
   );

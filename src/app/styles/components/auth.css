@@ -1,0 +1,267 @@
+/* Login-side */
+.login-side {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  padding: 1.5rem;
+}
+
+.login-boks {
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 380px;
+  box-shadow: 0 4px 24px rgba(30, 58, 95, 0.08);
+}
+
+.login-logo {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.login-logo-billede {
+  height: 40px;
+  width: auto;
+}
+
+.login-titel {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  margin-bottom: 0.25rem;
+  text-align: center;
+}
+
+.login-undertitel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.login-felt-gruppe {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.login-label {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-secondary);
+}
+
+.login-input {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  background: var(--color-card);
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+}
+
+.login-input:focus {
+  border-color: var(--color-primary);
+}
+
+.login-kodeord-wrapper {
+  position: relative;
+}
+
+.login-kodeord-wrapper .login-input {
+  padding-right: 2.5rem;
+}
+
+.login-vis-kodeord {
+  position: absolute;
+  right: 0.65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+}
+
+.login-fejl {
+  font-size: var(--text-xs);
+  color: var(--color-accent);
+  background: var(--color-accent-light);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.login-knap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.7rem 1.25rem;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: background 0.15s;
+  margin-top: 0.25rem;
+}
+
+.login-knap:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.login-knap:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+/* Brugeradmin */
+.bruger-admin-layout {
+  padding: 1.5rem;
+  max-width: 900px;
+}
+
+.bruger-admin-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+  color: var(--color-primary);
+}
+
+.bruger-admin-titel {
+  font-size: var(--text-xl);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.bruger-admin-undertitel {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.bruger-admin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+
+.bruger-opret-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.bruger-succes {
+  font-size: var(--text-xs);
+  color: #15803d;
+  background: #dcfce7;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+}
+
+.bruger-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.bruger-loading {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.bruger-række {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.bruger-række:last-child {
+  border-bottom: none;
+}
+
+.bruger-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.1rem;
+}
+
+.bruger-navn {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text-primary);
+}
+
+.bruger-email {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.bruger-meta {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.bruger-slet-knap {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 0.35rem;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  transition: color 0.15s, border-color 0.15s;
+  display: flex;
+}
+
+.bruger-slet-knap:hover {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+}
+
+/* Log ud-knap i sidebar */
+.sidebar-logud-knap {
+  background: none;
+  border: none;
+  color: var(--color-sidebar-text);
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 5px;
+  display: flex;
+  opacity: 0.7;
+  transition: opacity 0.15s;
+}
+
+.sidebar-logud-knap:hover {
+  opacity: 1;
+}
+
+@media (max-width: 700px) {
+  .bruger-admin-grid {
+    grid-template-columns: 1fr;
+  }
+}
