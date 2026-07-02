@@ -11,7 +11,7 @@ export function BostedKort({ adresse }: Props) {
 
   if (!apiKey) return null;
 
-  const src = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(adresse)}&language=da&region=DK&zoom=13`;
+  const src = `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${encodeURIComponent(adresse)}&language=da&region=DK&zoom=10`;
 
   return (
     <div className="bosted-detail-kort">

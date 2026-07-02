@@ -2,7 +2,6 @@
 
 import { Building2, Phone, Mail, User, Globe, MapPin, Shield, TrendingUp } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
-import { BostedKort } from '../BostedKort';
 
 type Props = { bosted: BostedDetail };
 type Felt = { label: string; value: string | null; placeholder?: string };
@@ -61,7 +60,6 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
         </div>
-        {adresse && <BostedKort adresse={adresse} />}
       </div>
 
       {harKontakt && (
