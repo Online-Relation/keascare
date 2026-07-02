@@ -1,0 +1,1 @@
+export { BostedKort } from './BostedKort';

@@ -7,6 +7,7 @@ import { KunderKpier } from './sections/KunderKpier/KunderKpier';
 import { KunderVækstGraf } from './sections/KunderVækstGraf/KunderVækstGraf';
 import { ForløbsansvarligGraf } from './sections/ForløbsansvarligGraf';
 import { KunderTabel } from './sections/KunderTabel/KunderTabel';
+import { KunderKort } from './sections/KunderKort';
 
 export function KunderPage() {
   const [kunder, setKunder] = useState<MondayKundeItem[]>([]);
@@ -43,6 +44,7 @@ export function KunderPage() {
           <KunderVækstGraf kunder={kunder} />
           <ForløbsansvarligGraf kunder={kunder} />
           <KunderTabel kunder={kunder} />
+          <KunderKort />
         </>
       )}
     </div>

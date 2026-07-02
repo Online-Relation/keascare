@@ -1,0 +1,1 @@
+export { KunderKort } from './KunderKort';
