@@ -1,0 +1,1 @@
+export { KontaktHistorik } from './KontaktHistorik';

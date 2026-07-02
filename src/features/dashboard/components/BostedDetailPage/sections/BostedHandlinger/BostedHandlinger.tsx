@@ -1,15 +1,52 @@
 'use client';
 
-import { PlusCircle, ExternalLink, PhoneOff, Clock, CheckCircle } from 'lucide-react';
+import { useState } from 'react';
+import { PlusCircle, ExternalLink, PhoneOff, Clock, CheckCircle, Loader } from 'lucide-react';
+
+type KontaktStatus = 'kontaktet' | 'kontakt_senere' | 'afvist';
 
 type Props = {
+  bostedId: string;
   mondayItemId?: string | null;
+  onLogget?: () => void;
 };
 
-export function BostedHandlinger({ mondayItemId }: Props) {
+const KNAPPER: { status: KontaktStatus; label: string; icon: React.ElementType; farve?: string }[] = [
+  { status: 'kontaktet',      label: 'Kontaktet',      icon: CheckCircle },
+  { status: 'kontakt_senere', label: 'Kontakt senere', icon: Clock },
+  { status: 'afvist',        label: 'Afvist',         icon: PhoneOff, farve: 'var(--color-accent)' },
+];
+
+export function BostedHandlinger({ bostedId, mondayItemId, onLogget }: Props) {
+  const [valgt, setValgt] = useState<KontaktStatus | null>(null);
+  const [note, setNote] = useState('');
+  const [sender, setSender] = useState(false);
+  const [bekræftet, setBekræftet] = useState(false);
+
   const MONDAY_URL = mondayItemId
     ? `https://onlinerelation.monday.com/boards/${process.env.NEXT_PUBLIC_MONDAY_BOARD_ID}/pulses/${mondayItemId}`
     : null;
+
+  async function gemKontakt() {
+    if (!valgt) return;
+    setSender(true);
+    try {
+      const res = await fetch('/api/bosteder/kontakt', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bostedId, status: valgt, note: note.trim() || undefined }),
+      });
+      if (res.ok) {
+        setBekræftet(true);
+        setValgt(null);
+        setNote('');
+        onLogget?.();
+        setTimeout(() => setBekræftet(false), 3000);
+      }
+    } finally {
+      setSender(false);
+    }
+  }
 
   return (
     <div className="bosted-detail-kort">
@@ -36,23 +73,54 @@ export function BostedHandlinger({ mondayItemId }: Props) {
           </div>
         </div>
 
-        {/* Kold canvas salg */}
+        {/* Kold canvas */}
         <div className="bosted-salg-sektion">
           <p className="bosted-salg-titel">Kold canvas</p>
           <div className="bosted-salg-knapper">
-            <button className="btn btn-outline btn-sm" disabled title="Kommer snart">
-              <CheckCircle size={14} />
-              Kontaktet
-            </button>
-            <button className="btn btn-outline btn-sm" disabled title="Kommer snart">
-              <Clock size={14} />
-              Kontakt senere
-            </button>
-            <button className="btn btn-outline btn-sm" disabled title="Kommer snart" style={{ color: 'var(--color-accent)', borderColor: 'var(--color-accent)' }}>
-              <PhoneOff size={14} />
-              Afvist
-            </button>
+            {KNAPPER.map(({ status, label, icon: Icon, farve }) => (
+              <button
+                key={status}
+                className={`btn btn-sm ${valgt === status ? 'btn-primary' : 'btn-outline'}`}
+                style={valgt !== status && farve ? { color: farve, borderColor: farve } : undefined}
+                onClick={() => setValgt(valgt === status ? null : status)}
+              >
+                <Icon size={14} />
+                {label}
+              </button>
+            ))}
           </div>
+
+          {valgt && (
+            <div style={{ marginTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <textarea
+                placeholder="Tilføj en note (valgfrit)..."
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={2}
+                style={{
+                  width: '100%', fontSize: 'var(--text-sm)', padding: '0.4rem 0.6rem',
+                  border: '1px solid var(--color-border)', borderRadius: '6px',
+                  resize: 'none', color: 'var(--color-text-primary)',
+                  background: 'var(--color-bg-card)',
+                }}
+              />
+              <button
+                className="btn btn-primary btn-sm"
+                onClick={gemKontakt}
+                disabled={sender}
+                style={{ alignSelf: 'flex-start' }}
+              >
+                {sender ? <Loader size={14} className="scraper-ikon-kører" /> : <CheckCircle size={14} />}
+                Gem
+              </button>
+            </div>
+          )}
+
+          {bekræftet && (
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success, #16a34a)', marginTop: '0.4rem' }}>
+              ✓ Kontakt logget
+            </p>
+          )}
         </div>
 
       </div>

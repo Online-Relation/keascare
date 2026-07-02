@@ -1,5 +1,8 @@
 // src/features/dashboard/components/BostedDetailPage/BostedDetailPage.tsx
 
+'use client';
+
+import { useState } from 'react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import { BostedHeader } from './sections/BostedHeader';
 import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
@@ -8,12 +11,15 @@ import { BostedOrganisationKort } from './sections/BostedOrganisationKort';
 import { BostedHandlinger } from './sections/BostedHandlinger';
 import { BostedSalgsAfsnit } from './sections/BostedSalgsAfsnit';
 import { MailchimpSignup } from './sections/MailchimpSignup';
+import { KontaktHistorik } from './sections/KontaktHistorik';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
 };
 
 export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
+  const [historikOpdater, setHistorikOpdater] = useState(0);
+
   return (
     <div className="bosted-detail-layout">
       <BostedHeader bosted={bosted} />
@@ -31,7 +37,13 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
 
       <MailchimpSignup bostedNavn={bosted.navn} foreslåetEmail={bosted.tpEmail ?? undefined} />
 
-      <BostedHandlinger />
+      <BostedHandlinger
+        bostedId={bosted.id}
+        mondayItemId={bosted.mondayItemId}
+        onLogget={() => setHistorikOpdater((n) => n + 1)}
+      />
+
+      <KontaktHistorik bostedId={bosted.id} opdater={historikOpdater} />
     </div>
   );
 }
