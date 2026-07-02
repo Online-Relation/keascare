@@ -27,11 +27,12 @@ type StpsRapport = {
   id: number;
   cvr: string | null;
   stps_tilbud_navn: string | null;
+  kommune: string | null;
+  tp_kommune: string | null;
 };
 
 type TpData = Omit<TpTilbud, 'cvr' | 'navn'>;
 
-// Ord der ikke hjælper matchingen
 const STOPORD = new Set([
   'og', 'for', 'til', 'i', 'af', 'med', 'på', 'den', 'det', 'de',
   'bosted', 'bofællesskab', 'botilbud', 'bo', 'center', 'hus', 'gård',
@@ -44,6 +45,19 @@ export function normaliserNavn(navn: string): string {
     .replace(/[.,\-–()&]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function normaliserKommune(kommune: string | null): string | null {
+  if (!kommune) return null;
+  return kommune.toLowerCase().replace(/\s+kommune$/, '').trim();
+}
+
+function kommunerMatcher(a: string | null, b: string | null): boolean {
+  const na = normaliserKommune(a);
+  const nb = normaliserKommune(b);
+  // Hvis én af dem er null ved vi ikke kommunen — tillad ikke fuzzy match
+  if (!na || !nb) return false;
+  return na === nb;
 }
 
 function tokeniser(navn: string): Set<string> {
@@ -68,35 +82,42 @@ type KandidatMatch = { data: TpData; score: number };
 
 function findBedsteMatch(
   stpsNavn: string,
+  stpsKommune: string | null,
   cvrMap: Map<string, TpData>,
-  navnMap: Map<string, TpData>,
+  navnMap: Map<string, { data: TpData; kommune: string | null }>,
   alle: TpTilbud[],
   stpsCvr: string | null,
 ): { data: TpData; kilde: string } | null {
-  // 1. Eksakt CVR-match
+  // 1. Eksakt CVR-match — altid sikkert, ingen kommunekrav
   if (stpsCvr) {
     const m = cvrMap.get(stpsCvr.trim());
     if (m) return { data: m, kilde: 'cvr' };
   }
 
-  // 2. Eksakt normaliseret navnmatch
+  // 2. Eksakt normaliseret navnmatch + kommunekrav
   const normStps = normaliserNavn(stpsNavn);
   const eksakt = navnMap.get(normStps);
-  if (eksakt) return { data: eksakt, kilde: 'navn_eksakt' };
+  if (eksakt && kommunerMatcher(stpsKommune, eksakt.kommune)) {
+    return { data: eksakt.data, kilde: 'navn_eksakt' };
+  }
 
-  // 3. Præfiks/suffiks match
-  for (const [tpNavn, data] of navnMap) {
-    if (tpNavn.startsWith(normStps) || normStps.startsWith(tpNavn)) {
-      return { data, kilde: 'navn_præfiks' };
+  // 3. Præfiks/suffiks match + kommunekrav
+  for (const [tpNavn, entry] of navnMap) {
+    if (
+      (tpNavn.startsWith(normStps) || normStps.startsWith(tpNavn)) &&
+      kommunerMatcher(stpsKommune, entry.kommune)
+    ) {
+      return { data: entry.data, kilde: 'navn_præfiks' };
     }
   }
 
-  // 4. Fuzzy token-match — kræver score >= 0.55
+  // 4. Fuzzy token-match — kræver score >= 0.65 OG kommunematch
   let bedste: KandidatMatch | null = null;
   for (const t of alle) {
     if (!t.navn) continue;
+    if (!kommunerMatcher(stpsKommune, t.kommune)) continue;
     const score = fuzzyScore(stpsNavn, t.navn);
-    if (score >= 0.55 && (!bedste || score > bedste.score)) {
+    if (score >= 0.65 && (!bedste || score > bedste.score)) {
       bedste = {
         data: {
           id: t.id, tilbudstype: t.tilbudstype, pladser: t.pladser,
@@ -126,7 +147,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const alleTilbud = (tilbud ?? []) as TpTilbud[];
   const cvrMap = new Map<string, TpData>();
-  const navnMap = new Map<string, TpData>();
+  const navnMap = new Map<string, { data: TpData; kommune: string | null }>();
 
   for (const t of alleTilbud) {
     const data: TpData = {
@@ -138,12 +159,12 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
       driftsform: t.driftsform,
     };
     if (t.cvr) cvrMap.set(t.cvr.trim(), data);
-    if (t.navn) navnMap.set(normaliserNavn(t.navn), data);
+    if (t.navn) navnMap.set(normaliserNavn(t.navn), { data, kommune: t.kommune });
   }
 
   const { data: rapporter, error: stpsFejl } = await supabase
     .from('stps_rapporter')
-    .select('id, cvr, stps_tilbud_navn');
+    .select('id, cvr, stps_tilbud_navn, kommune, tp_kommune');
 
   if (stpsFejl) throw new Error(`STPS fejl: ${stpsFejl.message}`);
 
@@ -155,7 +176,17 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
     if (!rapport.stps_tilbud_navn) { ingenMatch++; continue; }
     if (!rapport.cvr) ingenCvr++;
 
-    const resultat = findBedsteMatch(rapport.stps_tilbud_navn, cvrMap, navnMap, alleTilbud, rapport.cvr);
+    // Brug kommune fra STPS — fald tilbage til tp_kommune hvis tilgængeligt
+    const stpsKommune = rapport.kommune ?? rapport.tp_kommune;
+
+    const resultat = findBedsteMatch(
+      rapport.stps_tilbud_navn,
+      stpsKommune,
+      cvrMap,
+      navnMap,
+      alleTilbud,
+      rapport.cvr,
+    );
 
     if (!resultat) { ingenMatch++; continue; }
 

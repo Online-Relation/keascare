@@ -131,9 +131,15 @@ export function ManuelMatch() {
                             )}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
-                            <span style={{ fontSize: '0.65rem', fontWeight: 'var(--fw-semibold)', color: scoreFarve(kand.score) }}>
-                              {Math.round(kand.score * 100)}%
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.15rem' }}>
+                              <span style={{ fontSize: '0.65rem', fontWeight: 'var(--fw-semibold)', color: scoreFarve(kand.score) }}>
+                                {Math.round(kand.score * 100)}% navn
+                              </span>
+                              {kand.kommuneMatch
+                                ? <span style={{ fontSize: '0.6rem', color: 'var(--color-success, #16a34a)', fontWeight: 'var(--fw-semibold)' }}>✓ samme kommune</span>
+                                : <span style={{ fontSize: '0.6rem', color: 'var(--color-accent)' }}>⚠ anden kommune</span>
+                              }
+                            </div>
                             <button
                               className="btn btn-primary btn-sm"
                               style={{ padding: '0.2rem 0.6rem', fontSize: '0.7rem' }}

@@ -31,6 +31,8 @@ export type ManuelMatchKandidat = {
     tpEmail: string | null;
     tpPladser: number | null;
     score: number;
+    kommuneMatch: boolean;
+    samletScore: number;
   }[];
 };
 
@@ -57,20 +59,31 @@ export async function GET() {
   const resultater: ManuelMatchKandidat[] = [];
 
   for (const r of umatched as { id: number; stps_tilbud_navn: string; kommune: string | null; tp_kommune: string | null; fund_niveau: string | null }[]) {
+    const stpsKommune = (r.kommune ?? r.tp_kommune ?? '').toLowerCase().replace(/\s+kommune$/, '').trim();
+
     const scorede = alleTilbud
       .filter((t) => t.navn)
-      .map((t) => ({
-        tpId: t.id,
-        tpNavn: t.navn!,
-        tpKommune: t.kommune,
-        tpAdresse: t.tilbuddets_adresse,
-        tpTelefon: t.telefon,
-        tpEmail: t.email,
-        tpPladser: t.pladser,
-        score: fuzzyScore(r.stps_tilbud_navn, t.navn!),
-      }))
+      .map((t) => {
+        const navnScore = fuzzyScore(r.stps_tilbud_navn, t.navn!);
+        const tpKommune = (t.kommune ?? '').toLowerCase().replace(/\s+kommune$/, '').trim();
+        const kommuneMatch = !!(stpsKommune && tpKommune && stpsKommune === tpKommune);
+        // Boost score hvis kommunen matcher — hjælper rangeringen i UI
+        const samletScore = kommuneMatch ? Math.min(navnScore + 0.2, 1) : navnScore;
+        return {
+          tpId: t.id,
+          tpNavn: t.navn!,
+          tpKommune: t.kommune,
+          tpAdresse: t.tilbuddets_adresse,
+          tpTelefon: t.telefon,
+          tpEmail: t.email,
+          tpPladser: t.pladser,
+          score: navnScore,
+          kommuneMatch,
+          samletScore,
+        };
+      })
       .filter((k) => k.score >= 0.3)
-      .sort((a, b) => b.score - a.score)
+      .sort((a, b) => b.samletScore - a.samletScore)
       .slice(0, 5);
 
     if (scorede.length === 0) continue;
