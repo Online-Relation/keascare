@@ -17,14 +17,15 @@ function venteMs(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat> {
+export async function opdaterCvrAnsatte(batch = 40): Promise<CvrAnsatteResultat> {
   const supabase = getSupabaseServerClient();
 
-  // Hent bosteder med CVR — prioritér dem der ikke er opdateret eller er ældst
+  // Prioritér records der mangler branche/ansatte, dernæst ældst opdateret
   const { data, error } = await supabase
     .from('stps_rapporter')
     .select('id, cvr')
     .not('cvr', 'is', null)
+    .or('cvr_ansatte.is.null,cvr_branche.is.null')
     .order('cvr_opdateret', { ascending: true, nullsFirst: true })
     .limit(batch);
 
@@ -81,8 +82,8 @@ export async function opdaterCvrAnsatte(batch = 100): Promise<CvrAnsatteResultat
       fejl++;
     }
 
-    // Respektér rate limit på cvrapi.dk (~3 req/sek)
-    if (i < rækker.length - 1) await venteMs(400);
+    // cvrapi.dk gratis kvote: ~50/time — 1.2 sek pause giver ~40/time
+    if (i < rækker.length - 1) await venteMs(1200);
   }
 
   return { behandlet: rækker.length, opdateret, ingenData, fejl, fejlBeskeder, førsteCvr };
