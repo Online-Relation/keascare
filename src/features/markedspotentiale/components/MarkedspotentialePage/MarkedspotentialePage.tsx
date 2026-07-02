@@ -18,12 +18,11 @@ const TRIN_FARVER = [
 ];
 
 export function MarkedspotentialePage({ funnel, dstData }: Props) {
-  const max = funnel.trin[0]?.antal ?? 1;
   const totalBorgere = dstData.reduce((s, k) => s + k.total, 0);
-  const ikkeBearbejdet = funnel.trin[3]?.antal ?? 0;
-  const kunder = funnel.trin[4]?.antal ?? 0;
-  const alleBosteder = funnel.trin[0]?.antal ?? 0;
-  const konverteringsPct = alleBosteder > 0 ? ((kunder / alleBosteder) * 100).toFixed(1) : '0';
+  const ikkeBearbejdet = funnel.trin[2]?.antal ?? 0;
+  const kunder = funnel.trin[3]?.antal ?? 0;
+  const medFund = funnel.trin[0]?.antal ?? 0;
+  const konverteringsPct = medFund > 0 ? ((kunder / medFund) * 100).toFixed(1) : '0';
 
   return (
     <div className="dashboard-content">

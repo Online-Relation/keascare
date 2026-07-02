@@ -207,9 +207,10 @@ function beregnSalgsFunnel(rapporter: DbRapport[]) {
   const ubearbejdede = rapporter.filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id).length;
   const kunder = rapporter.filter((r) => !!r.monday_item_id).length;
 
+  void total; // ikke vist i tragten men beregnet til evt. kontekst
+
   return {
     trin: [
-      { label: 'Alle bosteder', antal: total, beskrivelse: 'Totalt antal bosteder i det valgte udsnit' },
       { label: 'Med tilsynsfund', antal: medFund, beskrivelse: 'Har kritisk, større eller mindre fund fra STPS' },
       { label: 'Kritisk / større fund', antal: varme, beskrivelse: 'Varmeste signaler — størst behov for KeasCare' },
       { label: 'Ikke bearbejdet endnu', antal: ubearbejdede, beskrivelse: 'Kritisk/større fund og ikke allerede kunde' },
