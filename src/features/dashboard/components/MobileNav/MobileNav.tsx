@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical, Target, LogOut,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical, Target, LogOut, Building2,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
@@ -23,6 +23,7 @@ const navItems = [
   { label: 'Alle rapporter',    href: '/dashboard/alle-rapporter',       icon: FileText },
   { label: 'Kommuner',          href: '/dashboard/kommuner',             icon: MapPin },
   { label: 'Markedsdata',       href: '/dashboard/markedsdata',          icon: BarChart2 },
+  { label: 'Kunder',            href: '/dashboard/kunder',               icon: Building2 },
   { label: 'Scrapers',          href: '/dashboard/scrapers',             icon: RefreshCw },
   { label: 'Monday test',       href: '/dashboard/monday-test',          icon: FlaskConical },
   { label: 'Indstillinger',     href: '/dashboard/indstillinger',        icon: Settings },
