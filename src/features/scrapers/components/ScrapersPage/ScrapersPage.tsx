@@ -72,8 +72,8 @@ const SCRAPERS: Scraper[] = [
     titel: 'CVR-register — Opdater ansatte og virksomhedsdata',
     beskrivelse: 'Henter antal ansatte, branche og virksomhedstype fra CVR for alle bosteder med CVR-nummer. Køres automatisk dagligt kl. 03:00 via cron. Prioriterer dem der er ældst opdateret.',
     endpoint: '/api/scrapers/cvr/ansatte',
-    body: { batch: 100 },
-    loop: false,
+    body: { batch: 40 },
+    loop: true,
   },
   {
     id: 'tp-liste',
