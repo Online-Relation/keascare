@@ -49,37 +49,32 @@ export function KunderKort() {
       fullscreenControl: false,
     });
 
-    const geocoder = new window.google.maps.Geocoder();
     const infoWindow = new window.google.maps.InfoWindow();
 
     punkter.forEach((punkt) => {
-      geocoder.geocode({ address: punkt.adresse + ', Danmark' }, (results: any, status: any) => {
-        if (status !== 'OK' || !results?.[0]) return;
+      const marker = new window.google.maps.Marker({
+        position: { lat: punkt.lat, lng: punkt.lng },
+        map,
+        title: punkt.navn,
+        icon: {
+          path: window.google.maps.SymbolPath.CIRCLE,
+          scale: 9,
+          fillColor: punkt.gruppe === 'aktive_forloeb' ? '#1d4ed8' : '#16a34a',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+        },
+      });
 
-        const marker = new window.google.maps.Marker({
-          position: results[0].geometry.location,
-          map,
-          title: punkt.navn,
-          icon: {
-            path: window.google.maps.SymbolPath.CIRCLE,
-            scale: 9,
-            fillColor: punkt.gruppe === 'aktive_forloeb' ? '#1d4ed8' : '#16a34a',
-            fillOpacity: 1,
-            strokeColor: '#fff',
-            strokeWeight: 2,
-          },
-        });
-
-        marker.addListener('click', () => {
-          setValgt(punkt);
-          infoWindow.setContent(`
-            <div style="font-family:sans-serif;padding:4px 2px">
-              <strong style="font-size:13px">${punkt.navn}</strong>
-              <div style="font-size:11px;color:#666;margin-top:2px">${punkt.adresse}</div>
-            </div>
-          `);
-          infoWindow.open(map, marker);
-        });
+      marker.addListener('click', () => {
+        setValgt(punkt);
+        infoWindow.setContent(`
+          <div style="font-family:sans-serif;padding:4px 2px">
+            <strong style="font-size:13px">${punkt.navn}</strong>
+            <div style="font-size:11px;color:#666;margin-top:2px">${punkt.adresse}</div>
+          </div>
+        `);
+        infoWindow.open(map, marker);
       });
     });
   }, [indlæst, punkter]);
