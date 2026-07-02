@@ -67,7 +67,7 @@ export function SalgstragtKlient({ funnel, fra, til }: Props) {
   return (
     <div className="mp-funnel-trin-liste">
       {funnel.trin.map((trin, i) => {
-        const tragPct = 100 - (i / Math.max(n - 1, 1)) * 60;
+        const tragPct = 100 - (i / Math.max(n - 1, 1)) * 70;
         const farve = TRIN_FARVER[i] ?? TRIN_FARVER[0];
         const næste = funnel.trin[i + 1];
         const konvPct = næste && trin.antal > 0
