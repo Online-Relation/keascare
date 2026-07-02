@@ -4,6 +4,7 @@ import { Target } from 'lucide-react';
 import type { SalgsFunnel } from '@/features/dashboard/types/dashboard.types';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 import { SalgstragtKlient } from './SalgstragtKlient';
+import { PipelineStats } from './PipelineStats';
 
 type Props = {
   funnel: SalgsFunnel;
@@ -75,6 +76,8 @@ export function MarkedspotentialePage({ funnel, dstData, fra, til }: Props) {
 
         <SalgstragtKlient funnel={funnel} fra={fra} til={til} />
       </div>
+
+      <PipelineStats />
 
       <div className="dst-info-boks">
         <p>
