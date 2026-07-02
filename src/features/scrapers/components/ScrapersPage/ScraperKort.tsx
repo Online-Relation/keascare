@@ -1,5 +1,6 @@
 // src/features/scrapers/components/ScrapersPage/ScraperKort.tsx
 
+import React from 'react';
 import { AlertTriangle, CheckCircle, Loader, Play, XCircle, RefreshCw } from 'lucide-react';
 import type { ScraperStatus, Scraper } from './ScrapersPage';
 import type { ScraperLog } from '@/lib/db/ScraperLog';
@@ -15,6 +16,7 @@ type ScraperKortProps = {
   resultat?: Record<string, unknown>;
   fremgang?: Fremgang;
   log?: ScraperLog;
+  badge?: React.ReactNode;
   onKør: () => void;
 };
 
@@ -29,7 +31,7 @@ function formaterDato(iso: string): string {
   });
 }
 
-export function ScraperKort({ scraper, status, resultat, fremgang, log, onKør }: ScraperKortProps) {
+export function ScraperKort({ scraper, status, resultat, fremgang, log, badge, onKør }: ScraperKortProps) {
   const kører = status === 'kører';
 
   return (
@@ -50,6 +52,8 @@ export function ScraperKort({ scraper, status, resultat, fremgang, log, onKør }
           </div>
         </div>
         <p className="scraper-kort-beskrivelse">{scraper.beskrivelse}</p>
+
+        {badge && <div style={{ marginTop: '0.5rem' }}>{badge}</div>}
 
         {scraper.advarsel && (
           <div className="scraper-kort-advarsel">

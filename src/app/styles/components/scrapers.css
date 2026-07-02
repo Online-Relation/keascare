@@ -442,6 +442,25 @@
     }
   }
 
+  .scraper-status-tæller {
+    display: inline-flex;
+    align-items: center;
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    padding: 0.2rem 0.6rem;
+    border-radius: 9999px;
+  }
+
+  .scraper-status-tæller--advarsel {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .scraper-status-tæller--ok {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
   @keyframes scraper-puls {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.6; }

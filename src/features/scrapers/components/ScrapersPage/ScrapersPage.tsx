@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ScraperKort } from './ScraperKort';
 import { ScraperHistorik } from './ScraperHistorik';
 import { ScraperFremgang } from './ScraperFremgang';
@@ -108,13 +108,24 @@ const SCRAPERS: Scraper[] = [
   },
 ];
 
+type CvrStatus = { manglerCvr: number; manglerData: number; total: number };
+
 export function ScrapersPage() {
   const [statusser, setStatusser] = useState<Record<string, ScraperStatus>>({});
   const [resultater, setResultater] = useState<Record<string, Record<string, unknown>>>({});
   const [fremgang, setFremgang] = useState<Record<string, Fremgang>>({});
   const [logs, setLogs] = useState<Record<string, ScraperLog>>({});
+  const [cvrStatus, setCvrStatus] = useState<CvrStatus | null>(null);
+
+  function hentCvrStatus() {
+    fetch('/api/scrapers/cvr/status')
+      .then((r) => r.json())
+      .then((d) => setCvrStatus(d))
+      .catch(() => {});
+  }
 
   useEffect(() => {
+    hentCvrStatus();
     fetch('/api/scrapers/logs')
       .then((r) => r.json())
       .then((data: ScraperLog[]) => {
@@ -163,6 +174,8 @@ export function ScrapersPage() {
 
       setStatusser((s) => ({ ...s, [scraper.id]: 'done' }));
 
+      if (scraper.id === 'cvr-berig' || scraper.id === 'cvr-ansatte') hentCvrStatus();
+
       // Opdater log efter vellykket kørsel
       fetch('/api/scrapers/logs')
         .then((r) => r.json())
@@ -194,17 +207,39 @@ export function ScrapersPage() {
       <ManuelMatch />
 
       <div className="scrapers-grid">
-        {SCRAPERS.map((scraper) => (
-          <ScraperKort
-            key={scraper.id}
-            scraper={scraper}
-            status={statusser[scraper.id] ?? 'idle'}
-            resultat={resultater[scraper.id]}
-            fremgang={fremgang[scraper.id]}
-            log={logs[scraper.id]}
-            onKør={() => kørScraper(scraper)}
-          />
-        ))}
+        {SCRAPERS.map((scraper) => {
+          let badge: React.ReactNode = undefined;
+          if (scraper.id === 'cvr-berig' && cvrStatus !== null) {
+            badge = cvrStatus.manglerCvr > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">
+                {cvrStatus.manglerCvr} mangler CVR-opslag
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">Alle CVR opslået ✓</span>
+            );
+          }
+          if (scraper.id === 'cvr-ansatte' && cvrStatus !== null) {
+            badge = cvrStatus.manglerData > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">
+                {cvrStatus.manglerData} mangler ansatte/branche
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">Alle beriget ✓</span>
+            );
+          }
+          return (
+            <ScraperKort
+              key={scraper.id}
+              scraper={scraper}
+              status={statusser[scraper.id] ?? 'idle'}
+              resultat={resultater[scraper.id]}
+              fremgang={fremgang[scraper.id]}
+              log={logs[scraper.id]}
+              badge={badge}
+              onKør={() => kørScraper(scraper)}
+            />
+          );
+        })}
       </div>
     </div>
   );
