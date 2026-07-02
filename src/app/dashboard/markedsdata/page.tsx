@@ -6,10 +6,15 @@ import { hentDashboardData } from '@/features/dashboard/services/DashboardServic
 
 export const revalidate = 0;
 
-export default async function MarkedsdataSide() {
+type Props = {
+  searchParams: Promise<{ fra?: string; til?: string }>;
+};
+
+export default async function MarkedsdataSide({ searchParams }: Props) {
+  const { fra, til } = await searchParams;
   const [dstData, dashboardData] = await Promise.all([
     hentDstKommuneData(),
-    hentDashboardData(),
+    hentDashboardData(fra, til),
   ]);
 
   return <MarkedsdataPage data={dstData} antalBosteder={dashboardData.bosteder.length} />;

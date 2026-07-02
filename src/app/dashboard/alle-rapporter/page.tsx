@@ -3,8 +3,13 @@
 import { hentRapporterData } from '@/features/rapporter/services/RapporterService';
 import { RapporterListeSektion } from '@/features/rapporter/components/RapporterPage/RapporterListeSektion';
 
-export default async function AlleRapporterSide() {
-  const data = await hentRapporterData();
+type Props = {
+  searchParams: Promise<{ fra?: string; til?: string }>;
+};
+
+export default async function AlleRapporterSide({ searchParams }: Props) {
+  const { fra, til } = await searchParams;
+  const data = await hentRapporterData(fra, til);
 
   return (
     <div className="dashboard-content">

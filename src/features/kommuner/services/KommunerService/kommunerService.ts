@@ -37,10 +37,10 @@ export async function hentKommunerOversigt(fra?: string, til?: string): Promise<
   }));
 }
 
-export async function hentKommuneDetail(kommuneNavn: string): Promise<KommuneDetail | null> {
+export async function hentKommuneDetail(kommuneNavn: string, fra?: string, til?: string): Promise<KommuneDetail | null> {
   const [dstData, bosteder] = await Promise.all([
     hentDstKommuneData(),
-    hentBostedForKommune(kommuneNavn),
+    hentBostedForKommune(kommuneNavn, fra, til),
   ]);
 
   const dstNavn = kommuneNavn.replace(/\s+[Kk]ommune$/, '').trim();
@@ -85,7 +85,7 @@ async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbK
   return Array.from(tæller.entries()).map(([kommune, antal]) => ({ kommune, antal }));
 }
 
-async function hentBostedForKommune(kommuneNavn: string): Promise<KommuneBosted[]> {
+async function hentBostedForKommune(kommuneNavn: string, fra?: string, til?: string): Promise<KommuneBosted[]> {
   const supabase = getSupabaseServerClient();
   const visFilter = await getVisFilter();
 
@@ -98,6 +98,8 @@ async function hentBostedForKommune(kommuneNavn: string): Promise<KommuneBosted[
     .order('rapport_dato', { ascending: false });
 
   if (visFilter === 'privat') query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+  if (fra) query = query.gte('rapport_dato', fra);
+  if (til) query = query.lte('rapport_dato', til);
 
   const { data } = await query;
 
