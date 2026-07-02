@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import type { MondayKundeItem } from '@/features/monday/types/monday.types';
 
@@ -10,6 +11,14 @@ const MONDAY_BOARD_URL = 'https://onlinerelation.monday.com/boards';
 
 export function KunderTabel({ kunder }: Props) {
   const [filter, setFilter] = useState<'alle' | 'aktive' | 'nye'>('alle');
+  const [stpsMap, setStpsMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch('/api/monday/stps-match')
+      .then((r) => r.json())
+      .then((d) => { if (d && typeof d === 'object') setStpsMap(d); })
+      .catch(() => {});
+  }, []);
 
   const filtrerede = kunder.filter((k) => {
     if (filter === 'aktive') return k.gruppe === 'aktive_forloeb';
@@ -46,34 +55,51 @@ export function KunderTabel({ kunder }: Props) {
             </tr>
           </thead>
           <tbody>
-            {filtrerede.map((k) => (
-              <tr key={k.mondayId}>
-                <td className="kunder-tabel-navn">{k.navn}</td>
-                <td>
-                  <span className={`badge ${k.gruppe === 'aktive_forloeb' ? 'badge-success' : 'badge-info'}`}>
-                    {k.gruppeNavn}
-                  </span>
-                </td>
-                <td className="kunder-tabel-muted">{k.forløbsansvarlig ?? '—'}</td>
-                <td className="kunder-tabel-muted">
-                  {k.oprettetDato ? new Date(k.oprettetDato).toLocaleDateString('da-DK') : '—'}
-                </td>
-                <td className="kunder-tabel-muted">
-                  {k.opfølgningsdato ? new Date(k.opfølgningsdato).toLocaleDateString('da-DK') : '—'}
-                </td>
-                <td>
-                  <a
-                    href={`${MONDAY_BOARD_URL}/${process.env.NEXT_PUBLIC_MONDAY_BOARD_ID}/pulses/${k.mondayId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-ghost btn-sm"
-                    title="Åbn i Monday"
-                  >
-                    <ExternalLink size={13} />
-                  </a>
-                </td>
-              </tr>
-            ))}
+            {filtrerede.map((k) => {
+              const stpsId = stpsMap[k.mondayId];
+              return (
+                <tr key={k.mondayId}>
+                  <td className="kunder-tabel-navn">
+                    {stpsId ? (
+                      <Link
+                        href={`/dashboard/bosteder/${stpsId}`}
+                        style={{ color: 'var(--color-primary)', fontWeight: 'var(--fw-medium)', textDecoration: 'none' }}
+                        className="kunder-bosted-link"
+                      >
+                        {k.navn}
+                      </Link>
+                    ) : (
+                      <span style={{ color: 'var(--color-text-muted)' }} title="Ikke fundet i STPS-systemet">
+                        {k.navn}
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <span className={`badge ${k.gruppe === 'aktive_forloeb' ? 'badge-success' : 'badge-info'}`}>
+                      {k.gruppeNavn}
+                    </span>
+                  </td>
+                  <td className="kunder-tabel-muted">{k.forløbsansvarlig ?? '—'}</td>
+                  <td className="kunder-tabel-muted">
+                    {k.oprettetDato ? new Date(k.oprettetDato).toLocaleDateString('da-DK') : '—'}
+                  </td>
+                  <td className="kunder-tabel-muted">
+                    {k.opfølgningsdato ? new Date(k.opfølgningsdato).toLocaleDateString('da-DK') : '—'}
+                  </td>
+                  <td>
+                    <a
+                      href={`${MONDAY_BOARD_URL}/${process.env.NEXT_PUBLIC_MONDAY_BOARD_ID}/pulses/${k.mondayId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-ghost btn-sm"
+                      title="Åbn i Monday"
+                    >
+                      <ExternalLink size={13} />
+                    </a>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

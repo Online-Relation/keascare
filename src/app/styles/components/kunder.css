@@ -136,6 +136,10 @@
   color: var(--color-text-primary);
 }
 
+.kunder-bosted-link:hover {
+  text-decoration: underline;
+}
+
 .kunder-tabel-muted {
   color: var(--color-text-secondary);
   font-size: var(--text-xs);
