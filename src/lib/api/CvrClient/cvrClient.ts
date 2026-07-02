@@ -71,12 +71,15 @@ export async function slaaCvrOp(cvr: string): Promise<CvrOpslag | null> {
   };
 }
 
-export async function slaaPNummerOp(pNummer: string): Promise<CvrOpslag | null> {
+export type PNummerOpslag = CvrOpslag & { cvrNummer: string | null };
+
+export async function slaaPNummerOp(pNummer: string): Promise<PNummerOpslag | null> {
   const body = {
     _source: [
       'Vrproduktionsenhed.pNummer',
       'Vrproduktionsenhed.virksomhedMetadata.nyesteNavn.navn',
       'Vrproduktionsenhed.beliggenhedsadresse',
+      'Vrproduktionsenhed.virksomhedSummariskRelation.cvrNummer',
     ],
     query: { term: { 'Vrproduktionsenhed.pNummer': parseInt(pNummer, 10) } },
     size: 1,
@@ -102,8 +105,13 @@ export async function slaaPNummerOp(pNummer: string): Promise<CvrOpslag | null> 
   const by = adresseObj.postdistrikt ?? null;
   const adresse = vejnavn ? `${vejnavn} ${husnr}`.trim() : null;
 
+  const cvrNummer = hit.virksomhedSummariskRelation?.cvrNummer
+    ? String(hit.virksomhedSummariskRelation.cvrNummer)
+    : null;
+
   return {
-    cvr: String(hit.pNummer ?? pNummer),
+    cvr: cvrNummer ?? pNummer,
+    cvrNummer,
     navn: hit.virksomhedMetadata?.nyesteNavn?.navn ?? '',
     adresse: adresse && postnr && by ? `${adresse}, ${postnr} ${by}` : adresse,
     postnummer: postnr,
