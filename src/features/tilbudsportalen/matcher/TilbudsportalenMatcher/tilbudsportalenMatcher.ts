@@ -4,6 +4,7 @@ import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { TilbudsportalenMatchResultat } from '@/features/tilbudsportalen/types/tilbudsportalen.types';
 
 type TpTilbud = {
+  id: number;
   cvr: string | null;
   navn: string | null;
   tilbudstype: string | null;
@@ -28,40 +29,90 @@ type StpsRapport = {
   stps_tilbud_navn: string | null;
 };
 
-type TpData = {
-  tilbudstype: string | null;
-  pladser: number | null;
-  p_nummer: string | null;
-  kommune: string | null;
-  kontaktperson: string | null;
-  telefon: string | null;
-  email: string | null;
-  tilbuddets_adresse: string | null;
-  leder: string | null;
-  website: string | null;
-  virksomheds_navn: string | null;
-  tilsynsmyndighed: string | null;
-  pladser_pr_paragraf: string | null;
-  driftsform: string | null;
-};
+type TpData = Omit<TpTilbud, 'cvr' | 'navn'>;
 
-function normaliserNavn(navn: string): string {
+// Ord der ikke hjælper matchingen
+const STOPORD = new Set([
+  'og', 'for', 'til', 'i', 'af', 'med', 'på', 'den', 'det', 'de',
+  'bosted', 'bofællesskab', 'botilbud', 'bo', 'center', 'hus', 'gård',
+  'stedet', 'hjemmet', 'institution', 'tilbud',
+]);
+
+export function normaliserNavn(navn: string): string {
   return navn
     .toLowerCase()
+    .replace(/[.,\-–()&]/g, ' ')
     .replace(/\s+/g, ' ')
-    .replace(/[.,\-–]/g, '')
     .trim();
 }
 
-function findNavnMatch(stpsNavn: string, navnMap: Map<string, TpData>): TpData | undefined {
+function tokeniser(navn: string): Set<string> {
+  return new Set(
+    normaliserNavn(navn)
+      .split(' ')
+      .filter((t) => t.length > 2 && !STOPORD.has(t))
+  );
+}
+
+export function fuzzyScore(navnA: string, navnB: string): number {
+  const tokensA = tokeniser(navnA);
+  const tokensB = tokeniser(navnB);
+  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+
+  const fælles = [...tokensA].filter((t) => tokensB.has(t)).length;
+  const union = new Set([...tokensA, ...tokensB]).size;
+  return fælles / union;
+}
+
+type KandidatMatch = { data: TpData; score: number };
+
+function findBedsteMatch(
+  stpsNavn: string,
+  cvrMap: Map<string, TpData>,
+  navnMap: Map<string, TpData>,
+  alle: TpTilbud[],
+  stpsCvr: string | null,
+): { data: TpData; kilde: string } | null {
+  // 1. Eksakt CVR-match
+  if (stpsCvr) {
+    const m = cvrMap.get(stpsCvr.trim());
+    if (m) return { data: m, kilde: 'cvr' };
+  }
+
+  // 2. Eksakt normaliseret navnmatch
   const normStps = normaliserNavn(stpsNavn);
-  if (navnMap.has(normStps)) return navnMap.get(normStps);
+  const eksakt = navnMap.get(normStps);
+  if (eksakt) return { data: eksakt, kilde: 'navn_eksakt' };
+
+  // 3. Præfiks/suffiks match
   for (const [tpNavn, data] of navnMap) {
     if (tpNavn.startsWith(normStps) || normStps.startsWith(tpNavn)) {
-      return data;
+      return { data, kilde: 'navn_præfiks' };
     }
   }
-  return undefined;
+
+  // 4. Fuzzy token-match — kræver score >= 0.55
+  let bedste: KandidatMatch | null = null;
+  for (const t of alle) {
+    if (!t.navn) continue;
+    const score = fuzzyScore(stpsNavn, t.navn);
+    if (score >= 0.55 && (!bedste || score > bedste.score)) {
+      bedste = {
+        data: {
+          id: t.id, tilbudstype: t.tilbudstype, pladser: t.pladser,
+          p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
+          telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
+          leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
+          tilsynsmyndighed: t.tilsynsmyndighed, pladser_pr_paragraf: t.pladser_pr_paragraf,
+          driftsform: t.driftsform,
+        },
+        score,
+      };
+    }
+  }
+  if (bedste) return { data: bedste.data, kilde: `fuzzy_${Math.round(bedste.score * 100)}` };
+
+  return null;
 }
 
 export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatchResultat> {
@@ -69,28 +120,21 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const { data: tilbud, error: tilbudFejl } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('cvr, navn, tilbudstype, pladser, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform');
+    .select('id, cvr, navn, tilbudstype, pladser, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform');
 
   if (tilbudFejl) throw new Error(`Tilbudsportalen fejl: ${tilbudFejl.message}`);
 
+  const alleTilbud = (tilbud ?? []) as TpTilbud[];
   const cvrMap = new Map<string, TpData>();
   const navnMap = new Map<string, TpData>();
 
-  for (const t of (tilbud ?? []) as TpTilbud[]) {
+  for (const t of alleTilbud) {
     const data: TpData = {
-      tilbudstype: t.tilbudstype,
-      pladser: t.pladser,
-      p_nummer: t.p_nummer,
-      kommune: t.kommune,
-      kontaktperson: t.kontaktperson,
-      telefon: t.telefon,
-      email: t.email,
-      tilbuddets_adresse: t.tilbuddets_adresse,
-      leder: t.leder,
-      website: t.website,
-      virksomheds_navn: t.virksomheds_navn,
-      tilsynsmyndighed: t.tilsynsmyndighed,
-      pladser_pr_paragraf: t.pladser_pr_paragraf,
+      id: t.id, tilbudstype: t.tilbudstype, pladser: t.pladser,
+      p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
+      telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
+      leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
+      tilsynsmyndighed: t.tilsynsmyndighed, pladser_pr_paragraf: t.pladser_pr_paragraf,
       driftsform: t.driftsform,
     };
     if (t.cvr) cvrMap.set(t.cvr.trim(), data);
@@ -108,37 +152,31 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
   let ingenMatch = 0;
 
   for (const rapport of (rapporter ?? []) as StpsRapport[]) {
-    let match: TpData | undefined;
+    if (!rapport.stps_tilbud_navn) { ingenMatch++; continue; }
+    if (!rapport.cvr) ingenCvr++;
 
-    if (rapport.cvr) {
-      match = cvrMap.get(rapport.cvr.trim());
-    } else {
-      ingenCvr++;
-    }
+    const resultat = findBedsteMatch(rapport.stps_tilbud_navn, cvrMap, navnMap, alleTilbud, rapport.cvr);
 
-    if (!match && rapport.stps_tilbud_navn) {
-      match = findNavnMatch(rapport.stps_tilbud_navn, navnMap);
-    }
+    if (!resultat) { ingenMatch++; continue; }
 
-    if (!match) { ingenMatch++; continue; }
-
+    const { data: m } = resultat;
     await supabase
       .from('stps_rapporter')
       .update({
-        tp_tilbudstype: match.tilbudstype,
-        tp_pladser: match.pladser?.toString() ?? null,
-        tp_p_nummer: match.p_nummer,
-        tp_kommune: match.kommune,
-        tp_kontaktperson: match.kontaktperson,
-        tp_telefon: match.telefon,
-        tp_email: match.email,
-        tp_adresse: match.tilbuddets_adresse,
-        tp_leder: match.leder,
-        tp_website: match.website,
-        tp_virksomheds_navn: match.virksomheds_navn,
-        tp_tilsynsmyndighed: match.tilsynsmyndighed,
-        tp_pladser_pr_paragraf: match.pladser_pr_paragraf,
-        tp_driftsform: match.driftsform,
+        tp_tilbudstype: m.tilbudstype,
+        tp_pladser: m.pladser?.toString() ?? null,
+        tp_p_nummer: m.p_nummer,
+        tp_kommune: m.kommune,
+        tp_kontaktperson: m.kontaktperson,
+        tp_telefon: m.telefon,
+        tp_email: m.email,
+        tp_adresse: m.tilbuddets_adresse,
+        tp_leder: m.leder,
+        tp_website: m.website,
+        tp_virksomheds_navn: m.virksomheds_navn,
+        tp_tilsynsmyndighed: m.tilsynsmyndighed,
+        tp_pladser_pr_paragraf: m.pladser_pr_paragraf,
+        tp_driftsform: m.driftsform,
       })
       .eq('id', rapport.id);
 

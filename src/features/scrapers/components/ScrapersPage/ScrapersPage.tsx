@@ -7,6 +7,7 @@ import { ScraperKort } from './ScraperKort';
 import { ScraperHistorik } from './ScraperHistorik';
 import { ScraperFremgang } from './ScraperFremgang';
 import { MondayOversigt } from '@/features/monday/components/MondayOversigt';
+import { ManuelMatch } from './ManuelMatch';
 import type { ScraperLog } from '@/lib/db/ScraperLog';
 
 export type ScraperStatus = 'idle' | 'kører' | 'done' | 'fejl';
@@ -190,6 +191,7 @@ export function ScrapersPage() {
       <ScraperFremgang />
       <ScraperHistorik />
       <MondayOversigt />
+      <ManuelMatch />
 
       <div className="scrapers-grid">
         {SCRAPERS.map((scraper) => (
