@@ -5,6 +5,7 @@ import { Users } from 'lucide-react';
 import type { MondayKundeItem } from '@/features/monday/types/monday.types';
 import { KunderKpier } from './sections/KunderKpier/KunderKpier';
 import { KunderVækstGraf } from './sections/KunderVækstGraf/KunderVækstGraf';
+import { ForløbsansvarligGraf } from './sections/ForløbsansvarligGraf';
 import { KunderTabel } from './sections/KunderTabel/KunderTabel';
 
 export function KunderPage() {
@@ -40,6 +41,7 @@ export function KunderPage() {
         <>
           <KunderKpier kunder={kunder} />
           <KunderVækstGraf kunder={kunder} />
+          <ForløbsansvarligGraf kunder={kunder} />
           <KunderTabel kunder={kunder} />
         </>
       )}

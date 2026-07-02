@@ -1,0 +1,1 @@
+export { ForløbsansvarligGraf } from './ForløbsansvarligGraf';

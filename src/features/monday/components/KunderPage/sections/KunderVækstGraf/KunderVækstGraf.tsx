@@ -5,7 +5,7 @@ import type { MondayKundeItem } from '@/features/monday/types/monday.types';
 
 type Props = { kunder: MondayKundeItem[] };
 
-type MånedData = { måned: string; aktive: number; nye: number };
+type MånedData = { måned: string; nøgle: string; aktive: number; nye: number };
 
 function parseDato(dato: string | null): Date | null {
   if (!dato) return null;
@@ -17,10 +17,11 @@ function månedNøgle(dato: Date): string {
   return `${dato.getFullYear()}-${String(dato.getMonth() + 1).padStart(2, '0')}`;
 }
 
-function månedLabel(nøgle: string): string {
+function månedLabel(nøgle: string, visÅr: boolean): string {
   const [år, mnd] = nøgle.split('-');
   const navne = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
-  return `${navne[parseInt(mnd) - 1]} ${år}`;
+  const mndNavn = navne[parseInt(mnd) - 1];
+  return visÅr ? `${mndNavn}\n${år}` : mndNavn;
 }
 
 export function KunderVækstGraf({ kunder }: Props) {
@@ -37,10 +38,12 @@ export function KunderVækstGraf({ kunder }: Props) {
       else if (k.gruppe === 'nye_forloeb') entry.nye++;
     }
 
-    return [...map.entries()]
-      .sort(([a], [b]) => a.localeCompare(b))
-      .slice(-12)
-      .map(([nøgle, tæller]) => ({ måned: månedLabel(nøgle), ...tæller }));
+    const sorteret = [...map.entries()].sort(([a], [b]) => a.localeCompare(b)).slice(-12);
+    return sorteret.map(([nøgle, tæller], i) => {
+      const erJanuar = nøgle.endsWith('-01');
+      const visÅr = erJanuar || i === 0;
+      return { måned: månedLabel(nøgle, visÅr), nøgle, ...tæller };
+    });
   }, [kunder]);
 
   if (data.length === 0) {
@@ -81,7 +84,7 @@ export function KunderVækstGraf({ kunder }: Props) {
             const aktivH = Math.round((d.aktive / maxVærdi) * 100);
             const nyH = Math.round((d.nye / maxVærdi) * 100);
             return (
-              <div key={d.måned} className="kunder-graf-kolonne">
+              <div key={d.nøgle} className="kunder-graf-kolonne">
                 <div className="kunder-graf-søjler">
                   {d.aktive > 0 && (
                     <div
@@ -98,7 +101,7 @@ export function KunderVækstGraf({ kunder }: Props) {
                     />
                   )}
                 </div>
-                <span className="kunder-graf-label">{d.måned}</span>
+                <span className="kunder-graf-label" style={{ whiteSpace: 'pre', lineHeight: 1.2 }}>{d.måned}</span>
               </div>
             );
           })}
