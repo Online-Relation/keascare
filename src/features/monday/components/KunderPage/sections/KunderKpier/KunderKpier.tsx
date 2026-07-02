@@ -2,9 +2,9 @@
 
 import type { MondayKundeItem } from '@/features/monday/types/monday.types';
 
-type Props = { kunder: MondayKundeItem[] };
+type Props = { kunder: MondayKundeItem[]; matchAntal?: number | null };
 
-export function KunderKpier({ kunder }: Props) {
+export function KunderKpier({ kunder, matchAntal }: Props) {
   const aktive = kunder.filter((k) => k.gruppe === 'aktive_forloeb').length;
   const nye = kunder.filter((k) => k.gruppe === 'nye_forloeb').length;
   const total = kunder.length;
@@ -16,6 +16,7 @@ export function KunderKpier({ kunder }: Props) {
     { label: 'Nye forløb', værdi: nye, farve: '#16a34a', note: 'nyopstartede forløb' },
     { label: 'Kunder i alt', værdi: total, farve: 'var(--color-text-primary)', note: 'Type=Bosted i Monday' },
     { label: 'Forløbsansvarlige', værdi: ansvarlige, farve: '#7c3aed', note: 'medarbejdere med ansvar' },
+    { label: 'Matchede bosteder', værdi: matchAntal ?? '…', farve: '#0369a1', note: 'bosteder matchet i systemet' },
   ];
 
   return (

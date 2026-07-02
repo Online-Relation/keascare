@@ -11,6 +11,7 @@ import { KunderKort } from './sections/KunderKort';
 
 export function KunderPage() {
   const [kunder, setKunder] = useState<MondayKundeItem[]>([]);
+  const [matchAntal, setMatchAntal] = useState<number | null>(null);
   const [loader, setLoader] = useState(true);
   const [fejl, setFejl] = useState<string | null>(null);
 
@@ -23,6 +24,11 @@ export function KunderPage() {
       })
       .catch(() => setFejl('Kunne ikke hente kunder'))
       .finally(() => setLoader(false));
+
+    fetch('/api/monday/match-antal')
+      .then((r) => r.json())
+      .then((d) => setMatchAntal(d.antal ?? null))
+      .catch(() => {});
   }, []);
 
   return (
@@ -40,7 +46,7 @@ export function KunderPage() {
 
       {!loader && !fejl && (
         <>
-          <KunderKpier kunder={kunder} />
+          <KunderKpier kunder={kunder} matchAntal={matchAntal} />
           <KunderVækstGraf kunder={kunder} />
           <ForløbsansvarligGraf kunder={kunder} />
           <KunderTabel kunder={kunder} />
