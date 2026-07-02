@@ -28,18 +28,8 @@ async function nominatimSøg(q: string): Promise<{ lat: number; lng: number } | 
   }
 }
 
-// Prøver fuld adresse, derefter kun postnummer+by som fallback
 async function geocodeAdresse(adresse: string): Promise<{ lat: number; lng: number } | null> {
-  const fuld = await nominatimSøg(adresse + ', Danmark');
-  if (fuld) return fuld;
-
-  // Fallback: udtræk postnummer og by (fx "2400 København NV")
-  const postnrMatch = adresse.match(/\b(\d{4})\s+(.+)/);
-  if (postnrMatch) {
-    await new Promise((r) => setTimeout(r, 300));
-    return nominatimSøg(`${postnrMatch[1]} ${postnrMatch[2]}, Danmark`);
-  }
-  return null;
+  return nominatimSøg(adresse + ', Danmark');
 }
 
 export async function GET() {
