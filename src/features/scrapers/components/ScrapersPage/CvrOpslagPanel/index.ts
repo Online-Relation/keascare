@@ -1,0 +1,1 @@
+export { CvrOpslagPanel } from './CvrOpslagPanel';
