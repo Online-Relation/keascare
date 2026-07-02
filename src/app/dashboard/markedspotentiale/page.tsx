@@ -14,5 +14,5 @@ export default async function MarkedspotentialeSide({ searchParams }: Props) {
     hentDashboardData(fra, til),
     hentDstKommuneData(),
   ]);
-  return <MarkedspotentialePage funnel={dashboardData.salgsFunnel} dstData={dstData} />;
+  return <MarkedspotentialePage funnel={dashboardData.salgsFunnel} dstData={dstData} fra={fra} til={til} />;
 }

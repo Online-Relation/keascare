@@ -293,3 +293,77 @@
   padding: 0.25rem 0;
   text-align: center;
 }
+
+.mp-funnel-trin--klik {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  font: inherit;
+}
+
+.mp-funnel-trin--klik:hover {
+  filter: brightness(0.97);
+}
+
+.mp-funnel-trin-liste-panel {
+  border: 1px solid;
+  border-top: none;
+  border-radius: 0 0 0.5rem 0.5rem;
+  background: var(--color-card);
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.mp-funnel-liste-loading {
+  padding: 1rem;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.mp-funnel-bosted-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.mp-funnel-bosted-tabel th {
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+  color: var(--color-text-muted);
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+
+.mp-funnel-bosted-tabel td {
+  padding: 0.5rem 0.875rem;
+  border-bottom: 1px solid var(--color-border-light);
+  vertical-align: middle;
+}
+
+.mp-funnel-bosted-tabel tr:last-child td {
+  border-bottom: none;
+}
+
+.mp-funnel-bosted-link {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: var(--fw-medium);
+}
+
+.mp-funnel-bosted-link:hover {
+  text-decoration: underline;
+}
+
+.mp-funnel-bosted-muted {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.mp-funnel-fund-badge {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-semibold);
+}
