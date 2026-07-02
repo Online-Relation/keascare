@@ -13,9 +13,9 @@ export type KundeKortPunkt = {
   lng: number;
 };
 
-async function geocodeAdresse(adresse: string): Promise<{ lat: number; lng: number } | null> {
+async function nominatimSøg(q: string): Promise<{ lat: number; lng: number } | null> {
   try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(adresse + ', Danmark')}&format=json&limit=1&countrycodes=dk`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=1&countrycodes=dk`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk' },
       next: { revalidate: 86400 },
@@ -26,6 +26,20 @@ async function geocodeAdresse(adresse: string): Promise<{ lat: number; lng: numb
   } catch {
     return null;
   }
+}
+
+// Prøver fuld adresse, derefter kun postnummer+by som fallback
+async function geocodeAdresse(adresse: string): Promise<{ lat: number; lng: number } | null> {
+  const fuld = await nominatimSøg(adresse + ', Danmark');
+  if (fuld) return fuld;
+
+  // Fallback: udtræk postnummer og by (fx "2400 København NV")
+  const postnrMatch = adresse.match(/\b(\d{4})\s+(.+)/);
+  if (postnrMatch) {
+    await new Promise((r) => setTimeout(r, 300));
+    return nominatimSøg(`${postnrMatch[1]} ${postnrMatch[2]}, Danmark`);
+  }
+  return null;
 }
 
 export async function GET() {
@@ -50,10 +64,19 @@ export async function GET() {
 
   // Geocode med 300ms pause mellem kald for at respektere Nominatim usage policy
   const punkter: KundeKortPunkt[] = [];
+  const ingenKoords: string[] = [];
   for (const r of rækker) {
     const coords = await geocodeAdresse(r.adresse);
-    if (coords) punkter.push({ ...r, ...coords });
+    if (coords) {
+      punkter.push({ ...r, ...coords });
+    } else {
+      ingenKoords.push(`${r.navn}: ${r.adresse}`);
+    }
     await new Promise((res) => setTimeout(res, 300));
+  }
+
+  if (ingenKoords.length > 0) {
+    console.warn('[kunder-kort] Kunne ikke geocode:', ingenKoords);
   }
 
   return NextResponse.json(punkter);
