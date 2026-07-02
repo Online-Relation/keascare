@@ -24,6 +24,7 @@ const AFVISNINGS_ÅRSAGER = [
   'Forkert målgruppe',
   'Kommunalt / offentligt drevet',
   'Ingen kontakt opnået',
+  'Lederen kunne ikke træffes',
   'Lukker / under afvikling',
   'Andet',
 ];
