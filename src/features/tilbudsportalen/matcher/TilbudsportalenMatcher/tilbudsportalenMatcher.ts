@@ -31,7 +31,7 @@ type StpsRapport = {
   tp_kommune: string | null;
 };
 
-type TpData = Omit<TpTilbud, 'cvr' | 'navn'>;
+type TpData = Omit<TpTilbud, 'navn'> & { cvr: string | null };
 
 const STOPORD = new Set([
   'og', 'for', 'til', 'i', 'af', 'med', 'på', 'den', 'det', 'de',
@@ -120,7 +120,7 @@ function findBedsteMatch(
     if (score >= 0.65 && (!bedste || score > bedste.score)) {
       bedste = {
         data: {
-          id: t.id, tilbudstype: t.tilbudstype, pladser: t.pladser,
+          id: t.id, cvr: t.cvr ?? null, tilbudstype: t.tilbudstype, pladser: t.pladser,
           p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
           telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
           leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
@@ -151,7 +151,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   for (const t of alleTilbud) {
     const data: TpData = {
-      id: t.id, tilbudstype: t.tilbudstype, pladser: t.pladser,
+      id: t.id, cvr: t.cvr ?? null, tilbudstype: t.tilbudstype, pladser: t.pladser,
       p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
       telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
       leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
@@ -194,6 +194,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
     await supabase
       .from('stps_rapporter')
       .update({
+        ...(m.cvr && !rapport.cvr ? { cvr: m.cvr } : {}),
         tp_tilbudstype: m.tilbudstype,
         tp_pladser: m.pladser?.toString() ?? null,
         tp_p_nummer: m.p_nummer,
