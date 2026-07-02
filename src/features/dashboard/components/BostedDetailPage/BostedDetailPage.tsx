@@ -12,7 +12,6 @@ import { BostedHandlinger } from './sections/BostedHandlinger';
 import { BostedSalgsAfsnit } from './sections/BostedSalgsAfsnit';
 import { MailchimpSignup } from './sections/MailchimpSignup';
 import { KontaktHistorik } from './sections/KontaktHistorik';
-import { BostedKort } from './sections/BostedKort';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
@@ -30,9 +29,6 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
         <BostedOrganisationKort bosted={bosted} />
       </div>
 
-      {(bosted.tpAdresse ?? bosted.adresse) && (
-        <BostedKort adresse={(bosted.tpAdresse ?? bosted.adresse)!} />
-      )}
 
       {bosted.fundNiveau !== 'ingen' && bosted.fundNiveau !== 'ukendt' && (
         <BostedSalgsAfsnit bostedId={bosted.id} cachetAnbefalinger={bosted.salgsAnbefalinger} />
