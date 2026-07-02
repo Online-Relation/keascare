@@ -204,7 +204,6 @@ export function ScrapersPage() {
       <ScraperFremgang />
       <ScraperHistorik />
       <MondayOversigt />
-      <ManuelMatch />
 
       <div className="scrapers-grid">
         {SCRAPERS.map((scraper) => {
@@ -241,6 +240,8 @@ export function ScrapersPage() {
           );
         })}
       </div>
+
+      <ManuelMatch />
     </div>
   );
 }
