@@ -15,7 +15,13 @@ export async function GET(request: NextRequest) {
   try {
     cvrData = await slaaCvrOp(cvr);
   } catch (e) {
-    cvrFejl = e instanceof Error ? e.message : String(e);
+    const msg = e instanceof Error ? e.message : String(e);
+    // cvrapi.dk rammer timekvote når baggrundsjobs kører. Giv brugervenlig besked.
+    if (msg.includes('QUOTA_EXCEEDED')) {
+      cvrFejl = 'cvrapi.dk timekvote overskredet — baggrundsjobs har brugt kvotet. Prøv igen om lidt, eller tilføj CVR_USER + CVR_PASS fra datacvr.virk.dk i Railway-miljøvariablerne for ubegrænset adgang.';
+    } else {
+      cvrFejl = msg;
+    }
   }
 
   const [stpsRader, navnRader] = await Promise.all([
