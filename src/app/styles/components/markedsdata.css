@@ -225,6 +225,14 @@
   display: flex;
   flex-direction: column;
   gap: 0;
+  align-items: center;
+}
+
+.mp-funnel-trin-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .mp-funnel-trin {
@@ -282,5 +290,6 @@
 .mp-funnel-pil {
   font-size: var(--text-xs);
   color: var(--color-text-muted);
-  padding: 0.25rem 0 0.25rem 1rem;
+  padding: 0.25rem 0;
+  text-align: center;
 }

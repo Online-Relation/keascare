@@ -81,7 +81,9 @@ export function MarkedspotentialePage({ funnel, dstData }: Props) {
 
         <div className="mp-funnel-trin-liste">
           {funnel.trin.map((trin, i) => {
-            const pct = max > 0 ? Math.round((trin.antal / max) * 100) : 0;
+            const n = funnel.trin.length;
+            // Tragt: trin 0 = 100%, sidste trin = 40%, jævnt fordelt
+            const tragPct = 100 - (i / Math.max(n - 1, 1)) * 60;
             const farve = TRIN_FARVER[i] ?? TRIN_FARVER[0];
             const næste = funnel.trin[i + 1];
             const konvPct = næste && trin.antal > 0
@@ -89,13 +91,13 @@ export function MarkedspotentialePage({ funnel, dstData }: Props) {
               : null;
 
             return (
-              <div key={trin.label}>
+              <div key={trin.label} className="mp-funnel-trin-wrapper">
                 <div
                   className="mp-funnel-trin"
                   style={{
                     borderColor: farve.border,
                     backgroundColor: farve.bg,
-                    width: `${Math.max(pct, 20)}%`,
+                    width: `${tragPct}%`,
                   }}
                 >
                   <div className="mp-funnel-trin-indhold">
