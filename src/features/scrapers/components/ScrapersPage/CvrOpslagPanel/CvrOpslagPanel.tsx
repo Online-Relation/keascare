@@ -22,6 +22,7 @@ type StpsBosted = {
 type OpslagResultat = {
   cvr: string;
   cvrData: CvrOpslag | null;
+  cvrFejl: string | null;
   stpsBosteder: StpsBosted[];
   navnMatches: StpsBosted[];
 };
@@ -135,7 +136,12 @@ export function CvrOpslagPanel() {
                 <Building2 size={13} style={{ color: 'var(--color-text-muted)' }} />
                 <span style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CVR-register</span>
               </div>
-              {resultat.cvrData ? (
+              {resultat.cvrFejl ? (
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', color: '#dc2626', fontSize: 'var(--text-sm)', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '0.625rem 0.75rem' }}>
+                  <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
+                  <span><strong>Fejl fra CVR-registret:</strong> {resultat.cvrFejl}</span>
+                </div>
+              ) : resultat.cvrData ? (
                 <div style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '0.5rem', padding: '0.75rem' }}>
                   <FeltRække label="Navn" value={resultat.cvrData.navn} />
                   <FeltRække label="Adresse" value={resultat.cvrData.adresse} />
@@ -145,7 +151,7 @@ export function CvrOpslagPanel() {
                   <FeltRække label="Stiftet" value={resultat.cvrData.stiftet ? new Date(resultat.cvrData.stiftet).toLocaleDateString('da-DK') : null} />
                 </div>
               ) : (
-                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>Ingen data fundet i CVR-registret</p>
+                <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>CVR-nummer ikke fundet i registret</p>
               )}
             </div>
 

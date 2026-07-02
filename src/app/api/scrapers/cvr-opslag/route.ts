@@ -10,7 +10,13 @@ export async function GET(request: NextRequest) {
 
   const supabase = getSupabaseServerClient();
 
-  const cvrData = await slaaCvrOp(cvr).catch(() => null);
+  let cvrData = null;
+  let cvrFejl: string | null = null;
+  try {
+    cvrData = await slaaCvrOp(cvr);
+  } catch (e) {
+    cvrFejl = e instanceof Error ? e.message : String(e);
+  }
 
   const [stpsRader, navnRader] = await Promise.all([
     supabase
@@ -36,6 +42,7 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     cvr,
     cvrData,
+    cvrFejl,
     stpsBosteder: stpsRader.data ?? [],
     navnMatches,
   });
