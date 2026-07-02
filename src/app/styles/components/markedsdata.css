@@ -313,6 +313,33 @@
   background: var(--color-card);
   overflow: hidden;
   margin-bottom: 0.25rem;
+  animation: slideNed 0.22s ease both;
+}
+
+@keyframes slideNed {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mp-funnel-bosted-tabel-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+  .mp-funnel-trin-liste-panel {
+    width: calc(100% + 2.5rem) !important;
+    margin-left: -1.25rem;
+    border-left: none !important;
+    border-right: none !important;
+    border-radius: 0;
+  }
 }
 
 .mp-funnel-liste-loading {

@@ -112,51 +112,53 @@ export function SalgstragtKlient({ funnel, fra, til }: Props) {
                 ) : trinBosteder.length === 0 ? (
                   <div className="mp-funnel-liste-loading">Ingen bosteder fundet</div>
                 ) : (
-                  <table className="mp-funnel-bosted-tabel">
-                    <thead>
-                      <tr>
-                        <th>Bosted</th>
-                        <th>Kommune</th>
-                        <th>Fund</th>
-                        <th>Rapport</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {trinBosteder.map((b) => {
-                        const fundInfo = FUND_BADGE[b.fund_niveau ?? ''];
-                        return (
-                          <tr key={b.id}>
-                            <td>
-                              <Link href={`/dashboard/bosteder/${b.id}`} className="mp-funnel-bosted-link">
-                                {b.stps_tilbud_navn ?? '—'}
-                              </Link>
-                            </td>
-                            <td className="mp-funnel-bosted-muted">{b.kommune ?? '—'}</td>
-                            <td>
-                              {fundInfo && (
-                                <span className="mp-funnel-fund-badge" style={{ color: fundInfo.color }}>
-                                  {fundInfo.label}
-                                </span>
-                              )}
-                            </td>
-                            <td className="mp-funnel-bosted-muted">
-                              {b.rapport_dato ? new Date(b.rapport_dato).toLocaleDateString('da-DK') : '—'}
-                            </td>
-                            <td>
-                              <Link
-                                href={`/dashboard/bosteder/${b.id}`}
-                                className="btn btn-ghost btn-sm"
-                                title="Se bosted"
-                              >
-                                <ExternalLink size={13} />
-                              </Link>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
+                  <div className="mp-funnel-bosted-tabel-scroll">
+                    <table className="mp-funnel-bosted-tabel">
+                      <thead>
+                        <tr>
+                          <th>Bosted</th>
+                          <th>Kommune</th>
+                          <th>Fund</th>
+                          <th>Rapport</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {trinBosteder.map((b) => {
+                          const fundInfo = FUND_BADGE[b.fund_niveau ?? ''];
+                          return (
+                            <tr key={b.id}>
+                              <td>
+                                <Link href={`/dashboard/bosteder/${b.id}`} className="mp-funnel-bosted-link">
+                                  {b.stps_tilbud_navn ?? '—'}
+                                </Link>
+                              </td>
+                              <td className="mp-funnel-bosted-muted">{b.kommune ?? '—'}</td>
+                              <td>
+                                {fundInfo && (
+                                  <span className="mp-funnel-fund-badge" style={{ color: fundInfo.color }}>
+                                    {fundInfo.label}
+                                  </span>
+                                )}
+                              </td>
+                              <td className="mp-funnel-bosted-muted">
+                                {b.rapport_dato ? new Date(b.rapport_dato).toLocaleDateString('da-DK') : '—'}
+                              </td>
+                              <td>
+                                <Link
+                                  href={`/dashboard/bosteder/${b.id}`}
+                                  className="btn btn-ghost btn-sm"
+                                  title="Se bosted"
+                                >
+                                  <ExternalLink size={13} />
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
               </div>
             )}
