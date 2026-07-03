@@ -20,11 +20,18 @@ export function KunderTabel({ kunder }: Props) {
       .catch(() => {});
   }, []);
 
-  const filtrerede = kunder.filter((k) => {
-    if (filter === 'aktive') return k.gruppe === 'aktive_forloeb';
-    if (filter === 'nye') return k.gruppe === 'nye_forloeb';
-    return true;
-  });
+  const filtrerede = kunder
+    .filter((k) => {
+      if (filter === 'aktive') return k.gruppe === 'aktive_forloeb';
+      if (filter === 'nye') return k.gruppe === 'nye_forloeb';
+      return true;
+    })
+    .sort((a, b) => {
+      if (!a.oprettetDato && !b.oprettetDato) return 0;
+      if (!a.oprettetDato) return 1;
+      if (!b.oprettetDato) return -1;
+      return new Date(b.oprettetDato).getTime() - new Date(a.oprettetDato).getTime();
+    });
 
   return (
     <div className="bosted-detail-kort">
