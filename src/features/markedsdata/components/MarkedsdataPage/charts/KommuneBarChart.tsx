@@ -13,11 +13,11 @@ export function KommuneBarChart({ data }: Props) {
   const top15 = data.slice(0, 15);
 
   return (
-    <ResponsiveContainer width="100%" height={360}>
+    <ResponsiveContainer width="100%" height={420}>
       <BarChart data={top15} layout="vertical" margin={{ top: 0, right: 16, left: 8, bottom: 0 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
         <XAxis type="number" tick={{ fontSize: 11, fill: '#9CA3AF' }} tickLine={false} axisLine={false} />
-        <YAxis type="category" dataKey="kommune" tick={{ fontSize: 11, fill: '#6B7280' }} tickLine={false} axisLine={false} width={105} />
+        <YAxis type="category" dataKey="kommune" interval={0} tick={{ fontSize: 11, fill: '#6B7280' }} tickLine={false} axisLine={false} width={105} />
         <Tooltip
           contentStyle={{ background: '#fff', border: '1px solid #E5E7EB', borderRadius: '8px', fontSize: 12 }}
           formatter={(val, name) => [val, name === 'p107' ? '§107 borgere' : '§108 borgere']}
