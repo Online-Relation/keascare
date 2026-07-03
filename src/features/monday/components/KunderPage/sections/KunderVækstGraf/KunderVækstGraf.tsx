@@ -63,6 +63,11 @@ export function KunderVækstGraf({ kunder }: Props) {
 
   const maxVærdi = Math.max(...data.map((d) => d.aktive + d.nye), 1);
 
+  // Pæne Y-akse trin
+  const yTrin = maxVærdi <= 5 ? 1 : maxVærdi <= 10 ? 2 : maxVærdi <= 20 ? 5 : 10;
+  const yMax = Math.ceil(maxVærdi / yTrin) * yTrin;
+  const yLabels = Array.from({ length: Math.floor(yMax / yTrin) + 1 }, (_, i) => i * yTrin).reverse();
+
   return (
     <div className="bosted-detail-kort">
       <div className="bosted-detail-kort-header">
@@ -79,32 +84,42 @@ export function KunderVækstGraf({ kunder }: Props) {
         </div>
       </div>
       <div className="bosted-detail-kort-body">
-        <div className="kunder-graf-wrapper">
-          {data.map((d) => {
-            const aktivH = Math.round((d.aktive / maxVærdi) * 100);
-            const nyH = Math.round((d.nye / maxVærdi) * 100);
-            return (
-              <div key={d.nøgle} className="kunder-graf-kolonne">
-                <div className="kunder-graf-søjler">
-                  {d.aktive > 0 && (
-                    <div
-                      className="kunder-graf-søjle"
-                      style={{ height: `${aktivH}%`, background: 'var(--color-primary)' }}
-                      title={`Aktive: ${d.aktive}`}
-                    />
-                  )}
-                  {d.nye > 0 && (
-                    <div
-                      className="kunder-graf-søjle"
-                      style={{ height: `${nyH}%`, background: '#16a34a' }}
-                      title={`Nye: ${d.nye}`}
-                    />
-                  )}
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          {/* Y-akse */}
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '1.5rem', minWidth: '1.5rem' }}>
+            {yLabels.map((v) => (
+              <span key={v} style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', lineHeight: 1 }}>{v}</span>
+            ))}
+          </div>
+
+          {/* Søjler */}
+          <div className="kunder-graf-wrapper" style={{ flex: 1 }}>
+            {data.map((d) => {
+              const aktivH = Math.round((d.aktive / yMax) * 100);
+              const nyH = Math.round((d.nye / yMax) * 100);
+              return (
+                <div key={d.nøgle} className="kunder-graf-kolonne">
+                  <div className="kunder-graf-søjler">
+                    {d.aktive > 0 && (
+                      <div
+                        className="kunder-graf-søjle"
+                        style={{ height: `${aktivH}%`, background: 'var(--color-primary)' }}
+                        title={`Aktive: ${d.aktive}`}
+                      />
+                    )}
+                    {d.nye > 0 && (
+                      <div
+                        className="kunder-graf-søjle"
+                        style={{ height: `${nyH}%`, background: '#16a34a' }}
+                        title={`Nye: ${d.nye}`}
+                      />
+                    )}
+                  </div>
+                  <span className="kunder-graf-label" style={{ whiteSpace: 'pre', lineHeight: 1.2 }}>{d.måned}</span>
                 </div>
-                <span className="kunder-graf-label" style={{ whiteSpace: 'pre', lineHeight: 1.2 }}>{d.måned}</span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
