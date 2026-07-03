@@ -139,7 +139,21 @@ export function CvrOpslagPanel() {
               {resultat.cvrFejl ? (
                 <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start', color: '#dc2626', fontSize: 'var(--text-sm)', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '0.625rem 0.75rem' }}>
                   <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
-                  <span><strong>Fejl fra CVR-registret:</strong> {resultat.cvrFejl}</span>
+                  <span>
+                    {resultat.cvrFejl.includes('QUOTA_EXCEEDED') ? (
+                      <>
+                        <strong>Kvote overskredet</strong> — den gratis cvrapi.dk-kvote er opbrugt af baggrundsjobs.{' '}
+                        Opret en gratis konto på{' '}
+                        <a href="https://datacvr.virk.dk" target="_blank" rel="noopener noreferrer" style={{ color: '#dc2626', textDecoration: 'underline' }}>
+                          datacvr.virk.dk
+                        </a>{' '}
+                        og tilføj <code style={{ background: '#fee2e2', padding: '0 3px', borderRadius: 3 }}>CVR_USER</code> +{' '}
+                        <code style={{ background: '#fee2e2', padding: '0 3px', borderRadius: 3 }}>CVR_PASS</code> i Railway for ubegrænset adgang.
+                      </>
+                    ) : (
+                      <><strong>Fejl:</strong> {resultat.cvrFejl}</>
+                    )}
+                  </span>
                 </div>
               ) : resultat.cvrData ? (
                 <div style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '0.5rem', padding: '0.75rem' }}>

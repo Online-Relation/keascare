@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     const msg = e instanceof Error ? e.message : String(e);
     // cvrapi.dk rammer timekvote når baggrundsjobs kører. Giv brugervenlig besked.
     if (msg.includes('QUOTA_EXCEEDED')) {
-      cvrFejl = 'cvrapi.dk timekvote overskredet — baggrundsjobs har brugt kvotet. Prøv igen om lidt, eller tilføj CVR_USER + CVR_PASS fra datacvr.virk.dk i Railway-miljøvariablerne for ubegrænset adgang.';
+      cvrFejl = 'QUOTA_EXCEEDED: Den gratis cvrapi.dk-kvote er brugt op. Opret en gratis konto på datacvr.virk.dk og tilføj CVR_USER + CVR_PASS i Railway for ubegrænset adgang til det officielle register.';
     } else {
       cvrFejl = msg;
     }

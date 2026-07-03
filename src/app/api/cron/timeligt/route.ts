@@ -13,7 +13,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const cvr = await opdaterCvrAnsatte(40);
+    // Batch=5 for at spare cvrapi.dk-kvote til manuelle opslag.
+    // Når CVR_USER+CVR_PASS er sat skiftes til virk.dk uden kvotebegrænsning.
+    const cvr = await opdaterCvrAnsatte(5);
     await logScraperKørsel('cvr-ansatte', true, cvr);
     return NextResponse.json({ ok: true, kørt: new Date().toISOString(), ...cvr });
   } catch (err) {
