@@ -21,7 +21,7 @@ export function MarkedsdataPage({ data, antalBosteder }: Props) {
     {
       label: 'Bosteder i Danmark',
       værdi: antalBosteder.toLocaleString('da-DK'),
-      forklaring: 'Antal §107/§108 bosteder fundet via STPS-tilsynsrapporter. Tallet afspejler det valgte filter for driftsform (kommunal/privat) og datoperiode.',
+      forklaring: 'Antal §107/§108 botilbud registreret på Tilbudsportalen. Opdateres løbende via automatisk scraping.',
     },
     {
       label: 'Borgere i §107/§108 i alt',

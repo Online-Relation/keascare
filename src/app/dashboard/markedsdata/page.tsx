@@ -2,20 +2,19 @@
 
 import { MarkedsdataPage } from '@/features/markedsdata/components/MarkedsdataPage';
 import { hentDstKommuneData } from '@/lib/api/DstClient';
-import { hentDashboardData } from '@/features/dashboard/services/DashboardService/dashboardService';
+import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 
 export const revalidate = 0;
 
-type Props = {
-  searchParams: Promise<{ fra?: string; til?: string }>;
-};
+export default async function MarkedsdataSide() {
+  const supabase = getSupabaseServerClient();
 
-export default async function MarkedsdataSide({ searchParams }: Props) {
-  const { fra, til } = await searchParams;
-  const [dstData, dashboardData] = await Promise.all([
+  const [dstData, tpTæl] = await Promise.all([
     hentDstKommuneData(),
-    hentDashboardData(fra, til),
+    supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }),
   ]);
 
-  return <MarkedsdataPage data={dstData} antalBosteder={dashboardData.bosteder.length} />;
+  const antalBosteder = tpTæl.count ?? 0;
+
+  return <MarkedsdataPage data={dstData} antalBosteder={antalBosteder} />;
 }
