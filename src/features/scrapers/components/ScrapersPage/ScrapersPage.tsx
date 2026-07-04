@@ -61,6 +61,14 @@ const SCRAPERS: Scraper[] = [
     loop: true,
   },
   {
+    id: 'cvr-signaler',
+    titel: 'CVR — Nye bosted-registreringer',
+    beskrivelse: 'Søger i CVR-registret efter virksomheder med branchekode 87901/87902 der er startet de seneste 30 dage. Kræver CVR_USER + CVR_PASS fra distribution.virk.dk.',
+    endpoint: '/api/scrapers/cvr-signaler',
+    body: { dage: 30 },
+    advarsel: 'Afventer adgang til distribution.virk.dk (Erhvervsstyrelsen).',
+  },
+  {
     id: 'cvr-berig',
     titel: 'CVR-register — Berig med CVR og adresse',
     beskrivelse: 'Slår P-nummer op i CVR-registret for rapporter der mangler CVR. Henter CVR og adresse.',

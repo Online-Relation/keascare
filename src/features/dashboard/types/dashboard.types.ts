@@ -141,6 +141,7 @@ export type Datakilde = {
 export type DashboardData = {
   kpis: KpiItem[];
   bosteder: Bosted[];
+  cvrSignaler: import('@/features/cvr/types/cvr.types').CvrSignal[];
   tilbudsportalen: TilbudsportalenStats;
   stpsFordeling: StpsFordeling[];
   topKommuner: KommuneStat[];

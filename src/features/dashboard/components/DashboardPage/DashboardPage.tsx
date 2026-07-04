@@ -14,7 +14,7 @@ export function DashboardPage({ data }: DashboardPageProps) {
     <main className="dashboard-main">
       <div className="dashboard-content">
         <DashboardKpis kpis={data.kpis} />
-        <DashboardTable bosteder={data.bosteder} />
+        <DashboardTable bosteder={data.bosteder} cvrSignaler={data.cvrSignaler} />
         <DashboardBottomPanels
           data={{
             tilbudsportalen: data.tilbudsportalen,

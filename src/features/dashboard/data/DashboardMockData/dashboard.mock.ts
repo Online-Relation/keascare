@@ -5,6 +5,7 @@ import type { DashboardData } from '../../types/dashboard.types';
 export const dashboardMockData: DashboardData = {
   kpis: [],
   bosteder: [],
+  cvrSignaler: [],
   tilbudsportalen: {
     total: 0,
     nyeSidst: 0,

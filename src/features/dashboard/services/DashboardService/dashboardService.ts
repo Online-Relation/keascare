@@ -237,7 +237,9 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   const rapporter = (data ?? []) as DbRapport[];
   const bosteder = rapporter.map(mapTilBosted);
 
-  const [datakilder, logData] = await Promise.all([
+  const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
+
+  const [datakilder, logData, cvrSignaler] = await Promise.all([
     hentDatakilderStatus(supabase, rapporter),
     supabase
       .from('scraper_log')
@@ -247,11 +249,13 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
       .order('koersel_slut', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    hentCvrSignaler(),
   ]);
 
   return {
     kpis:            beregnKpis(rapporter, logData.data?.koersel_slut ?? null),
     bosteder,
+    cvrSignaler,
     stpsFordeling:   beregnFordeling(rapporter),
     topKommuner:     beregnTopKommuner(rapporter),
     tilbudsportalen: beregnTilbudsportalen(rapporter),
