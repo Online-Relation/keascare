@@ -68,9 +68,7 @@ forklaring: 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Talle
       <div className="dst-info-boks">
         <Info size={14} className="dst-info-ikon" />
         <p>
-          Data er hentet gratis fra Danmarks Statistiks åbne API og opdateres automatisk kvartalsvist.
-          Tallene viser det samlede antal borgere der modtager botilbudsydelser — ikke antal pladser.
-          Brug tallene som pejlemærke for markedsstørrelse pr. kommune.
+          Antal bosteder stammer fra Tilbudsportalen (§107/§108) og opdateres løbende. Borgere-tallene er hentet fra Danmarks Statistiks åbne API og opdateres kvartalsvist. Tallene viser antal borgere der modtager botilbudsydelser — ikke antal pladser.
         </p>
       </div>
 
