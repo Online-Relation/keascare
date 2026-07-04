@@ -68,7 +68,7 @@ forklaring: 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Talle
       <div className="dst-info-boks">
         <Info size={14} className="dst-info-ikon" />
         <p>
-          Antal bosteder stammer fra Tilbudsportalen (§107/§108) og opdateres løbende. Borgere-tallene er hentet fra Danmarks Statistiks åbne API og opdateres kvartalsvist. Tallene viser antal borgere der modtager botilbudsydelser — ikke antal pladser.
+          Antal bosteder stammer fra Tilbudsportalen (§107/§108) og følger dit valgte filter for driftsform. Borgere-tallene er hentet fra Danmarks Statistiks åbne API og opdateres kvartalsvist — de kan ikke filtreres på driftsform og viser derfor altid det samlede nationale tal. Tallene viser antal borgere der modtager botilbudsydelser — ikke antal pladser.
         </p>
       </div>
 
