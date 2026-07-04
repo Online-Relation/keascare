@@ -21,6 +21,7 @@ export function MarkedsdataPage({ data, antalBosteder }: Props) {
     {
       label: 'Bosteder i Danmark',
       værdi: antalBosteder.toLocaleString('da-DK'),
+      note: 'Kilde: Tilbudsportalen (§107/§108). Tæller individuelle afdelinger — et tilbud med flere lokationer tæller flere gange.',
       forklaring: 'Antal §107/§108 botilbud registreret på Tilbudsportalen. Opdateres løbende via automatisk scraping.',
     },
     {
@@ -82,6 +83,11 @@ export function MarkedsdataPage({ data, antalBosteder }: Props) {
               <InfoTooltip tekst={kpi.forklaring} />
             </div>
             <div className="dst-kpi-tal">{kpi.værdi}</div>
+            {'note' in kpi && kpi.note && (
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.35rem', lineHeight: 1.4 }}>
+                {kpi.note}
+              </p>
+            )}
           </div>
         ))}
       </div>
