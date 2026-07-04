@@ -78,18 +78,12 @@ function mapTilBosted(row: DbRapport): Bosted {
   };
 }
 
-function beregnKpis(rapporter: DbRapport[]): KpiItem[] {
+function beregnKpis(rapporter: DbRapport[], sidstKørtDato: string | null): KpiItem[] {
   const kritiske = rapporter.filter((r) => r.fund_niveau === 'kritisk').length;
   const kommuner = new Set(rapporter.map((r) => r.kommune).filter(Boolean)).size;
 
-  const sidstScraped = rapporter
-    .map((r) => r.scraper_dato)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
-
-  const sidstDato = sidstScraped
-    ? new Date(sidstScraped).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
+  const sidstDato = sidstKørtDato
+    ? new Date(sidstKørtDato).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
     : '—';
 
   return [
@@ -243,10 +237,20 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   const rapporter = (data ?? []) as DbRapport[];
   const bosteder = rapporter.map(mapTilBosted);
 
-  const datakilder = await hentDatakilderStatus(supabase, rapporter);
+  const [datakilder, logData] = await Promise.all([
+    hentDatakilderStatus(supabase, rapporter),
+    supabase
+      .from('scraper_log')
+      .select('koersel_slut')
+      .eq('kilde', 'stps')
+      .eq('status', 'succes')
+      .order('koersel_slut', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
   return {
-    kpis:            beregnKpis(rapporter),
+    kpis:            beregnKpis(rapporter, logData.data?.koersel_slut ?? null),
     bosteder,
     stpsFordeling:   beregnFordeling(rapporter),
     topKommuner:     beregnTopKommuner(rapporter),

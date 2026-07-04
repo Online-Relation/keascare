@@ -6,6 +6,13 @@ import type { StpsRapportInput } from '@/features/stps/types/stps.types';
 export async function upsertStpsRapport(rapport: StpsRapportInput): Promise<boolean> {
   const supabase = getSupabaseServerClient();
 
+  // Check if the row already exists
+  const { data: existing } = await supabase
+    .from('stps_rapporter')
+    .select('id')
+    .eq('rapport_url', rapport.rapport_url)
+    .maybeSingle();
+
   const { error } = await supabase
     .from('stps_rapporter')
     .upsert(
@@ -29,9 +36,11 @@ export async function upsertStpsRapport(rapport: StpsRapportInput): Promise<bool
 
   if (error) {
     console.error('[StpsRepository] upsert fejl:', error.code, error.message);
+    return false;
   }
 
-  return !error;
+  // Return true only for genuinely new rows
+  return !existing;
 }
 
 export async function opretScraperLog(kilde: string): Promise<string | null> {
