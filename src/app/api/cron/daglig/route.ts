@@ -3,6 +3,7 @@
 // Autentificeres med SCRAPER_SECRET headeren.
 
 import { NextRequest, NextResponse } from 'next/server';
+import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
 import { kørCvrSignalScraper } from '@/features/cvr/scraper/CvrSignalScraper/cvrSignalScraper';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
@@ -14,6 +15,17 @@ export async function POST(request: NextRequest) {
   }
 
   const resultater: Record<string, unknown> = {};
+
+  // STPS — hent nye tilsynsrapporter
+  try {
+    const stps = await kørStpsScraper({ maxSider: 10 });
+    resultater.stps = stps;
+    await logScraperKørsel('stps', true, stps);
+  } catch (err) {
+    const besked = err instanceof Error ? err.message : 'Ukendt fejl';
+    resultater.stps = { fejl: besked };
+    await logScraperKørsel('stps', false, { error: besked });
+  }
 
   // CVR ansatte — opdater op til 200 bosteder (ældst opdateret først)
   try {
