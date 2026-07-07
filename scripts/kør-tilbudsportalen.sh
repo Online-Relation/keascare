@@ -4,7 +4,7 @@
 #
 # Anbefalet kørsel: én gang om ugen (fx søndag kl. 02:00)
 # Tilføj til cron med: crontab -e
-#   0 2 * * 0 /path/til/kør-tilbudsportalen.sh >> ~/keascare-cron.log 2>&1
+#   0 12 * * 0 /path/til/kør-tilbudsportalen.sh >> ~/keascare-cron.log 2>&1
 
 set -euo pipefail
 

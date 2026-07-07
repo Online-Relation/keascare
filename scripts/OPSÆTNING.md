@@ -53,7 +53,7 @@ crontab -e
 Tilføj denne linje (kører søndag kl. 02:00):
 
 ```
-0 2 * * 0 /Users/<dit-brugernavn>/keascare/scripts/kør-tilbudsportalen.sh >> ~/keascare-cron.log 2>&1
+0 12 * * 0 /Users/<dit-brugernavn>/keascare/scripts/kør-tilbudsportalen.sh >> ~/keascare-cron.log 2>&1
 ```
 
 Gem og luk. Cron-jobbet kører nu automatisk hver søndag.
