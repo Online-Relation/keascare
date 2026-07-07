@@ -47,6 +47,7 @@ type DbRapport = {
   salgs_anbefalinger: unknown | null;
   monday_item_id: string | null;
   monday_gruppe: string | null;
+  besoeg_dato: string | null;
 };
 
 function beregnDataKvalitet(r: DbRapport): DataKvalitet {
@@ -69,6 +70,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     navn: r.stps_tilbud_navn,
     rapportTitel: r.rapport_titel ?? r.stps_tilbud_navn,
     rapportDato: r.rapport_dato,
+    besoegDato: r.besoeg_dato,
     rapportUrl: r.rapport_url,
     pdfUrl: r.pdf_url,
     stpsKonklusion: r.stps_konklusion,
@@ -116,7 +118,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato')
     .eq('id', id)
     .single();
 

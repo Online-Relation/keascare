@@ -14,6 +14,12 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
       })
     : '—';
 
+  const besoegDato = bosted.besoegDato
+    ? new Date(bosted.besoegDato).toLocaleDateString('da-DK', {
+        day: 'numeric', month: 'long', year: 'numeric',
+      })
+    : null;
+
   const harFokus = bosted.fokusOmraader.length > 0;
   const harTemaer = bosted.temaer.length > 0;
 
@@ -25,6 +31,13 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
       </div>
 
       <div className="bosted-detail-kort-body">
+        {besoegDato && (
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">Tilsynsbesøg</span>
+            <span className="bosted-detail-field-value">{besoegDato}</span>
+          </div>
+        )}
+
         <div className="bosted-detail-field">
           <span className="bosted-detail-field-label">Rapportdato</span>
           <span className="bosted-detail-field-value">{dato}</span>

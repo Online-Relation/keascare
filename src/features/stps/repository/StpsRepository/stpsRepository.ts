@@ -30,6 +30,7 @@ export async function upsertStpsRapport(rapport: StpsRapportInput): Promise<bool
         region:           rapport.region,
         tilsynsform:      rapport.tilsynsform,
         temaer:           rapport.temaer,
+        besoeg_dato:      rapport.besoegsDato ?? null,
       },
       { onConflict: 'rapport_url', ignoreDuplicates: false }
     );

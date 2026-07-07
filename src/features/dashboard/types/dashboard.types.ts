@@ -74,6 +74,7 @@ export type BostedDetail = {
   navn: string;
   rapportTitel: string;
   rapportDato: string | null;
+  besoegDato: string | null;
   rapportUrl: string;
   pdfUrl: string | null;
   stpsKonklusion: string | null;
