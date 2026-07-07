@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // src/app/dashboard/alle-rapporter/page.tsx
 
 import { hentRapporterData } from '@/features/rapporter/services/RapporterService';

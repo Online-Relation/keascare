@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // src/app/dashboard/kommuner/page.tsx
 
 import { KommunerPage } from '@/features/kommuner/components/KommunerPage';

@@ -1,5 +1,7 @@
 // src/app/dashboard/page.tsx
 
+export const dynamic = 'force-dynamic';
+
 import { DashboardPage } from '@/features/dashboard/components/DashboardPage';
 import { hentDashboardData } from '@/features/dashboard/services/DashboardService';
 

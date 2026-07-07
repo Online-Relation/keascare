@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 // src/app/dashboard/rapporter/page.tsx
 
 import { RapporterPage } from '@/features/rapporter/components/RapporterPage';
