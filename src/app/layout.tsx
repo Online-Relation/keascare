@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
+import { PullToRefresh } from "@/components/PullToRefresh";
 import "./globals.css";
 
 const workSans = Work_Sans({
@@ -29,7 +30,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="da" className={`${workSans.variable} h-full antialiased`}>
-      <body className={`${workSans.className} min-h-full flex flex-col`}>{children}</body>
+      <body className={`${workSans.className} min-h-full flex flex-col`}>
+        <PullToRefresh />
+        {children}
+      </body>
     </html>
   );
 }
