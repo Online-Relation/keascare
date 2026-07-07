@@ -26,12 +26,29 @@ type NextPage = {
   next_items_page: { cursor: string | null; items: RåMondayItem[] };
 };
 
+const STOPORD = new Set(['bo', 'center', 'hus', 'huset', 'og', 'a', 'as', 'aps', 'i', 'af', 'til', 'den', 'det', 'de']);
+
 function normaliserNavn(navn: string): string {
   return navn
     .toLowerCase()
     .replace(/\s+/g, ' ')
     .replace(/[.,\-–]/g, '')
     .trim();
+}
+
+function signifikanteOrd(navn: string): Set<string> {
+  return new Set(
+    normaliserNavn(navn).split(' ').filter((ord) => ord.length > 2 && !STOPORD.has(ord))
+  );
+}
+
+function ordOverlapScore(a: string, b: string): number {
+  const ordA = signifikanteOrd(a);
+  const ordB = signifikanteOrd(b);
+  if (ordA.size === 0 || ordB.size === 0) return 0;
+  let fælles = 0;
+  for (const ord of ordA) if (ordB.has(ord)) fælles++;
+  return fælles / Math.min(ordA.size, ordB.size);
 }
 
 function mapGruppe(gruppeNavn: string): MondayGruppe {
@@ -183,11 +200,26 @@ function findNavn<T extends { id: string }>(
   navnMap: Map<string, T>
 ): T | null {
   const norm = normaliserNavn(mondayNavn);
+
+  // 1. Direkte match
   if (navnMap.has(norm)) return navnMap.get(norm)!;
+
+  // 2. Prefix-match
   for (const [key, val] of navnMap) {
     if (norm.startsWith(key) || key.startsWith(norm)) return val;
   }
-  return null;
+
+  // 3. Ord-overlap (mindst 75% af de signifikante ord matcher)
+  let bedsteMatch: T | null = null;
+  let bedsteScore = 0;
+  for (const [key, val] of navnMap) {
+    const score = ordOverlapScore(mondayNavn, key);
+    if (score >= 0.75 && score > bedsteScore) {
+      bedsteScore = score;
+      bedsteMatch = val;
+    }
+  }
+  return bedsteMatch;
 }
 
 export async function kørMondayMatch(): Promise<MondayMatchResultat> {
