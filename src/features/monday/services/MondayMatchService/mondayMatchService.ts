@@ -209,17 +209,7 @@ function findNavn<T extends { id: string }>(
     if (norm.startsWith(key) || key.startsWith(norm)) return val;
   }
 
-  // 3. Ord-overlap (mindst 75% af de signifikante ord matcher)
-  let bedsteMatch: T | null = null;
-  let bedsteScore = 0;
-  for (const [key, val] of navnMap) {
-    const score = ordOverlapScore(mondayNavn, key);
-    if (score >= 0.75 && score > bedsteScore) {
-      bedsteScore = score;
-      bedsteMatch = val;
-    }
-  }
-  return bedsteMatch;
+  return null;
 }
 
 export async function kørMondayMatch(): Promise<MondayMatchResultat> {
