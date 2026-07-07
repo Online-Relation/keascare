@@ -2,100 +2,108 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-const THRESHOLD = 80; // px der skal trækkes ned før refresh udløses
+const THRESHOLD = 72;
 
 export function PullToRefresh() {
   const startY = useRef<number | null>(null);
-  const [pull, setPull] = useState(0); // 0–1
-  const [refreshing, setRefreshing] = useState(false);
+  const pulling = useRef(false);
+  const [translateY, setTranslateY] = useState(-56);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    // Deaktiver browserens native pull-to-refresh
+    document.body.style.overscrollBehaviorY = 'none';
+
     const onTouchStart = (e: TouchEvent) => {
-      if (window.scrollY === 0) {
-        startY.current = e.touches[0].clientY;
-      }
+      if (window.scrollY > 0) return;
+      startY.current = e.touches[0].clientY;
+      pulling.current = false;
     };
 
     const onTouchMove = (e: TouchEvent) => {
-      if (startY.current === null || window.scrollY > 0) return;
+      if (startY.current === null) return;
       const delta = e.touches[0].clientY - startY.current;
-      if (delta > 0) {
-        setPull(Math.min(delta / THRESHOLD, 1));
-      }
+      if (delta <= 0) return;
+      if (window.scrollY > 0) return;
+
+      pulling.current = true;
+      setVisible(true);
+
+      // Dæmpet træk: fuld drag = halvt offset
+      const clamped = Math.min(delta * 0.5, THRESHOLD);
+      setTranslateY(clamped - 56);
     };
 
     const onTouchEnd = () => {
-      if (pull >= 1) {
-        setRefreshing(true);
-        setTimeout(() => window.location.reload(), 300);
-      } else {
-        setPull(0);
-        startY.current = null;
-      }
+      if (!pulling.current) return;
+      pulling.current = false;
+      startY.current = null;
+
+      setTranslateY((prev) => {
+        if (prev >= 0) {
+          // Nok træk — vis spinner og reload
+          setIsRefreshing(true);
+          setTimeout(() => window.location.reload(), 600);
+          return 8;
+        }
+        // For lidt træk — spring tilbage
+        setTimeout(() => setVisible(false), 250);
+        return -56;
+      });
     };
 
     window.addEventListener('touchstart', onTouchStart, { passive: true });
     window.addEventListener('touchmove', onTouchMove, { passive: true });
-    window.addEventListener('touchend', onTouchEnd);
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
 
     return () => {
+      document.body.style.overscrollBehaviorY = '';
       window.removeEventListener('touchstart', onTouchStart);
       window.removeEventListener('touchmove', onTouchMove);
       window.removeEventListener('touchend', onTouchEnd);
     };
-  }, [pull]);
+  }, []);
 
-  if (pull === 0 && !refreshing) return null;
-
-  const size = 28;
-  const progress = refreshing ? 1 : pull;
-  const circumference = Math.PI * (size - 4);
-  const dashOffset = circumference * (1 - progress);
-  const rotation = refreshing ? 'animate-spin' : '';
+  if (!visible) return null;
 
   return (
     <div
       style={{
         position: 'fixed',
-        top: `${refreshing ? 16 : Math.max(pull * 56 - 40, -40)}px`,
+        top: 0,
         left: '50%',
-        transform: 'translateX(-50%)',
+        transform: `translateX(-50%) translateY(${translateY}px)`,
+        transition: pulling.current ? 'none' : 'transform 0.25s ease',
         zIndex: 9999,
-        opacity: pull > 0.2 ? 1 : pull / 0.2,
-        transition: refreshing ? 'top 0.2s ease' : undefined,
         pointerEvents: 'none',
       }}
     >
       <div style={{
-        background: 'var(--color-surface, #fff)',
+        width: 40,
+        height: 40,
         borderRadius: '50%',
-        width: size + 8,
-        height: size + 8,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.18)',
+        background: '#fff',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.2)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
       }}>
-        <svg
-          width={size}
-          height={size}
-          viewBox={`0 0 ${size} ${size}`}
-          className={rotation}
-          style={{ display: 'block' }}
-        >
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={(size - 4) / 2}
-            fill="none"
-            stroke="var(--color-brand, #1e4d8c)"
-            strokeWidth="3"
-            strokeDasharray={circumference}
-            strokeDashoffset={dashOffset}
-            strokeLinecap="round"
-            transform={`rotate(-90 ${size / 2} ${size / 2})`}
-          />
-        </svg>
+        {isRefreshing ? (
+          <svg width="22" height="22" viewBox="0 0 22 22" style={{ animation: 'ptr-spin 0.7s linear infinite' }}>
+            <circle cx="11" cy="11" r="9" fill="none" stroke="#1e4d8c" strokeWidth="2.5" strokeDasharray="40" strokeDashoffset="10" strokeLinecap="round" />
+            <style>{`@keyframes ptr-spin { to { transform: rotate(360deg); transform-origin: 11px 11px; } }`}</style>
+          </svg>
+        ) : (
+          <svg width="22" height="22" viewBox="0 0 22 22">
+            <circle cx="11" cy="11" r="9" fill="none" stroke="#1e4d8c" strokeWidth="2.5"
+              strokeDasharray={`${2 * Math.PI * 9}`}
+              strokeDashoffset={`${2 * Math.PI * 9 * (1 - Math.max(0, (translateY + 56) / 56))}`}
+              strokeLinecap="round"
+              transform="rotate(-90 11 11)"
+            />
+          </svg>
+        )}
       </div>
     </div>
   );
