@@ -20,6 +20,13 @@ SECRET="${SCRAPER_SECRET:?Sæt SCRAPER_SECRET i $ENV_FILE eller som miljøvariab
 
 echo "=== Tilbudsportalen kørsel $(date '+%Y-%m-%d %H:%M') ==="
 
+# ---- 0. Reset Cloudflare-blokkerede detaljer ----
+echo "→ Nulstiller rækker der mangler CVR (Cloudflare-blokkerede)..."
+RESET=$(curl -sS -X POST "$APP_URL/api/scrapers/tilbudsportalen/reset-detaljer" \
+  -H "Content-Type: application/json" \
+  -H "x-scraper-secret: $SECRET")
+echo "  Resultat: $RESET"
+
 # ---- 1. Hent tilbudsliste ----
 echo "→ Henter tilbudsliste..."
 LISTE=$(curl -sS -X POST "$APP_URL/api/scrapers/tilbudsportalen/liste" \

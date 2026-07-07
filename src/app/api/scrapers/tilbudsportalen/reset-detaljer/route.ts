@@ -1,20 +1,28 @@
 // src/app/api/scrapers/tilbudsportalen/reset-detaljer/route.ts
+// Nulstiller detaljer_hentet så rækker re-scrapes.
+// Default: kun rækker der er hentet men mangler CVR (Cloudflare-blokkerede svar).
+// ?alle=true nulstiller samtlige rækker.
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 
-// Nulstiller detaljer_hentet så alle rækker re-scrapes og får driftsform udfyldt
-export async function POST() {
+export async function POST(request: NextRequest) {
+  const alle = request.nextUrl.searchParams.get('alle') === 'true';
   const supabase = getSupabaseServerClient();
 
-  const { error } = await supabase
+  let query = supabase
     .from('tilbudsportalen_tilbud')
-    .update({ detaljer_hentet: false, driftsform: null })
-    .not('id', 'is', null);
+    .update({ detaljer_hentet: false })
+    .eq('detaljer_hentet', true);
 
-  if (error) {
-    return NextResponse.json({ ok: false, fejl: error.message }, { status: 500 });
+  if (!alle) {
+    // Kun rækker der er markeret som hentet men mangler CVR
+    // — indikerer at Cloudflare blokkerede og returnerede en challenge-side
+    query = query.is('cvr', null);
   }
 
-  return NextResponse.json({ ok: true });
+  const { error } = await query;
+
+  if (error) return NextResponse.json({ ok: false, fejl: error.message }, { status: 500 });
+  return NextResponse.json({ ok: true, alle });
 }
