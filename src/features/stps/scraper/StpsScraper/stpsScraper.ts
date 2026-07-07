@@ -49,6 +49,7 @@ export async function kørStpsScraper(
           region:           udtraekRegion(item.tags),
           tilsynsform:      udtraekTilsynsform(item.tags),
           temaer:           udtraekTemaer(item.tags),
+          besoegsDato:      item.besoegsDato ?? null,
         });
 
         if (gemt) nye++;

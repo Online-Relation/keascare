@@ -38,6 +38,7 @@ export type StpsRapportInput = {
   region: string | null;
   tilsynsform: string | null;
   temaer: string[];
+  besoegsDato: string | null;
 };
 
 export type StpsScraperOptions = {
