@@ -13,6 +13,7 @@ import { BostedSalgsAfsnit } from './sections/BostedSalgsAfsnit';
 import { MailchimpSignup } from './sections/MailchimpSignup';
 import { KontaktHistorik } from './sections/KontaktHistorik';
 import { BostedKort } from './sections/BostedKort';
+import { TidligereRapporter } from './sections/TidligereRapporter';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
@@ -39,6 +40,10 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
 
       {bosted.fundNiveau !== 'ingen' && bosted.fundNiveau !== 'ukendt' && (
         <BostedSalgsAfsnit bostedId={bosted.id} cachetAnbefalinger={bosted.salgsAnbefalinger} />
+      )}
+
+      {bosted.cvr && (
+        <TidligereRapporter bostedId={bosted.id} cvr={bosted.cvr} />
       )}
 
       <BostedFundsoversigt bosted={bosted} />
