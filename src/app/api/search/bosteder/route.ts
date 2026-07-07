@@ -22,28 +22,41 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, region, fund_niveau')
+    .select('id, stps_tilbud_navn, kommune, region, fund_niveau, cvr')
     .ilike('stps_tilbud_navn', `%${q}%`)
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false })
-    .limit(8);
+    .limit(20);
 
   if (error) {
     return NextResponse.json([], { status: 500 });
   }
 
-  const unikke = new Map<string, BostedSøgeresultat>();
+  // Deduplisér på CVR (samme bosted, forskellig rapport) — derefter på navn
+  const seetCvr = new Set<string>();
+  const seetNavn = new Set<string>();
+  const unikke: BostedSøgeresultat[] = [];
+
   for (const row of data ?? []) {
-    if (!unikke.has(row.stps_tilbud_navn)) {
-      unikke.set(row.stps_tilbud_navn, {
-        id: row.id,
-        navn: row.stps_tilbud_navn,
-        kommune: row.kommune ?? null,
-        region: row.region ?? null,
-        fundNiveau: row.fund_niveau ?? null,
-      });
-    }
+    const cvr = row.cvr?.trim();
+    const navn = row.stps_tilbud_navn ?? '';
+
+    if (cvr && seetCvr.has(cvr)) continue;
+    if (seetNavn.has(navn)) continue;
+
+    if (cvr) seetCvr.add(cvr);
+    seetNavn.add(navn);
+
+    unikke.push({
+      id: row.id,
+      navn,
+      kommune: row.kommune ?? null,
+      region: row.region ?? null,
+      fundNiveau: row.fund_niveau ?? null,
+    });
+
+    if (unikke.length >= 8) break;
   }
 
-  return NextResponse.json(Array.from(unikke.values()));
+  return NextResponse.json(unikke);
 }
