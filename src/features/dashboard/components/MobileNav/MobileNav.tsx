@@ -223,25 +223,29 @@ export function MobileNav() {
               <div key={gruppe.label} className="sidebar-nav-gruppe-sektion">
                 {erMarkedsforing ? (
                   <>
+                    <p className="sidebar-section-label">Markedsføring</p>
                     <button
-                      className="sidebar-section-label"
-                      style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: '0 0.375rem 0.375rem', color: 'inherit' }}
+                      className="sidebar-nav-item sidebar-nav-gruppe"
                       onClick={() => setMarkedsforingÅben((v) => !v)}
                     >
-                      <span style={{ flex: 1 }}>Markedsføring</span>
-                      {markedsforingÅben ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                      <Megaphone className="sidebar-nav-item-icon" size={16} />
+                      <span style={{ flex: 1, textAlign: 'left' }}>Kanaler</span>
+                      {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                     </button>
-                    {markedsforingÅben && gruppe.items.map(({ label, href, icon: Icon }) => (
-                      <Link
-                        key={href + label}
-                        href={href}
-                        className={`sidebar-nav-item${pathname === href ? ' active' : ''}`}
-                        onClick={() => setMenuÅben(false)}
-                      >
-                        <Icon className="sidebar-nav-item-icon" size={16} />
-                        {label}
-                      </Link>
-                    ))}
+                    {markedsforingÅben && (
+                      <div className="sidebar-subnav">
+                        {gruppe.items.map(({ label, href }) => (
+                          <Link
+                            key={href + label}
+                            href={href}
+                            className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`}
+                            onClick={() => setMenuÅben(false)}
+                          >
+                            {label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
                   </>
                 ) : (
                   <>
