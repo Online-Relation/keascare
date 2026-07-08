@@ -34,7 +34,7 @@ const navGrupper = [
   {
     label: 'Tilsyn',
     items: [
-      { label: 'Tilsynsrapporter', href: '/dashboard/rapporter',      icon: ClipboardList },
+      { label: 'Kritiske rapporter', href: '/dashboard/rapporter',      icon: ClipboardList },
       { label: 'Alle rapporter',   href: '/dashboard/alle-rapporter', icon: FileText },
     ],
   },
