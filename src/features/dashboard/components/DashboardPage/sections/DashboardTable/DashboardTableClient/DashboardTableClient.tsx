@@ -54,19 +54,6 @@ export function DashboardTableClient({ bosteder, cvrSignaler }: Props) {
             {totalAntal} signaler fundet
           </p>
         </div>
-        <div className="kunder-filter-gruppe">
-          {(['alle', 'stps', 'cvr'] as Kilde[]).map((k) => (
-            <button
-              key={k}
-              className={`kunder-filter-knap${kilde === k ? ' aktiv' : ''}`}
-              onClick={() => skiftKilde(k)}
-            >
-              {k === 'alle' ? `Alle (${bosteder.length + cvrSignaler.length})`
-                : k === 'stps' ? `STPS-rapport (${bosteder.length})`
-                : `Ny CVR (${cvrSignaler.length})`}
-            </button>
-          ))}
-        </div>
       </div>
 
       <div style={{ overflowX: 'auto' }}>
