@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
@@ -70,6 +70,7 @@ type Søgeresultat = {
 
 export function MobileNav() {
   const [menuÅben, setMenuÅben] = useState(false);
+  const [markedsforingÅben, setMarkedsforingÅben] = useState(false);
   const [søgningÅben, setSøgningÅben] = useState(false);
   const [datoÅben, setDatoÅben] = useState(false);
   const [brugerNavn, setBrugerNavn] = useState('');
@@ -216,25 +217,54 @@ export function MobileNav() {
         </div>
 
         <div style={{ flex: 1 }}>
-          {navGrupper.map((gruppe) => (
-            <div key={gruppe.label} className="sidebar-nav-gruppe-sektion">
-              <p className="sidebar-section-label">{gruppe.label}</p>
-              {gruppe.items.map(({ label, href, icon: Icon }) => {
-                const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-                return (
-                  <Link
-                    key={href + label}
-                    href={href}
-                    className={`sidebar-nav-item${isActive ? ' active' : ''}`}
-                    onClick={() => setMenuÅben(false)}
-                  >
-                    <Icon className="sidebar-nav-item-icon" size={16} />
-                    {label}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+          {navGrupper.map((gruppe) => {
+            const erMarkedsforing = gruppe.label === 'Markedsføring';
+            return (
+              <div key={gruppe.label} className="sidebar-nav-gruppe-sektion">
+                {erMarkedsforing ? (
+                  <>
+                    <button
+                      className="sidebar-section-label"
+                      style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', background: 'none', border: 'none', cursor: 'pointer', width: '100%', padding: '0 0.375rem 0.375rem', color: 'inherit' }}
+                      onClick={() => setMarkedsforingÅben((v) => !v)}
+                    >
+                      <span style={{ flex: 1 }}>Markedsføring</span>
+                      {markedsforingÅben ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                    </button>
+                    {markedsforingÅben && gruppe.items.map(({ label, href, icon: Icon }) => (
+                      <Link
+                        key={href + label}
+                        href={href}
+                        className={`sidebar-nav-item${pathname === href ? ' active' : ''}`}
+                        onClick={() => setMenuÅben(false)}
+                      >
+                        <Icon className="sidebar-nav-item-icon" size={16} />
+                        {label}
+                      </Link>
+                    ))}
+                  </>
+                ) : (
+                  <>
+                    <p className="sidebar-section-label">{gruppe.label}</p>
+                    {gruppe.items.map(({ label, href, icon: Icon }) => {
+                      const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+                      return (
+                        <Link
+                          key={href + label}
+                          href={href}
+                          className={`sidebar-nav-item${isActive ? ' active' : ''}`}
+                          onClick={() => setMenuÅben(false)}
+                        >
+                          <Icon className="sidebar-nav-item-icon" size={16} />
+                          {label}
+                        </Link>
+                      );
+                    })}
+                  </>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         <Link href="/dashboard/profil" className="sidebar-footer" onClick={() => setMenuÅben(false)}>
