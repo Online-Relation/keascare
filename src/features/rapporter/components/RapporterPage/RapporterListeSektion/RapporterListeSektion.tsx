@@ -54,10 +54,8 @@ export function RapporterListeSektion({ rapporter }: Props) {
     return rapporter.filter((r) => r.fundNiveau === f).length;
   }
 
-  const harKritiske = filter === 'alle' || filter === 'kritisk' || filter === 'stoerre';
-
   return (
-    <div className="rl-wrapper">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
 
       {/* ── Fokus-banner ───────────────────────────────── */}
       {(filter === 'kritisk' || filter === 'stoerre' || filter === 'alle') && (
@@ -85,50 +83,69 @@ export function RapporterListeSektion({ rapporter }: Props) {
         </div>
       )}
 
-      {/* ── Filter + søgning ───────────────────────────── */}
-      <div className="rl-kontroller">
-        <div className="rl-filter-chips">
-          {FILTER_RÆKKEFØLGE.map((f) => (
-            <button
-              key={f}
-              onClick={() => skiftFilter(f)}
-              className={`rl-chip ${filter === f ? 'rl-chip--aktiv' : ''} ${f !== 'alle' ? `rl-chip--${f}` : ''}`}
-            >
-              {f === 'alle' ? 'Alle' : FUND_CFG[f as FundNiveau].kortLabel}
-              <span className="rl-chip-tal">{tæl(f)}</span>
-            </button>
-          ))}
-        </div>
-        <div className="rl-søgning-wrapper">
-          <Search size={14} className="rl-søgning-ikon" />
-          <input
-            className="rl-søgning-input"
-            type="text"
-            placeholder="Søg bosted eller kommune…"
-            value={søgning}
-            onChange={(e) => { setSøgning(e.target.value); setSide(1); }}
-          />
-        </div>
+      {/* ── Filter chips ───────────────────────────────── */}
+      <div className="kunder-filter-gruppe" style={{ flexWrap: 'wrap' }}>
+        {FILTER_RÆKKEFØLGE.map((f) => (
+          <button
+            key={f}
+            onClick={() => skiftFilter(f)}
+            className={`kunder-filter-knap${filter === f ? ' aktiv' : ''}`}
+          >
+            {f === 'alle' ? 'Alle' : FUND_CFG[f as FundNiveau].kortLabel}
+            <span style={{
+              marginLeft: '0.375rem',
+              background: 'rgba(255,255,255,0.15)',
+              borderRadius: '999px',
+              padding: '0 0.4rem',
+              fontSize: '0.7rem',
+            }}>
+              {tæl(f)}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── Søgning ────────────────────────────────────── */}
+      <div style={{ position: 'relative' }}>
+        <Search size={14} style={{
+          position: 'absolute', left: '0.75rem', top: '50%',
+          transform: 'translateY(-50%)', color: 'var(--color-text-muted)',
+          pointerEvents: 'none',
+        }} />
+        <input
+          style={{
+            width: '100%', padding: '0.5rem 0.75rem 0.5rem 2.25rem',
+            border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+            background: 'var(--color-surface)', fontSize: 'var(--text-sm)',
+            color: 'var(--color-text)',
+          }}
+          type="text"
+          placeholder="Søg bosted eller kommune…"
+          value={søgning}
+          onChange={(e) => { setSøgning(e.target.value); setSide(1); }}
+        />
       </div>
 
       {/* ── Tabel ─────────────────────────────────────── */}
       <div className="dashboard-table-wrapper">
         <div className="dashboard-section-header">
-          <span className="dashboard-section-title">
-            {filter === 'alle' ? 'Alle rapporter' : `${FUND_CFG[filter as FundNiveau]?.label ?? filter}`}
-          </span>
-          <span className="rap-tabel-antal">
-            {filtrerede.length} {filtrerede.length === 1 ? 'rapport' : 'rapporter'}
-          </span>
+          <div>
+            <h2 className="dashboard-section-title">
+              {filter === 'alle' ? 'Alle rapporter' : FUND_CFG[filter as FundNiveau]?.label ?? filter}
+            </h2>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.125rem' }}>
+              {filtrerede.length} {filtrerede.length === 1 ? 'rapport' : 'rapporter'}
+            </p>
+          </div>
         </div>
 
         {filtrerede.length === 0 ? (
-          <div className="rl-ingen">
+          <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
             <Search size={20} />
             <span>Ingen rapporter matcher søgningen</span>
           </div>
         ) : (
-          <div className="rap-tabel-scroll">
+          <div style={{ overflowX: 'auto' }}>
             <table className="data-table">
               <thead>
                 <tr>
@@ -151,8 +168,8 @@ export function RapporterListeSektion({ rapporter }: Props) {
                       key={r.id}
                       className={erKritisk ? 'rap-kritisk-række' : erStoerre ? 'rap-stoerre-række' : ''}
                     >
-                      <td>
-                        <Link href={`/dashboard/bosteder/${r.id}`} className="rap-bosted-link">
+                      <td className="table-cell-bold">
+                        <Link href={`/dashboard/bosteder/${r.id}`} style={{ color: 'var(--color-primary)', textDecoration: 'none', fontWeight: 'var(--fw-medium)' }}>
                           {r.navn}
                         </Link>
                       </td>
@@ -172,7 +189,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
                             })
                           : '—'}
                       </td>
-                      <td className="table-cell-muted rap-tema-celle">
+                      <td className="table-cell-muted">
                         {r.temaer.slice(0, 2).join(', ') || '—'}
                       </td>
                       <td>
@@ -181,10 +198,10 @@ export function RapporterListeSektion({ rapporter }: Props) {
                             href={r.rapportLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="rap-pdf-link"
-                            title="Åbn rapport (PDF)"
+                            className="btn btn-outline btn-sm"
                           >
-                            <ExternalLink size={14} />
+                            <ExternalLink size={12} />
+                            Se rapport
                           </a>
                         )}
                       </td>
@@ -206,7 +223,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
             >
               <ChevronLeft size={15} />
             </button>
-
             <div className="rl-page-numre">
               {Array.from({ length: antalSider }, (_, i) => i + 1)
                 .filter((n) => n === 1 || n === antalSider || Math.abs(n - sidenummer) <= 2)
@@ -229,7 +245,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
                   )
                 )}
             </div>
-
             <button
               className="rl-page-knap"
               onClick={() => setSide((s) => Math.min(antalSider, s + 1))}
@@ -237,7 +252,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
             >
               <ChevronRight size={15} />
             </button>
-
             <span className="rl-page-info">
               {(sidenummer - 1) * PR_SIDE + 1}–{Math.min(sidenummer * PR_SIDE, filtrerede.length)} af {filtrerede.length}
             </span>
