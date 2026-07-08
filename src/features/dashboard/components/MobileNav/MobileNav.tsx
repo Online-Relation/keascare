@@ -8,31 +8,57 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, FlaskConical, Target, LogOut, Building2,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 
-const navItems = [
-  { label: 'Dashboard',         href: '/dashboard',                      icon: LayoutDashboard },
-  { label: 'Markedssignaler',   href: '/dashboard/markedspotentiale',    icon: TrendingUp },
-  { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale',    icon: Target },
-  { label: 'Tilsynsrapporter',  href: '/dashboard/rapporter',            icon: ClipboardList },
-  { label: 'Alle rapporter',    href: '/dashboard/alle-rapporter',       icon: FileText },
-  { label: 'Kommuner',          href: '/dashboard/kommuner',             icon: MapPin },
-  { label: 'Markedsdata',       href: '/dashboard/markedsdata',          icon: BarChart2 },
-  { label: 'Kunder',            href: '/dashboard/kunder',               icon: Building2 },
-  { label: 'Scrapers',          href: '/dashboard/scrapers',             icon: RefreshCw },
-  { label: 'Monday test',       href: '/dashboard/monday-test',          icon: FlaskConical },
-  { label: 'Indstillinger',     href: '/dashboard/indstillinger',        icon: Settings },
-];
-
-const markedsforingItems = [
-  { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
-  { label: 'Google Ads', href: '/dashboard/markedsforing/google' },
-  { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
+const navGrupper = [
+  {
+    label: 'Overblik',
+    items: [
+      { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Marked',
+    items: [
+      { label: 'Markedssignaler',   href: '/dashboard/markedspotentiale', icon: TrendingUp },
+      { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
+      { label: 'Kommuner',          href: '/dashboard/kommuner',          icon: MapPin },
+      { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },
+    ],
+  },
+  {
+    label: 'Tilsyn',
+    items: [
+      { label: 'Tilsynsrapporter', href: '/dashboard/rapporter',      icon: ClipboardList },
+      { label: 'Alle rapporter',   href: '/dashboard/alle-rapporter', icon: FileText },
+    ],
+  },
+  {
+    label: 'CRM',
+    items: [
+      { label: 'Kunder', href: '/dashboard/kunder', icon: Building2 },
+    ],
+  },
+  {
+    label: 'Markedsføring',
+    items: [
+      { label: 'Meta',       href: '/dashboard/markedsforing/meta',     icon: Megaphone },
+      { label: 'Google Ads', href: '/dashboard/markedsforing/google',   icon: Megaphone },
+      { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin', icon: Megaphone },
+    ],
+  },
+  {
+    label: 'System',
+    items: [
+      { label: 'Scrapers',      href: '/dashboard/scrapers',       icon: RefreshCw },
+      { label: 'Indstillinger', href: '/dashboard/indstillinger',  icon: Settings },
+    ],
+  },
 ];
 
 type Søgeresultat = {
@@ -189,30 +215,25 @@ export function MobileNav() {
           </button>
         </div>
 
-        <div className="sidebar-section" style={{ flex: 1 }}>
-          <p className="sidebar-section-label">Navigation</p>
-          {navItems.map(({ label, href, icon: Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`sidebar-nav-item${pathname === href ? ' active' : ''}`}
-              onClick={() => setMenuÅben(false)}
-            >
-              <Icon className="sidebar-nav-item-icon" size={16} />
-              {label}
-            </Link>
-          ))}
-          <p className="sidebar-section-label" style={{ marginTop: '0.75rem' }}>Markedsføring</p>
-          {markedsforingItems.map(({ label, href }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`sidebar-nav-item${pathname === href ? ' active' : ''}`}
-              onClick={() => setMenuÅben(false)}
-            >
-              <Megaphone className="sidebar-nav-item-icon" size={16} />
-              {label}
-            </Link>
+        <div style={{ flex: 1 }}>
+          {navGrupper.map((gruppe) => (
+            <div key={gruppe.label} className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">{gruppe.label}</p>
+              {gruppe.items.map(({ label, href, icon: Icon }) => {
+                const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+                return (
+                  <Link
+                    key={href + label}
+                    href={href}
+                    className={`sidebar-nav-item${isActive ? ' active' : ''}`}
+                    onClick={() => setMenuÅben(false)}
+                  >
+                    <Icon className="sidebar-nav-item-icon" size={16} />
+                    {label}
+                  </Link>
+                );
+              })}
+            </div>
           ))}
         </div>
 

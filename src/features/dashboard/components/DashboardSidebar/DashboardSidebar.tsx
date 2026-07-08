@@ -7,45 +7,64 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
-  LayoutDashboard,
-  ClipboardList,
-  TrendingUp,
-  BarChart2,
-  Settings,
-  FileText,
-  RefreshCw,
-  MapPin,
-  Megaphone,
-  ChevronDown,
-  ChevronRight,
-  FlaskConical,
-  Users,
-  LogOut,
-  Building2,
+  LayoutDashboard, ClipboardList, TrendingUp, BarChart2, Settings,
+  FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
+  Users, LogOut, Building2, Target,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 
-const navItems = [
-  { label: 'Dashboard',           href: '/dashboard',                       icon: LayoutDashboard },
-  { label: 'Markedssignaler',     href: '/dashboard/markedspotentiale',     icon: TrendingUp },
-  { label: 'Tilsynsrapporter',    href: '/dashboard/rapporter',             icon: ClipboardList },
-  { label: 'Alle rapporter',      href: '/dashboard/alle-rapporter',        icon: FileText },
-  { label: 'Kommuner',            href: '/dashboard/kommuner',              icon: MapPin },
-  { label: 'Kunder',              href: '/dashboard/kunder',                icon: Building2 },
-  { label: 'Markedsdata',         href: '/dashboard/markedsdata',           icon: BarChart2 },
-  { label: 'Scrapers',            href: '/dashboard/scrapers',              icon: RefreshCw },
-  { label: 'Monday test',         href: '/dashboard/monday-test',           icon: FlaskConical },
-  { label: 'Indstillinger',       href: '/dashboard/indstillinger',         icon: Settings },
-  { label: 'Brugere',             href: '/dashboard/admin/brugere',         icon: Users },
+type NavItem = { label: string; href: string; icon: React.ElementType };
+
+const gruppeOverblik: NavItem[] = [
+  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
 ];
 
-const markedsforingItems = [
-  { label: 'Meta',        href: '/dashboard/markedsforing/meta' },
-  { label: 'Google Ads',  href: '/dashboard/markedsforing/google' },
-  { label: 'LinkedIn',    href: '/dashboard/markedsforing/linkedin' },
+const gruppeMarked: NavItem[] = [
+  { label: 'Markedssignaler',   href: '/dashboard/markedspotentiale', icon: TrendingUp },
+  { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
+  { label: 'Kommuner',          href: '/dashboard/kommuner',          icon: MapPin },
+  { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },
 ];
+
+const gruppeTilsyn: NavItem[] = [
+  { label: 'Tilsynsrapporter', href: '/dashboard/rapporter',      icon: ClipboardList },
+  { label: 'Alle rapporter',   href: '/dashboard/alle-rapporter', icon: FileText },
+];
+
+const gruppeCrm: NavItem[] = [
+  { label: 'Kunder', href: '/dashboard/kunder', icon: Building2 },
+];
+
+const gruppeMarkedsforing = [
+  { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
+  { label: 'Google Ads', href: '/dashboard/markedsforing/google' },
+  { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
+];
+
+const gruppeSystem: NavItem[] = [
+  { label: 'Scrapers',     href: '/dashboard/scrapers',          icon: RefreshCw },
+  { label: 'Indstillinger', href: '/dashboard/indstillinger',    icon: Settings },
+  { label: 'Brugere',      href: '/dashboard/admin/brugere',     icon: Users },
+];
+
+function NavGruppe({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
+  return (
+    <div className="sidebar-nav-gruppe-sektion">
+      <p className="sidebar-section-label">{label}</p>
+      {items.map(({ label: l, href, icon: Icon }) => {
+        const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
+        return (
+          <Link key={href + l} href={href} className={`sidebar-nav-item${isActive ? ' active' : ''}`}>
+            <Icon className="sidebar-nav-item-icon" size={16} />
+            {l}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 export function DashboardSidebar() {
   const pathname = usePathname();
@@ -72,47 +91,38 @@ export function DashboardSidebar() {
         />
       </div>
 
-      <nav className="sidebar-section" style={{ flex: 1 }}>
-        <p className="sidebar-section-label">Navigation</p>
-        {navItems.map(({ label, href, icon: Icon }) => {
-          const isActive = pathname === href || (href !== '/dashboard' && pathname.startsWith(href));
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={`sidebar-nav-item${isActive ? ' active' : ''}`}
-            >
-              <Icon className="sidebar-nav-item-icon" size={16} />
-              {label}
-            </Link>
-          );
-        })}
+      <nav style={{ flex: 1, overflowY: 'auto' }}>
+        <NavGruppe label="Overblik"    items={gruppeOverblik} pathname={pathname} />
+        <NavGruppe label="Marked"      items={gruppeMarked}   pathname={pathname} />
+        <NavGruppe label="Tilsyn"      items={gruppeTilsyn}   pathname={pathname} />
+        <NavGruppe label="CRM"         items={gruppeCrm}      pathname={pathname} />
 
-        <button
-          className={`sidebar-nav-item sidebar-nav-gruppe${erMarkedsforingAktiv ? ' active' : ''}`}
-          onClick={() => setMarkedsforingÅben((v) => !v)}
-        >
-          <Megaphone className="sidebar-nav-item-icon" size={16} />
-          <span style={{ flex: 1, textAlign: 'left' }}>Markedsføring</span>
-          {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        </button>
-
-        {markedsforingÅben && (
-          <div className="sidebar-subnav">
-            {markedsforingItems.map(({ label, href }) => {
-              const isActive = pathname === href;
-              return (
+        <div className="sidebar-nav-gruppe-sektion">
+          <p className="sidebar-section-label">Markedsføring</p>
+          <button
+            className={`sidebar-nav-item sidebar-nav-gruppe${erMarkedsforingAktiv ? ' active' : ''}`}
+            onClick={() => setMarkedsforingÅben((v) => !v)}
+          >
+            <Megaphone className="sidebar-nav-item-icon" size={16} />
+            <span style={{ flex: 1, textAlign: 'left' }}>Kanaler</span>
+            {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+          {markedsforingÅben && (
+            <div className="sidebar-subnav">
+              {gruppeMarkedsforing.map(({ label, href }) => (
                 <Link
                   key={href}
                   href={href}
-                  className={`sidebar-subnav-item${isActive ? ' active' : ''}`}
+                  className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`}
                 >
                   {label}
                 </Link>
-              );
-            })}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
+
+        <NavGruppe label="System" items={gruppeSystem} pathname={pathname} />
       </nav>
 
       <Link href="/dashboard/profil" className="sidebar-footer">
