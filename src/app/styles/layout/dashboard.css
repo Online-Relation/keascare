@@ -353,12 +353,12 @@
 
     .dashboard-table-wrapper {
       overflow-x: auto;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
     }
 
     .dashboard-content {
       padding: 1rem;
-      overflow-x: hidden;
     }
 
     .dashboard-kpis {
