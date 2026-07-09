@@ -14,7 +14,6 @@ function venteMs(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Berig records der allerede har CVR men mangler branche/ansatte
 async function berigCvrData(batch: number): Promise<CvrEnricherResultat> {
   const supabase = getSupabaseServerClient();
 
@@ -56,7 +55,6 @@ async function berigCvrData(batch: number): Promise<CvrEnricherResultat> {
       fejl++;
     }
 
-    if (i < rapporter.length - 1) await venteMs(1200);
   }
 
   return { behandlet: rapporter.length, beriget, ingenMatch, fejl };
@@ -105,13 +103,12 @@ async function berigViaPNummer(batch: number): Promise<CvrEnricherResultat> {
       fejl++;
     }
 
-    if (i < rapporter.length - 1) await venteMs(1200);
   }
 
   return { behandlet: rapporter.length, beriget, ingenMatch, fejl };
 }
 
-export async function berigMedCvr(batch = 25): Promise<CvrEnricherResultat> {
+export async function berigMedCvr(batch = 200): Promise<CvrEnricherResultat> {
   // Prioriter records der allerede har CVR (kun ét API-kald pr. record)
   const cvrResultat = await berigCvrData(batch);
 

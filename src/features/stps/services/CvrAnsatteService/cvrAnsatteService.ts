@@ -13,11 +13,7 @@ export type CvrAnsatteResultat = {
   førsteCvr?: string;
 };
 
-function venteMs(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export async function opdaterCvrAnsatte(batch = 40): Promise<CvrAnsatteResultat> {
+export async function opdaterCvrAnsatte(batch = 200): Promise<CvrAnsatteResultat> {
   const supabase = getSupabaseServerClient();
 
   // Prioritér records der mangler branche/ansatte, dernæst ældst opdateret
@@ -82,8 +78,6 @@ export async function opdaterCvrAnsatte(batch = 40): Promise<CvrAnsatteResultat>
       fejl++;
     }
 
-    // cvrapi.dk gratis kvote: ~50/time — 1.2 sek pause giver ~40/time
-    if (i < rækker.length - 1) await venteMs(1200);
   }
 
   return { behandlet: rækker.length, opdateret, ingenData, fejl, fejlBeskeder, førsteCvr };
