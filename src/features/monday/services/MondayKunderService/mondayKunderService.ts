@@ -95,11 +95,6 @@ export async function hentAlleMondayKunder(): Promise<MondayKundeItem[]> {
   }
 
   return råItems
-    .filter((item) => {
-      const type = findKolonne(item, 'Type')?.toLowerCase();
-      const gruppe = mapGruppe(item.group.title);
-      // Afsluttede/tabte behøver ikke Type=Bosted — de er allerede kvalificerede via gruppe
-      return type === 'bosted' || gruppe === 'afsluttet_forloeb';
-    })
+    .filter((item) => findKolonne(item, 'Type')?.toLowerCase() === 'bosted')
     .map(mapItem);
 }
