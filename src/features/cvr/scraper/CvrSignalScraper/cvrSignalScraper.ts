@@ -34,19 +34,19 @@ async function hentNyeBostederFraCvr(_dage: number): Promise<RåCvrVirksomhed[]>
     query: {
       bool: {
         must: [
-          { terms: { 'virksomhedMetadata.nyesteHovedbranche.branchekode': Object.keys(BOSTED_BRANCHEKODER) } },
-          { range: { 'virksomhedMetadata.stiftelsesDato': { gte: fraDatoStr } } },
-          { term: { 'virksomhedMetadata.sammensatStatus': 'NORMAL' } },
+          { terms: { 'Vrvirksomhed.virksomhedMetadata.nyesteHovedbranche.branchekode': Object.keys(BOSTED_BRANCHEKODER) } },
+          { range: { 'Vrvirksomhed.virksomhedMetadata.stiftelsesDato': { gte: fraDatoStr } } },
+          { term: { 'Vrvirksomhed.virksomhedMetadata.sammensatStatus': 'NORMAL' } },
         ],
       },
     },
     _source: [
-      'cvrNummer',
-      'virksomhedMetadata.nyesteNavn.navn',
-      'virksomhedMetadata.nyesteHovedbranche.branchekode',
-      'virksomhedMetadata.nyesteHovedbranche.branchetekst',
-      'virksomhedMetadata.stiftelsesDato',
-      'virksomhedMetadata.nyesteBeliggenhedsadresse',
+      'Vrvirksomhed.cvrNummer',
+      'Vrvirksomhed.virksomhedMetadata.nyesteNavn.navn',
+      'Vrvirksomhed.virksomhedMetadata.nyesteHovedbranche.branchekode',
+      'Vrvirksomhed.virksomhedMetadata.nyesteHovedbranche.branchetekst',
+      'Vrvirksomhed.virksomhedMetadata.stiftelsesDato',
+      'Vrvirksomhed.virksomhedMetadata.nyesteBeliggenhedsadresse',
     ],
   };
 
@@ -61,8 +61,8 @@ async function hentNyeBostederFraCvr(_dage: number): Promise<RåCvrVirksomhed[]>
 
   if (!res.ok) throw new Error(`CVR API fejl: ${res.status} ${res.statusText}`);
 
-  const data = await res.json() as { hits: { hits: { _source: RåCvrVirksomhed }[] } };
-  return data.hits.hits.map((h) => h._source);
+  const data = await res.json() as { hits: { hits: { _source: { Vrvirksomhed: RåCvrVirksomhed } }[] } };
+  return data.hits.hits.map((h) => h._source.Vrvirksomhed);
 }
 
 type RåCvrVirksomhed = {
