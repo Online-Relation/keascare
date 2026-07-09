@@ -92,9 +92,10 @@ function Klokke() {
 
 // ─── ScraperRække ─────────────────────────────────────────────────────────────
 
-function ScraperRække({ scraper, log, flash }: {
+function ScraperRække({ scraper, log, forrigeLog, flash }: {
   scraper: typeof SCRAPERS[0];
   log: ScraperLogHistorik | undefined;
+  forrigeLog: ScraperLogHistorik | undefined;
   flash: boolean;
 }) {
   const status = getStatus(log, scraper.intervalTimer);
@@ -104,6 +105,9 @@ function ScraperRække({ scraper, log, flash }: {
   const freshnessWidth = timerSiden != null
     ? Math.max(4, Math.min(100, (1 - timerSiden / scraper.intervalTimer) * 100))
     : 0;
+
+  const forrigeAntal = forrigeLog ? getBehandlet(forrigeLog) : null;
+  const delta = antal > 0 && forrigeAntal != null ? antal - forrigeAntal : null;
 
   return (
     <div style={{
@@ -178,13 +182,21 @@ function ScraperRække({ scraper, log, flash }: {
                 <div style={{
                   position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
                   background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-                  animation: 'shimmer 2.5s ease-in-out infinite',
+                  animation: 'shimmer 300s linear infinite',
                 }} />
               </div>
             </div>
             <span style={{ fontSize: '0.8rem', fontWeight: 700, color: p.accent, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
               {antal}
             </span>
+            {delta !== null && (
+              <span style={{
+                fontSize: '0.58rem', fontWeight: 600, flexShrink: 0,
+                color: delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : '#334155',
+              }}>
+                {delta > 0 ? `▲${delta}` : delta < 0 ? `▼${Math.abs(delta)}` : '—'}
+              </span>
+            )}
           </>
         ) : (
           <span style={{ fontSize: '0.62rem', color: '#1e3a5a' }}>
@@ -213,6 +225,7 @@ function ScraperRække({ scraper, log, flash }: {
 export function LiveMonitorPage() {
   const searchParams = useSearchParams();
   const [senesteLog, setSenesteLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
+  const [forrigeLog, setForrigeLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
   const [totalOpdateret, setTotalOpdateret] = useState(0);
   const [antalOk, setAntalOk] = useState(0);
@@ -242,8 +255,13 @@ export function LiveMonitorPage() {
         .sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime());
 
       const senesteMap = new Map<string, ScraperLogHistorik>();
+      const forrigeMap = new Map<string, ScraperLogHistorik>();
       for (const l of sorteret) {
-        if (!senesteMap.has(l.scraperId)) senesteMap.set(l.scraperId, l);
+        if (!senesteMap.has(l.scraperId)) {
+          senesteMap.set(l.scraperId, l);
+        } else if (!forrigeMap.has(l.scraperId)) {
+          forrigeMap.set(l.scraperId, l);
+        }
       }
 
       const nyeFlashIds = new Set<string>();
@@ -260,6 +278,7 @@ export function LiveMonitorPage() {
       if (maxId > 0) sidsteMaxId.current = maxId;
 
       setSenesteLog(senesteMap);
+      setForrigeLog(forrigeMap);
       setTotalOpdateret(Array.from(senesteMap.values()).reduce((s, l) => s + getBehandlet(l), 0));
       setAntalOk(SCRAPERS.filter(s => getStatus(senesteMap.get(s.id), s.intervalTimer) === 'ok').length);
     } catch { /* ignore */ }
@@ -293,8 +312,10 @@ export function LiveMonitorPage() {
     }}>
       <style>{`
         @keyframes shimmer {
-          0%   { transform: translateX(-200%); }
-          100% { transform: translateX(500%); }
+          0%, 94%  { transform: translateX(-200%); opacity: 0; }
+          95%      { opacity: 1; }
+          99%      { transform: translateX(500%); opacity: 1; }
+          100%     { transform: translateX(500%); opacity: 0; }
         }
         @keyframes flashRow {
           0%   { background: #22c55e0a; }
@@ -388,6 +409,7 @@ export function LiveMonitorPage() {
             key={s.id}
             scraper={s}
             log={senesteLog.get(s.id)}
+            forrigeLog={forrigeLog.get(s.id)}
             flash={flashIds.has(s.id)}
           />
         ))}
