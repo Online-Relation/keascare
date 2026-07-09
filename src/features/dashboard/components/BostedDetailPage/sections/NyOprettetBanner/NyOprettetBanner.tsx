@@ -19,10 +19,10 @@ export function NyOprettetBanner() {
       setTilbage((n) => {
         if (n <= 1) {
           clearInterval(interval);
-          // Reload uden query-param
+          // Hard reload så server-side data genindlæses
           const url = new URL(window.location.href);
           url.searchParams.delete('nyOprettet');
-          router.replace(url.pathname);
+          window.location.href = url.pathname;
           return 0;
         }
         return n - 1;
