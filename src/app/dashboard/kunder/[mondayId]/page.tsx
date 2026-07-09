@@ -26,6 +26,7 @@ export default async function KundeDetailRoute({ params }: PageProps) {
       forloebsansvarlig={data.forloebsansvarlig}
       oprettetDato={data.oprettet_dato}
       status={data.status}
+      adresse={data.adresse || null}
     />
   );
 }

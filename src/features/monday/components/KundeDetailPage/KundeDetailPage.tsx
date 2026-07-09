@@ -10,6 +10,7 @@ type Props = {
   forloebsansvarlig: string | null;
   oprettetDato: string | null;
   status: string | null;
+  adresse: string | null;
 };
 
 type CvrOpslag = { navn: string; adresse: string | null };
@@ -18,7 +19,7 @@ type Fase = 'input' | 'bekræft' | 'henter' | 'færdig';
 
 const MONDAY_BOARD_URL = 'https://onlinerelation.monday.com/boards';
 
-export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, oprettetDato, status }: Props) {
+export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, oprettetDato, status, adresse }: Props) {
   const [cvr, setCvr] = useState('');
   const [fase, setFase] = useState<Fase>('input');
   const [cvrOpslag, setCvrOpslag] = useState<CvrOpslag | null>(null);
@@ -171,21 +172,36 @@ export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig,
 
         {fase === 'bekræft' && cvrOpslag && (
           <>
-            <div style={{
-              background: 'var(--color-bg-subtle)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-sm)',
-              padding: '0.75rem 1rem',
-              marginBottom: '1rem',
-            }}>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Fundet i CVR-registeret</p>
-              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-semibold)' }}>{cvrOpslag.navn}</p>
-              {cvrOpslag.adresse && (
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{cvrOpslag.adresse}</p>
-              )}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+              <div style={{
+                background: 'var(--color-bg-subtle)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.75rem 1rem',
+              }}>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>CVR-registeret</p>
+                <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-semibold)' }}>{cvrOpslag.navn}</p>
+                {cvrOpslag.adresse && (
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>{cvrOpslag.adresse}</p>
+                )}
+              </div>
+              <div style={{
+                background: 'var(--color-bg-subtle)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                padding: '0.75rem 1rem',
+              }}>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Monday CRM</p>
+                <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-semibold)' }}>{navn}</p>
+                {adresse ? (
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>{adresse}</p>
+                ) : (
+                  <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem', fontStyle: 'italic' }}>Ingen adresse i Monday</p>
+                )}
+              </div>
             </div>
             <p style={{ fontSize: 'var(--text-sm)', marginBottom: '1rem' }}>
-              Passer dette til <strong>{navn}</strong>?
+              Passer disse to sammen?
             </p>
             <div style={{ display: 'flex', gap: '0.5rem' }}>
               <button onClick={() => { setFase('input'); setCvrOpslag(null); }} className="btn btn-ghost btn-sm">
