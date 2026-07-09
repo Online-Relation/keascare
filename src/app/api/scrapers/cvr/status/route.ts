@@ -17,7 +17,7 @@ export async function GET() {
       .from('stps_rapporter')
       .select('id', { count: 'exact', head: true })
       .not('cvr', 'is', null)
-      .or('cvr_ansatte.is.null,cvr_branche.is.null'),
+      .is('cvr_opdateret', null),
   ]);
 
   return NextResponse.json({
