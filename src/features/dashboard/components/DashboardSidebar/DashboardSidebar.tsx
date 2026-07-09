@@ -44,7 +44,8 @@ const gruppeMarkedsforing = [
 ];
 
 const gruppeSystem: NavItem[] = [
-  { label: 'Systemstatus',  href: '/dashboard/systemstatus',     icon: Activity },
+  { label: 'Live Monitor',  href: '/dashboard/monitor',          icon: Activity },
+  { label: 'Systemstatus',  href: '/dashboard/systemstatus',     icon: BarChart2 },
   { label: 'Scrapers',      href: '/dashboard/scrapers',         icon: RefreshCw },
   { label: 'Monday test',   href: '/dashboard/monday-test',      icon: FlaskConical },
   { label: 'Indstillinger', href: '/dashboard/indstillinger',    icon: Settings },
