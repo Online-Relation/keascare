@@ -215,8 +215,8 @@ export function BostedHandlinger({ bostedId, mondayItemId: initialMondayItemId, 
           )}
         </div>
 
-        {/* Kold canvas */}
-        <div className="bosted-salg-sektion">
+        {/* Kold canvas — vises ikke når bostedet allerede er Monday-kunde */}
+        {!mondayItemId && <div className="bosted-salg-sektion">
           <p className="bosted-salg-titel">Kold canvas</p>
           <div className="bosted-salg-knapper">
             {KNAPPER.map(({ status, label, icon: Icon, farve }) => (
@@ -281,7 +281,7 @@ export function BostedHandlinger({ bostedId, mondayItemId: initialMondayItemId, 
               ✓ Kontakt logget
             </p>
           )}
-        </div>
+        </div>}
 
       </div>
     </div>
