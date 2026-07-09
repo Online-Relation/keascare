@@ -147,7 +147,6 @@ function Klokke() {
 
 export function LiveMonitorPage() {
   const [senesteLog, setSenesteLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
-  const [feed, setFeed] = useState<(ScraperLogHistorik & { nylig: boolean })[]>([]);
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
   const [harFejl, setHarFejl] = useState(false);
   const sidsteMaxId = useRef(0);
@@ -194,8 +193,7 @@ export function LiveMonitorPage() {
       if (maxId > 0) sidsteMaxId.current = maxId;
 
       setSenesteLog(senesteMap);
-      setFeed(aktivitet);
-      setHarFejl(aktivitet.some(l => !l.ok));
+      setHarFejl(Array.from(senesteMap.values()).some(l => !l.ok));
     } catch { /* ignore */ }
   }
 
@@ -261,68 +259,73 @@ export function LiveMonitorPage() {
         </div>
       )}
 
-      {/* Scraper temperatur-grid */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gridTemplateRows: 'repeat(3, 1fr)',
-        gap: '0.6rem',
-        flex: '0 0 auto',
-        height: '44vh',
-      }}>
-        {SCRAPERS.map(s => (
-          <ScraperCelle
-            key={s.id}
-            scraper={s}
-            log={senesteLog.get(s.id)}
-            flash={flashIds.has(s.id)}
-          />
-        ))}
-      </div>
-
-      {/* Aktivitetsfeed */}
+      {/* Scraper tabel — én fast række per scraper */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem', overflow: 'hidden' }}>
-        <div style={{ fontSize: '0.55rem', color: '#1e293b', textTransform: 'uppercase', letterSpacing: '0.1em', flexShrink: 0 }}>
-          Seneste begivenheder med data
-        </div>
-        {feed.length === 0 ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1e293b', fontSize: '0.8rem' }}>
-            🌙 Ingen aktivitet de seneste 24 timer
-          </div>
-        ) : (
-          feed.map(b => {
-            const antal = getBehandlet(b);
-            const label = SCRAPERS.find(s => s.id === b.scraperId)?.label ?? b.scraperId;
-            return (
-              <div key={b.id} style={{
-                display: 'flex', alignItems: 'center', gap: '0.6rem',
-                padding: '0.45rem 0.75rem',
-                background: !b.ok ? '#2d0a0a' : '#052e16',
-                border: `1px solid ${!b.ok ? '#7f1d1d' : '#166534'}`,
-                borderRadius: 8,
-                animation: b.nylig ? 'slideIn 0.4s ease-out' : undefined,
-                flexShrink: 0,
-              }}>
-                <div style={{
-                  width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                  background: !b.ok ? '#ef4444' : '#22c55e',
-                  boxShadow: `0 0 5px ${!b.ok ? '#ef4444' : '#22c55e'}`,
-                }} />
-                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#e2e8f0', flex: 1 }}>{label}</span>
-                <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>
-                  {!b.ok ? '⚠ fejl' : antal > 0 ? `${antal} nye` : 'ingen nye'}
+        {SCRAPERS.map(s => {
+          const log = senesteLog.get(s.id);
+          const antal = log ? getBehandlet(log) : 0;
+          const harFejl = !!log && !log.ok;
+          const flash = flashIds.has(s.id);
+          const f = tempFarve(log && !harFejl && antal > 0 ? log.kørtKl : null, harFejl);
+
+          return (
+            <div key={s.id} style={{
+              display: 'flex', alignItems: 'center', gap: '0.75rem',
+              padding: '0.6rem 0.85rem',
+              background: f.bg,
+              border: `1px solid ${f.border}`,
+              borderRadius: 10,
+              position: 'relative', overflow: 'hidden',
+              flex: 1,
+              animation: flash ? 'flashGreen 1.2s ease-out' : undefined,
+              transition: 'background 2s ease, border-color 2s ease',
+            }}>
+              {flash && (
+                <div style={{ position: 'absolute', inset: 0, borderRadius: 10, animation: 'flashOverlay 1.2s ease-out forwards', pointerEvents: 'none' }} />
+              )}
+
+              {/* Status dot */}
+              <div style={{
+                width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                background: f.border,
+                boxShadow: `0 0 6px ${f.glow}`,
+              }} />
+
+              {/* Navn */}
+              <span style={{ fontSize: '0.8rem', fontWeight: 600, color: f.tekst, width: 120, flexShrink: 0 }}>
+                {s.label}
+              </span>
+
+              {/* Antal-bar */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {antal > 0 && (
+                  <div style={{
+                    height: 6, borderRadius: 3,
+                    background: f.border,
+                    width: `${Math.min(100, (antal / 50) * 100)}%`,
+                    maxWidth: '60%',
+                    boxShadow: `0 0 4px ${f.glow}`,
+                    transition: 'width 0.8s ease',
+                  }} />
+                )}
+                <span style={{ fontSize: '0.7rem', color: f.tekst, opacity: 0.8, whiteSpace: 'nowrap' }}>
+                  {harFejl ? '⚠ fejl' : antal > 0 ? `${antal} opdateret` : log ? 'ingen nye' : '—'}
                 </span>
-                <span style={{ fontSize: '0.6rem', color: '#475569' }}>{tidLabel(b.kørtKl)}</span>
               </div>
-            );
-          })
-        )}
+
+              {/* Tid */}
+              <span style={{ fontSize: '0.6rem', color: f.tekst, opacity: 0.5, flexShrink: 0 }}>
+                {log ? tidLabel(log.kørtKl) : ''}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Footer */}
       <div style={{ fontSize: '0.55rem', color: '#1e293b', display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
         <span>Opdaterer hvert 15. minut</span>
-        <span>{feed.filter(b => b.ok && getBehandlet(b) > 0).reduce((s, b) => s + getBehandlet(b), 0)} nye poster i dag</span>
+        <span>{Array.from(senesteLog.values()).reduce((s, l) => s + getBehandlet(l), 0)} opdateret i dag</span>
       </div>
     </div>
   );
