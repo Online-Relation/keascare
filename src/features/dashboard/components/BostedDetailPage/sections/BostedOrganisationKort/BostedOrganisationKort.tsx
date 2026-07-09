@@ -58,7 +58,9 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <FeltRække label="Pladser" value={pladserVærdi} placeholder={pladserPlaceholder} />
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
-          <ScraperInfo kørselKl={2} scraperDato={bosted.scraperDato} label="TP-matcher" />
+          {(!kommune || !pladserVærdi || !bosted.tpTilbudstype) && (
+            <ScraperInfo kørselKl={2} scraperDato={bosted.scraperDato} label="TP-matcher" />
+          )}
         </div>
       </div>
 
@@ -107,7 +109,9 @@ export function BostedOrganisationKort({ bosted }: Props) {
               Ingen kontaktdata fundet endnu på Tilbudsportalen
             </p>
           )}
-          <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="Synology TP-detaljer" />
+          {!harKontakt && (
+            <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="Synology TP-detaljer" />
+          )}
         </div>
       </div>
 
@@ -133,7 +137,9 @@ export function BostedOrganisationKort({ bosted }: Props) {
                 </span>
               </div>
             )}
-            <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="CVR-ansatte" />
+            {bosted.cvrAnsatte == null && (
+              <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="CVR-ansatte" />
+            )}
           </div>
         </div>
       )}
@@ -152,7 +158,9 @@ export function BostedOrganisationKort({ bosted }: Props) {
               Ingen tilsynsdata fundet endnu på Tilbudsportalen
             </p>
           )}
-          <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="Synology TP-detaljer" />
+          {!bosted.tpTilsynsmyndighed && (
+            <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="Synology TP-detaljer" />
+          )}
         </div>
       </div>
     </>
