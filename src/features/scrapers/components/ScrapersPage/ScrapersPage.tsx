@@ -104,7 +104,7 @@ const SCRAPERS: Scraper[] = [
   {
     id: 'tp-match',
     titel: 'Tilbudsportalen — Kør matcher',
-    beskrivelse: 'Matcher Tilbudsportalen-tilbud mod STPS-rapporter via CVR-nummer og navn. Sætter tilbudstype, pladser og kommune på STPS-bosteder. Kører automatisk på Railway kl. 02:00 via cron-job.org — kan også køres manuelt her.',
+    beskrivelse: 'Matcher Tilbudsportalen-tilbud mod STPS-rapporter via CVR-nummer og navn. Sætter tilbudstype, pladser og kommune på STPS-bosteder. Kører automatisk på Railway kl. 05:00 via cron-job.org (efter Synology er færdig kl. 03:00) — kan også køres manuelt her.',
     endpoint: '/api/scrapers/tilbudsportalen/match',
     body: {},
   },
