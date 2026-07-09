@@ -8,6 +8,7 @@ export type MondaySyncResultat = {
   hentet: number;
   upserted: number;
   fejl: number;
+  fejlBeskeder: string[];
 };
 
 export async function synkroniserMondayKunder(): Promise<MondaySyncResultat> {
@@ -16,6 +17,7 @@ export async function synkroniserMondayKunder(): Promise<MondaySyncResultat> {
 
   let upserted = 0;
   let fejl = 0;
+  const fejlBeskeder: string[] = [];
 
   const rækker = kunder.map((k) => ({
     monday_id:          k.mondayId,
@@ -41,12 +43,12 @@ export async function synkroniserMondayKunder(): Promise<MondaySyncResultat> {
       .upsert(batch, { onConflict: 'monday_id' });
 
     if (error) {
-      console.error('Supabase upsert fejl:', error.message);
+      fejlBeskeder.push(error.message);
       fejl++;
     } else {
       upserted += batch.length;
     }
   }
 
-  return { hentet: kunder.length, upserted, fejl };
+  return { hentet: kunder.length, upserted, fejl, fejlBeskeder };
 }
