@@ -137,7 +137,12 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
 
   const forrigeAntal = forrigeLog ? getBehandlet(forrigeLog) : null;
   const delta = antal > 0 && forrigeAntal != null ? antal - forrigeAntal : null;
-  const sparkVærdier = historik.map(l => getBehandlet(l)).reverse();
+  const sparkVærdier = historik.slice(0, 14).map(l => getBehandlet(l)).reverse();
+
+  // Periode-totaler (baseret på hele historik i valgt datointerval)
+  const totalBehandlet = historik.reduce((s, l) => s + getBehandlet(l), 0);
+  const antalKørsler = historik.length;
+  const antalFejlKørsler = historik.filter(l => !l.ok).length;
 
   return (
     <div style={{
@@ -196,42 +201,60 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
         {p.label}
       </div>
 
-      {/* Progress bar med shimmer */}
-      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-        {antal > 0 ? (
-          <>
-            <div style={{ flex: 1, height: 4, background: '#0f1f33', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
-              <div style={{
-                height: '100%',
-                width: `${Math.min(100, (antal / 200) * 100)}%`,
-                background: `linear-gradient(90deg, ${p.accent}66, ${p.accent})`,
-                borderRadius: 2,
-                position: 'relative', overflow: 'hidden',
-                transition: 'width 1.5s ease',
-              }}>
-                <div style={{
-                  position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
-                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-                  animation: 'shimmer 300s linear infinite',
-                }} />
-              </div>
+      {/* Periode-data */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        {/* Total behandlet */}
+        <div style={{ flexShrink: 0 }}>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: totalBehandlet > 0 ? p.accent : '#1e3a5a', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+            {totalBehandlet > 0 ? totalBehandlet.toLocaleString('da-DK') : '—'}
+          </div>
+          <div style={{ fontSize: '0.52rem', color: '#1e3a5a', marginTop: '0.1rem' }}>behandlet</div>
+        </div>
+
+        {/* Kørsler */}
+        {antalKørsler > 0 && (
+          <div style={{ flexShrink: 0 }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#334155', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+              {antalKørsler}
+              {antalFejlKørsler > 0 && (
+                <span style={{ fontSize: '0.65rem', color: '#ef4444', marginLeft: '0.2rem' }}>/{antalFejlKørsler} fejl</span>
+              )}
             </div>
-            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: p.accent, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
-              {antal}
-            </span>
-            {delta !== null && (
-              <span style={{
-                fontSize: '0.58rem', fontWeight: 600, flexShrink: 0,
-                color: delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : '#334155',
-              }}>
-                {delta > 0 ? `▲${delta}` : delta < 0 ? `▼${Math.abs(delta)}` : '—'}
-              </span>
-            )}
-          </>
-        ) : (
-          <span style={{ fontSize: '0.62rem', color: '#1e3a5a' }}>
-            {log && status === 'ok' ? 'ingen nye' : ''}
-          </span>
+            <div style={{ fontSize: '0.52rem', color: '#1e3a5a', marginTop: '0.1rem' }}>kørsler</div>
+          </div>
+        )}
+
+        {/* Delta ift. forrige kørsel */}
+        {delta !== null && (
+          <div style={{ flexShrink: 0 }}>
+            <div style={{
+              fontSize: '0.85rem', fontWeight: 700, lineHeight: 1,
+              color: delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : '#334155',
+            }}>
+              {delta > 0 ? `▲ ${delta}` : delta < 0 ? `▼ ${Math.abs(delta)}` : '='}
+            </div>
+            <div style={{ fontSize: '0.52rem', color: '#1e3a5a', marginTop: '0.1rem' }}>ift. forrige</div>
+          </div>
+        )}
+
+        {/* Bar — viser relativ mængde */}
+        {totalBehandlet > 0 && (
+          <div style={{ flex: 1, height: 3, background: '#0f1f33', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${Math.min(100, (totalBehandlet / 500) * 100)}%`,
+              background: `linear-gradient(90deg, ${p.accent}44, ${p.accent}88)`,
+              borderRadius: 2,
+              position: 'relative', overflow: 'hidden',
+              transition: 'width 1.5s ease',
+            }}>
+              <div style={{
+                position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                animation: 'shimmer 300s linear infinite',
+              }} />
+            </div>
+          </div>
         )}
       </div>
 
@@ -294,10 +317,8 @@ export function LiveMonitorPage() {
       const forrigeMap = new Map<string, ScraperLogHistorik>();
       const historikMap = new Map<string, ScraperLogHistorik[]>();
       for (const l of sorteret) {
-        const liste = historikMap.get(l.scraperId) ?? [];
-        if (liste.length < 7) {
-          historikMap.set(l.scraperId, [...liste, l]);
-        }
+        // Gem alle logs i perioden (til totaler + sparkline)
+        historikMap.set(l.scraperId, [...(historikMap.get(l.scraperId) ?? []), l]);
         if (!senesteMap.has(l.scraperId)) {
           senesteMap.set(l.scraperId, l);
         } else if (!forrigeMap.has(l.scraperId)) {
