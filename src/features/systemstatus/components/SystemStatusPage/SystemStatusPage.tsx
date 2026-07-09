@@ -43,9 +43,9 @@ export function SystemStatusPage() {
         <ScraperCountdowns />
       </section>
 
-      <section>
+      {/* <section>
         <SenesteBosteder />
-      </section>
+      </section> */}
 
     </div>
   );
