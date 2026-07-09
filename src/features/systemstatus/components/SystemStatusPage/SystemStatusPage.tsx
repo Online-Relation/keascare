@@ -5,6 +5,7 @@
 import { DataOverblik } from './sections/DataOverblik/DataOverblik';
 import { ScraperCountdowns } from './sections/ScraperCountdowns/ScraperCountdowns';
 import { SenesteBosteder } from './sections/SenesteBosteder/SenesteBosteder';
+import { CronJobStatus } from './sections/CronJobStatus';
 import { Lock } from 'lucide-react';
 
 export function SystemStatusPage() {
@@ -36,6 +37,11 @@ export function SystemStatusPage() {
             </p>
           </div>
         </div>
+      </section>
+
+      <section>
+        <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 'var(--fw-semibold)', marginBottom: '0.75rem' }}>Cron jobs — seneste kørsel</h2>
+        <CronJobStatus />
       </section>
 
       <section>
