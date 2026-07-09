@@ -181,6 +181,7 @@ export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig,
               }}>
                 <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>CVR-registeret</p>
                 <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-semibold)' }}>{cvrOpslag.navn}</p>
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.1rem' }}>CVR: {cvr.trim()}</p>
                 {cvrOpslag.adresse && (
                   <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>{cvrOpslag.adresse}</p>
                 )}
