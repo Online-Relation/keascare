@@ -25,9 +25,9 @@ export function SystemStatusPage() {
 
       <section>
         <h2 style={{ fontSize: 'var(--text-base)', fontWeight: 'var(--fw-semibold)', marginBottom: '0.75rem' }}>CVR-signaler — Nye bosted-registreringer</h2>
-        <div className="dashboard-kort" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <Lock size={18} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
-          <div>
+        <div className="dashboard-kort" style={{ padding: '1.25rem', display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+          <Lock size={18} style={{ color: 'var(--color-text-muted)', flexShrink: 0, marginTop: '0.15rem' }} />
+          <div style={{ minWidth: 0 }}>
             <p style={{ fontWeight: 'var(--fw-medium)', fontSize: 'var(--text-sm)' }}>Afventer adgang til CVR-distributionssystemet</p>
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>
               Når CVR_USER og CVR_PASS er sat op, vises her automatisk nye bosteder (§107, §108, §108a)
