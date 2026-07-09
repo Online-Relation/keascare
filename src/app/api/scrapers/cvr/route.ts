@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json().catch(() => ({}));
-    const batch = typeof body.batch === 'number' ? body.batch : 50;
+    const batch = typeof body.batch === 'number' ? body.batch : 10;
 
     const resultat = await berigMedCvr(batch);
     await logScraperKørsel('cvr-berig', true, { ok: true, ...resultat });
