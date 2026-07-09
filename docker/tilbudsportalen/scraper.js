@@ -5,6 +5,7 @@
 import axios from 'axios';
 import { load } from 'cheerio';
 import { createClient } from '@supabase/supabase-js';
+import ws from 'ws';
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -14,7 +15,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
   process.exit(1);
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+  realtime: { transport: ws },
+});
 
 const TP_LISTE_URL = 'https://tilbudsportalen.dk/tilbudssoegning/SoegVoksneTilbud/index';
 const TP_DETALJE_URL = 'https://tilbudsportalen.dk/tilbudssoegning/tilbudDetaljeside/index';
