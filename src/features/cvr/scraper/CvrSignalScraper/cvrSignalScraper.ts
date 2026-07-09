@@ -50,7 +50,7 @@ async function hentNyeBostederFraCvr(_dage: number): Promise<RåCvrVirksomhed[]>
     ],
   };
 
-  const res = await fetch('https://distribution.virk.dk/cvr-permanent/virksomhed/_search', {
+  const res = await fetch('http://distribution.virk.dk/cvr-permanent/virksomhed/_search', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
