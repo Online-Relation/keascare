@@ -3,7 +3,7 @@ import type { MondayKundeItem, MondayGruppe } from '@/features/monday/types/mond
 
 const BOARD_ID = process.env.MONDAY_BOARD_ID;
 const AKTIVE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb'];
-const AFSLUTTEDE_GRUPPE_NAVNE = ['afsluttet'];
+const AFSLUTTEDE_GRUPPE_NAVNE = ['afsluttede deals', 'tabte deals'];
 
 type Kolonne = { id: string; text: string | null; type: string; column: { title: string } };
 type RåItem = { id: string; name: string; group: { id: string; title: string }; column_values: Kolonne[] };
@@ -19,7 +19,7 @@ function mapGruppe(gruppeNavn: string): MondayGruppe {
   const norm = gruppeNavn.toLowerCase();
   if (norm.includes('nye')) return 'nye_forloeb';
   if (norm.includes('aktive')) return 'aktive_forloeb';
-  if (norm.includes('afsluttet')) return 'afsluttet_forloeb';
+  if (norm.includes('afsluttede') || norm.includes('tabte')) return 'afsluttet_forloeb';
   return 'ukendt';
 }
 
@@ -35,7 +35,7 @@ function mapItem(item: RåItem): MondayKundeItem {
     oprettetDato:     findKolonne(item, 'Oprettelsesdato'),
     forløbsansvarlig: findKolonne(item, 'Forløbsansvarlig'),
     opfølgningsdato:  findKolonne(item, 'Opfølgningsdato'),
-    afsluttetDato:    findKolonne(item, 'Afsluttet'),
+    afsluttetDato:    findKolonne(item, 'Last updated'),
     status:           findKolonne(item, 'Status'),
   };
 }

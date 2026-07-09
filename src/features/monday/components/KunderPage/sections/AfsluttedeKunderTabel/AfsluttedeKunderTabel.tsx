@@ -62,8 +62,8 @@ export function AfsluttedeKunderTabel({ kunder }: Props) {
               <th>Bosted</th>
               <th>Forløbsansvarlig</th>
               <th>Oprettet</th>
-              <th>Afsluttet</th>
-              <th>Levetid</th>
+              <th>Sidst opdateret</th>
+              <th>Levetid (ca.)</th>
               <th></th>
             </tr>
           </thead>
