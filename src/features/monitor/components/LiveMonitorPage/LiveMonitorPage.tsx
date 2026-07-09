@@ -3,16 +3,20 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
 
-const SCRAPERS: { id: string; label: string }[] = [
-  { id: 'stps',            label: 'STPS Rapporter' },
-  { id: 'stps-detaljer',   label: 'STPS PDFer'     },
-  { id: 'stps-fund-items', label: 'STPS Fund'      },
-  { id: 'stps-pnummer',    label: 'P-numre'        },
-  { id: 'cvr-berig',       label: 'CVR Opslag'     },
-  { id: 'cvr-ansatte',     label: 'CVR Ansatte'    },
-  { id: 'tp-match',        label: 'TP Matcher'     },
-  { id: 'monday-match',    label: 'Monday'         },
-  { id: 'regnskab',        label: 'Regnskab'       },
+// id skal matche hvad logScraperKørsel bruger i API-routes
+// intervalTimer = forventet interval i timer (bruges til at afgøre om den er "forsinket")
+const SCRAPERS: { id: string; label: string; kørselKl: string; intervalTimer: number }[] = [
+  { id: 'stps-liste',      label: 'STPS Rapporter', kørselKl: '20:00', intervalTimer: 24 },
+  { id: 'stps-detaljer',   label: 'STPS PDFer',     kørselKl: '21:00', intervalTimer: 24 },
+  { id: 'stps-fund-items', label: 'STPS Fund',      kørselKl: '22:00', intervalTimer: 24 },
+  { id: 'stps-pnummer',    label: 'P-numre',        kørselKl: '23:00', intervalTimer: 24 },
+  { id: 'cvr-berig',       label: 'CVR Opslag',     kørselKl: '00:00', intervalTimer: 24 },
+  { id: 'cvr-ansatte',     label: 'CVR Ansatte',    kørselKl: '03:00', intervalTimer: 24 },
+  { id: 'tp-liste',        label: 'TP Liste',       kørselKl: '03:00', intervalTimer: 24 },
+  { id: 'tp-detaljer',     label: 'TP Detaljer',    kørselKl: '03:00', intervalTimer: 24 },
+  { id: 'tp-match',        label: 'TP Matcher',     kørselKl: '05:00', intervalTimer: 24 },
+  { id: 'monday-sync',     label: 'Monday Sync',    kørselKl: '04:00', intervalTimer: 24 },
+  { id: 'regnskab',        label: 'Regnskab',       kørselKl: '03:00', intervalTimer: 24 },
 ];
 
 const POLL_INTERVAL = 15 * 60_000;
@@ -20,20 +24,20 @@ const POLL_INTERVAL = 15 * 60_000;
 // ─── Temperaturfarve ─────────────────────────────────────────────────────────
 // Grøn (netop opdateret) → gul → orange → rød (ingen data i lang tid)
 
-function tempFarve(sidstDataKl: string | null, harFejl: boolean): {
+function tempFarve(sidstOkKl: string | null, harFejl: boolean, intervalTimer: number): {
   bg: string; border: string; tekst: string; glow: string;
 } {
   if (harFejl) return { bg: '#450a0a', border: '#b91c1c', tekst: '#fca5a5', glow: '#ef444466' };
-  if (!sidstDataKl) return { bg: '#1a0505', border: '#7f1d1d', tekst: '#6b2121', glow: '#7f1d1d44' };
+  if (!sidstOkKl) return { bg: '#1a0505', border: '#7f1d1d', tekst: '#6b2121', glow: '#7f1d1d44' };
 
-  const minSiden = (Date.now() - new Date(sidstDataKl).getTime()) / 60_000;
+  const timerSiden = (Date.now() - new Date(sidstOkKl).getTime()) / 3_600_000;
+  const iv = intervalTimer;
 
-  if (minSiden < 20)  return { bg: '#052e16', border: '#16a34a', tekst: '#86efac', glow: '#22c55e88' };
-  if (minSiden < 60)  return { bg: '#14290f', border: '#15803d', tekst: '#4ade80', glow: '#22c55e44' };
-  if (minSiden < 180) return { bg: '#1c1408', border: '#92400e', tekst: '#fcd34d', glow: '#f59e0b44' };
-  if (minSiden < 360) return { bg: '#1f1008', border: '#c2410c', tekst: '#fdba74', glow: '#f9731644' };
-  if (minSiden < 720) return { bg: '#200c08', border: '#b45309', tekst: '#fb923c', glow: '#f9731633' };
-  return               { bg: '#1a0505', border: '#7f1d1d', tekst: '#f87171', glow: '#ef444433' };
+  if (timerSiden < iv)        return { bg: '#052e16', border: '#16a34a', tekst: '#86efac', glow: '#22c55e88' };
+  if (timerSiden < iv * 1.2)  return { bg: '#14290f', border: '#15803d', tekst: '#4ade80', glow: '#22c55e44' };
+  if (timerSiden < iv * 1.5)  return { bg: '#1c1408', border: '#92400e', tekst: '#fcd34d', glow: '#f59e0b44' };
+  if (timerSiden < iv * 2.0)  return { bg: '#1f1008', border: '#c2410c', tekst: '#fdba74', glow: '#f9731644' };
+  return                             { bg: '#1a0505', border: '#7f1d1d', tekst: '#f87171', glow: '#ef444433' };
 }
 
 // ─── Hjælpefunktioner ────────────────────────────────────────────────────────
@@ -62,10 +66,8 @@ function ScraperCelle({ scraper, log, flash }: {
   log: ScraperLogHistorik | undefined;
   flash: boolean;
 }) {
-  const sidstDataKl = log && !log.ok === false && getBehandlet(log) > 0 ? log.kørtKl : null;
-  // Find den seneste log med behandlet > 0
   const harFejl = !!log && !log.ok;
-  const f = tempFarve(sidstDataKl, harFejl);
+  const f = tempFarve(log && log.ok ? log.kørtKl : null, harFejl, scraper.intervalTimer);
   const antal = log ? getBehandlet(log) : 0;
 
   return (
@@ -266,7 +268,7 @@ export function LiveMonitorPage() {
           const antal = log ? getBehandlet(log) : 0;
           const harFejl = !!log && !log.ok;
           const flash = flashIds.has(s.id);
-          const f = tempFarve(log && !harFejl && antal > 0 ? log.kørtKl : null, harFejl);
+          const f = tempFarve(log && log.ok ? log.kørtKl : null, harFejl, s.intervalTimer);
 
           return (
             <div key={s.id} style={{
