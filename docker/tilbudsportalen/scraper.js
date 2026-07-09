@@ -265,6 +265,21 @@ async function scraperDetaljer(batch = 50) {
   console.log(`\nFærdig: ${behandlet} OK, ${fejl} fejl`);
 }
 
+async function nulstilDetaljerMaanedligt() {
+  // Nulstil detaljer_hentet for tilbud der ikke er opdateret inden for 30 dage
+  const grænse = new Date();
+  grænse.setDate(grænse.getDate() - 30);
+
+  const { error, count } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .update({ detaljer_hentet: false })
+    .lt('scraper_dato', grænse.toISOString())
+    .eq('detaljer_hentet', true);
+
+  if (error) console.error('Nulstil fejl:', error.message);
+  else console.log(`Nulstillede detaljer for tilbud ældre end 30 dage`);
+}
+
 // Main
 const kommando = process.argv[2] ?? 'begge';
 try {
@@ -273,6 +288,7 @@ try {
   } else if (kommando === 'detaljer') {
     await scraperDetaljer(100);
   } else {
+    await nulstilDetaljerMaanedligt();
     await scraperListe();
     await scraperDetaljer(200);
   }
