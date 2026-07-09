@@ -14,6 +14,7 @@ import { MailchimpSignup } from './sections/MailchimpSignup';
 import { KontaktHistorik } from './sections/KontaktHistorik';
 import { BostedKort } from './sections/BostedKort';
 import { TidligereRapporter } from './sections/TidligereRapporter';
+import { BostedRegnskabKort } from './sections/BostedRegnskabKort';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
@@ -30,6 +31,8 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
         <BostedTilsynKort bosted={bosted} />
         <BostedOrganisationKort bosted={bosted} />
       </div>
+
+      <BostedRegnskabKort bosted={bosted} />
 
       {(bosted.tpAdresse ?? bosted.adresse) && (
         <div style={{ marginTop: '1.25rem' }}>

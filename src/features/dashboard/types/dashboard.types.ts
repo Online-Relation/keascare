@@ -118,6 +118,13 @@ export type BostedDetail = {
   mondayKunde: MondayKundeStatus;
   mondayGruppe: string | null;
   mondayItemId: string | null;
+  regnskabAar: number | null;
+  regnskabNettoomsaetning: number | null;
+  regnskabBruttofortjeneste: number | null;
+  regnskabAarsresultat: number | null;
+  regnskabEgenkapital: number | null;
+  regnskabBalance: number | null;
+  regnskabOpdateret: string | null;
 };
 
 export type SalgsFunnelTrin = {

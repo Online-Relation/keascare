@@ -1,0 +1,1 @@
+export { BostedRegnskabKort } from './BostedRegnskabKort';

@@ -48,6 +48,13 @@ type DbRapport = {
   monday_item_id: string | null;
   monday_gruppe: string | null;
   besoeg_dato: string | null;
+  regnskab_aar: number | null;
+  regnskab_nettoomsaetning: number | null;
+  regnskab_bruttofortjeneste: number | null;
+  regnskab_aarsresultat: number | null;
+  regnskab_egenkapital: number | null;
+  regnskab_balance: number | null;
+  regnskab_opdateret: string | null;
 };
 
 function beregnDataKvalitet(r: DbRapport): DataKvalitet {
@@ -111,6 +118,13 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     mondayKunde: r.monday_item_id ? 'kunde' : 'ingen',
     mondayGruppe: r.monday_gruppe ?? null,
     mondayItemId: r.monday_item_id ?? null,
+    regnskabAar: r.regnskab_aar ?? null,
+    regnskabNettoomsaetning: r.regnskab_nettoomsaetning ?? null,
+    regnskabBruttofortjeneste: r.regnskab_bruttofortjeneste ?? null,
+    regnskabAarsresultat: r.regnskab_aarsresultat ?? null,
+    regnskabEgenkapital: r.regnskab_egenkapital ?? null,
+    regnskabBalance: r.regnskab_balance ?? null,
+    regnskabOpdateret: r.regnskab_opdateret ?? null,
   };
 }
 
@@ -118,7 +132,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret')
     .eq('id', id)
     .single();
 
