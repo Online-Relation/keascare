@@ -76,6 +76,10 @@ export async function opdaterRegnskab(batch = 50): Promise<RegnskabResultat> {
       const msg = e instanceof Error ? e.message : String(e);
       if (fejlBeskeder.length < 3) fejlBeskeder.push(`Fejl for CVR ${cvr}: ${msg}`);
       fejl++;
+      await supabase
+        .from('stps_rapporter')
+        .update({ regnskab_opdateret: new Date().toISOString() })
+        .eq('id', id);
     }
 
     if (i < rækker.length - 1) await venteMs(300);
