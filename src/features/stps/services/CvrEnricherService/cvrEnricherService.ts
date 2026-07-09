@@ -21,9 +21,8 @@ async function berigCvrData(batch: number): Promise<CvrEnricherResultat> {
     .from('stps_rapporter')
     .select('id, cvr')
     .not('cvr', 'is', null)
-    .is('cvr_ansatte', null)
-    .is('cvr_branche', null)
-    .order('cvr_opdateret', { ascending: true, nullsFirst: true })
+    .is('cvr_opdateret', null)
+    .order('id', { ascending: true })
     .limit(batch);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
