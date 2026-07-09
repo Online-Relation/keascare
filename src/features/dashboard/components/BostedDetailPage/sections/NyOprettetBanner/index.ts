@@ -1,0 +1,1 @@
+export { NyOprettetBanner } from './NyOprettetBanner';

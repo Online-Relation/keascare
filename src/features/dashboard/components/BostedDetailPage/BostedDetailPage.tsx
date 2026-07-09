@@ -2,8 +2,9 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
+import { NyOprettetBanner } from './sections/NyOprettetBanner';
 import { BostedHeader } from './sections/BostedHeader';
 import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
 import { BostedTilsynKort } from './sections/BostedTilsynKort';
@@ -25,6 +26,10 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
 
   return (
     <div className="bosted-detail-layout">
+      <Suspense>
+        <NyOprettetBanner />
+      </Suspense>
+
       <BostedHeader bosted={bosted} />
 
       <div className="bosted-detail-grid">
