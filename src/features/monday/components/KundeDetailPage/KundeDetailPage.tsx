@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { ExternalLink } from 'lucide-react';
 
 type Props = {
@@ -13,43 +12,91 @@ type Props = {
   status: string | null;
 };
 
+type CvrOpslag = { navn: string; adresse: string | null };
+
+type Fase = 'input' | 'bekræft' | 'henter' | 'færdig';
+
 const MONDAY_BOARD_URL = 'https://onlinerelation.monday.com/boards';
 
 export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, oprettetDato, status }: Props) {
-  const router = useRouter();
   const [cvr, setCvr] = useState('');
-  const [gemmer, setGemmer] = useState(false);
+  const [fase, setFase] = useState<Fase>('input');
+  const [cvrOpslag, setCvrOpslag] = useState<CvrOpslag | null>(null);
+  const [statusTekst, setStatusTekst] = useState('');
   const [fejl, setFejl] = useState<string | null>(null);
 
-  async function handleLinkCvr() {
+  async function handleSlåOpCvr() {
     const rensCvr = cvr.trim().replace(/\s/g, '');
     if (!/^\d{8}$/.test(rensCvr)) {
       setFejl('CVR skal være præcis 8 cifre');
       return;
     }
+    setFejl(null);
+    setFase('henter');
+    setStatusTekst('Slår CVR op…');
 
-    setGemmer(true);
+    try {
+      const res = await fetch(`/api/scrapers/cvr-opslag?cvr=${rensCvr}`);
+      const data = await res.json();
+
+      if (!data.cvrData && !data.cvrFejl) {
+        setFejl('CVR-nummeret blev ikke fundet i registeret. Tjek at du har tastet korrekt.');
+        setFase('input');
+        return;
+      }
+
+      if (data.cvrFejl && !data.cvrData) {
+        setFejl(`Kunne ikke slå CVR op: ${data.cvrFejl}`);
+        setFase('input');
+        return;
+      }
+
+      setCvrOpslag({ navn: data.cvrData.navn, adresse: data.cvrData.adresse });
+      setFase('bekræft');
+    } catch {
+      setFejl('Netværksfejl – prøv igen');
+      setFase('input');
+    }
+  }
+
+  async function handleBekræft() {
+    const rensCvr = cvr.trim().replace(/\s/g, '');
+    setFase('henter');
     setFejl(null);
 
     try {
-      const res = await fetch(`/api/monday/kunder/${mondayId}/link-cvr`, {
+      // 1. Link CVR til Monday-kunden
+      setStatusTekst('Opretter bosted…');
+      const linkRes = await fetch(`/api/monday/kunder/${mondayId}/link-cvr`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cvr: rensCvr }),
       });
-      const data = await res.json();
-
-      if (!data.ok) {
-        setFejl(data.fejl ?? 'Noget gik galt');
+      const linkData = await linkRes.json();
+      if (!linkData.ok) {
+        setFejl(linkData.fejl ?? 'Oprettelse fejlede');
+        setFase('bekræft');
         return;
       }
 
-      // Naviger til bostedets detailside og kør CVR-scraper bagefter
-      router.push(`/dashboard/bosteder/${data.bostedId}?nyOprettet=1`);
+      const bostedId = linkData.bostedId;
+
+      // 2. Berig med CVR, regnskab og STPS — klient-side så det ikke afbrydes
+      setStatusTekst('Henter CVR-data og regnskab…');
+      await fetch('/api/scrapers/berig-bosted', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bostedId, cvr: rensCvr }),
+      });
+
+      setStatusTekst('Færdig! Sender dig videre…');
+      setFase('færdig');
+
+      // Naviger til bosted-siden
+      window.location.href = `/dashboard/bosteder/${bostedId}`;
     } catch {
       setFejl('Netværksfejl – prøv igen');
-    } finally {
-      setGemmer(false);
+      setFase('bekræft');
     }
   }
 
@@ -88,39 +135,87 @@ export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig,
       {/* CVR-link */}
       <div className="dashboard-kort" style={{ padding: '1.25rem' }}>
         <p style={{ fontWeight: 'var(--fw-semibold)', marginBottom: '0.5rem' }}>Link til bosted</p>
-        <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-          Dette bosted er endnu ikke fundet i systemet. Indtast CVR-nummeret (find det på proff.dk eller cvr.dk) for at oprette forbindelsen.
-        </p>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <input
-            type="text"
-            value={cvr}
-            onChange={(e) => setCvr(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLinkCvr()}
-            placeholder="12345678"
-            maxLength={8}
-            style={{
-              flex: 1,
-              padding: '0.5rem 0.75rem',
+
+        {fase === 'input' && (
+          <>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
+              Indtast CVR-nummeret (find det på proff.dk eller cvr.dk). Vi slår det op og bekræfter firmanavnet før vi linker.
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <input
+                type="text"
+                value={cvr}
+                onChange={(e) => { setCvr(e.target.value); setFejl(null); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleSlåOpCvr()}
+                placeholder="12345678"
+                maxLength={8}
+                style={{
+                  flex: 1,
+                  padding: '0.5rem 0.75rem',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: 'var(--text-sm)',
+                  background: 'var(--color-bg)',
+                  color: 'var(--color-text)',
+                }}
+              />
+              <button onClick={handleSlåOpCvr} disabled={cvr.trim().length < 8} className="btn btn-primary btn-sm">
+                Slå op
+              </button>
+            </div>
+            {fejl && (
+              <p style={{ marginTop: '0.5rem', fontSize: 'var(--text-xs)', color: 'var(--color-danger, #dc2626)' }}>{fejl}</p>
+            )}
+          </>
+        )}
+
+        {fase === 'bekræft' && cvrOpslag && (
+          <>
+            <div style={{
+              background: 'var(--color-bg-subtle)',
               border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-sm)',
-              fontSize: 'var(--text-sm)',
-              background: 'var(--color-bg)',
-              color: 'var(--color-text)',
-            }}
-          />
-          <button
-            onClick={handleLinkCvr}
-            disabled={gemmer || cvr.trim().length === 0}
-            className="btn btn-primary btn-sm"
-          >
-            {gemmer ? 'Henter…' : 'Link bosted'}
-          </button>
-        </div>
-        {fejl && (
-          <p style={{ marginTop: '0.5rem', fontSize: 'var(--text-xs)', color: 'var(--color-danger, #dc2626)' }}>{fejl}</p>
+              padding: '0.75rem 1rem',
+              marginBottom: '1rem',
+            }}>
+              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Fundet i CVR-registeret</p>
+              <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-semibold)' }}>{cvrOpslag.navn}</p>
+              {cvrOpslag.adresse && (
+                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{cvrOpslag.adresse}</p>
+              )}
+            </div>
+            <p style={{ fontSize: 'var(--text-sm)', marginBottom: '1rem' }}>
+              Passer dette til <strong>{navn}</strong>?
+            </p>
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button onClick={() => { setFase('input'); setCvrOpslag(null); }} className="btn btn-ghost btn-sm">
+                Nej, ret CVR
+              </button>
+              <button onClick={handleBekræft} className="btn btn-primary btn-sm">
+                Ja, link bosted
+              </button>
+            </div>
+            {fejl && (
+              <p style={{ marginTop: '0.5rem', fontSize: 'var(--text-xs)', color: 'var(--color-danger, #dc2626)' }}>{fejl}</p>
+            )}
+          </>
+        )}
+
+        {(fase === 'henter' || fase === 'færdig') && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0' }}>
+            <div style={{
+              width: '16px', height: '16px', borderRadius: '50%',
+              border: '2px solid var(--color-primary)',
+              borderTopColor: 'transparent',
+              animation: fase === 'henter' ? 'spin 0.8s linear infinite' : 'none',
+              background: fase === 'færdig' ? 'var(--color-primary)' : 'transparent',
+            }} />
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>{statusTekst}</p>
+          </div>
         )}
       </div>
+
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }

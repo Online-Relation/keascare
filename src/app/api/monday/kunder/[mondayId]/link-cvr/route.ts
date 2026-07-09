@@ -77,13 +77,5 @@ export async function POST(req: NextRequest, { params }: Params) {
     bostedId = ny.id;
   }
 
-  // Berig bostedet med CVR- og regnskabsdata i baggrunden
-  const baseUrl = req.nextUrl.origin;
-  fetch(`${baseUrl}/api/scrapers/berig-bosted`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ bostedId, cvr }),
-  }).catch(console.error);
-
   return NextResponse.json({ ok: true, bostedId });
 }
