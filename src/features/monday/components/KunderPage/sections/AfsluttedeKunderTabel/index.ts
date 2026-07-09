@@ -1,0 +1,1 @@
+export { AfsluttedeKunderTabel } from './AfsluttedeKunderTabel';

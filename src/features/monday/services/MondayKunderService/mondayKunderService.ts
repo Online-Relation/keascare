@@ -3,6 +3,7 @@ import type { MondayKundeItem, MondayGruppe } from '@/features/monday/types/mond
 
 const BOARD_ID = process.env.MONDAY_BOARD_ID;
 const AKTIVE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb'];
+const AFSLUTTEDE_GRUPPE_NAVNE = ['afsluttet'];
 
 type Kolonne = { id: string; text: string | null; type: string; column: { title: string } };
 type RåItem = { id: string; name: string; group: { id: string; title: string }; column_values: Kolonne[] };
@@ -18,6 +19,7 @@ function mapGruppe(gruppeNavn: string): MondayGruppe {
   const norm = gruppeNavn.toLowerCase();
   if (norm.includes('nye')) return 'nye_forloeb';
   if (norm.includes('aktive')) return 'aktive_forloeb';
+  if (norm.includes('afsluttet')) return 'afsluttet_forloeb';
   return 'ukendt';
 }
 
@@ -33,6 +35,7 @@ function mapItem(item: RåItem): MondayKundeItem {
     oprettetDato:     findKolonne(item, 'Oprettelsesdato'),
     forløbsansvarlig: findKolonne(item, 'Forløbsansvarlig'),
     opfølgningsdato:  findKolonne(item, 'Opfølgningsdato'),
+    afsluttetDato:    findKolonne(item, 'Afsluttet'),
     status:           findKolonne(item, 'Status'),
   };
 }
@@ -46,13 +49,21 @@ export async function hentAlleMondayKunder(): Promise<MondayKundeItem[]> {
     }
   `, { boardId: BOARD_ID });
 
-  const aktiveIds = (gruppeData.boards[0]?.groups ?? [])
-    .filter((g) => AKTIVE_GRUPPE_NAVNE.some((navn) => g.title.toLowerCase() === navn))
+  const alleGrupper = gruppeData.boards[0]?.groups ?? [];
+
+  const relevanteIds = alleGrupper
+    .filter((g) => {
+      const norm = g.title.toLowerCase();
+      return (
+        AKTIVE_GRUPPE_NAVNE.some((navn) => norm === navn) ||
+        AFSLUTTEDE_GRUPPE_NAVNE.some((navn) => norm.includes(navn))
+      );
+    })
     .map((g) => g.id);
 
-  if (aktiveIds.length === 0) return [];
+  if (relevanteIds.length === 0) return [];
 
-  const gruppeIdStr = aktiveIds.map((id) => `"${id}"`).join(', ');
+  const gruppeIdStr = relevanteIds.map((id) => `"${id}"`).join(', ');
 
   const side1 = await mondayQuery<GruppeItemsPage>(`
     query ($boardId: ID!) {

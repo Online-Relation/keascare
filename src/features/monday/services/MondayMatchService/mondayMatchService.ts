@@ -156,6 +156,7 @@ function mapTilKundeItem(item: RåMondayItem): MondayKundeItem {
     oprettetDato:     findKolonneVærdi(item, 'Oprettelsesdato'),
     forløbsansvarlig: findKolonneVærdi(item, 'Forløbsansvarlig'),
     opfølgningsdato:  findKolonneVærdi(item, 'Opfølgningsdato'),
+    afsluttetDato:    findKolonneVærdi(item, 'Afsluttet'),
     status:           findKolonneVærdi(item, 'Status'),
   };
 }
