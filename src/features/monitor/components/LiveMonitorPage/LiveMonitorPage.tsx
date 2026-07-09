@@ -102,7 +102,7 @@ function ScraperRække({ scraper, log, flash }: {
       position: 'relative', overflow: 'hidden',
       flex: 1,
       boxShadow: status !== 'ukendt' ? p.glow : 'none',
-      animation: flash ? 'pulseIn 0.8s ease-out' : undefined,
+      animation: flash ? 'pulseIn 0.8s ease-out' : status === 'ok' ? 'breathe 4s ease-in-out infinite' : undefined,
       transition: 'border-color 1s ease, box-shadow 1s ease',
     }}>
       {/* Flash */}
@@ -151,14 +151,23 @@ function ScraperRække({ scraper, log, flash }: {
       {/* Bar + antal */}
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         {antal > 0 && (
-          <div style={{ flex: 1, height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden' }}>
+          <div style={{ flex: 1, height: 4, background: '#1e293b', borderRadius: 2, overflow: 'hidden', position: 'relative' }}>
             <div style={{
               height: '100%',
               width: `${Math.min(100, (antal / 200) * 100)}%`,
               background: `linear-gradient(90deg, ${p.accent}88, ${p.accent})`,
               borderRadius: 2,
               transition: 'width 1.2s ease',
-            }} />
+              position: 'relative', overflow: 'hidden',
+            }}>
+              {status === 'ok' && (
+                <div style={{
+                  position: 'absolute', top: 0, left: 0, width: '30%', height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
+                  animation: 'shimmer 2.5s ease-in-out infinite',
+                }} />
+              )}
+            </div>
           </div>
         )}
         {antal > 0 && (
@@ -273,6 +282,22 @@ export function LiveMonitorPage() {
           from { opacity: 0; transform: translateY(4px); }
           to   { opacity: 1; transform: translateY(0); }
         }
+        @keyframes shimmer {
+          0%   { transform: translateX(-100%); }
+          100% { transform: translateX(400%); }
+        }
+        @keyframes dotPulse {
+          0%, 100% { opacity: 1; box-shadow: 0 0 0 0 #22c55e66; }
+          50%       { opacity: 0.7; box-shadow: 0 0 0 4px #22c55e22; }
+        }
+        @keyframes breathe {
+          0%, 100% { border-left-color: #22c55ecc; }
+          50%       { border-left-color: #22c55e55; }
+        }
+        @keyframes healthPulse {
+          0%, 100% { text-shadow: 0 0 20px #22c55e66; }
+          50%       { text-shadow: 0 0 40px #22c55eaa, 0 0 80px #22c55e44; }
+        }
       `}</style>
 
       {/* ── Header ── */}
@@ -293,7 +318,7 @@ export function LiveMonitorPage() {
           display: 'flex', flexDirection: 'column', gap: '0.2rem',
         }}>
           <div style={{ fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.1em', color: '#475569', textTransform: 'uppercase' }}>System health</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: healthPct === 100 ? '#22c55e' : healthPct > 70 ? '#f59e0b' : '#ef4444', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>
+          <div style={{ fontSize: '1.6rem', fontWeight: 800, color: healthPct === 100 ? '#22c55e' : healthPct > 70 ? '#f59e0b' : '#ef4444', lineHeight: 1, fontVariantNumeric: 'tabular-nums', animation: healthPct > 70 ? 'healthPulse 3s ease-in-out infinite' : undefined }}>
             {healthPct}<span style={{ fontSize: '0.9rem' }}>%</span>
           </div>
           <div style={{ fontSize: '0.6rem', color: '#334155' }}>{antalOk}/{SCRAPERS.length} scrapers ok</div>
