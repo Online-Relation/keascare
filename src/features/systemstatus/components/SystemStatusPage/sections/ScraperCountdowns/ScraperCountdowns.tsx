@@ -104,25 +104,25 @@ export function ScraperCountdowns() {
           .sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime())[0];
 
         return (
-          <div key={s.id} className="dashboard-kort" style={{ padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <div style={{ flex: 1, minWidth: '200px' }}>
-              <p style={{ fontWeight: 'var(--fw-medium)', fontSize: 'var(--text-sm)' }}>{s.navn}</p>
-              <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>{s.beskrivelse}</p>
-            </div>
+          <div key={s.id} className="dashboard-kort" style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            <p style={{ fontWeight: 'var(--fw-medium)', fontSize: 'var(--text-sm)' }}>{s.navn}</p>
+            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{s.beskrivelse}</p>
 
-            {seneste && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--text-xs)', color: seneste.ok ? 'var(--color-success, #16a34a)' : 'var(--color-danger, #dc2626)' }}>
-                {seneste.ok ? <CheckCircle size={13} /> : <XCircle size={13} />}
-                Senest {new Date(seneste.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem', alignItems: 'center' }}>
+              {seneste && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--text-xs)', color: seneste.ok ? 'var(--color-success, #16a34a)' : 'var(--color-danger, #dc2626)' }}>
+                  {seneste.ok ? <CheckCircle size={13} /> : <XCircle size={13} />}
+                  Senest {new Date(seneste.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+                <Clock size={13} />
+                Om {formaterCountdown(msHen)}
+                <span style={{ marginLeft: '0.25rem', padding: '0.1rem 0.5rem', borderRadius: '999px', background: s.kilde === 'lokal' ? 'var(--color-warning-bg, #fef3c7)' : 'var(--color-border-light)', fontSize: '0.65rem', fontWeight: 'var(--fw-semibold)', textTransform: 'uppercase', color: s.kilde === 'lokal' ? '#92400e' : 'var(--color-text-muted)' }}>
+                  {s.kilde === 'lokal' ? 'Lokal Mac' : 'Railway'}
+                </span>
               </div>
-            )}
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', whiteSpace: 'nowrap' }}>
-              <Clock size={13} />
-              Om {formaterCountdown(msHen)}
-              <span style={{ marginLeft: '0.25rem', padding: '0.1rem 0.5rem', borderRadius: '999px', background: s.kilde === 'lokal' ? 'var(--color-warning-bg, #fef3c7)' : 'var(--color-border-light)', fontSize: '0.65rem', fontWeight: 'var(--fw-semibold)', textTransform: 'uppercase', color: s.kilde === 'lokal' ? '#92400e' : 'var(--color-text-muted)' }}>
-                {s.kilde === 'lokal' ? 'Lokal Mac' : 'Railway'}
-              </span>
             </div>
           </div>
         );

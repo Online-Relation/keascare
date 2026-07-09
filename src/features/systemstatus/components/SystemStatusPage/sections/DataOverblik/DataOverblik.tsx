@@ -39,7 +39,7 @@ export function DataOverblik() {
   const tpUdenMatch = data.tp.total - data.tp.matchetModStps;
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(280px, 100%), 1fr))', gap: '1rem' }}>
       <StatKort titel="STPS Tilsynsrapporter" linjer={[
         { tekst: `Der er i alt ${data.stps.total} tilsynsrapporter i systemet.`, fremhæv: true },
         { tekst: <><Delta n={data.stps.nyeIgår} /> — {data.stps.nyeUge} nye den seneste uge.</> as unknown as string },
