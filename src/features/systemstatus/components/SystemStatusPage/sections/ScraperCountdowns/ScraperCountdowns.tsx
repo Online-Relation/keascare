@@ -52,6 +52,19 @@ const SCRAPERS: ScraperInfo[] = [
     kilde: 'railway',
   },
   {
+    id: 'monday-sync',
+    navn: 'Monday — Synkroniser kunder',
+    beskrivelse: 'Henter alle Monday-kunder og cacher dem i Supabase så Kunder-siden loader hurtigt.',
+    næsteKørsel: () => {
+      const nu = new Date();
+      const næste = new Date(nu);
+      næste.setMinutes(0, 0, 0);
+      næste.setHours(næste.getHours() + 1);
+      return næste;
+    },
+    kilde: 'railway',
+  },
+  {
     id: 'tp',
     navn: 'Tilbudsportalen — Fuld kørsel',
     beskrivelse: 'Kører lokalt hver mandag kl. 11:00 og henter detaljer fra Tilbudsportalen.',
@@ -97,6 +110,7 @@ export function ScraperCountdowns() {
     stps: ['stps-liste', 'stps-detaljer'],
     cvr: ['cvr-berig', 'cvr-ansatte'],
     regnskab: ['regnskab'],
+    'monday-sync': ['monday-sync'],
     tp: ['tp-liste', 'tp-detaljer', 'tp-match'],
   };
 
