@@ -109,6 +109,14 @@ const SCRAPERS: Scraper[] = [
     body: {},
   },
   {
+    id: 'regnskab',
+    titel: 'Regnskab — Hent årsregnskab',
+    beskrivelse: 'Henter nøgletal fra Erhvervsstyrelsens årsrapport-API for bosteder med CVR. Kræver ingen credentials.',
+    endpoint: '/api/scrapers/regnskab',
+    body: { batch: 50 },
+    loop: true,
+  },
+  {
     id: 'monday-match',
     titel: 'Monday — Synkroniser kunder',
     beskrivelse: 'Henter Bosted-kunder fra Monday (Nye + Aktive Forløb) og matcher mod STPS-bosteder på navn. Sætter "Kunde"-badge i dashboardet.',
