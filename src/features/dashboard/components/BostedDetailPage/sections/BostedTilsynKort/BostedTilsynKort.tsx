@@ -79,28 +79,32 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           </div>
         )}
 
-        <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border-light)' }}>
-          <a
-            href={bosted.rapportUrl}
-            className="btn btn-outline btn-sm"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <ExternalLink size={13} />
-            Åbn rapport på STPS
-          </a>
-          {bosted.pdfUrl && (
-            <a
-              href={bosted.pdfUrl}
-              className="btn btn-outline btn-sm"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <FileText size={13} />
-              Åbn PDF
-            </a>
-          )}
-        </div>
+        {(bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:')) || bosted.pdfUrl ? (
+          <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border-light)' }}>
+            {bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:') && (
+              <a
+                href={bosted.rapportUrl}
+                className="btn btn-outline btn-sm"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <ExternalLink size={13} />
+                Åbn rapport på STPS
+              </a>
+            )}
+            {bosted.pdfUrl && (
+              <a
+                href={bosted.pdfUrl}
+                className="btn btn-outline btn-sm"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FileText size={13} />
+                Åbn PDF
+              </a>
+            )}
+          </div>
+        ) : null}
       </div>
     </div>
   );
