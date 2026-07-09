@@ -62,6 +62,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       .from('stps_rapporter')
       .insert({
         stps_tilbud_navn: kunde?.navn ?? `CVR ${cvr}`,
+        rapport_titel:    kunde?.navn ?? `CVR ${cvr}`,
         cvr,
         ...mondayData,
       })
