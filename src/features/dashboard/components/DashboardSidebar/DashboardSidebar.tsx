@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, TrendingUp, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity,
+  Users, LogOut, Building2, Target, Activity, FlaskConical,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -46,6 +46,7 @@ const gruppeMarkedsforing = [
 const gruppeSystem: NavItem[] = [
   { label: 'Systemstatus',  href: '/dashboard/systemstatus',     icon: Activity },
   { label: 'Scrapers',      href: '/dashboard/scrapers',         icon: RefreshCw },
+  { label: 'Monday test',   href: '/dashboard/monday-test',      icon: FlaskConical },
   { label: 'Indstillinger', href: '/dashboard/indstillinger',    icon: Settings },
   { label: 'Brugere',       href: '/dashboard/admin/brugere',    icon: Users },
 ];
