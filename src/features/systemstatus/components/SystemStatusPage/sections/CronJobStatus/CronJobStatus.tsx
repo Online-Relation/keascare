@@ -76,7 +76,7 @@ export function CronJobStatus() {
                       <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Aldrig kørt</p>
                     )}
                   </div>
-                  {log && !log.ok && log.resultat?.error && (
+                  {log && !log.ok && log.resultat?.error != null && (
                     <p style={{
                       fontSize: 'var(--text-xs)',
                       color: 'var(--color-danger, #dc2626)',
