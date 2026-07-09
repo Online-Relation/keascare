@@ -282,6 +282,8 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
 
 export function LiveMonitorPage() {
   const searchParams = useSearchParams();
+  const fra = searchParams.get('fra');
+  const til = searchParams.get('til');
   const [senesteLog, setSenesteLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
   const [forrigeLog, setForrigeLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
   const [historikLog, setHistorikLog] = useState<Map<string, ScraperLogHistorik[]>>(new Map());
@@ -301,8 +303,6 @@ export function LiveMonitorPage() {
       const res = await fetch('/api/scrapers/logs/historik');
       const data: ScraperLogHistorik[] = await res.json();
 
-      const fra = searchParams.get('fra');
-      const til = searchParams.get('til');
       const fraTs = fra ? new Date(fra).getTime() : Date.now() - 36 * 3600_000;
       const tilTs = til ? new Date(til).getTime() + 86_400_000 : Date.now();
 
@@ -352,7 +352,7 @@ export function LiveMonitorPage() {
     const id = setInterval(() => hentData(false), POLL_INTERVAL);
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [fra, til]);
 
   const antalFejl = SCRAPERS.filter(s => getStatus(senesteLog.get(s.id), s.intervalTimer) === 'fejl').length;
   const healthPct = Math.round((antalOk / SCRAPERS.length) * 100);
