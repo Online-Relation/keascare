@@ -32,7 +32,6 @@
     background-color: var(--color-bg);
     color: var(--color-text-primary);
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
   }
 
   /* Forhindrer iOS Safari i at zoome ind på inputfelter */
