@@ -33,7 +33,7 @@ export function SenesteBosteder() {
   }, [side]);
 
   return (
-    <div className="dashboard-table-wrapper">
+    <div style={{ background: 'var(--color-card)', border: '1px solid var(--color-border)', borderRadius: '0.75rem', marginBottom: '1.5rem' }}>
       <div className="dashboard-section-header">
         <div>
           <h2 className="dashboard-section-title">Senest opdaterede bosteder</h2>
