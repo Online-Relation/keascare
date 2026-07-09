@@ -118,6 +118,7 @@ const SCRAPERS: Scraper[] = [
 ];
 
 type CvrStatus = { manglerCvr: number; manglerData: number; total: number };
+type TpStatus = { total: number; mangler: number; matchet: number };
 
 export function ScrapersPage() {
   const [statusser, setStatusser] = useState<Record<string, ScraperStatus>>({});
@@ -125,6 +126,7 @@ export function ScrapersPage() {
   const [fremgang, setFremgang] = useState<Record<string, Fremgang>>({});
   const [logs, setLogs] = useState<Record<string, ScraperLog>>({});
   const [cvrStatus, setCvrStatus] = useState<CvrStatus | null>(null);
+  const [tpStatus, setTpStatus] = useState<TpStatus | null>(null);
 
   function hentCvrStatus() {
     fetch('/api/scrapers/cvr/status')
@@ -133,8 +135,16 @@ export function ScrapersPage() {
       .catch(() => {});
   }
 
+  function hentTpStatus() {
+    fetch('/api/scrapers/tilbudsportalen/status')
+      .then((r) => r.json())
+      .then((d) => setTpStatus(d))
+      .catch(() => {});
+  }
+
   useEffect(() => {
     hentCvrStatus();
+    hentTpStatus();
     fetch('/api/scrapers/logs')
       .then((r) => r.json())
       .then((data: ScraperLog[]) => {
@@ -184,6 +194,7 @@ export function ScrapersPage() {
       setStatusser((s) => ({ ...s, [scraper.id]: 'done' }));
 
       if (scraper.id === 'cvr-berig' || scraper.id === 'cvr-ansatte') hentCvrStatus();
+      if (scraper.id === 'tp-liste' || scraper.id === 'tp-detaljer' || scraper.id === 'tp-match') hentTpStatus();
 
       // Opdater log efter vellykket kørsel
       fetch('/api/scrapers/logs')
@@ -234,6 +245,33 @@ export function ScrapersPage() {
               </span>
             ) : (
               <span className="scraper-status-tæller scraper-status-tæller--ok">Alle beriget ✓</span>
+            );
+          }
+          if (scraper.id === 'tp-liste' && tpStatus !== null) {
+            badge = tpStatus.total > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">
+                {tpStatus.total} tilbud i databasen ✓
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen tilbud hentet endnu</span>
+            );
+          }
+          if (scraper.id === 'tp-detaljer' && tpStatus !== null) {
+            badge = tpStatus.mangler > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">
+                {tpStatus.mangler} tilbud mangler detaljer
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet ✓</span>
+            );
+          }
+          if (scraper.id === 'tp-match' && tpStatus !== null) {
+            badge = tpStatus.matchet > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">
+                {tpStatus.matchet} tilbud matchet mod STPS ✓
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen matches endnu</span>
             );
           }
           return (
