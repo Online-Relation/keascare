@@ -17,7 +17,7 @@ const SCRAPERS: { id: string; label: string; emoji: string }[] = [
   { id: 'regnskab',          label: 'Regnskab',        emoji: '💰' },
 ];
 
-const POLL_INTERVAL = 60_000; // 1 minut
+const POLL_INTERVAL = 15 * 60_000; // 15 minutter
 
 // ─── Hjælpefunktioner ────────────────────────────────────────────────────────
 
@@ -333,7 +333,7 @@ export function LiveMonitorPage() {
         fontSize: '0.6rem', color: '#334155',
         borderTop: '1px solid #1e293b', paddingTop: '0.5rem',
       }}>
-        <span>Opdaterer hvert minut</span>
+        <span>Opdaterer hvert 15. minut</span>
         <span>
           I dag: {begivenheder.filter((b) => b.ok && behandlet(b) > 0).reduce((s, b) => s + behandlet(b), 0)} nye poster
           {harFejl ? ' · ⚠ fejl registreret' : ' · ✓ ingen fejl'}
