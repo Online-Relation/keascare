@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
 
 const SCRAPERS = [
@@ -248,14 +249,14 @@ function ScraperRække({ scraper, log, flash, idx }: {
 // ─── Hoved-komponent ─────────────────────────────────────────────────────────
 
 export function LiveMonitorPage() {
+  const searchParams = useSearchParams();
   const [senesteLog, setSenesteLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
   const [totalOpdateret, setTotalOpdateret] = useState(0);
   const [antalOk, setAntalOk] = useState(0);
-  const [uptime, setUptime] = useState(0); // sekunder siden load
+  const [uptime, setUptime] = useState(0);
   const sidsteMaxId = useRef(0);
 
-  // Uptime-tæller — tikker hvert sekund, viser at siden er levende
   useEffect(() => {
     const id = setInterval(() => setUptime(s => s + 1), 1000);
     return () => clearInterval(id);
@@ -266,9 +267,16 @@ export function LiveMonitorPage() {
       const res = await fetch('/api/scrapers/logs/historik');
       const data: ScraperLogHistorik[] = await res.json();
 
-      const grænse = Date.now() - 36 * 3600_000;
+      const fra = searchParams.get('fra');
+      const til = searchParams.get('til');
+      const fraTs = fra ? new Date(fra).getTime() : Date.now() - 36 * 3600_000;
+      const tilTs = til ? new Date(til).getTime() + 86_400_000 : Date.now();
+
       const sorteret = [...data]
-        .filter(l => new Date(l.kørtKl).getTime() > grænse)
+        .filter(l => {
+          const t = new Date(l.kørtKl).getTime();
+          return t >= fraTs && t <= tilTs;
+        })
         .sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime());
 
       const senesteMap = new Map<string, ScraperLogHistorik>();
@@ -300,7 +308,7 @@ export function LiveMonitorPage() {
     const id = setInterval(() => hentData(false), POLL_INTERVAL);
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   const antalFejl = SCRAPERS.filter(s => getStatus(senesteLog.get(s.id), s.intervalTimer) === 'fejl').length;
   const healthPct = Math.round((antalOk / SCRAPERS.length) * 100);
