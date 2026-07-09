@@ -54,6 +54,34 @@ function tidSidenLabel(iso: string) {
   return m > 0 ? `${t}t ${m}m` : `${t}t`;
 }
 
+// ─── Sparkline ───────────────────────────────────────────────────────────────
+
+function Sparkline({ værdier, color }: { værdier: number[]; color: string }) {
+  if (værdier.length < 2) return null;
+  const w = 64, h = 22;
+  const max = Math.max(...værdier, 1);
+  const pts = værdier.map((v, i) => {
+    const x = (i / (værdier.length - 1)) * w;
+    const y = h - (v / max) * (h - 2) - 1;
+    return `${x},${y}`;
+  }).join(' ');
+  const stigning = værdier[værdier.length - 1] - værdier[0];
+  const trendFarve = stigning > 0 ? '#22c55e' : stigning < 0 ? '#ef4444' : color;
+
+  return (
+    <svg width={w} height={h} style={{ flexShrink: 0, opacity: 0.7 }}>
+      <polyline points={pts} fill="none" stroke={trendFarve} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+      {værdier.map((v, i) => {
+        const x = (i / (værdier.length - 1)) * w;
+        const y = h - (v / max) * (h - 2) - 1;
+        return i === værdier.length - 1
+          ? <circle key={i} cx={x} cy={y} r="2.5" fill={trendFarve} />
+          : null;
+      })}
+    </svg>
+  );
+}
+
 // ─── Status-dot ──────────────────────────────────────────────────────────────
 
 function StatusDot({ color, active }: { color: string; active: boolean }) {
@@ -92,10 +120,11 @@ function Klokke() {
 
 // ─── ScraperRække ─────────────────────────────────────────────────────────────
 
-function ScraperRække({ scraper, log, forrigeLog, flash }: {
+function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
   scraper: typeof SCRAPERS[0];
   log: ScraperLogHistorik | undefined;
   forrigeLog: ScraperLogHistorik | undefined;
+  historik: ScraperLogHistorik[];
   flash: boolean;
 }) {
   const status = getStatus(log, scraper.intervalTimer);
@@ -108,6 +137,7 @@ function ScraperRække({ scraper, log, forrigeLog, flash }: {
 
   const forrigeAntal = forrigeLog ? getBehandlet(forrigeLog) : null;
   const delta = antal > 0 && forrigeAntal != null ? antal - forrigeAntal : null;
+  const sparkVærdier = historik.map(l => getBehandlet(l)).reverse();
 
   return (
     <div style={{
@@ -205,6 +235,11 @@ function ScraperRække({ scraper, log, forrigeLog, flash }: {
         )}
       </div>
 
+      {/* Sparkline */}
+      {sparkVærdier.length >= 2 && (
+        <Sparkline værdier={sparkVærdier} color={p.accent} />
+      )}
+
       {/* Tidspunkt */}
       {log && (
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
@@ -226,6 +261,7 @@ export function LiveMonitorPage() {
   const searchParams = useSearchParams();
   const [senesteLog, setSenesteLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
   const [forrigeLog, setForrigeLog] = useState<Map<string, ScraperLogHistorik>>(new Map());
+  const [historikLog, setHistorikLog] = useState<Map<string, ScraperLogHistorik[]>>(new Map());
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
   const [totalOpdateret, setTotalOpdateret] = useState(0);
   const [antalOk, setAntalOk] = useState(0);
@@ -256,7 +292,12 @@ export function LiveMonitorPage() {
 
       const senesteMap = new Map<string, ScraperLogHistorik>();
       const forrigeMap = new Map<string, ScraperLogHistorik>();
+      const historikMap = new Map<string, ScraperLogHistorik[]>();
       for (const l of sorteret) {
+        const liste = historikMap.get(l.scraperId) ?? [];
+        if (liste.length < 7) {
+          historikMap.set(l.scraperId, [...liste, l]);
+        }
         if (!senesteMap.has(l.scraperId)) {
           senesteMap.set(l.scraperId, l);
         } else if (!forrigeMap.has(l.scraperId)) {
@@ -279,6 +320,7 @@ export function LiveMonitorPage() {
 
       setSenesteLog(senesteMap);
       setForrigeLog(forrigeMap);
+      setHistorikLog(historikMap);
       setTotalOpdateret(Array.from(senesteMap.values()).reduce((s, l) => s + getBehandlet(l), 0));
       setAntalOk(SCRAPERS.filter(s => getStatus(senesteMap.get(s.id), s.intervalTimer) === 'ok').length);
     } catch { /* ignore */ }
@@ -410,6 +452,7 @@ export function LiveMonitorPage() {
             scraper={s}
             log={senesteLog.get(s.id)}
             forrigeLog={forrigeLog.get(s.id)}
+            historik={historikLog.get(s.id) ?? []}
             flash={flashIds.has(s.id)}
           />
         ))}
