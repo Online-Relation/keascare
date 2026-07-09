@@ -18,7 +18,7 @@ const SCRAPERS = [
   { id: 'regnskab',        label: 'Regnskab',        emoji: '💰', kørselKl: '03:00', intervalTimer: 24 },
 ];
 
-const POLL_INTERVAL = 15 * 60_000;
+const POLL_INTERVAL = 60_000; // 1 minut
 
 type Status = 'ok' | 'advarsel' | 'fejl' | 'ukendt';
 
@@ -481,7 +481,7 @@ export function LiveMonitorPage() {
 
       {/* ── Footer ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontSize: '0.52rem', color: '#0f2040' }}>Opdaterer hvert 15. minut</span>
+        <span style={{ fontSize: '0.52rem', color: '#0f2040' }}>Opdaterer hvert minut</span>
         <span style={{ fontSize: '0.52rem', color: '#0f2040' }}>keascare · live</span>
       </div>
     </div>
