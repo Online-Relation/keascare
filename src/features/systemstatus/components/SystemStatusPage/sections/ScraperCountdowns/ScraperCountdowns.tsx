@@ -45,6 +45,13 @@ const SCRAPERS: ScraperInfo[] = [
     kilde: 'railway',
   },
   {
+    id: 'regnskab',
+    navn: 'Regnskab — Hent årsregnskab',
+    beskrivelse: 'Henter nøgletal fra Erhvervsstyrelsens årsrapport-API for bosteder med CVR. Kræver ingen credentials.',
+    næsteKørsel: () => næsteDagKl(4, 0),
+    kilde: 'railway',
+  },
+  {
     id: 'tp',
     navn: 'Tilbudsportalen — Fuld kørsel',
     beskrivelse: 'Kører lokalt hver mandag kl. 11:00 og henter detaljer fra Tilbudsportalen.',
@@ -89,6 +96,7 @@ export function ScraperCountdowns() {
   const logNøgler: Record<string, string[]> = {
     stps: ['stps-liste', 'stps-detaljer'],
     cvr: ['cvr-berig', 'cvr-ansatte'],
+    regnskab: ['regnskab'],
     tp: ['tp-liste', 'tp-detaljer', 'tp-match'],
   };
 
