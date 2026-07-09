@@ -56,7 +56,9 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
 
       <BostedFundsoversigt bosted={bosted} />
 
-      <MailchimpSignup bostedNavn={bosted.navn} foreslåetEmail={bosted.tpEmail ?? undefined} />
+      {!bosted.mondayItemId && (
+        <MailchimpSignup bostedNavn={bosted.navn} foreslåetEmail={bosted.tpEmail ?? undefined} />
+      )}
 
       <BostedHandlinger
         bostedId={bosted.id}
