@@ -54,32 +54,16 @@ function tidSidenLabel(iso: string) {
   return m > 0 ? `${t}t ${m}m` : `${t}t`;
 }
 
-// ─── Sonar-dot: permanent pulserende ring ────────────────────────────────────
+// ─── Status-dot ──────────────────────────────────────────────────────────────
 
-function SonarDot({ color, delay = 0 }: { color: string; delay?: number }) {
+function StatusDot({ color, active }: { color: string; active: boolean }) {
   return (
-    <div style={{ position: 'relative', width: 10, height: 10, flexShrink: 0 }}>
-      {/* Ring 1 */}
-      <div style={{
-        position: 'absolute', inset: -4, borderRadius: '50%',
-        border: `1px solid ${color}`,
-        animation: `sonarRing 2.4s ease-out ${delay}s infinite`,
-        opacity: 0,
-      }} />
-      {/* Ring 2 — forskudt */}
-      <div style={{
-        position: 'absolute', inset: -4, borderRadius: '50%',
-        border: `1px solid ${color}`,
-        animation: `sonarRing 2.4s ease-out ${delay + 1.2}s infinite`,
-        opacity: 0,
-      }} />
-      {/* Kerne */}
-      <div style={{
-        width: 10, height: 10, borderRadius: '50%',
-        background: color,
-        boxShadow: `0 0 6px ${color}`,
-      }} />
-    </div>
+    <div style={{
+      width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+      background: color,
+      boxShadow: active ? `0 0 5px ${color}88` : 'none',
+      animation: active ? 'dotBreath 4s ease-in-out infinite' : undefined,
+    }} />
   );
 }
 
@@ -108,11 +92,10 @@ function Klokke() {
 
 // ─── ScraperRække ─────────────────────────────────────────────────────────────
 
-function ScraperRække({ scraper, log, flash, idx }: {
+function ScraperRække({ scraper, log, flash }: {
   scraper: typeof SCRAPERS[0];
   log: ScraperLogHistorik | undefined;
   flash: boolean;
-  idx: number;
 }) {
   const status = getStatus(log, scraper.intervalTimer);
   const p = PALETTE[status];
@@ -121,9 +104,6 @@ function ScraperRække({ scraper, log, flash, idx }: {
   const freshnessWidth = timerSiden != null
     ? Math.max(4, Math.min(100, (1 - timerSiden / scraper.intervalTimer) * 100))
     : 0;
-
-  // Forskud sonar-animation per række
-  const sonarDelay = (idx * 0.22) % 2.4;
 
   return (
     <div style={{
@@ -136,26 +116,8 @@ function ScraperRække({ scraper, log, flash, idx }: {
       position: 'relative', overflow: 'hidden',
       flex: 1,
       transition: 'border-color 1s ease',
+      animation: flash ? 'flashRow 2s ease-out forwards' : undefined,
     }}>
-      {/* Flash overlay */}
-      {flash && (
-        <div style={{
-          position: 'absolute', inset: 0, borderRadius: 10,
-          background: `${p.accent}22`,
-          animation: 'fadeOut 1.5s ease-out forwards',
-          pointerEvents: 'none',
-        }} />
-      )}
-
-      {/* Shimmer-stribe der løber hen over hele rækken */}
-      {status === 'ok' && (
-        <div style={{
-          position: 'absolute', top: 0, left: 0, width: '15%', height: '100%',
-          background: `linear-gradient(90deg, transparent, ${p.accent}0a, transparent)`,
-          animation: `rowShimmer ${3 + idx * 0.3}s ease-in-out ${idx * 0.4}s infinite`,
-          pointerEvents: 'none',
-        }} />
-      )}
 
       {/* Freshness bar — bund */}
       {log && status === 'ok' && (
@@ -168,8 +130,8 @@ function ScraperRække({ scraper, log, flash, idx }: {
         }} />
       )}
 
-      {/* Sonar dot */}
-      <SonarDot color={p.accent} delay={sonarDelay} />
+      {/* Status dot */}
+      <StatusDot color={p.accent} active={status === 'ok'} />
 
       {/* Emoji */}
       <span style={{ fontSize: '1rem', flexShrink: 0, opacity: status === 'ukendt' ? 0.25 : 0.9 }}>
@@ -216,7 +178,7 @@ function ScraperRække({ scraper, log, flash, idx }: {
                 <div style={{
                   position: 'absolute', top: 0, left: 0, width: '40%', height: '100%',
                   background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent)',
-                  animation: `shimmer ${2 + idx * 0.15}s ease-in-out ${idx * 0.2}s infinite`,
+                  animation: 'shimmer 2.5s ease-in-out infinite',
                 }} />
               </div>
             </div>
@@ -330,24 +292,13 @@ export function LiveMonitorPage() {
       position: 'relative',
     }}>
       <style>{`
-        @keyframes sonarRing {
-          0%   { transform: scale(1);   opacity: 0.7; }
-          100% { transform: scale(3.5); opacity: 0; }
-        }
         @keyframes shimmer {
           0%   { transform: translateX(-200%); }
           100% { transform: translateX(500%); }
         }
-        @keyframes rowShimmer {
-          0%   { transform: translateX(-100%); opacity: 0; }
-          20%  { opacity: 1; }
-          100% { transform: translateX(800%); opacity: 0; }
-        }
-        @keyframes scanline {
-          0%   { top: -2px; opacity: 0; }
-          5%   { opacity: 1; }
-          95%  { opacity: 1; }
-          100% { top: 100%; opacity: 0; }
+        @keyframes flashRow {
+          0%   { background: #22c55e0a; }
+          100% { background: transparent; }
         }
         @keyframes fadeOut {
           from { opacity: 1; }
@@ -358,22 +309,18 @@ export function LiveMonitorPage() {
           50%       { opacity: 0.4; }
         }
         @keyframes healthGlow {
-          0%, 100% { text-shadow: 0 0 12px #22c55e55; }
-          50%       { text-shadow: 0 0 30px #22c55eaa, 0 0 60px #22c55e33; }
+          0%, 100% { text-shadow: 0 0 12px #22c55e44; }
+          50%       { text-shadow: 0 0 20px #22c55e88; }
         }
         @keyframes uptimeTick {
           from { opacity: 0.6; }
           to   { opacity: 1; }
         }
+        @keyframes dotBreath {
+          0%, 100% { opacity: 1; }
+          50%       { opacity: 0.5; }
+        }
       `}</style>
-
-      {/* Scanline — løber ned over hele siden hele tiden */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, height: 2, zIndex: 10,
-        background: 'linear-gradient(90deg, transparent, #22c55e22, #22c55e55, #22c55e22, transparent)',
-        animation: 'scanline 8s linear infinite',
-        pointerEvents: 'none',
-      }} />
 
       {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
@@ -436,13 +383,12 @@ export function LiveMonitorPage() {
 
       {/* ── Scraper rækker ── */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.35rem', overflow: 'hidden' }}>
-        {SCRAPERS.map((s, idx) => (
+        {SCRAPERS.map((s) => (
           <ScraperRække
             key={s.id}
             scraper={s}
             log={senesteLog.get(s.id)}
             flash={flashIds.has(s.id)}
-            idx={idx}
           />
         ))}
       </div>
