@@ -9,7 +9,7 @@ import { Lock } from 'lucide-react';
 
 export function SystemStatusPage() {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '1100px', margin: '0 auto', padding: '1.5rem 0' }}>
 
       <div>
         <h1 style={{ fontSize: 'var(--text-2xl)', fontWeight: 'var(--fw-bold)', color: 'var(--color-text)' }}>Systemstatus</h1>
@@ -43,9 +43,9 @@ export function SystemStatusPage() {
         <ScraperCountdowns />
       </section>
 
-      {/* <section>
+      <section>
         <SenesteBosteder />
-      </section> */}
+      </section>
 
     </div>
   );
