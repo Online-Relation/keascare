@@ -63,7 +63,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       .insert({
         stps_tilbud_navn: kunde?.navn ?? `CVR ${cvr}`,
         rapport_titel:    kunde?.navn ?? `CVR ${cvr}`,
-        rapport_url:      '',
+        rapport_url:      `manuel:${cvr}:${mondayId}`,
         rapport_dato:     new Date().toISOString().slice(0, 10),
         cvr,
         ...mondayData,
