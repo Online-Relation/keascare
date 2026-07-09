@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight, Activity,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
@@ -55,6 +55,7 @@ const navGrupper = [
   {
     label: 'System',
     items: [
+      { label: 'Systemstatus',  href: '/dashboard/systemstatus',   icon: Activity },
       { label: 'Scrapers',      href: '/dashboard/scrapers',       icon: RefreshCw },
       { label: 'Indstillinger', href: '/dashboard/indstillinger',  icon: Settings },
     ],

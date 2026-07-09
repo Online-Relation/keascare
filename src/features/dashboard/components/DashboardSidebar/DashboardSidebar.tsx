@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, TrendingUp, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target,
+  Users, LogOut, Building2, Target, Activity,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -44,9 +44,10 @@ const gruppeMarkedsforing = [
 ];
 
 const gruppeSystem: NavItem[] = [
-  { label: 'Scrapers',     href: '/dashboard/scrapers',          icon: RefreshCw },
+  { label: 'Systemstatus',  href: '/dashboard/systemstatus',     icon: Activity },
+  { label: 'Scrapers',      href: '/dashboard/scrapers',         icon: RefreshCw },
   { label: 'Indstillinger', href: '/dashboard/indstillinger',    icon: Settings },
-  { label: 'Brugere',      href: '/dashboard/admin/brugere',     icon: Users },
+  { label: 'Brugere',       href: '/dashboard/admin/brugere',    icon: Users },
 ];
 
 function NavGruppe({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
