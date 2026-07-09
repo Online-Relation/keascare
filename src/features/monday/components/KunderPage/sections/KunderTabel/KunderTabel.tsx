@@ -67,19 +67,18 @@ export function KunderTabel({ kunder }: Props) {
               return (
                 <tr key={k.mondayId}>
                   <td className="kunder-tabel-navn">
-                    {stpsId ? (
-                      <Link
-                        href={`/dashboard/bosteder/${stpsId}`}
-                        style={{ color: 'var(--color-primary)', fontWeight: 'var(--fw-medium)', textDecoration: 'none' }}
-                        className="kunder-bosted-link"
-                      >
-                        {k.navn}
-                      </Link>
-                    ) : (
-                      <span style={{ color: 'var(--color-text-muted)' }} title="Ikke fundet i STPS-systemet">
-                        {k.navn}
-                      </span>
-                    )}
+                    <Link
+                      href={stpsId ? `/dashboard/bosteder/${stpsId}` : `/dashboard/kunder/${k.mondayId}`}
+                      style={{
+                        color: stpsId ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                        fontWeight: 'var(--fw-medium)',
+                        textDecoration: 'none',
+                      }}
+                      className="kunder-bosted-link"
+                      title={stpsId ? undefined : 'Klik for at linke CVR'}
+                    >
+                      {k.navn}
+                    </Link>
                   </td>
                   <td>
                     <span className={`badge ${k.gruppe === 'aktive_forloeb' ? 'badge-success' : 'badge-info'}`}>
