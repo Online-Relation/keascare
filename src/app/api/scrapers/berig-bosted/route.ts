@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { slaaCvrOp } from '@/lib/api/CvrClient';
 import { hentRegnskab } from '@/lib/api/RegnskabClient';
+import { søgStpsForCvr } from '@/features/stps/services/StpsCvrSøgService';
 
 export const dynamic = 'force-dynamic';
 
@@ -72,6 +73,13 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     resultater.regnskab = e instanceof Error ? e.message : 'fejl';
   }
+
+  // STPS-søgning på CVR — kør i baggrunden da det tager længere tid
+  søgStpsForCvr(cvr, bostedId).then((r) => {
+    resultater.stps = `fundet: ${r.fundet}, gemt: ${r.gemt}`;
+  }).catch((e) => {
+    resultater.stps = e instanceof Error ? e.message : 'fejl';
+  });
 
   return NextResponse.json({ ok: true, resultater });
 }
