@@ -237,12 +237,13 @@ function TpStatusKort({ tp }: { tp: TpStatus }) {
 
 type FremgangResponse = { total: number; items: FremgangItem[] };
 
-const POLL_TP = 30_000;
+const POLL_TP = 20_000;
 
 export function FremgangSektion({ fra, til }: { fra: string | null; til: string | null }) {
-  const [data,     setData]     = useState<FremgangResponse | null>(null);
-  const [historik, setHistorik] = useState<FremgangSnapshot[]>([]);
-  const [tp,       setTp]       = useState<TpStatus | null>(null);
+  const [data,        setData]        = useState<FremgangResponse | null>(null);
+  const [historik,    setHistorik]    = useState<FremgangSnapshot[]>([]);
+  const [tp,          setTp]          = useState<TpStatus | null>(null);
+  const [tpOpdateret, setTpOpdateret] = useState<string | null>(null);
 
   useEffect(() => {
     async function hent() {
@@ -266,6 +267,7 @@ export function FremgangSektion({ fra, til }: { fra: string | null; til: string 
       try {
         const res = await fetch('/api/scrapers/tilbudsportalen/status');
         setTp(await res.json() as TpStatus);
+        setTpOpdateret(new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       } catch { /* ignore */ }
     }
     hentTp();
@@ -309,7 +311,9 @@ export function FremgangSektion({ fra, til }: { fra: string | null; til: string 
               Tilbudsportalen
             </span>
             <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
-            <span style={{ fontSize: '0.52rem', color: '#334155' }}>opdaterer hvert 30s</span>
+            <span style={{ fontSize: '0.52rem', color: '#334155', fontVariantNumeric: 'tabular-nums' }}>
+              {tpOpdateret ? `Tjekket kl. ${tpOpdateret}` : 'opdaterer hvert 20s'}
+            </span>
           </div>
           <TpStatusKort tp={tp} />
         </>
