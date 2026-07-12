@@ -23,15 +23,16 @@ export async function GET(req: NextRequest) {
       query: { term: { cvrNummer: 24256790 } }, size: 1,
     }],
     // Tjek indeks-mapping
-    ['regnskab_mapping', 'http://distribution.virk.dk/cvr-permanent/regnskab/_mapping', null],
+    ['regnskab_mapping', 'http://distribution.virk.dk/cvr-permanent/regnskab/_mapping', {}],
   ];
 
   for (const [navn, url, body] of tests) {
+    const erMapping = navn === 'regnskab_mapping';
     try {
       const res = await fetch(url, {
-        method: body ? 'POST' : 'GET',
-        headers: body ? headers : { Authorization: `Basic ${auth}` },
-        ...(body ? { body: JSON.stringify(body) } : {}),
+        method: erMapping ? 'GET' : 'POST',
+        headers: erMapping ? { Authorization: `Basic ${auth}` } : headers,
+        ...(erMapping ? {} : { body: JSON.stringify(body) }),
         cache: 'no-store',
       });
       const tekst = await res.text();
