@@ -1,6 +1,9 @@
 // src/features/dashboard/components/BostedDetailPage/sections/BostedOrganisationKort/BostedOrganisationKort.tsx
 
-import { Building2, Phone, Mail, User, Globe, MapPin, Shield, TrendingUp } from 'lucide-react';
+'use client';
+
+import { useState } from 'react';
+import { Building2, Phone, Mail, User, Globe, MapPin, TrendingUp, RefreshCw, Shield } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import { ScraperInfo } from '../ScraperInfo/ScraperInfo';
 
@@ -16,6 +19,53 @@ function FeltRække({ label, value, placeholder = 'Mangler data' }: Felt) {
         : <span className="bosted-detail-placeholder">{placeholder}</span>
       }
     </div>
+  );
+}
+
+function HentTpKnap({ bostedId, cvr }: { bostedId: string; cvr: string }) {
+  const [status, setStatus] = useState<'idle' | 'henter' | 'ok' | 'fejl'>('idle');
+  const [fejlTekst, setFejlTekst] = useState('');
+
+  async function hentTp() {
+    setStatus('henter');
+    try {
+      const res = await fetch('/api/scrapers/berig-bosted-tp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bostedId, cvr }),
+      });
+      const data = await res.json() as { ok: boolean; fejl?: string; afdelinger?: number };
+      if (data.ok) {
+        setStatus('ok');
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        setStatus('fejl');
+        setFejlTekst(data.fejl ?? 'Ukendt fejl');
+      }
+    } catch {
+      setStatus('fejl');
+      setFejlTekst('Netværksfejl');
+    }
+  }
+
+  if (status === 'ok') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>TP-data hentet — opdaterer...</p>;
+  if (status === 'fejl') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)' }}>Fejl: {fejlTekst}</p>;
+
+  return (
+    <button
+      onClick={hentTp}
+      disabled={status === 'henter'}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.35rem',
+        fontSize: 'var(--text-xs)', padding: '0.3rem 0.6rem',
+        background: 'var(--color-bg-card)', border: '1px solid var(--color-border)',
+        borderRadius: 6, cursor: 'pointer', color: 'var(--color-text-secondary)',
+        marginTop: '0.5rem',
+      }}
+    >
+      <RefreshCw size={11} style={{ animation: status === 'henter' ? 'spin 1s linear infinite' : undefined }} />
+      {status === 'henter' ? 'Henter...' : 'Hent TP-data nu'}
+    </button>
   );
 }
 
@@ -59,7 +109,10 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
           {(!kommune || !pladserVærdi || !bosted.tpTilbudstype) && (
-            <ScraperInfo kørselKl={2} scraperDato={bosted.scraperDato} label="TP-matcher" />
+            <>
+              <ScraperInfo kørselKl={2} scraperDato={bosted.scraperDato} label="TP-matcher" />
+              {bosted.cvr && <HentTpKnap bostedId={bosted.id} cvr={bosted.cvr} />}
+            </>
           )}
         </div>
       </div>
