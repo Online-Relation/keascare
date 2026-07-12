@@ -14,8 +14,8 @@ export type ScraperLiveStatus = {
 type StatusRække = {
   scraper_id: string;
   status: string;
-  startet_kl: string | null;
-  opdateret_kl: string | null;
+  started_at: string | null;
+  updated_at: string | null;
   progress: number;
   total: number;
 };
@@ -23,14 +23,14 @@ type StatusRække = {
 export async function hentAlleScraperStatus(): Promise<ScraperLiveStatus[]> {
   const supabase = getSupabaseServerClient();
   const { data } = await supabase
-    .from('scraper_status')
-    .select('scraper_id, status, startet_kl, opdateret_kl, progress, total');
+    .from('scraper_run_status')
+    .select('scraper_id, status, started_at, updated_at, progress, total');
   if (!data) return [];
   return (data as StatusRække[]).map((r) => ({
     scraperId: r.scraper_id,
     status: r.status as ScraperLiveStatus['status'],
-    startetKl: r.startet_kl,
-    opdateretKl: r.opdateret_kl,
+    startetKl: r.started_at,
+    opdateretKl: r.updated_at,
     progress: r.progress ?? 0,
     total: r.total ?? 0,
   }));
@@ -48,13 +48,12 @@ export async function opdaterScraperStatus(
     status,
     progress,
     total,
-    opdateret_kl: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
-  // Sæt startet_kl kun ved første kørsel-kald
   if (status === 'kører' && progress === 0) {
-    patch.startet_kl = new Date().toISOString();
+    patch.started_at = new Date().toISOString();
   }
   await supabase
-    .from('scraper_status')
+    .from('scraper_run_status')
     .upsert(patch, { onConflict: 'scraper_id' });
 }
