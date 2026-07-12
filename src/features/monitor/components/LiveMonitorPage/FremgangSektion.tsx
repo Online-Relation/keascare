@@ -1,0 +1,173 @@
+// src/features/monitor/components/LiveMonitorPage/FremgangSektion.tsx
+
+import { useEffect, useState } from 'react';
+import type { FremgangItem } from '@/app/api/scrapers/fremgang/route';
+import type { FremgangSnapshot } from '@/app/api/scrapers/fremgang/historik/route';
+
+// ── Mini sparkline ────────────────────────────────────────────────────────────
+
+function MiniSparkline({ værdier, accent }: { værdier: number[]; accent: string }) {
+  if (værdier.length < 2) return <div style={{ width: 80, height: 28 }} />;
+  const w = 80, h = 28;
+  const min = Math.min(...værdier);
+  const max = Math.max(...værdier, min + 1);
+  const pts = værdier.map((v, i) => {
+    const x = (i / (værdier.length - 1)) * w;
+    const y = h - ((v - min) / (max - min)) * (h - 4) - 2;
+    return `${x},${y}`;
+  }).join(' ');
+  const stigning = værdier[værdier.length - 1] - værdier[0];
+  const farve = stigning > 0 ? '#22c55e' : stigning === 0 ? accent : '#ef4444';
+  const sidst = værdier[værdier.length - 1];
+  const px = w;
+  const py = h - ((sidst - min) / (max - min)) * (h - 4) - 2;
+  return (
+    <svg width={w} height={h} style={{ flexShrink: 0 }}>
+      <polyline points={pts} fill="none" stroke={farve} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" opacity={0.8} />
+      <circle cx={px} cy={py} r={2.5} fill={farve} />
+    </svg>
+  );
+}
+
+// ── FremgangKort ──────────────────────────────────────────────────────────────
+
+type Kort = {
+  item: FremgangItem;
+  historik: FremgangSnapshot[];
+  accent: string;
+};
+
+const NØGLE_MAP: Record<string, keyof FremgangSnapshot> = {
+  'pdf':        'pdf',
+  'fund-items': 'fund',
+  'cvr':        'cvr',
+  'tp-match':   'tp',
+  'pnummer':    'pnr',
+};
+
+function FremgangKort({ item, historik, accent }: Kort) {
+  const nøgle = NØGLE_MAP[item.id];
+  const sparkVærdier = historik.map((s) => (nøgle ? s[nøgle] as number : 0));
+  const deltaLabel = (() => {
+    if (historik.length < 2 || !nøgle) return null;
+    const start = historik[0][nøgle] as number;
+    const slut  = historik[historik.length - 1][nøgle] as number;
+    const diff = slut - start;
+    if (diff === 0) return null;
+    return { diff, positiv: diff > 0 };
+  })();
+
+  return (
+    <div style={{
+      background: '#0b1120', borderRadius: 10, padding: '0.7rem 0.9rem',
+      border: `1px solid ${accent}22`, borderLeft: `3px solid ${accent}`,
+      display: 'flex', flexDirection: 'column', gap: '0.35rem',
+    }}>
+      {/* Label + sparkline */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <div style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', color: '#475569', textTransform: 'uppercase' }}>
+            {item.label}
+          </div>
+          <div style={{ fontSize: '0.54rem', color: '#334155', marginTop: '0.1rem' }}>{item.beskrivelse}</div>
+        </div>
+        <MiniSparkline værdier={sparkVærdier} accent={accent} />
+      </div>
+
+      {/* Tal-linje */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.4rem' }}>
+        <span style={{ fontSize: '1.4rem', fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: accent }}>
+          {item.nuværende.toLocaleString('da-DK')}
+        </span>
+        <span style={{ fontSize: '0.6rem', color: '#475569' }}>/ {item.mål.toLocaleString('da-DK')}</span>
+        {deltaLabel && (
+          <span style={{
+            fontSize: '0.6rem', fontWeight: 700,
+            color: deltaLabel.positiv ? '#22c55e' : '#ef4444',
+            marginLeft: 'auto',
+          }}>
+            {deltaLabel.positiv ? '+' : ''}{deltaLabel.diff.toLocaleString('da-DK')} i perioden
+          </span>
+        )}
+      </div>
+
+      {/* Progress bar */}
+      <div style={{ height: 4, background: '#0f1f33', borderRadius: 4, overflow: 'hidden' }}>
+        <div style={{
+          height: '100%', width: `${item.pct}%`,
+          background: `linear-gradient(90deg, ${accent}66, ${accent})`,
+          borderRadius: 4, transition: 'width 1.2s ease',
+        }} />
+      </div>
+
+      <div style={{ fontSize: '0.54rem', color: '#334155' }}>{item.pct}% af {item.mål.toLocaleString('da-DK')} rapporter</div>
+    </div>
+  );
+}
+
+// ── Accenter per kategori ─────────────────────────────────────────────────────
+
+const ACCENT_MAP: Record<string, string> = {
+  'pdf':        '#38bdf8',
+  'fund-items': '#a78bfa',
+  'pnummer':    '#f59e0b',
+  'cvr':        '#22c55e',
+  'tp-match':   '#fb923c',
+};
+
+// ── FremgangSektion (hoved-eksport) ───────────────────────────────────────────
+
+type FremgangResponse = { total: number; items: FremgangItem[] };
+
+export function FremgangSektion({ fra, til }: { fra: string | null; til: string | null }) {
+  const [data,     setData]     = useState<FremgangResponse | null>(null);
+  const [historik, setHistorik] = useState<FremgangSnapshot[]>([]);
+
+  useEffect(() => {
+    async function hent() {
+      try {
+        const params = new URLSearchParams();
+        if (fra) params.set('fra', fra);
+        if (til) params.set('til', til);
+        const [resData, resHist] = await Promise.all([
+          fetch('/api/scrapers/fremgang').then(r => r.json()) as Promise<FremgangResponse>,
+          fetch(`/api/scrapers/fremgang/historik?${params}`).then(r => r.json()) as Promise<FremgangSnapshot[]>,
+        ]);
+        setData(resData);
+        setHistorik(Array.isArray(resHist) ? resHist : []);
+      } catch { /* ignore */ }
+    }
+    hent();
+  }, [fra, til]);
+
+  if (!data) return null;
+
+  return (
+    <div style={{ flexShrink: 0 }}>
+      {/* Sektion-header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <span style={{ fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.14em', color: '#334155', textTransform: 'uppercase' }}>
+          Databasefremgang
+        </span>
+        <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+        <span style={{ fontSize: '0.52rem', color: '#334155' }}>
+          {historik.length > 0
+            ? `${historik.length} snapshots · ${data.total.toLocaleString('da-DK')} rapporter i alt`
+            : `${data.total.toLocaleString('da-DK')} rapporter i alt`}
+        </span>
+      </div>
+
+      {/* Kort-gitter */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
+        {data.items.map((item) => (
+          <FremgangKort
+            key={item.id}
+            item={item}
+            historik={historik}
+            accent={ACCENT_MAP[item.id] ?? '#64748b'}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

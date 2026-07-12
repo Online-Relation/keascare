@@ -6,6 +6,7 @@ import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
 import type { ScraperLiveStatus } from '@/lib/db/ScraperStatus';
 import { SCRAPERS, SCRAPER_GRUPPER, getStatus, getBehandlet } from './liveMonitorConfig';
 import { ScraperRække } from './ScraperRække';
+import { FremgangSektion } from './FremgangSektion';
 
 const POLL_LOGS     = 20_000;  // 20 sekunder
 const POLL_LIVE_AKTIV = 5_000; // 5 sek — når noget kører
@@ -256,6 +257,9 @@ export function LiveMonitorPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Databasefremgang ── */}
+      <FremgangSektion fra={fra} til={til} />
 
       {/* ── Footer ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
