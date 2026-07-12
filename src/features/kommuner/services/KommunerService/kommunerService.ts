@@ -2,7 +2,7 @@
 
 import { hentDstKommuneData } from '@/lib/api/DstClient';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, driftsformFilterStreng } from '@/lib/config/GlobalFilter';
+import { getVisFilter, privatFilterOr } from '@/lib/config/GlobalFilter';
 import type { KommuneOversigt, KommuneDetail, KommuneBosted } from '@/features/kommuner/types/kommuner.types';
 
 type DbKommuneCount = {
@@ -65,7 +65,7 @@ async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbK
     .select('kommune, tp_kommune')
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%');
 
-  if (visFilter === 'privat') query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+  if (visFilter === 'privat') query = query.or(privatFilterOr());
   if (fra) query = query.gte('rapport_dato', fra);
   if (til) query = query.lte('rapport_dato', til);
 
@@ -97,7 +97,7 @@ async function hentBostedForKommune(kommuneNavn: string, fra?: string, til?: str
     .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 
-  if (visFilter === 'privat') query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+  if (visFilter === 'privat') query = query.or(privatFilterOr());
   if (fra) query = query.gte('rapport_dato', fra);
   if (til) query = query.lte('rapport_dato', til);
 

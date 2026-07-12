@@ -1,7 +1,7 @@
 // src/features/rapporter/services/RapporterService/rapporterService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, driftsformFilterStreng } from '@/lib/config/GlobalFilter';
+import { getVisFilter, privatFilterOr } from '@/lib/config/GlobalFilter';
 import type {
   RapporterData, RapportRække, MånedligTrend, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
@@ -26,7 +26,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     .order('rapport_dato', { ascending: false });
 
   if (visFilter === 'privat') {
-    query = query.not('tp_driftsform', 'in', driftsformFilterStreng());
+    query = query.or(privatFilterOr());
   }
 
   if (fra) query = query.gte('rapport_dato', fra);

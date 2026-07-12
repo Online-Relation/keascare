@@ -23,3 +23,9 @@ export async function getVisFilter(): Promise<VisFilter> {
 export function driftsformFilterStreng(): string {
   return `(${KOMMUNALE_DRIFTSFORMER.map((d) => `"${d}"`).join(',')})`;
 }
+
+// .or()-filter der ekskluderer kendte kommunale driftsformer MEN inkluderer NULL (ukendt)
+export function privatFilterOr(): string {
+  const ikkeKommunal = `tp_driftsform.not.in.(${KOMMUNALE_DRIFTSFORMER.join(',')})`;
+  return `tp_driftsform.is.null,${ikkeKommunal}`;
+}
