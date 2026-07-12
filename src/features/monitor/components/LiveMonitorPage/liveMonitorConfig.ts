@@ -7,6 +7,7 @@ export type ScraperDef = {
   label: string;
   kørselKl: string;
   intervalTimer: number;
+  næsteKørselLabel?: () => string; // overskriver automatisk beregning
 };
 
 export const SCRAPER_GRUPPER: { label: string; scrapers: ScraperDef[] }[] = [
@@ -37,7 +38,21 @@ export const SCRAPER_GRUPPER: { label: string; scrapers: ScraperDef[] }[] = [
   {
     label: 'Danmarks Statistik',
     scrapers: [
-      { id: 'dst', label: 'DST HAND01', kørselKl: '5. jan/apr/jul/okt', intervalTimer: 24 * 90 },
+      {
+        id: 'dst',
+        label: 'DST HAND01',
+        kørselKl: '5. jan/apr/jul/okt',
+        intervalTimer: 24 * 90,
+        næsteKørselLabel: () => {
+          const nu = new Date();
+          const kvartalMåneder = [0, 3, 6, 9]; // jan, apr, jul, okt (0-indekseret)
+          for (const m of kvartalMåneder) {
+            const kandidat = new Date(nu.getFullYear(), m, 5, 8, 0, 0);
+            if (kandidat > nu) return `5. ${kandidat.toLocaleDateString('da-DK', { month: 'long' })}`;
+          }
+          return `5. jan ${nu.getFullYear() + 1}`;
+        },
+      },
     ],
   },
   {

@@ -110,13 +110,19 @@ export function LiveMonitorPage() {
         .filter((l) => { const t = new Date(l.kørtKl).getTime(); return t >= fraTs && t <= tilTs; })
         .sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime());
 
+      // senesteMap bygges fra ALLE logs (ikke tidsfiltreret) så langsomt-kørende scrapers (fx DST) altid vises
+      const alleSorteret = [...data].sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime());
       const senesteMap  = new Map<string, ScraperLogHistorik>();
       const forrigeMap  = new Map<string, ScraperLogHistorik>();
+      for (const l of alleSorteret) {
+        if (!senesteMap.has(l.scraperId)) senesteMap.set(l.scraperId, l);
+        else if (!forrigeMap.has(l.scraperId)) forrigeMap.set(l.scraperId, l);
+      }
+
+      // historikMap bruger tidsfiltreret view
       const historikMap = new Map<string, ScraperLogHistorik[]>();
       for (const l of sorteret) {
         historikMap.set(l.scraperId, [...(historikMap.get(l.scraperId) ?? []), l]);
-        if (!senesteMap.has(l.scraperId)) senesteMap.set(l.scraperId, l);
-        else if (!forrigeMap.has(l.scraperId)) forrigeMap.set(l.scraperId, l);
       }
 
       const maxId = Math.max(...data.map((l) => l.id), 0);

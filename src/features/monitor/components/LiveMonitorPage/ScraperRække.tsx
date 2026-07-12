@@ -154,7 +154,7 @@ export function ScraperRække({ scraper, log, forrigeLog, historik, flash, liveS
           {scraper.label}
         </div>
         <div style={{ fontSize: '0.58rem', color: '#64748b', marginTop: '0.1rem' }}>
-          kl. {scraper.kørselKl}
+          {scraper.næsteKørselLabel ? `næste: ${scraper.næsteKørselLabel()}` : `kl. ${scraper.kørselKl}`}
         </div>
       </div>
 
