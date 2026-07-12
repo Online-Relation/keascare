@@ -124,7 +124,8 @@ function useKørselStatus(mangler: number | undefined) {
   const sidsteÆndring  = useRef<Date | null>(null);
   const startMangler   = useRef<number | null>(null);
   const startTid       = useRef<Date | null>(null);
-  const [status, setStatus] = useState<'idle' | 'kører' | 'færdig'>('idle');
+  // 'afventer' = vi ved der er manglende, men vi har ikke set et fald endnu
+  const [status, setStatus] = useState<'idle' | 'afventer' | 'kører' | 'færdig'>('idle');
   const [færdigKl, setFærdigKl] = useState<string | null>(null);
   const [eta, setEta] = useState<string | null>(null);
 
@@ -132,13 +133,19 @@ function useKørselStatus(mangler: number | undefined) {
     if (mangler === undefined) return;
 
     if (forrigeMangler.current === null) {
+      // Første poll: hvis der allerede mangler noget, vis "afventer"
       forrigeMangler.current = mangler;
+      if (mangler > 0) {
+        setStatus('afventer');
+        startMangler.current = mangler;
+        startTid.current = new Date();
+      }
       return;
     }
 
     if (mangler < forrigeMangler.current) {
-      // Tallet faldt — kørsel er i gang
-      if (status !== 'kører') {
+      // Tallet faldt — kørsel er bekræftet i gang
+      if (status !== 'kører' && startMangler.current === null) {
         startMangler.current = forrigeMangler.current;
         startTid.current = new Date();
       }
@@ -174,6 +181,11 @@ function useKørselStatus(mangler: number | undefined) {
         setEta(null);
       }
     }
+    // Hvis afventer og ingen ændring i 2 minutter — ingen kørsel i gang
+    if (status === 'afventer' && startTid.current) {
+      const stilleMs = Date.now() - startTid.current.getTime();
+      if (stilleMs > 120_000) setStatus('idle');
+    }
   }, [mangler, status]);
 
   return { status, færdigKl, eta };
@@ -192,8 +204,9 @@ function TpStatusKort({ tp }: { tp: TpStatus }) {
   ];
 
   const statusBadge = (() => {
-    if (status === 'kører')  return { tekst: 'Kørsel i gang...', farve: '#38bdf8', animation: 'liveBlink 2s ease-in-out infinite' };
-    if (status === 'færdig') return { tekst: `Færdig kl. ${færdigKl}`, farve: '#22c55e', animation: undefined };
+    if (status === 'kører')   return { tekst: 'Kørsel i gang...', farve: '#38bdf8', animation: 'liveBlink 2s ease-in-out infinite' };
+    if (status === 'afventer') return { tekst: 'Tjekker om kørsel er i gang...', farve: '#f59e0b', animation: 'liveBlink 3s ease-in-out infinite' };
+    if (status === 'færdig')  return { tekst: `Færdig kl. ${færdigKl}`, farve: '#22c55e', animation: undefined };
     return null;
   })();
 
