@@ -26,39 +26,45 @@ export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFil
       label: 'Bosteder i Danmark',
       værdi: antalBosteder.toLocaleString('da-DK'),
       forklaring: erFiltreret
-        ? 'Viser kun private og selvejende §107/§108 afdelinger fra Tilbudsportalen — kommunale og regionale bosteder er fravalgt i dine indstillinger. Skift filter under Indstillinger for at se alle.'
-        : 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Tallet kan være højere end det reelle antal bosteder, fordi større organisationer med flere lokationer tæller som én afdeling pr. lokation.',
-      filtreret: true,
+        ? 'Viser kun private og selvejende §107/§108 afdelinger fra Tilbudsportalen — kommunale og regionale bosteder er fravalgt i dine indstillinger.'
+        : 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Større organisationer med flere lokationer tæller som én afdeling pr. lokation.',
+      kilde: 'Tilbudsportalen',
+      opdatering: erFiltreret ? 'Kun privat/selvejende · opdateres dagligt' : 'Opdateres dagligt',
     },
     {
       label: 'Borgere i §107/§108 i alt',
       værdi: totalBorgere.toLocaleString('da-DK'),
-      forklaring: 'Nationalt tal fra Danmarks Statistik — kan ikke filtreres på driftsform og viser altid alle borgere uanset dit filter.',
-      filtreret: false,
+      forklaring: 'Det samlede nationale antal borgere der modtager botilbudsydelser. Påvirkes ikke af dit driftsformfilter.',
+      kilde: 'Danmarks Statistik · HAND01',
+      opdatering: kvartal ? `Seneste kvartal: ${kvartal}` : 'Opdateres kvartalsvist',
     },
     {
       label: '§107 – Midlertidigt botilbud',
       værdi: totalP107.toLocaleString('da-DK'),
-      forklaring: '§107 er midlertidigt ophold med støtte. Nationalt tal — ikke påvirket af driftsformfilter.',
-      filtreret: false,
+      forklaring: '§107 er midlertidigt ophold med støtte — typisk til personer i overgang eller med midlertidigt behov.',
+      kilde: 'Danmarks Statistik · HAND01',
+      opdatering: kvartal ? `Seneste kvartal: ${kvartal}` : 'Opdateres kvartalsvist',
     },
     {
       label: '§108 – Længerevarende botilbud',
       værdi: totalP108.toLocaleString('da-DK'),
-      forklaring: '§108 er langvarigt botilbud. Nationalt tal — ikke påvirket af driftsformfilter.',
-      filtreret: false,
+      forklaring: '§108 er langvarigt botilbud til personer med varigt nedsat fysisk eller psykisk funktionsevne.',
+      kilde: 'Danmarks Statistik · HAND01',
+      opdatering: kvartal ? `Seneste kvartal: ${kvartal}` : 'Opdateres kvartalsvist',
     },
     {
       label: 'Kommuner med data',
       værdi: `${data.length}`,
       forklaring: 'Antal kommuner der har indberettet data til Danmarks Statistik for seneste kvartal.',
-      filtreret: false,
+      kilde: 'Danmarks Statistik · HAND01',
+      opdatering: kvartal ? `Seneste kvartal: ${kvartal}` : 'Opdateres kvartalsvist',
     },
     {
       label: 'Størst marked',
       værdi: størsteKommune?.kommune ?? '—',
       forklaring: `${størsteKommune?.kommune} har flest borgere i §107/§108 botilbud med i alt ${størsteKommune?.total.toLocaleString('da-DK')} borgere.`,
-      filtreret: false,
+      kilde: 'Danmarks Statistik · HAND01',
+      opdatering: kvartal ? `Seneste kvartal: ${kvartal}` : 'Opdateres kvartalsvist',
     },
   ];
 
@@ -112,17 +118,14 @@ export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFil
               <InfoTooltip tekst={kpi.forklaring} />
             </div>
             <div className="dst-kpi-tal">{kpi.værdi}</div>
-            {erFiltreret && kpi.filtreret && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.3rem' }}>
-                <Filter size={10} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
-                <span style={{ fontSize: '0.65rem', color: 'var(--color-accent)' }}>Kun privat/selvejende</span>
-              </div>
-            )}
-            {!kpi.filtreret && kpi.label !== 'Kommuner med data' && kpi.label !== 'Størst marked' && (
-              <div style={{ marginTop: '0.3rem' }}>
-                <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>Nationalt tal · alle driftsformer</span>
-              </div>
-            )}
+            <div style={{ marginTop: '0.4rem', display: 'flex', flexDirection: 'column', gap: '0.1rem' }}>
+              <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>
+                {kpi.kilde}
+              </span>
+              <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>
+                {kpi.opdatering}
+              </span>
+            </div>
           </div>
         ))}
       </div>
