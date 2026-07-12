@@ -146,7 +146,8 @@ export function LiveMonitorPage() {
         @keyframes healthGlow     { 0%,100%{text-shadow:0 0 12px #22c55e44} 50%{text-shadow:0 0 20px #22c55e88} }
         @keyframes blinkRed       { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @keyframes uptimeTick     { from{opacity:0.6} to{opacity:1} }
-        @keyframes progressSweep  { 0%{transform:translateX(-200%)} 100%{transform:translateX(400%)} }
+        @keyframes progressSweep   { 0%{transform:translateX(-200%)} 100%{transform:translateX(400%)} }
+        @keyframes indeterminate   { 0%{transform:translateX(-100%)} 100%{transform:translateX(200%)} }
         @keyframes shimmer        { 0%,94%{transform:translateX(-200%);opacity:0} 95%{opacity:1} 99%{transform:translateX(500%);opacity:1} 100%{transform:translateX(500%);opacity:0} }
       `}</style>
 

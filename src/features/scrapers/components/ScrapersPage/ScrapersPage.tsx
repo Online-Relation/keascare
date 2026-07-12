@@ -163,10 +163,22 @@ export function ScrapersPage() {
       .catch(() => {});
   }, []);
 
+  async function rapporterLiveStatus(scraperId: string, status: string, progress: number, total: number) {
+    try {
+      await fetch('/api/scrapers/live-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scraper_id: scraperId, status, progress, total }),
+      });
+    } catch { /* ignore — live-status er ikke kritisk */ }
+  }
+
   async function kørScraper(scraper: Scraper) {
     setStatusser((s) => ({ ...s, [scraper.id]: 'kører' }));
     setResultater((r) => ({ ...r, [scraper.id]: {} }));
     setFremgang((f) => ({ ...f, [scraper.id]: { runder: 0, totalBehandlet: 0 } }));
+
+    await rapporterLiveStatus(scraper.id, 'kører', 0, 0);
 
     const secret = process.env.NEXT_PUBLIC_SCRAPER_SECRET;
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -190,8 +202,10 @@ export function ScrapersPage() {
 
         setResultater((r) => ({ ...r, [scraper.id]: data }));
         setFremgang((f) => ({ ...f, [scraper.id]: { runder, totalBehandlet } }));
+        await rapporterLiveStatus(scraper.id, 'kører', totalBehandlet, 0);
 
         if (!data.ok) {
+          await rapporterLiveStatus(scraper.id, 'fejl', totalBehandlet, 0);
           setStatusser((s) => ({ ...s, [scraper.id]: 'fejl' }));
           return;
         }
@@ -199,6 +213,7 @@ export function ScrapersPage() {
         if (!scraper.loop || behandletDenneRunde === 0) break;
       } while (true);
 
+      await rapporterLiveStatus(scraper.id, 'idle', totalBehandlet, totalBehandlet);
       setStatusser((s) => ({ ...s, [scraper.id]: 'done' }));
 
       if (scraper.id === 'cvr-berig' || scraper.id === 'cvr-ansatte') hentCvrStatus();
@@ -214,6 +229,7 @@ export function ScrapersPage() {
         })
         .catch(() => {});
     } catch (err) {
+      await rapporterLiveStatus(scraper.id, 'fejl', totalBehandlet, 0);
       setResultater((r) => ({ ...r, [scraper.id]: { ok: false, fejl: String(err) } }));
       setStatusser((s) => ({ ...s, [scraper.id]: 'fejl' }));
     }

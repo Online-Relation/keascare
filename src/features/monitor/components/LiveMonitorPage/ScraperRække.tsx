@@ -52,41 +52,50 @@ function StatusDot({ color, active }: { color: string; active: boolean }) {
 function LiveProgressBar({ progress, total, startetKl, accent }: {
   progress: number; total: number; startetKl: string | null; accent: string;
 }) {
-  const pct = total > 0 ? Math.min(100, Math.round((progress / total) * 100)) : 0;
-  const restTid = startetKl ? estimerRestTid(startetKl, progress, total) : '...';
+  const erBestemt = total > 0;
+  const pct = erBestemt ? Math.min(100, Math.round((progress / total) * 100)) : 0;
+  const restTid = erBestemt && startetKl ? estimerRestTid(startetKl, progress, total) : null;
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
       {/* Tal-linje */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
         <span style={{ fontSize: '0.7rem', fontWeight: 700, color: accent, fontVariantNumeric: 'tabular-nums' }}>
-          {progress.toLocaleString('da-DK')}
-          {total > 0 && <span style={{ color: '#64748b', fontWeight: 400 }}> / {total.toLocaleString('da-DK')}</span>}
+          {progress > 0 ? progress.toLocaleString('da-DK') : 'Starter...'}
+          {erBestemt && <span style={{ color: '#64748b', fontWeight: 400 }}> / {total.toLocaleString('da-DK')}</span>}
         </span>
-        <span style={{ fontSize: '0.6rem', color: '#94a3b8' }}>Est. {restTid}</span>
+        {restTid && <span style={{ fontSize: '0.6rem', color: '#94a3b8' }}>Est. {restTid}</span>}
       </div>
 
-      {/* Bar */}
+      {/* Bar — bestemt eller indeterminate */}
       <div style={{ height: 4, background: '#0f1f33', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
-        <div style={{
-          height: '100%',
-          width: `${pct}%`,
-          background: `linear-gradient(90deg, ${accent}88, ${accent})`,
-          borderRadius: 4,
-          transition: 'width 0.8s ease',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
+        {erBestemt ? (
           <div style={{
-            position: 'absolute', top: 0, left: 0, width: '50%', height: '100%',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
-            animation: 'progressSweep 1.5s linear infinite',
+            height: '100%', width: `${pct}%`,
+            background: `linear-gradient(90deg, ${accent}88, ${accent})`,
+            borderRadius: 4, transition: 'width 0.8s ease',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 0, width: '50%', height: '100%',
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent)',
+              animation: 'progressSweep 1.5s linear infinite',
+            }} />
+          </div>
+        ) : (
+          /* Indeterminate: løbende stribe på hele baren */
+          <div style={{
+            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
+            background: `linear-gradient(90deg, transparent 0%, ${accent}88 40%, ${accent} 50%, ${accent}88 60%, transparent 100%)`,
+            animation: 'indeterminate 1.4s linear infinite',
           }} />
-        </div>
+        )}
       </div>
 
-      {/* Procent */}
-      <span style={{ fontSize: '0.55rem', color: '#475569' }}>{pct}% færdig</span>
+      {/* Undertext */}
+      <span style={{ fontSize: '0.55rem', color: '#475569' }}>
+        {erBestemt ? `${pct}% færdig` : 'behandler...'}
+      </span>
     </div>
   );
 }
