@@ -1,6 +1,6 @@
 // src/features/markedsdata/components/MarkedsdataPage/MarkedsdataPage.tsx
 
-import { Database, Info, Filter } from 'lucide-react';
+import { Database } from 'lucide-react';
 import { KommuneBarChart } from './charts/KommuneBarChart';
 import { ParagrafDonut } from './charts/ParagrafDonut';
 import { InfoTooltip } from '@/features/markedsforing/components/shared/InfoTooltip';
@@ -85,30 +85,6 @@ export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFil
         </div>
       </div>
 
-      <div className="dst-info-boks">
-        <Info size={14} className="dst-info-ikon" />
-        <p>
-          Borgere-tallene er fra Danmarks Statistiks åbne API og opdateres kvartalsvist — de viser altid det nationale totalbillede uanset filter. Antal bosteder følger dit valgte driftsformfilter. Tallene viser borgere der modtager botilbudsydelser — ikke antal pladser.
-        </p>
-      </div>
-
-      {erFiltreret && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '0.5rem',
-          padding: '0.55rem 0.85rem',
-          background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
-          border: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)',
-          borderRadius: 8,
-          fontSize: 'var(--text-xs)',
-          color: 'var(--color-accent)',
-        }}>
-          <Filter size={13} style={{ flexShrink: 0 }} />
-          <span>
-            <strong>Filter aktivt:</strong> Viser kun private og selvejende bosteder. Borgere-tallene er nationale og påvirkes ikke af filteret. Skift under{' '}
-            <a href="/dashboard/indstillinger" style={{ color: 'inherit', textDecoration: 'underline' }}>Indstillinger</a>.
-          </span>
-        </div>
-      )}
 
       <div className="dst-kpis">
         {kpis.map((kpi) => (
