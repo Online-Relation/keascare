@@ -1,29 +1,27 @@
-// Debug: test regnskab API med ét CVR og vis råsvar
+// Debug: test regnskab API alternativer
 import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(req: NextRequest) {
-  const cvr = req.nextUrl.searchParams.get('cvr') ?? '36427404';
-  const url = `https://regnskab.virk.dk/regnskab/xbrl/api/1/regnskab?cvrnummer=${cvr}`;
-
+async function testUrl(url: string, headers?: Record<string, string>) {
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk' },
-      cache: 'no-store',
-    });
-
+    const res = await fetch(url, { headers: { 'User-Agent': 'KeasCare/1.0', ...headers }, cache: 'no-store' });
     const tekst = await res.text();
     let json: unknown = null;
     try { json = JSON.parse(tekst); } catch { /* ikke JSON */ }
-
-    return NextResponse.json({
-      cvr,
-      url,
-      status: res.status,
-      ok: res.ok,
-      contentType: res.headers.get('content-type'),
-      råsvar: json ?? tekst.slice(0, 500),
-    });
+    return { url, status: res.status, ok: res.ok, svar: json ?? tekst.slice(0, 300) };
   } catch (err) {
-    return NextResponse.json({ cvr, url, fejl: String(err) }, { status: 500 });
+    return { url, fejl: String(err) };
   }
+}
+
+export async function GET(req: NextRequest) {
+  const cvr = req.nextUrl.searchParams.get('cvr') ?? '36427404';
+
+  const resultater = await Promise.all([
+    testUrl(`https://regnskab.virk.dk/regnskab/xbrl/api/1/regnskab?cvrnummer=${cvr}`),
+    testUrl(`https://cvrapi.dk/api?search=${cvr}&country=dk`),
+    testUrl(`https://api.cvr.dev/api/cvr/company?cvr=${cvr}`),
+    testUrl(`https://data.virk.dk/dataudtræk/cvr/company?cvr=${cvr}`),
+  ]);
+
+  return NextResponse.json({ cvr, resultater });
 }
