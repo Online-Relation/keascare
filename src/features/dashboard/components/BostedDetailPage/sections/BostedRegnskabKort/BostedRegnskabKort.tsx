@@ -17,24 +17,29 @@ function ResultatBadge({ beloeb }: { beloeb: number | null }) {
 }
 
 export function BostedRegnskabKort({ bosted }: Props) {
-  if (!bosted.regnskabAar && !bosted.regnskabOpdateret) return null;
+  // Intet CVR — kan ikke hente regnskab
+  if (!bosted.cvr) return null;
+
+  // Aldrig forsøgt hentet eller ingen data — regnskab hentes via "Hent TP-data nu"
   if (!bosted.regnskabAar) {
     return (
-      <div className="dashboard-kort" style={{ padding: '1.25rem' }}>
-        <p style={{ fontWeight: 'var(--fw-semibold)', marginBottom: '0.5rem' }}>Økonomi</p>
+      <div className="dashboard-kort" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+        <p style={{ fontWeight: 'var(--fw-semibold)' }}>Økonomi</p>
         <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)' }}>
-          Ingen årsregnskab fundet i Erhvervsstyrelsens register.
+          {bosted.regnskabOpdateret
+            ? 'Ingen årsregnskab fundet i Erhvervsstyrelsens register.'
+            : 'Regnskab hentes automatisk via "Hent TP-data nu" under Bostedinformation.'}
         </p>
       </div>
     );
   }
 
   const rækker: { label: string; værdi: React.ReactNode }[] = [
-    { label: 'Nettoomsætning', værdi: formaterKr(bosted.regnskabNettoomsaetning) },
+    { label: 'Nettoomsætning',   værdi: formaterKr(bosted.regnskabNettoomsaetning) },
     { label: 'Bruttofortjeneste', værdi: formaterKr(bosted.regnskabBruttofortjeneste) },
-    { label: 'Årsresultat', værdi: <ResultatBadge beloeb={bosted.regnskabAarsresultat} /> },
-    { label: 'Egenkapital', værdi: formaterKr(bosted.regnskabEgenkapital) },
-    { label: 'Balance', værdi: formaterKr(bosted.regnskabBalance) },
+    { label: 'Årsresultat',      værdi: <ResultatBadge beloeb={bosted.regnskabAarsresultat} /> },
+    { label: 'Egenkapital',      værdi: formaterKr(bosted.regnskabEgenkapital) },
+    { label: 'Balance',          værdi: formaterKr(bosted.regnskabBalance) },
   ].filter((r) => r.værdi !== '—');
 
   return (

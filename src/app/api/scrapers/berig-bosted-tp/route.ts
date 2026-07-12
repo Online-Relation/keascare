@@ -1,8 +1,9 @@
-// Beriger ét bosted med data fra tilbudsportalen_tilbud via CVR.
+// Beriger ét bosted med data fra tilbudsportalen_tilbud + regnskab via CVR.
 // Bruges som "Hent TP-data nu"-knap på bostedsiden.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { hentRegnskab } from '@/lib/api/RegnskabClient';
 
 export async function POST(req: NextRequest) {
   const { bostedId, cvr } = await req.json() as { bostedId: string; cvr: string };
@@ -47,6 +48,28 @@ export async function POST(req: NextRequest) {
   }).eq('id', bostedId);
 
   if (error) return NextResponse.json({ ok: false, fejl: error.message }, { status: 500 });
+
+  // Hent regnskab parallelt
+  try {
+    const regnskab = await hentRegnskab(cvr);
+    if (regnskab) {
+      await supabase.from('stps_rapporter').update({
+        regnskab_aar:               regnskab.regnskabsaar,
+        regnskab_periode_start:     regnskab.periodeStart,
+        regnskab_periode_slut:      regnskab.periodeSlut,
+        regnskab_nettoomsaetning:   regnskab.nettoomsaetning,
+        regnskab_bruttofortjeneste: regnskab.bruttofortjeneste,
+        regnskab_aarsresultat:      regnskab.aarsresultat,
+        regnskab_egenkapital:       regnskab.egenkapital,
+        regnskab_balance:           regnskab.balance,
+        regnskab_opdateret:         new Date().toISOString(),
+      }).eq('id', bostedId);
+    } else {
+      await supabase.from('stps_rapporter')
+        .update({ regnskab_opdateret: new Date().toISOString() })
+        .eq('id', bostedId);
+    }
+  } catch { /* ignorer regnskabsfejl — TP-data er gemt */ }
 
   return NextResponse.json({ ok: true, afdelinger: tpRækker.length });
 }
