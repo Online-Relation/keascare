@@ -28,8 +28,17 @@ async function nominatimSøg(q: string): Promise<{ lat: number; lng: number } | 
   }
 }
 
+function rensAdresse(adresse: string): string {
+  return adresse
+    .replace(/,?\s*st\.?\s*(th\.?|tv\.?|mf\.?)/gi, '')  // fjern etage/dør
+    .replace(/\bJystrup Midtsj\b/gi, 'Jystrup Midtsjælland')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 async function geocodeAdresse(adresse: string): Promise<{ lat: number; lng: number } | null> {
-  return nominatimSøg(adresse + ', Danmark');
+  if (!adresse || adresse.toLowerCase().includes('hemmelig')) return null;
+  return nominatimSøg(rensAdresse(adresse) + ', Danmark');
 }
 
 export async function GET() {
