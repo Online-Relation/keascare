@@ -81,6 +81,7 @@ function mapTilBosted(row: DbRapport): Bosted {
 function beregnKpis(rapporter: DbRapport[], sidstKørtDato: string | null): KpiItem[] {
   const kritiske = rapporter.filter((r) => r.fund_niveau === 'kritisk').length;
   const kommuner = new Set(rapporter.map((r) => r.kommune).filter(Boolean)).size;
+  const unikkeVirksomheder = new Set(rapporter.map((r) => r.cvr).filter(Boolean)).size;
 
   const sidstDato = sidstKørtDato
     ? new Date(sidstKørtDato).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
@@ -89,9 +90,9 @@ function beregnKpis(rapporter: DbRapport[], sidstKørtDato: string | null): KpiI
   return [
     {
       id: 'bosteder-fundet',
-      label: 'Bosteder med rapport',
-      value: String(rapporter.length),
-      sub: 'fra STPS tilsynsrapporter',
+      label: 'Virksomheder med rapport',
+      value: String(unikkeVirksomheder),
+      sub: `${rapporter.length} rapporter fra STPS`,
       trendPositive: true,
     },
     {
@@ -142,13 +143,21 @@ function højesteFundNiveau(niveau: string | null | undefined): import('@/featur
 }
 
 function beregnTopKommuner(rapporter: DbRapport[]): KommuneStat[] {
-  const map = new Map<string, { antal: number; medFund: number; prioritet: number }>();
-
+  // Deduplicate by CVR per kommune — count virksomheder, not rapporter
+  const virksomhedMap = new Map<string, { kommune: string; prioritet: number }>();
   for (const r of rapporter) {
-    const k = r.kommune ?? 'Ukendt';
+    const key = r.cvr ?? r.id;
+    const p = FUND_PRIORITET[r.fund_niveau?.toLowerCase() ?? ''] ?? 0;
+    const eksist = virksomhedMap.get(key);
+    if (!eksist || p > eksist.prioritet) {
+      virksomhedMap.set(key, { kommune: r.kommune ?? 'Ukendt', prioritet: p });
+    }
+  }
+
+  const map = new Map<string, { antal: number; medFund: number; prioritet: number }>();
+  for (const { kommune: k, prioritet: p } of virksomhedMap.values()) {
     const eksist = map.get(k) ?? { antal: 0, medFund: 0, prioritet: 0 };
     eksist.antal++;
-    const p = FUND_PRIORITET[r.fund_niveau?.toLowerCase() ?? ''] ?? 0;
     if (p > 0) eksist.medFund++;
     if (p > eksist.prioritet) eksist.prioritet = p;
     map.set(k, eksist);
@@ -195,13 +204,24 @@ function beregnTilbudsportalen(rapporter: DbRapport[]) {
 }
 
 function beregnSalgsFunnel(rapporter: DbRapport[]) {
-  const total = rapporter.length;
-  const medFund = rapporter.filter((r) => r.fund_niveau && !['ingen', 'ukendt'].includes(r.fund_niveau)).length;
-  const varme = rapporter.filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '')).length;
-  const ubearbejdede = rapporter.filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id).length;
-  const kunder = rapporter.filter((r) => !!r.monday_item_id).length;
+  // Aggregate to virksomhed-niveau via CVR (fald tilbage til id for rapporter uden CVR)
+  const virksomheder = new Map<string, { fund_niveau: string | null; monday_item_id: string | null }>();
+  for (const r of rapporter) {
+    const key = r.cvr ?? r.id;
+    const eksist = virksomheder.get(key);
+    const p = FUND_PRIORITET[r.fund_niveau?.toLowerCase() ?? ''] ?? 0;
+    const eksistP = FUND_PRIORITET[eksist?.fund_niveau?.toLowerCase() ?? ''] ?? 0;
+    virksomheder.set(key, {
+      fund_niveau: p >= eksistP ? r.fund_niveau : (eksist?.fund_niveau ?? null),
+      monday_item_id: r.monday_item_id ?? eksist?.monday_item_id ?? null,
+    });
+  }
 
-  void total; // ikke vist i tragten men beregnet til evt. kontekst
+  const alle = Array.from(virksomheder.values());
+  const medFund = alle.filter((v) => v.fund_niveau && !['ingen', 'ukendt'].includes(v.fund_niveau)).length;
+  const varme = alle.filter((v) => ['kritisk', 'stoerre'].includes(v.fund_niveau ?? '')).length;
+  const ubearbejdede = alle.filter((v) => ['kritisk', 'stoerre'].includes(v.fund_niveau ?? '') && !v.monday_item_id).length;
+  const kunder = alle.filter((v) => !!v.monday_item_id).length;
 
   return {
     trin: [
