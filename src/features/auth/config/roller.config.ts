@@ -59,6 +59,24 @@ export const ROLLE_ADGANG: Record<BrugerRolle, string[] | '*'> = {
   ],
 };
 
+// Menneskelig beskrivelse af hvert menupunkt — bruges i adgangsoversigten
+export const MENU_PUNKTER: { label: string; href: string; gruppe: string }[] = [
+  { label: 'Dashboard',          href: '/dashboard',                   gruppe: 'Overblik' },
+  { label: 'Markedspotentiale',  href: '/dashboard/markedspotentiale', gruppe: 'Marked' },
+  { label: 'Kommuner',           href: '/dashboard/kommuner',          gruppe: 'Marked' },
+  { label: 'Markedsdata',        href: '/dashboard/markedsdata',       gruppe: 'Marked' },
+  { label: 'Kritiske rapporter', href: '/dashboard/rapporter',         gruppe: 'Tilsyn' },
+  { label: 'Alle rapporter',     href: '/dashboard/alle-rapporter',    gruppe: 'Tilsyn' },
+  { label: 'Kunder (CRM)',       href: '/dashboard/kunder',            gruppe: 'CRM' },
+  { label: 'Kanaler',            href: '/dashboard/markedsforing',     gruppe: 'Markedsføring' },
+  { label: 'Live Monitor',       href: '/dashboard/monitor',           gruppe: 'System' },
+  { label: 'Systemstatus',       href: '/dashboard/systemstatus',      gruppe: 'System' },
+  { label: 'Scrapers',           href: '/dashboard/scrapers',          gruppe: 'System' },
+  { label: 'Monday test',        href: '/dashboard/monday-test',       gruppe: 'System' },
+  { label: 'Indstillinger',      href: '/dashboard/indstillinger',     gruppe: 'System' },
+  { label: 'Brugere',            href: '/dashboard/admin/brugere',     gruppe: 'System' },
+];
+
 export function harAdgang(rolle: BrugerRolle | null | undefined, href: string): boolean {
   if (!rolle) return false;
   const adgang = ROLLE_ADGANG[rolle];

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { UserPlus, Trash2, Users, Eye, EyeOff, Shield } from 'lucide-react';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import { rollerTilgængeligeFor, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
+import { RolleAdgangOversigt } from '@/features/auth/components/RolleAdgangOversigt/RolleAdgangOversigt';
 
 type Bruger = {
   id: string;
@@ -143,6 +144,7 @@ export function BrugerAdminPage() {
                 ))}
               </select>
             </div>
+            {rolle && <RolleAdgangOversigt rolle={rolle} />}
             {fejl && <p className="login-fejl">{fejl}</p>}
             {succes && <p className="bruger-succes">{succes}</p>}
             <button className="btn btn-primary" type="submit" disabled={opretter}>
