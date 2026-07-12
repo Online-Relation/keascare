@@ -20,7 +20,7 @@ export async function gemListeItems(items: TilbudsportalenListeItem[]): Promise<
 
   const { error } = await supabase
     .from('tilbudsportalen_tilbud')
-    .upsert(rækker, { onConflict: 'afdelingsid', ignoreDuplicates: false });
+    .upsert(rækker, { onConflict: 'afdelingsid', ignoreDuplicates: true });
 
   if (error) throw new Error(`Supabase fejl (liste): ${error.message}`);
   return rækker.length;
