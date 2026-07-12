@@ -17,10 +17,8 @@ export async function GET(req: NextRequest) {
   const cvr = req.nextUrl.searchParams.get('cvr') ?? '36427404';
 
   const resultater = await Promise.all([
-    testUrl(`https://regnskab.virk.dk/regnskab/xbrl/api/1/regnskab?cvrnummer=${cvr}`),
     testUrl(`https://cvrapi.dk/api?search=${cvr}&country=dk`),
-    testUrl(`https://api.cvr.dev/api/cvr/company?cvr=${cvr}`),
-    testUrl(`https://data.virk.dk/dataudtræk/cvr/company?cvr=${cvr}`),
+    testUrl(`https://cvrapi.dk/api?search=10001987&country=dk`), // Novo Nordisk — stort CVR der altid findes
   ]);
 
   return NextResponse.json({ cvr, resultater });
