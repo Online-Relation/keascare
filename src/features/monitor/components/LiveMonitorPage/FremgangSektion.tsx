@@ -143,6 +143,14 @@ function useKørselStatus(mangler: number | undefined) {
       return;
     }
 
+    // Alle hentet — skift straks til færdig
+    if (mangler === 0 && status !== 'idle') {
+      setStatus('færdig');
+      setFærdigKl(new Date().toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }));
+      setEta(null);
+      return;
+    }
+
     if (mangler < forrigeMangler.current) {
       // Tallet faldt — kørsel er bekræftet i gang
       if (status !== 'kører' && startMangler.current === null) {
