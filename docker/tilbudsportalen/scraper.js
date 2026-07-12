@@ -266,9 +266,9 @@ async function scraperDetaljer(batch = 50) {
 }
 
 async function nulstilDetaljerMaanedligt() {
-  // Nulstil detaljer_hentet for tilbud der ikke er opdateret inden for 30 dage
+  // Nulstil detaljer_hentet for tilbud der ikke er opdateret inden for 14 dage
   const grænse = new Date();
-  grænse.setDate(grænse.getDate() - 30);
+  grænse.setDate(grænse.getDate() - 14);
 
   const { error, count } = await supabase
     .from('tilbudsportalen_tilbud')
@@ -277,7 +277,7 @@ async function nulstilDetaljerMaanedligt() {
     .eq('detaljer_hentet', true);
 
   if (error) console.error('Nulstil fejl:', error.message);
-  else console.log(`Nulstillede detaljer for tilbud ældre end 30 dage`);
+  else console.log(`Nulstillede detaljer for tilbud ældre end 14 dage`);
 }
 
 // Main
