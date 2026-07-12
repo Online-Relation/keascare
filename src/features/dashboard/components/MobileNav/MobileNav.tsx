@@ -55,6 +55,7 @@ const navGrupper = [
   {
     label: 'System',
     items: [
+      { label: 'Live Monitor',  href: '/dashboard/monitor',        icon: Activity },
       { label: 'Systemstatus',  href: '/dashboard/systemstatus',   icon: Activity },
       { label: 'Scrapers',      href: '/dashboard/scrapers',       icon: RefreshCw },
       { label: 'Indstillinger', href: '/dashboard/indstillinger',  icon: Settings },

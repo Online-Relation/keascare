@@ -182,7 +182,7 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
         <div style={{ fontSize: '0.76rem', fontWeight: 600, color: status === 'ukendt' ? '#2d3f55' : '#cbd5e1', lineHeight: 1.2 }}>
           {scraper.label}
         </div>
-        <div style={{ fontSize: '0.56rem', color: '#1e3a5a', marginTop: '0.1rem' }}>
+        <div style={{ fontSize: '0.56rem', color: '#475569', marginTop: '0.1rem' }}>
           kl. {scraper.kørselKl}
         </div>
       </div>
@@ -205,22 +205,22 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '1rem' }}>
         {/* Total behandlet */}
         <div style={{ flexShrink: 0 }}>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: totalBehandlet > 0 ? p.accent : '#1e3a5a', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: totalBehandlet > 0 ? p.accent : '#475569', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
             {totalBehandlet > 0 ? totalBehandlet.toLocaleString('da-DK') : '—'}
           </div>
-          <div style={{ fontSize: '0.52rem', color: '#1e3a5a', marginTop: '0.1rem' }}>behandlet</div>
+          <div style={{ fontSize: '0.52rem', color: '#475569', marginTop: '0.1rem' }}>behandlet</div>
         </div>
 
         {/* Kørsler */}
         {antalKørsler > 0 && (
           <div style={{ flexShrink: 0 }}>
-            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#334155', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
+            <div style={{ fontSize: '1rem', fontWeight: 700, color: '#94a3b8', fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>
               {antalKørsler}
               {antalFejlKørsler > 0 && (
                 <span style={{ fontSize: '0.65rem', color: '#ef4444', marginLeft: '0.2rem' }}>/{antalFejlKørsler} fejl</span>
               )}
             </div>
-            <div style={{ fontSize: '0.52rem', color: '#1e3a5a', marginTop: '0.1rem' }}>kørsler</div>
+            <div style={{ fontSize: '0.52rem', color: '#475569', marginTop: '0.1rem' }}>kørsler</div>
           </div>
         )}
 
@@ -229,11 +229,11 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
           <div style={{ flexShrink: 0 }}>
             <div style={{
               fontSize: '0.85rem', fontWeight: 700, lineHeight: 1,
-              color: delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : '#334155',
+              color: delta > 0 ? '#22c55e' : delta < 0 ? '#ef4444' : '#94a3b8',
             }}>
               {delta > 0 ? `▲ ${delta}` : delta < 0 ? `▼ ${Math.abs(delta)}` : '='}
             </div>
-            <div style={{ fontSize: '0.52rem', color: '#1e3a5a', marginTop: '0.1rem' }}>ift. forrige</div>
+            <div style={{ fontSize: '0.52rem', color: '#475569', marginTop: '0.1rem' }}>ift. forrige</div>
           </div>
         )}
 
@@ -269,7 +269,7 @@ function ScraperRække({ scraper, log, forrigeLog, historik, flash }: {
           <div style={{ fontSize: '0.7rem', fontWeight: 600, color: p.accent, fontVariantNumeric: 'tabular-nums' }}>
             {tidLabel(log.kørtKl)}
           </div>
-          <div style={{ fontSize: '0.53rem', color: '#1e3a5a', marginTop: '0.05rem' }}>
+          <div style={{ fontSize: '0.53rem', color: '#475569', marginTop: '0.05rem' }}>
             {tidSidenLabel(log.kørtKl)}
           </div>
         </div>
@@ -409,8 +409,8 @@ export function LiveMonitorPage() {
       {/* ── Header ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexShrink: 0 }}>
         <div>
-          <div style={{ fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.2em', color: '#1e3a5a', textTransform: 'uppercase' }}>KeasCare</div>
-          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#475569', marginTop: '0.1rem' }}>Live Dataoversigt</div>
+          <div style={{ fontSize: '0.58rem', fontWeight: 800, letterSpacing: '0.2em', color: '#475569', textTransform: 'uppercase' }}>KeasCare</div>
+          <div style={{ fontSize: '1rem', fontWeight: 700, color: '#94a3b8', marginTop: '0.1rem' }}>Live Dataoversigt</div>
         </div>
         <Klokke />
       </div>
@@ -421,7 +421,7 @@ export function LiveMonitorPage() {
           flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem',
           border: `1px solid ${healthPct > 70 ? '#22c55e22' : '#ef444422'}`,
         }}>
-          <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#1e3a5a', textTransform: 'uppercase', marginBottom: '0.2rem' }}>System health</div>
+          <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>System health</div>
           <div style={{
             fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums',
             color: healthPct === 100 ? '#22c55e' : healthPct > 70 ? '#f59e0b' : '#ef4444',
@@ -429,27 +429,27 @@ export function LiveMonitorPage() {
           }}>
             {healthPct}<span style={{ fontSize: '0.85rem' }}>%</span>
           </div>
-          <div style={{ fontSize: '0.56rem', color: '#1e3a5a', marginTop: '0.15rem' }}>{antalOk}/{SCRAPERS.length} ok</div>
+          <div style={{ fontSize: '0.56rem', color: '#475569', marginTop: '0.15rem' }}>{antalOk}/{SCRAPERS.length} ok</div>
         </div>
 
-        <div style={{ flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #0f2040' }}>
-          <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#1e3a5a', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Opdateret</div>
+        <div style={{ flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Opdateret</div>
           <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#38bdf8' }}>
             {totalOpdateret.toLocaleString('da-DK')}
           </div>
-          <div style={{ fontSize: '0.56rem', color: '#1e3a5a', marginTop: '0.15rem' }}>poster siden natten</div>
+          <div style={{ fontSize: '0.56rem', color: '#475569', marginTop: '0.15rem' }}>poster siden natten</div>
         </div>
 
         {/* Uptime-tæller — tikker hvert sekund = altid bevægelse */}
-        <div style={{ flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #0f2040' }}>
-          <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#1e3a5a', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Aktiv siden</div>
+        <div style={{ flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #334155' }}>
+          <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Aktiv siden</div>
           <div style={{
             fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#64748b',
             animation: 'uptimeTick 1s ease-in-out infinite alternate',
           }}>
             {String(uptimeMin).padStart(2, '0')}:{String(uptimeSek).padStart(2, '0')}
           </div>
-          <div style={{ fontSize: '0.56rem', color: '#1e3a5a', marginTop: '0.15rem' }}>denne session</div>
+          <div style={{ fontSize: '0.56rem', color: '#475569', marginTop: '0.15rem' }}>denne session</div>
         </div>
 
         {antalFejl > 0 && (
@@ -481,8 +481,8 @@ export function LiveMonitorPage() {
 
       {/* ── Footer ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0 }}>
-        <span style={{ fontSize: '0.52rem', color: '#0f2040' }}>Opdaterer hvert minut</span>
-        <span style={{ fontSize: '0.52rem', color: '#0f2040' }}>keascare · live</span>
+        <span style={{ fontSize: '0.52rem', color: '#334155' }}>Opdaterer hvert minut</span>
+        <span style={{ fontSize: '0.52rem', color: '#334155' }}>keascare · live</span>
       </div>
     </div>
   );
