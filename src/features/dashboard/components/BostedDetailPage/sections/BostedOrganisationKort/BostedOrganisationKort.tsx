@@ -109,11 +109,9 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
           {(!kommune || !pladserVærdi || !bosted.tpTilbudstype) && (
-            <>
-              <ScraperInfo kørselKl={2} scraperDato={bosted.scraperDato} label="TP-matcher" />
-              {bosted.cvr && <HentTpKnap bostedId={bosted.id} cvr={bosted.cvr} />}
-            </>
+            <ScraperInfo kørselKl={2} scraperDato={bosted.scraperDato} label="TP-matcher" />
           )}
+          {bosted.cvr && <HentTpKnap bostedId={bosted.id} cvr={bosted.cvr} />}
         </div>
       </div>
 
