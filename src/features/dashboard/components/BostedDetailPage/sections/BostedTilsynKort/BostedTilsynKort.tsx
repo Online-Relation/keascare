@@ -1,7 +1,56 @@
+'use client';
+
 // src/features/dashboard/components/BostedDetailPage/sections/BostedTilsynKort/BostedTilsynKort.tsx
 
-import { ClipboardList, ExternalLink, FileText } from 'lucide-react';
+import { useState } from 'react';
+import { ClipboardList, ExternalLink, FileText, RefreshCw } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
+
+function HentStpsDetaljerKnap({ bostedId }: { bostedId: string }) {
+  const [status, setStatus] = useState<'idle' | 'henter' | 'ok' | 'fejl'>('idle');
+  const [fejlTekst, setFejlTekst] = useState('');
+
+  async function hent() {
+    setStatus('henter');
+    try {
+      const res = await fetch('/api/scrapers/stps/berig-rapport', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bostedId }),
+      });
+      const data = await res.json() as { ok: boolean; fejl?: string };
+      if (data.ok) {
+        setStatus('ok');
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        setStatus('fejl');
+        setFejlTekst(data.fejl ?? 'Ukendt fejl');
+      }
+    } catch {
+      setStatus('fejl');
+      setFejlTekst('Netværksfejl');
+    }
+  }
+
+  if (status === 'ok') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>Detaljer hentet — opdaterer...</p>;
+  if (status === 'fejl') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)' }}>{fejlTekst}</p>;
+
+  return (
+    <button
+      onClick={hent}
+      disabled={status === 'henter'}
+      style={{
+        display: 'flex', alignItems: 'center', gap: '0.35rem',
+        fontSize: 'var(--text-xs)', padding: '0.3rem 0.6rem',
+        background: 'var(--color-bg-card)', border: '1px solid var(--color-border)',
+        borderRadius: 6, cursor: 'pointer', color: 'var(--color-text-secondary)',
+      }}
+    >
+      <RefreshCw size={11} style={{ animation: status === 'henter' ? 'spin 1s linear infinite' : undefined }} />
+      {status === 'henter' ? 'Henter...' : 'Hent STPS detaljer nu'}
+    </button>
+  );
+}
 
 type BostedTilsynKortProps = {
   bosted: BostedDetail;
@@ -77,6 +126,10 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
               ))}
             </div>
           </div>
+        )}
+
+        {bosted.rapportUrl && !bosted.tilsynsform && !bosted.pdfUrl && (
+          <HentStpsDetaljerKnap bostedId={bosted.id} />
         )}
 
         {(bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:')) || bosted.pdfUrl ? (
