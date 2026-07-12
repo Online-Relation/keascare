@@ -91,6 +91,7 @@ export type BostedDetail = {
   adresse: string | null;
   pladser: string | null;
   cvr: string | null;
+  cvrAntalAfdelinger: number | null;
   // CVR-berigede felter (opdateres dagligt)
   cvrAnsatte: number | null;
   cvrBranche: string | null;

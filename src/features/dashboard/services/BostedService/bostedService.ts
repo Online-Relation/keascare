@@ -118,6 +118,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     mondayKunde: r.monday_item_id ? 'kunde' : 'ingen',
     mondayGruppe: r.monday_gruppe ?? null,
     mondayItemId: r.monday_item_id ?? null,
+    cvrAntalAfdelinger: null,
     regnskabAar: r.regnskab_aar ?? null,
     regnskabNettoomsaetning: r.regnskab_nettoomsaetning ?? null,
     regnskabBruttofortjeneste: r.regnskab_bruttofortjeneste ?? null,
@@ -137,5 +138,18 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
     .single();
 
   if (error || !data) return null;
-  return mapTilBostedDetail(data as DbRapport);
+
+  const rapport = data as DbRapport;
+
+  // Tæl antal afdelinger på samme CVR
+  let cvrAntalAfdelinger: number | null = null;
+  if (rapport.cvr) {
+    const { count } = await supabase
+      .from('stps_rapporter')
+      .select('*', { count: 'exact', head: true })
+      .eq('cvr', rapport.cvr);
+    cvrAntalAfdelinger = count ?? null;
+  }
+
+  return { ...mapTilBostedDetail(rapport), cvrAntalAfdelinger };
 }

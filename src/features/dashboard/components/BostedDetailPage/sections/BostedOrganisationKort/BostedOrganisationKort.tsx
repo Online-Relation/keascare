@@ -88,6 +88,12 @@ export function BostedOrganisationKort({ bosted }: Props) {
         </div>
         <div className="bosted-detail-kort-body">
           <FeltRække label="CVR-nummer" value={bosted.cvr} />
+          {bosted.cvrAntalAfdelinger != null && bosted.cvrAntalAfdelinger > 1 && (
+            <FeltRække
+              label="Afdelinger på CVR"
+              value={`${bosted.cvrAntalAfdelinger} afdelinger registreret`}
+            />
+          )}
           {bosted.tpPNummer && <FeltRække label="P-nummer" value={bosted.tpPNummer} />}
           {adresse && (
             <div className="bosted-detail-field">
