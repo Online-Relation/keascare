@@ -5,7 +5,6 @@ import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
 export type ScraperDef = {
   id: string;
   label: string;
-  emoji: string;
   kørselKl: string;
   intervalTimer: number;
 };
@@ -14,32 +13,32 @@ export const SCRAPER_GRUPPER: { label: string; scrapers: ScraperDef[] }[] = [
   {
     label: 'STPS Kæde',
     scrapers: [
-      { id: 'stps-liste',      label: 'STPS Rapporter', emoji: '📋', kørselKl: '20:00', intervalTimer: 24 },
-      { id: 'stps-detaljer',   label: 'STPS PDFer',     emoji: '📄', kørselKl: '21:00', intervalTimer: 24 },
-      { id: 'stps-fund-items', label: 'STPS Fund',      emoji: '🔍', kørselKl: '22:00', intervalTimer: 24 },
-      { id: 'stps-pnummer',    label: 'P-numre',        emoji: '📍', kørselKl: '23:00', intervalTimer: 24 },
+      { id: 'stps-liste',      label: 'STPS Rapporter', kørselKl: '20:00', intervalTimer: 24 },
+      { id: 'stps-detaljer',   label: 'STPS PDFer',     kørselKl: '21:00', intervalTimer: 24 },
+      { id: 'stps-fund-items', label: 'STPS Fund',      kørselKl: '22:00', intervalTimer: 24 },
+      { id: 'stps-pnummer',    label: 'P-numre',        kørselKl: '23:00', intervalTimer: 24 },
     ],
   },
   {
     label: 'CVR & Regnskab',
     scrapers: [
-      { id: 'cvr-berig',   label: 'CVR Opslag',  emoji: '🏢', kørselKl: '00:00', intervalTimer: 24 },
-      { id: 'cvr-ansatte', label: 'CVR Ansatte', emoji: '👥', kørselKl: '03:00', intervalTimer: 24 },
-      { id: 'regnskab',    label: 'Regnskab',    emoji: '💰', kørselKl: '03:00', intervalTimer: 24 },
+      { id: 'cvr-berig',   label: 'CVR Opslag',  kørselKl: '00:00', intervalTimer: 24 },
+      { id: 'cvr-ansatte', label: 'CVR Ansatte', kørselKl: '03:00', intervalTimer: 24 },
+      { id: 'regnskab',    label: 'Regnskab',    kørselKl: '03:00', intervalTimer: 24 },
     ],
   },
   {
     label: 'Tilbudsportalen',
     scrapers: [
-      { id: 'tp-liste',    label: 'TP Liste',    emoji: '📊', kørselKl: '03:00', intervalTimer: 24 },
-      { id: 'tp-detaljer', label: 'TP Detaljer', emoji: '🗂️',  kørselKl: '03:00', intervalTimer: 24 },
+      { id: 'tp-liste',    label: 'TP Liste',    kørselKl: '03:00', intervalTimer: 24 },
+      { id: 'tp-detaljer', label: 'TP Detaljer', kørselKl: '03:00', intervalTimer: 24 },
     ],
   },
   {
     label: 'Afslutning',
     scrapers: [
-      { id: 'monday-sync', label: 'Monday Sync', emoji: '🔄', kørselKl: '04:00', intervalTimer: 24 },
-      { id: 'tp-match',    label: 'TP Matcher',  emoji: '🎯', kørselKl: '05:00', intervalTimer: 24 },
+      { id: 'monday-sync', label: 'Monday Sync', kørselKl: '04:00', intervalTimer: 24 },
+      { id: 'tp-match',    label: 'TP Matcher',  kørselKl: '05:00', intervalTimer: 24 },
     ],
   },
 ];

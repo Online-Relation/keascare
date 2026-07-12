@@ -148,11 +148,6 @@ export function ScraperRække({ scraper, log, forrigeLog, historik, flash, liveS
       {/* Status dot */}
       <StatusDot color={p.accent} active={logStatus === 'ok' || erLive} />
 
-      {/* Emoji */}
-      <span style={{ fontSize: '1rem', flexShrink: 0, opacity: logStatus === 'ukendt' ? 0.25 : 0.9 }}>
-        {scraper.emoji}
-      </span>
-
       {/* Navn + tid */}
       <div style={{ width: 118, flexShrink: 0 }}>
         <div style={{ fontSize: '0.76rem', fontWeight: 600, color: logStatus === 'ukendt' ? '#475569' : '#e2e8f0', lineHeight: 1.2 }}>
