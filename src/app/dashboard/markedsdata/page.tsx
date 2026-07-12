@@ -1,7 +1,7 @@
 // src/app/dashboard/markedsdata/page.tsx
 
 import { MarkedsdataPage } from '@/features/markedsdata/components/MarkedsdataPage';
-import { hentDstKommuneData } from '@/lib/api/DstClient';
+import { hentDstFraCache, hentDstKommuneData } from '@/lib/api/DstClient';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 
@@ -16,12 +16,31 @@ export default async function MarkedsdataSide() {
     tpQuery = tpQuery.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.map((d) => `"${d}"`).join(',')})`);
   }
 
-  const [dstData, tpTæl] = await Promise.all([
-    hentDstKommuneData(),
+  // Forsøg at læse fra Supabase-cache — fald tilbage til live DST-kald hvis tom
+  const [cacheResultat, tpTæl] = await Promise.all([
+    hentDstFraCache(),
     tpQuery,
   ]);
 
+  let dstData = cacheResultat.data;
+  let kvartal = cacheResultat.kvartal;
+  let hentetKl = cacheResultat.hentetKl;
+
+  if (!dstData.length) {
+    // Cache er tom — hent live fra DST (første gang)
+    dstData = await hentDstKommuneData();
+    kvartal = dstData[0]?.kvartal ?? null;
+    hentetKl = null;
+  }
+
   const antalBosteder = tpTæl.count ?? 0;
 
-  return <MarkedsdataPage data={dstData} antalBosteder={antalBosteder} />;
+  return (
+    <MarkedsdataPage
+      data={dstData}
+      antalBosteder={antalBosteder}
+      kvartal={kvartal}
+      hentetKl={hentetKl}
+    />
+  );
 }

@@ -9,9 +9,11 @@ import type { DstKommuneRå } from '@/lib/api/DstClient';
 type Props = {
   data: DstKommuneRå[];
   antalBosteder: number;
+  kvartal?: string | null;
+  hentetKl?: string | null;
 };
 
-export function MarkedsdataPage({ data, antalBosteder }: Props) {
+export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl }: Props) {
   const totalBorgere = data.reduce((s, k) => s + k.total, 0);
   const totalP107 = data.reduce((s, k) => s + k.p107, 0);
   const totalP108 = data.reduce((s, k) => s + k.p108, 0);
@@ -60,7 +62,9 @@ forklaring: 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Talle
         <div>
           <h1 className="dst-titel">Markedsdata – Danmarks Statistik</h1>
           <p className="dst-undertitel">
-            HAND01 · §107 og §108 botilbud · Antal borgere pr. kommune · Seneste kvartal
+            HAND01 · §107 og §108 botilbud · Antal borgere pr. kommune
+            {kvartal ? ` · ${kvartal}` : ' · Seneste kvartal'}
+            {hentetKl ? ` · Hentet ${new Date(hentetKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })}` : ''}
           </p>
         </div>
       </div>

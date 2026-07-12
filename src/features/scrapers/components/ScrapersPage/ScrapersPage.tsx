@@ -117,6 +117,13 @@ const SCRAPERS: Scraper[] = [
     loop: true,
   },
   {
+    id: 'dst',
+    titel: 'Danmarks Statistik — HAND01 borgere',
+    beskrivelse: 'Henter antal borgere i §107/§108 botilbud pr. kommune fra DST og gemmer i Supabase-cache. Kører automatisk kvartalsvist d. 5. jan/apr/jul/okt. Kan køres manuelt her for at opdatere cachen med det.',
+    endpoint: '/api/scrapers/dst',
+    body: {},
+  },
+  {
     id: 'monday-match',
     titel: 'Monday — Synkroniser kunder',
     beskrivelse: 'Henter Bosted-kunder fra Monday (Nye + Aktive Forløb) og matcher mod STPS-bosteder på navn. Sætter "Kunde"-badge i dashboardet.',

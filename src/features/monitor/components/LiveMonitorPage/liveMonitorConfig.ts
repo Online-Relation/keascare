@@ -35,6 +35,12 @@ export const SCRAPER_GRUPPER: { label: string; scrapers: ScraperDef[] }[] = [
     ],
   },
   {
+    label: 'Danmarks Statistik',
+    scrapers: [
+      { id: 'dst', label: 'DST HAND01', kørselKl: '5. jan/apr/jul/okt', intervalTimer: 24 * 90 },
+    ],
+  },
+  {
     label: 'Afslutning',
     scrapers: [
       { id: 'monday-sync', label: 'Monday Sync', kørselKl: '04:00', intervalTimer: 24 },

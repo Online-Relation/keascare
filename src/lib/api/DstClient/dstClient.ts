@@ -11,7 +11,36 @@ export type DstKommuneRå = {
   p107: number;
   p108: number;
   total: number;
+  kvartal?: string;
 };
+
+// Læs fra Supabase-cache (foretrækkes på runtime)
+export async function hentDstFraCache(): Promise<{ data: DstKommuneRå[]; kvartal: string | null; hentetKl: string | null }> {
+  const { getSupabaseServerClient } = await import('@/lib/db/SupabaseClient');
+  const supabase = getSupabaseServerClient();
+
+  // Find seneste kvartal
+  const { data: seneste } = await supabase
+    .from('dst_borgere')
+    .select('kvartal, hentet_kl')
+    .order('hentet_kl', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (!seneste) return { data: [], kvartal: null, hentetKl: null };
+
+  const { data: rækker } = await supabase
+    .from('dst_borgere')
+    .select('kommune, p107, p108, total')
+    .eq('kvartal', seneste.kvartal)
+    .order('total', { ascending: false });
+
+  return {
+    data: (rækker ?? []).map((r) => ({ ...r, kvartal: seneste.kvartal })),
+    kvartal: seneste.kvartal,
+    hentetKl: seneste.hentet_kl,
+  };
+}
 
 async function hentKommuneIds(): Promise<{ ids: string[]; senesteKvartal: string }> {
   const res = await fetch(DST_TABLEINFO, {
@@ -27,6 +56,7 @@ async function hentKommuneIds(): Promise<{ ids: string[]; senesteKvartal: string
 
 export async function hentDstKommuneData(): Promise<DstKommuneRå[]> {
   const { ids, senesteKvartal } = await hentKommuneIds();
+  // senesteKvartal sættes på hvert objekt så scraperen kan gemme det
 
   const payload = {
     table: 'HAND01',
@@ -51,10 +81,10 @@ export async function hentDstKommuneData(): Promise<DstKommuneRå[]> {
   }
 
   const csv = await res.text();
-  return parseKommuneCsv(csv);
+  return parseKommuneCsv(csv, senesteKvartal);
 }
 
-function parseKommuneCsv(csv: string): DstKommuneRå[] {
+function parseKommuneCsv(csv: string, senesteKvartal: string): DstKommuneRå[] {
   const linjer = csv.replace(/^﻿/, '').trim().split('\n').slice(1);
   const map = new Map<string, { p107: number; p108: number }>();
 
@@ -80,6 +110,7 @@ function parseKommuneCsv(csv: string): DstKommuneRå[] {
       p107: Math.round(data.p107),
       p108: Math.round(data.p108),
       total: Math.round(data.p107 + data.p108),
+      kvartal: senesteKvartal,
     }))
     .sort((a, b) => b.total - a.total);
 }
