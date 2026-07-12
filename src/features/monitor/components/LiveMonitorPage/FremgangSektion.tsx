@@ -115,13 +115,73 @@ const ACCENT_MAP: Record<string, string> = {
   'tp-match':   '#fb923c',
 };
 
+// ── TilbudsportalenStatus ─────────────────────────────────────────────────────
+
+type TpStatus = { total: number; mangler: number; matchet: number; medCvr: number };
+
+function TpStatusKort({ tp }: { tp: TpStatus }) {
+  const medDetaljer = tp.total - tp.mangler;
+  const pctDetaljer = tp.total > 0 ? Math.round((medDetaljer / tp.total) * 100) : 0;
+  const pctCvr      = tp.total > 0 ? Math.round((tp.medCvr   / tp.total) * 100) : 0;
+
+  const rækker = [
+    { label: 'Detaljer hentet', antal: medDetaljer, pct: pctDetaljer, accent: '#38bdf8' },
+    { label: 'CVR fundet',      antal: tp.medCvr,   pct: pctCvr,      accent: '#22c55e' },
+    { label: 'Matchet m. STPS', antal: tp.matchet,  pct: tp.total > 0 ? Math.round((tp.matchet / tp.total) * 100) : 0, accent: '#a78bfa' },
+  ];
+
+  return (
+    <div style={{
+      background: '#0b1120', borderRadius: 10, padding: '0.7rem 0.9rem',
+      border: '1px solid #38bdf822', borderLeft: '3px solid #38bdf8',
+      display: 'flex', flexDirection: 'column', gap: '0.5rem',
+    }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+        <span style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', color: '#475569', textTransform: 'uppercase' }}>
+          Tilbudsportalen
+        </span>
+        <span style={{ fontSize: '0.6rem', color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
+          {tp.total.toLocaleString('da-DK')} tilbud i alt
+        </span>
+      </div>
+
+      {rækker.map((r) => (
+        <div key={r.label}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
+            <span style={{ fontSize: '0.55rem', color: '#64748b' }}>{r.label}</span>
+            <span style={{ fontSize: '0.6rem', fontWeight: 700, color: r.accent, fontVariantNumeric: 'tabular-nums' }}>
+              {r.antal.toLocaleString('da-DK')} <span style={{ color: '#475569', fontWeight: 400 }}>({r.pct}%)</span>
+            </span>
+          </div>
+          <div style={{ height: 3, background: '#0f1f33', borderRadius: 2, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%', width: `${r.pct}%`,
+              background: `linear-gradient(90deg, ${r.accent}55, ${r.accent})`,
+              borderRadius: 2, transition: 'width 1s ease',
+            }} />
+          </div>
+        </div>
+      ))}
+
+      {tp.mangler > 0 && (
+        <div style={{ fontSize: '0.54rem', color: '#f59e0b', marginTop: '0.1rem' }}>
+          {tp.mangler.toLocaleString('da-DK')} mangler stadig detaljer
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── FremgangSektion (hoved-eksport) ───────────────────────────────────────────
 
 type FremgangResponse = { total: number; items: FremgangItem[] };
 
+const POLL_TP = 30_000;
+
 export function FremgangSektion({ fra, til }: { fra: string | null; til: string | null }) {
   const [data,     setData]     = useState<FremgangResponse | null>(null);
   const [historik, setHistorik] = useState<FremgangSnapshot[]>([]);
+  const [tp,       setTp]       = useState<TpStatus | null>(null);
 
   useEffect(() => {
     async function hent() {
@@ -140,11 +200,23 @@ export function FremgangSektion({ fra, til }: { fra: string | null; til: string 
     hent();
   }, [fra, til]);
 
+  useEffect(() => {
+    async function hentTp() {
+      try {
+        const res = await fetch('/api/scrapers/tilbudsportalen/status');
+        setTp(await res.json() as TpStatus);
+      } catch { /* ignore */ }
+    }
+    hentTp();
+    const id = setInterval(hentTp, POLL_TP);
+    return () => clearInterval(id);
+  }, []);
+
   if (!data) return null;
 
   return (
     <div style={{ flexShrink: 0 }}>
-      {/* Sektion-header */}
+      {/* ── STPS databasefremgang ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
         <span style={{ fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.14em', color: '#334155', textTransform: 'uppercase' }}>
           Databasefremgang
@@ -152,13 +224,12 @@ export function FremgangSektion({ fra, til }: { fra: string | null; til: string 
         <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
         <span style={{ fontSize: '0.52rem', color: '#334155' }}>
           {historik.length > 0
-            ? `${historik.length} snapshots · ${data.total.toLocaleString('da-DK')} rapporter i alt`
-            : `${data.total.toLocaleString('da-DK')} rapporter i alt`}
+            ? `${historik.length} snapshots · ${data.total.toLocaleString('da-DK')} STPS-rapporter`
+            : `${data.total.toLocaleString('da-DK')} STPS-rapporter`}
         </span>
       </div>
 
-      {/* Kort-gitter */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.5rem', marginBottom: '0.75rem' }}>
         {data.items.map((item) => (
           <FremgangKort
             key={item.id}
@@ -168,6 +239,20 @@ export function FremgangSektion({ fra, til }: { fra: string | null; til: string 
           />
         ))}
       </div>
+
+      {/* ── Tilbudsportalen ── */}
+      {tp && (
+        <>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.14em', color: '#334155', textTransform: 'uppercase' }}>
+              Tilbudsportalen
+            </span>
+            <div style={{ flex: 1, height: 1, background: '#1e293b' }} />
+            <span style={{ fontSize: '0.52rem', color: '#334155' }}>opdaterer hvert 30s</span>
+          </div>
+          <TpStatusKort tp={tp} />
+        </>
+      )}
     </div>
   );
 }

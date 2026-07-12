@@ -6,15 +6,17 @@ import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 export async function GET() {
   const supabase = getSupabaseServerClient();
 
-  const [{ count: total }, { count: mangler }, { count: matchet }] = await Promise.all([
+  const [{ count: total }, { count: mangler }, { count: matchet }, { count: medCvr }] = await Promise.all([
     supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }),
     supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }).eq('detaljer_hentet', false),
     supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }).not('stps_rapport_id', 'is', null),
+    supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }).not('cvr', 'is', null),
   ]);
 
   return NextResponse.json({
-    total: total ?? 0,
+    total:   total   ?? 0,
     mangler: mangler ?? 0,
     matchet: matchet ?? 0,
+    medCvr:  medCvr  ?? 0,
   });
 }
