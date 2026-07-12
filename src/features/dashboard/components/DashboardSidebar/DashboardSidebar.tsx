@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
-  LayoutDashboard, ClipboardList, TrendingUp, BarChart2, Settings,
+  LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
   Users, LogOut, Building2, Target, Activity, FlaskConical,
 } from 'lucide-react';
@@ -22,7 +22,6 @@ const gruppeOverblik: NavItem[] = [
 ];
 
 const gruppeMarked: NavItem[] = [
-  { label: 'Markedssignaler',   href: '/dashboard/markedspotentiale', icon: TrendingUp },
   { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
   { label: 'Kommuner',          href: '/dashboard/kommuner',          icon: MapPin },
   { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },

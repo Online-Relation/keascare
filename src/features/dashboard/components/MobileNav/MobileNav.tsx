@@ -25,7 +25,6 @@ const navGrupper = [
   {
     label: 'Marked',
     items: [
-      { label: 'Markedssignaler',   href: '/dashboard/markedspotentiale', icon: TrendingUp },
       { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
       { label: 'Kommuner',          href: '/dashboard/kommuner',          icon: MapPin },
       { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },
