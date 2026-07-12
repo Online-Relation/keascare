@@ -122,8 +122,11 @@ type TpStatus = { total: number; mangler: number; matchet: number; medCvr: numbe
 function useKørselStatus(mangler: number | undefined) {
   const forrigeMangler = useRef<number | null>(null);
   const sidsteÆndring  = useRef<Date | null>(null);
+  const startMangler   = useRef<number | null>(null);
+  const startTid       = useRef<Date | null>(null);
   const [status, setStatus] = useState<'idle' | 'kører' | 'færdig'>('idle');
   const [færdigKl, setFærdigKl] = useState<string | null>(null);
+  const [eta, setEta] = useState<string | null>(null);
 
   useEffect(() => {
     if (mangler === undefined) return;
@@ -135,10 +138,30 @@ function useKørselStatus(mangler: number | undefined) {
 
     if (mangler < forrigeMangler.current) {
       // Tallet faldt — kørsel er i gang
+      if (status !== 'kører') {
+        startMangler.current = forrigeMangler.current;
+        startTid.current = new Date();
+      }
       forrigeMangler.current = mangler;
       sidsteÆndring.current = new Date();
       setStatus('kører');
       setFærdigKl(null);
+
+      // Beregn ETA
+      if (startMangler.current !== null && startTid.current !== null && mangler > 0) {
+        const behandlet = startMangler.current - mangler;
+        const elapsedMin = (Date.now() - startTid.current.getTime()) / 60_000;
+        if (behandlet > 0 && elapsedMin > 0) {
+          const ratePerMin = behandlet / elapsedMin;
+          const minTilbage = mangler / ratePerMin;
+          if (minTilbage < 600) {
+            const etaDato = new Date(Date.now() + minTilbage * 60_000);
+            const etaStr = etaDato.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' });
+            const minRund = Math.round(minTilbage);
+            setEta(`~${minRund} min · kl. ${etaStr}`);
+          }
+        }
+      }
       return;
     }
 
@@ -146,21 +169,21 @@ function useKørselStatus(mangler: number | undefined) {
     if (status === 'kører' && sidsteÆndring.current) {
       const stilleMs = Date.now() - sidsteÆndring.current.getTime();
       if (stilleMs > 120_000) {
-        // 2 minutter uden ændring — anses som færdig
         setStatus('færdig');
         setFærdigKl(sidsteÆndring.current.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }));
+        setEta(null);
       }
     }
   }, [mangler, status]);
 
-  return { status, færdigKl };
+  return { status, færdigKl, eta };
 }
 
 function TpStatusKort({ tp }: { tp: TpStatus }) {
   const medDetaljer = tp.total - tp.mangler;
   const pctDetaljer = tp.total > 0 ? Math.round((medDetaljer / tp.total) * 100) : 0;
   const pctCvr      = tp.total > 0 ? Math.round((tp.medCvr   / tp.total) * 100) : 0;
-  const { status, færdigKl } = useKørselStatus(tp.mangler);
+  const { status, færdigKl, eta } = useKørselStatus(tp.mangler);
 
   const rækker = [
     { label: 'Detaljer hentet', antal: medDetaljer, pct: pctDetaljer, accent: '#38bdf8' },
@@ -220,8 +243,15 @@ function TpStatusKort({ tp }: { tp: TpStatus }) {
       ))}
 
       {tp.mangler > 0 && status !== 'færdig' && (
-        <div style={{ fontSize: '0.54rem', color: status === 'kører' ? '#38bdf8' : '#f59e0b', marginTop: '0.1rem' }}>
-          {tp.mangler.toLocaleString('da-DK')} mangler stadig detaljer
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.1rem' }}>
+          <span style={{ fontSize: '0.54rem', color: status === 'kører' ? '#38bdf8' : '#f59e0b' }}>
+            {tp.mangler.toLocaleString('da-DK')} mangler stadig detaljer
+          </span>
+          {eta && status === 'kører' && (
+            <span style={{ fontSize: '0.54rem', color: '#94a3b8', fontVariantNumeric: 'tabular-nums' }}>
+              Est. færdig om {eta}
+            </span>
+          )}
         </div>
       )}
       {status === 'færdig' && tp.mangler === 0 && (
