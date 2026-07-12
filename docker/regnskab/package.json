@@ -1,0 +1,10 @@
+{
+  "name": "keascare-regnskab-scraper",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "@supabase/supabase-js": "^2.39.0",
+    "ws": "^8.16.0"
+  }
+}
