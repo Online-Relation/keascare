@@ -128,7 +128,7 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           </div>
         )}
 
-        {bosted.rapportUrl && !bosted.tilsynsform && !bosted.pdfUrl && (
+        {bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:') && !bosted.tilsynsform && !bosted.pdfUrl && (
           <HentStpsDetaljerKnap bostedId={bosted.id} />
         )}
 
