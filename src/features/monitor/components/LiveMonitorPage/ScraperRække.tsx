@@ -130,7 +130,7 @@ export function ScraperRække({ scraper, log, forrigeLog, historik, flash, liveS
       borderRadius: 10,
       border: `1px solid ${erLive ? p.accent + '44' : p.dim}`,
       borderLeft: `3px solid ${p.accent}`,
-      position: 'relative', overflow: 'hidden',
+      position: 'relative', overflowX: 'auto', overflowY: 'hidden',
       flex: 1,
       animation: flash ? 'flashRow 2s ease-out forwards' : undefined,
     }}>
