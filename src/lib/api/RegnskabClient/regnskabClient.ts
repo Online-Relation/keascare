@@ -1,7 +1,6 @@
 // src/lib/api/RegnskabClient/regnskabClient.ts
-// Henter årsregnskab fra Erhvervsstyrelsens XBRL API.
-// API: https://regnskab.virk.dk/regnskab/xbrl/api/1/regnskab?cvrnummer=<CVR>
-// Kræver ingen credentials — offentligt tilgængeligt.
+// Henter årsregnskab fra Erhvervsstyrelsens CVR distribution API.
+// Kræver CVR_USER + CVR_PASS env-vars (system-til-system adgang fra distribution.virk.dk).
 
 export type RegnskabOpslag = {
   cvr: string;
@@ -17,36 +16,35 @@ export type RegnskabOpslag = {
   indsendt: string | null;
 };
 
-type XbrlFelt = {
-  contextRef?: string;
-  decimals?: string;
-  unitRef?: string;
-  value?: string | number;
-  name?: string;
-};
-
-type RegnskabPost = {
-  indsendelsesDato?: string;
+type RegnskabHit = {
+  cvrNummer?: number;
   regnskabsperiode?: {
     startDato?: string;
     slutDato?: string;
   };
-  xbrlData?: XbrlFelt[];
+  indsendelsesDato?: string;
+  sagsNummer?: string;
+  xbrl?: {
+    xbrlData?: Array<{
+      name?: string;
+      value?: string | number;
+    }>;
+  };
 };
 
 const FELT_NAVNE: Record<string, keyof Pick<RegnskabOpslag, 'nettoomsaetning' | 'bruttofortjeneste' | 'aarsresultat' | 'egenkapital' | 'balance'>> = {
-  'fsa:GrossProfit':               'bruttofortjeneste',
-  'fsa:Revenue':                   'nettoomsaetning',
-  'ifrs-full:Revenue':             'nettoomsaetning',
-  'fsa:ProfitLoss':                'aarsresultat',
-  'ifrs-full:ProfitLoss':          'aarsresultat',
-  'fsa:Equity':                    'egenkapital',
-  'ifrs-full:Equity':              'egenkapital',
-  'fsa:Assets':                    'balance',
-  'ifrs-full:Assets':              'balance',
+  'fsa:GrossProfit':     'bruttofortjeneste',
+  'fsa:Revenue':         'nettoomsaetning',
+  'ifrs-full:Revenue':   'nettoomsaetning',
+  'fsa:ProfitLoss':      'aarsresultat',
+  'ifrs-full:ProfitLoss':'aarsresultat',
+  'fsa:Equity':          'egenkapital',
+  'ifrs-full:Equity':    'egenkapital',
+  'fsa:Assets':          'balance',
+  'ifrs-full:Assets':    'balance',
 };
 
-function parseXbrl(felter: XbrlFelt[]): Partial<RegnskabOpslag> {
+function parseXbrl(felter: Array<{ name?: string; value?: string | number }>): Partial<RegnskabOpslag> {
   const resultat: Partial<RegnskabOpslag> = {};
   for (const felt of felter) {
     const nøgle = felt.name;
@@ -62,26 +60,44 @@ function parseXbrl(felter: XbrlFelt[]): Partial<RegnskabOpslag> {
 }
 
 export async function hentRegnskab(cvr: string): Promise<RegnskabOpslag | null> {
-  const url = `https://regnskab.virk.dk/regnskab/xbrl/api/1/regnskab?cvrnummer=${cvr}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk' },
+  const user = process.env.CVR_USER;
+  const pass = process.env.CVR_PASS;
+  if (!user || !pass) throw new Error('CVR_USER og CVR_PASS skal sættes som env-vars');
+
+  const auth = Buffer.from(`${user}:${pass}`).toString('base64');
+
+  const body = {
+    query: { term: { 'cvrNummer': parseInt(cvr, 10) } },
+    sort: [{ 'regnskabsperiode.slutDato': { order: 'desc' } }],
+    size: 5,
+  };
+
+  const res = await fetch('http://distribution.virk.dk/cvr-permanent/regnskab/_search', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${auth}`,
+    },
+    body: JSON.stringify(body),
     cache: 'no-store',
   });
 
   if (res.status === 404) return null;
-  if (!res.ok) throw new Error(`regnskab.virk.dk HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`distribution.virk.dk HTTP ${res.status}`);
 
-  const liste = await res.json() as RegnskabPost[];
-  if (!Array.isArray(liste) || liste.length === 0) return null;
+  const json = await res.json();
+  const hits: RegnskabHit[] = json?.hits?.hits?.map((h: { _source: RegnskabHit }) => h._source) ?? [];
+
+  if (hits.length === 0) return null;
 
   // Seneste regnskab først
-  const seneste = liste.sort((a, b) => {
+  const seneste = hits.sort((a, b) => {
     const da = a.regnskabsperiode?.slutDato ?? a.indsendelsesDato ?? '';
     const db = b.regnskabsperiode?.slutDato ?? b.indsendelsesDato ?? '';
     return db.localeCompare(da);
   })[0];
 
-  const xbrlFelter = parseXbrl(seneste.xbrlData ?? []);
+  const xbrlFelter = parseXbrl(seneste.xbrl?.xbrlData ?? []);
   const slutDato = seneste.regnskabsperiode?.slutDato ?? null;
   const aar = slutDato ? new Date(slutDato).getFullYear() : null;
 
