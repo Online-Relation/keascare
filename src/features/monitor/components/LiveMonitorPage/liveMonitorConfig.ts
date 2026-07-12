@@ -64,7 +64,20 @@ export function getStatus(log: ScraperLogHistorik | undefined, intervalTimer: nu
 }
 
 export function getBehandlet(log: ScraperLogHistorik): number {
-  return typeof log.resultat?.behandlet === 'number' ? log.resultat.behandlet : 0;
+  const r = log.resultat;
+  if (!r) return 0;
+  if (typeof r.behandlet === 'number') return r.behandlet;
+  if (typeof r.fundet === 'number') return r.fundet;
+  return 0;
+}
+
+export function getSidsteResultatLabel(log: ScraperLogHistorik): string | null {
+  const r = log.resultat;
+  if (!r) return null;
+  if (typeof r.nye === 'number') return `${r.nye} nye`;
+  if (typeof r.behandlet === 'number' && r.behandlet > 0) return `${r.behandlet} beh.`;
+  if (typeof r.fundet === 'number' && r.fundet > 0) return `${r.fundet} fundet`;
+  return null;
 }
 
 export function tidLabel(iso: string) {

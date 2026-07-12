@@ -7,7 +7,7 @@ import type { ScraperLiveStatus } from '@/lib/db/ScraperStatus';
 import { SCRAPERS, SCRAPER_GRUPPER, getStatus, getBehandlet } from './liveMonitorConfig';
 import { ScraperRække } from './ScraperRække';
 
-const POLL_LOGS     = 60_000;  // 1 minut
+const POLL_LOGS     = 20_000;  // 20 sekunder
 const POLL_LIVE_AKTIV = 5_000; // 5 sek — når noget kører
 const POLL_LIVE_IDLE  = 30_000; // 30 sek — når alt er idle
 

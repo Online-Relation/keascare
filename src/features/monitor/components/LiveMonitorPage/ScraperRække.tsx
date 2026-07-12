@@ -3,7 +3,7 @@
 import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
 import type { ScraperLiveStatus } from '@/lib/db/ScraperStatus';
 import {
-  PALETTE, getStatus, getBehandlet, tidLabel, tidSidenLabel, estimerRestTid,
+  PALETTE, getStatus, getBehandlet, getSidsteResultatLabel, tidLabel, tidSidenLabel, estimerRestTid,
   type ScraperDef, type Status,
 } from './liveMonitorConfig';
 
@@ -234,7 +234,7 @@ export function ScraperRække({ scraper, log, forrigeLog, historik, flash, liveS
         <Sparkline værdier={sparkVærdier} color={p.accent} />
       )}
 
-      {/* Tidspunkt */}
+      {/* Tidspunkt + sidste resultat */}
       {log && (
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: '0.7rem', fontWeight: 600, color: p.accent, fontVariantNumeric: 'tabular-nums' }}>
@@ -243,6 +243,11 @@ export function ScraperRække({ scraper, log, forrigeLog, historik, flash, liveS
           <div style={{ fontSize: '0.58rem', color: '#94a3b8', marginTop: '0.05rem' }}>
             {tidSidenLabel(log.kørtKl)}
           </div>
+          {getSidsteResultatLabel(log) && (
+            <div style={{ fontSize: '0.55rem', color: '#64748b', marginTop: '0.1rem', fontVariantNumeric: 'tabular-nums' }}>
+              {getSidsteResultatLabel(log)}
+            </div>
+          )}
         </div>
       )}
     </div>
