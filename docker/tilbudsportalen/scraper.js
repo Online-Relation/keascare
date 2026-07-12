@@ -117,7 +117,7 @@ async function scraperListe(maxSider = 100) {
 
   const { error } = await supabase
     .from('tilbudsportalen_tilbud')
-    .upsert(rækker, { onConflict: 'afdelingsid', ignoreDuplicates: false });
+    .upsert(rækker, { onConflict: 'afdelingsid', ignoreDuplicates: true });
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
   console.log(`Gemt ${rækker.length} tilbud OK`);
@@ -290,7 +290,18 @@ try {
   } else {
     await nulstilDetaljerMaanedligt();
     await scraperListe();
-    await scraperDetaljer(200);
+    // Kør detaljer i loop til alt er hentet
+    let runde = 0;
+    while (true) {
+      runde++;
+      const { count } = await supabase
+        .from('tilbudsportalen_tilbud')
+        .select('*', { count: 'exact', head: true })
+        .eq('detaljer_hentet', false);
+      if (!count || count === 0) break;
+      console.log(`\nDetaljer runde ${runde} — ${count} tilbage...`);
+      await scraperDetaljer(100);
+    }
   }
   console.log('Done ✓');
 } catch (err) {
