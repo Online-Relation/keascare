@@ -277,7 +277,14 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
     // 1. Forsøg: match mod STPS på navn
     const stpsMatch = findNavn(kunde.navn, stpsNavnMap);
     if (stpsMatch) {
-      await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsMatch.id);
+      // Find CVR for denne STPS-rapport og opdater ALLE med samme CVR
+      const matchetRapport = stpsRapporter.find((r) => r.id === stpsMatch.id);
+      if (matchetRapport?.cvr) {
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', matchetRapport.cvr);
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', matchetRapport.cvr);
+      } else {
+        await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsMatch.id);
+      }
       matchetTilStps++;
       continue;
     }
@@ -285,18 +292,15 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
     // 2. Forsøg: match mod Tilbudsportalen på navn
     const tpMatch = findNavn(kunde.navn, tpNavnMap);
     if (tpMatch) {
-      // Hvis TP-tilbuddet har CVR der matcher en STPS-rapport, opdater den i stedet
       if (tpMatch.cvr) {
-        const stpsViaCvr = stpsCvrMap.get(tpMatch.cvr.trim());
-        if (stpsViaCvr) {
-          await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsViaCvr);
-          matchetTilStps++;
-          continue;
-        }
+        // Opdater ALLE TP-afdelinger og STPS-rapporter med samme CVR
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', tpMatch.cvr.trim());
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', tpMatch.cvr.trim());
+        matchetTilTp++;
+      } else {
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('id', tpMatch.id);
+        matchetTilTp++;
       }
-      // Ellers gem på Tilbudsportalen-rækken
-      await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('id', tpMatch.id);
-      matchetTilTp++;
       continue;
     }
 
