@@ -14,6 +14,8 @@ import {
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
+import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
+import { harAdgang, ROLLE_LABELS } from '@/features/auth/config/roller.config';
 
 type NavItem = { label: string; href: string; icon: React.ElementType };
 
@@ -71,8 +73,11 @@ function NavGruppe({ label, items, pathname }: { label: string; items: NavItem[]
 export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { rolle, loading } = useBrugerRolle();
   const erMarkedsforingAktiv = pathname.startsWith('/dashboard/markedsforing');
   const [markedsforingÅben, setMarkedsforingÅben] = useState(erMarkedsforingAktiv);
+
+  const vis = (href: string) => !loading && harAdgang(rolle, href);
 
   async function logUd() {
     const supabase = getSupabaseAuthBrowserClient();
@@ -94,44 +99,67 @@ export function DashboardSidebar() {
       </div>
 
       <nav style={{ flex: 1, overflowY: 'auto' }}>
-        <NavGruppe label="Overblik"    items={gruppeOverblik} pathname={pathname} />
-        <NavGruppe label="Marked"      items={gruppeMarked}   pathname={pathname} />
-        <NavGruppe label="Tilsyn"      items={gruppeTilsyn}   pathname={pathname} />
-        <NavGruppe label="CRM"         items={gruppeCrm}      pathname={pathname} />
+        {vis('/dashboard') && (
+          <NavGruppe label="Overblik" items={gruppeOverblik} pathname={pathname} />
+        )}
 
-        <div className="sidebar-nav-gruppe-sektion">
-          <p className="sidebar-section-label">Markedsføring</p>
-          <button
-            className={`sidebar-nav-item sidebar-nav-gruppe${erMarkedsforingAktiv ? ' active' : ''}`}
-            onClick={() => setMarkedsforingÅben((v) => !v)}
-          >
-            <Megaphone className="sidebar-nav-item-icon" size={16} />
-            <span style={{ flex: 1, textAlign: 'left' }}>Kanaler</span>
-            {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-          {markedsforingÅben && (
-            <div className="sidebar-subnav">
-              {gruppeMarkedsforing.map(({ label, href }) => (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`}
-                >
-                  {label}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
+        {gruppeMarked.some((i) => vis(i.href)) && (
+          <NavGruppe
+            label="Marked"
+            items={gruppeMarked.filter((i) => vis(i.href))}
+            pathname={pathname}
+          />
+        )}
 
-        <NavGruppe label="System" items={gruppeSystem} pathname={pathname} />
+        {gruppeTilsyn.some((i) => vis(i.href)) && (
+          <NavGruppe
+            label="Tilsyn"
+            items={gruppeTilsyn.filter((i) => vis(i.href))}
+            pathname={pathname}
+          />
+        )}
+
+        {vis('/dashboard/kunder') && (
+          <NavGruppe label="CRM" items={gruppeCrm} pathname={pathname} />
+        )}
+
+        {vis('/dashboard/markedsforing') && (
+          <div className="sidebar-nav-gruppe-sektion">
+            <p className="sidebar-section-label">Markedsføring</p>
+            <button
+              className={`sidebar-nav-item sidebar-nav-gruppe${erMarkedsforingAktiv ? ' active' : ''}`}
+              onClick={() => setMarkedsforingÅben((v) => !v)}
+            >
+              <Megaphone className="sidebar-nav-item-icon" size={16} />
+              <span style={{ flex: 1, textAlign: 'left' }}>Kanaler</span>
+              {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {markedsforingÅben && (
+              <div className="sidebar-subnav">
+                {gruppeMarkedsforing.map(({ label, href }) => (
+                  <Link key={href} href={href} className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`}>
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {gruppeSystem.some((i) => vis(i.href)) && (
+          <NavGruppe
+            label="System"
+            items={gruppeSystem.filter((i) => vis(i.href))}
+            pathname={pathname}
+          />
+        )}
       </nav>
 
       <Link href="/dashboard/profil" className="sidebar-footer">
         <UserAvatar size={32} fontSize="0.7rem" />
         <div style={{ flex: 1 }}>
           <p className="sidebar-user-name">Min profil</p>
-          <p className="sidebar-user-role">Klik for at redigere</p>
+          <p className="sidebar-user-role">{rolle ? ROLLE_LABELS[rolle] : 'Klik for at redigere'}</p>
         </div>
         <button className="sidebar-logud-knap" onClick={(e) => { e.preventDefault(); logUd(); }} title="Log ud">
           <LogOut size={15} />

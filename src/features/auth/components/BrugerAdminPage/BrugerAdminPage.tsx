@@ -1,22 +1,29 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { UserPlus, Trash2, Users, Eye, EyeOff } from 'lucide-react';
+import { UserPlus, Trash2, Users, Eye, EyeOff, Shield } from 'lucide-react';
+import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
+import { rollerTilgængeligeFor, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
 
 type Bruger = {
   id: string;
   email: string;
   navn: string;
+  rolle: BrugerRolle | null;
   oprettet: string;
   sidstLoggetInd: string | null;
 };
 
 export function BrugerAdminPage() {
+  const { rolle: minRolle } = useBrugerRolle();
+  const tilgængeligeRoller = rollerTilgængeligeFor(minRolle);
+
   const [brugere, setBrugere] = useState<Bruger[]>([]);
   const [loader, setLoader] = useState(true);
   const [email, setEmail] = useState('');
   const [navn, setNavn] = useState('');
   const [kodeord, setKodeord] = useState('');
+  const [rolle, setRolle] = useState<BrugerRolle | ''>('');
   const [visKodeord, setVisKodeord] = useState(false);
   const [opretter, setOpretter] = useState(false);
   const [fejl, setFejl] = useState<string | null>(null);
@@ -33,6 +40,7 @@ export function BrugerAdminPage() {
 
   async function opretBruger(e: React.FormEvent) {
     e.preventDefault();
+    if (!rolle) { setFejl('Vælg en rolle.'); return; }
     setOpretter(true);
     setFejl(null);
     setSucces(null);
@@ -40,20 +48,29 @@ export function BrugerAdminPage() {
     const res = await fetch('/api/auth/brugere', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, navn, kodeord }),
+      body: JSON.stringify({ email, navn, kodeord, rolle }),
     });
     const data = await res.json();
 
     if (!data.ok) {
       setFejl(data.fejl);
     } else {
-      setSucces(`${email} er oprettet.`);
-      setEmail('');
-      setNavn('');
-      setKodeord('');
+      setSucces(`${email} er oprettet som ${ROLLE_LABELS[rolle]}.`);
+      setEmail(''); setNavn(''); setKodeord(''); setRolle('');
       hentBrugere();
     }
     setOpretter(false);
+  }
+
+  async function opdaterRolle(id: string, nyRolle: BrugerRolle) {
+    const res = await fetch('/api/auth/brugere', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, rolle: nyRolle }),
+    });
+    const data = await res.json();
+    if (data.ok) hentBrugere();
+    else alert(data.fejl);
   }
 
   async function sletBruger(id: string, brugerEmail: string) {
@@ -112,6 +129,20 @@ export function BrugerAdminPage() {
                 </button>
               </div>
             </div>
+            <div className="login-felt-gruppe">
+              <label className="login-label">Rolle</label>
+              <select
+                className="login-input"
+                value={rolle}
+                onChange={(e) => setRolle(e.target.value as BrugerRolle)}
+                required
+              >
+                <option value="">Vælg rolle…</option>
+                {tilgængeligeRoller.map((r) => (
+                  <option key={r} value={r}>{ROLLE_LABELS[r]}</option>
+                ))}
+              </select>
+            </div>
             {fejl && <p className="login-fejl">{fejl}</p>}
             {succes && <p className="bruger-succes">{succes}</p>}
             <button className="btn btn-primary" type="submit" disabled={opretter}>
@@ -135,16 +166,25 @@ export function BrugerAdminPage() {
                 <div className="bruger-info">
                   <span className="bruger-navn">{b.navn || b.email}</span>
                   <span className="bruger-email">{b.navn ? b.email : ''}</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
+                    <Shield size={11} style={{ color: 'var(--color-text-muted)' }} />
+                    <select
+                      style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+                      value={b.rolle ?? ''}
+                      onChange={(e) => opdaterRolle(b.id, e.target.value as BrugerRolle)}
+                    >
+                      {!b.rolle && <option value="">Ingen rolle</option>}
+                      {tilgængeligeRoller.map((r) => (
+                        <option key={r} value={r}>{ROLLE_LABELS[r]}</option>
+                      ))}
+                    </select>
+                  </div>
                   <span className="bruger-meta">
                     Oprettet {new Date(b.oprettet).toLocaleDateString('da-DK')}
                     {b.sidstLoggetInd && ` · Sidst aktiv ${new Date(b.sidstLoggetInd).toLocaleDateString('da-DK')}`}
                   </span>
                 </div>
-                <button
-                  className="bruger-slet-knap"
-                  onClick={() => sletBruger(b.id, b.email ?? '')}
-                  title="Slet bruger"
-                >
+                <button className="bruger-slet-knap" onClick={() => sletBruger(b.id, b.email ?? '')} title="Slet bruger">
                   <Trash2 size={14} />
                 </button>
               </div>
