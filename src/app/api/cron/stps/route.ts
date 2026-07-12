@@ -17,6 +17,7 @@ import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
+import { opdaterScraperStatus } from '@/lib/db/ScraperStatus';
 
 function erAutoriseret(req: NextRequest): boolean {
   const secret = process.env.SCRAPER_SECRET;
@@ -26,17 +27,23 @@ function erAutoriseret(req: NextRequest): boolean {
 
 async function kørPipeline() {
   async function trin(id: string, fn: () => Promise<unknown>) {
+    await opdaterScraperStatus(id, 'kører', 0, 0);
     try {
       const res = await fn();
+      const behandlet = typeof (res as Record<string, unknown>)?.behandlet === 'number'
+        ? (res as Record<string, unknown>).behandlet as number
+        : 0;
       await logScraperKørsel(id, true, res as Record<string, unknown>);
+      await opdaterScraperStatus(id, 'idle', behandlet, behandlet);
     } catch (err) {
       const besked = err instanceof Error ? err.message : String(err);
       await logScraperKørsel(id, false, { error: besked });
+      await opdaterScraperStatus(id, 'fejl', 0, 0);
     }
   }
 
-  await trin('stps-liste',      () => kørStpsScraper({ maxSider: 10 }));
-  await trin('stps-detaljer',   () => kørDetaljerScraper(50));
+  await trin('stps-liste',    () => kørStpsScraper({ maxSider: 10 }));
+  await trin('stps-detaljer', () => kørDetaljerScraper(50));
 
   const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const secret = process.env.SCRAPER_SECRET ?? '';
@@ -48,8 +55,8 @@ async function kørPipeline() {
   await trin('stps-pnummer', () =>
     fetch(`${base}/api/scrapers/stps/pnummer`, { method: 'POST', headers, body: JSON.stringify({ batch: 50 }) }).then(r => r.json())
   );
-  await trin('cvr-berig',    () => berigMedCvr(50));
-  await trin('cvr-ansatte',  () => opdaterCvrAnsatte(200));
+  await trin('cvr-berig',   () => berigMedCvr(50));
+  await trin('cvr-ansatte', () => opdaterCvrAnsatte(200));
 }
 
 export async function POST(request: NextRequest) {
