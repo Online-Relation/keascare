@@ -13,23 +13,65 @@ const POLL_LIVE_IDLE  = 30_000; // 30 sek — når alt er idle
 
 // ── Klokke ────────────────────────────────────────────────────────────────────
 
+function nesteKørselKl20(): Date {
+  const nu = new Date();
+  const næste = new Date(nu);
+  næste.setHours(20, 0, 0, 0);
+  if (nu >= næste) næste.setDate(næste.getDate() + 1);
+  return næste;
+}
+
+function nedtællingLabel(restMs: number): string {
+  if (restMs <= 0) return 'Kører nu';
+  const totalMin = Math.floor(restMs / 60_000);
+  const t = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  if (t === 0) return `${m}m`;
+  return `${t}t ${String(m).padStart(2, '0')}m`;
+}
+
 function Klokke() {
   const [tid, setTid] = useState('');
   const [dato, setDato] = useState('');
+  const [restMs, setRestMs] = useState(0);
+
   useEffect(() => {
     function opdater() {
       const nu = new Date();
       setTid(nu.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       setDato(nu.toLocaleDateString('da-DK', { weekday: 'long', day: 'numeric', month: 'long' }));
+      setRestMs(nesteKørselKl20().getTime() - nu.getTime());
     }
     opdater();
     const id = setInterval(opdater, 1000);
     return () => clearInterval(id);
   }, []);
+
   return (
     <div style={{ textAlign: 'right' }}>
       <div style={{ fontSize: '2rem', fontWeight: 800, fontVariantNumeric: 'tabular-nums', color: '#f1f5f9', lineHeight: 1, letterSpacing: '-0.02em' }}>{tid}</div>
       <div style={{ fontSize: '0.65rem', color: '#475569', marginTop: '0.15rem', textTransform: 'capitalize' }}>{dato}</div>
+    </div>
+  );
+}
+
+function NedtællingKPI({ restMs, antalLive }: { restMs: number; antalLive: number }) {
+  if (antalLive > 0) {
+    return (
+      <div style={{ flex: 1, background: '#0c1a2e', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #38bdf833', animation: 'liveBlink 2s ease-in-out infinite' }}>
+        <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Live nu</div>
+        <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, color: '#38bdf8' }}>{antalLive}</div>
+        <div style={{ fontSize: '0.56rem', color: '#64748b', marginTop: '0.15rem' }}>scraper{antalLive > 1 ? 'e' : ''} kører</div>
+      </div>
+    );
+  }
+  return (
+    <div style={{ flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #0f2040' }}>
+      <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Næste kørsel</div>
+      <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#64748b' }}>
+        {nedtællingLabel(restMs)}
+      </div>
+      <div style={{ fontSize: '0.56rem', color: '#64748b', marginTop: '0.15rem' }}>til kl. 20:00</div>
     </div>
   );
 }
@@ -46,12 +88,12 @@ export function LiveMonitorPage() {
   const [historikLog, setHistorikLog] = useState<Map<string, ScraperLogHistorik[]>>(new Map());
   const [flashIds,    setFlashIds]    = useState<Set<string>>(new Set());
   const [liveStatusMap, setLiveStatusMap] = useState<Map<string, ScraperLiveStatus>>(new Map());
-  const [uptime, setUptime] = useState(0);
+  const [restMs, setRestMs] = useState(() => nesteKørselKl20().getTime() - Date.now());
   const sidsteMaxId = useRef(0);
 
-  // Uptime-tæller
+  // Nedtælling til næste kørsel
   useEffect(() => {
-    const id = setInterval(() => setUptime((s) => s + 1), 1000);
+    const id = setInterval(() => setRestMs(nesteKørselKl20().getTime() - Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
@@ -129,8 +171,6 @@ export function LiveMonitorPage() {
   const antalLive = Array.from(liveStatusMap.values()).filter((s) => s.status === 'kører').length;
   const healthPct = Math.round((antalOk / SCRAPERS.length) * 100);
   const totalBehandlet = Array.from(senesteLog.values()).reduce((s, l) => s + getBehandlet(l), 0);
-  const uptimMin  = Math.floor(uptime / 60);
-  const uptimSek  = uptime % 60;
 
   return (
     <div style={{
@@ -176,21 +216,7 @@ export function LiveMonitorPage() {
           <div style={{ fontSize: '0.56rem', color: '#64748b', marginTop: '0.15rem' }}>poster i perioden</div>
         </div>
 
-        {antalLive > 0 ? (
-          <div style={{ flex: 1, background: '#0c1a2e', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #38bdf833', animation: 'liveBlink 2s ease-in-out infinite' }}>
-            <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Live nu</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, color: '#38bdf8' }}>{antalLive}</div>
-            <div style={{ fontSize: '0.56rem', color: '#64748b', marginTop: '0.15rem' }}>scraper{antalLive > 1 ? 'e' : ''} kører</div>
-          </div>
-        ) : (
-          <div style={{ flex: 1, background: '#0b1120', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #0f2040' }}>
-            <div style={{ fontSize: '0.52rem', fontWeight: 700, letterSpacing: '0.12em', color: '#475569', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Aktiv siden</div>
-            <div style={{ fontSize: '1.5rem', fontWeight: 800, lineHeight: 1, fontVariantNumeric: 'tabular-nums', color: '#64748b', animation: 'uptimeTick 1s ease-in-out infinite alternate' }}>
-              {String(uptimMin).padStart(2, '0')}:{String(uptimSek).padStart(2, '0')}
-            </div>
-            <div style={{ fontSize: '0.56rem', color: '#64748b', marginTop: '0.15rem' }}>denne session</div>
-          </div>
-        )}
+        <NedtællingKPI restMs={restMs} antalLive={antalLive} />
 
         {antalFejl > 0 && (
           <div style={{ flex: 1, background: '#1a0505', borderRadius: 10, padding: '0.65rem 0.9rem', border: '1px solid #b91c1c33', animation: 'blinkRed 2s ease-in-out infinite' }}>
