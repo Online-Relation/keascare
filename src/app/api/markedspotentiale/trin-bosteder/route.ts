@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
   let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, monday_item_id')
-    .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false })
     .limit(200);
 

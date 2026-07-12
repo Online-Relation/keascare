@@ -23,7 +23,6 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer')
-    .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false });
 
   if (visFilter === 'privat') {

@@ -24,7 +24,6 @@ export async function GET(request: NextRequest) {
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, region, fund_niveau, cvr')
     .ilike('stps_tilbud_navn', `%${q}%`)
-    .or('tp_tilbudstype.is.null,tp_tilbudstype.ilike.%107%,tp_tilbudstype.ilike.%108%')
     .order('rapport_dato', { ascending: false })
     .limit(20);
 
