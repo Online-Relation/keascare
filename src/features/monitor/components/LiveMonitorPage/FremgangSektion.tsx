@@ -199,7 +199,6 @@ function TpStatusKort({ tp }: { tp: TpStatus }) {
 
   const rækker = [
     { label: 'Detaljer hentet', antal: medDetaljer, pct: pctDetaljer, accent: '#38bdf8' },
-    { label: 'CVR fundet',      antal: tp.medCvr,   pct: pctCvr,      accent: '#22c55e' },
     { label: 'Matchet m. STPS', antal: tp.matchet,  pct: tp.total > 0 ? Math.round((tp.matchet / tp.total) * 100) : 0, accent: '#a78bfa' },
   ];
 
