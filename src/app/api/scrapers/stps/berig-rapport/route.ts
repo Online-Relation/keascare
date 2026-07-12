@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
     .eq('id', bostedId)
     .maybeSingle();
 
-  if (!bosted?.rapport_url) {
-    return NextResponse.json({ ok: false, fejl: 'Ingen STPS rapport-URL fundet for dette bosted' });
+  if (!bosted?.rapport_url || bosted.rapport_url.startsWith('manuel:')) {
+    return NextResponse.json({ ok: false, fejl: 'Dette bosted har ingen direkte STPS rapport-URL — tilsynsform skal udfyldes manuelt' });
   }
 
   try {

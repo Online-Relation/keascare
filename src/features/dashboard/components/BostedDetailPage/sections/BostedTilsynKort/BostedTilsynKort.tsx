@@ -33,7 +33,7 @@ function HentStpsDetaljerKnap({ bostedId }: { bostedId: string }) {
   }
 
   if (status === 'ok') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-success)' }}>Detaljer hentet — opdaterer...</p>;
-  if (status === 'fejl') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-accent)' }}>{fejlTekst}</p>;
+  if (status === 'fejl') return <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{fejlTekst}</p>;
 
   return (
     <button
@@ -128,7 +128,7 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           </div>
         )}
 
-        {bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:') && !bosted.tilsynsform && !bosted.pdfUrl && (
+        {!bosted.tilsynsform && !bosted.pdfUrl && (
           <HentStpsDetaljerKnap bostedId={bosted.id} />
         )}
 
