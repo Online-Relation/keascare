@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
+import { FremgangSektion } from './FremgangSektion';
 
 const SCRAPERS = [
   { id: 'stps-liste',      label: 'STPS Rapporter',  emoji: '📋', kørselKl: '20:00', intervalTimer: 24 },
@@ -334,6 +335,9 @@ export function LiveMonitorPage() {
           />
         ))}
       </div>
+
+      {/* ── Fremgang ── */}
+      <FremgangSektion fra={null} til={null} />
 
       {/* ── Footer ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', flexShrink: 0, padding: '0.3rem 0.1rem 0' }}>
