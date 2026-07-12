@@ -41,6 +41,7 @@ export default async function MarkedsdataSide() {
       antalBosteder={antalBosteder}
       kvartal={kvartal}
       hentetKl={hentetKl}
+      visFilter={visFilter}
     />
   );
 }

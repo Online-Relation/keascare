@@ -1,6 +1,6 @@
 // src/features/markedsdata/components/MarkedsdataPage/MarkedsdataPage.tsx
 
-import { Database, Info } from 'lucide-react';
+import { Database, Info, Filter } from 'lucide-react';
 import { KommuneBarChart } from './charts/KommuneBarChart';
 import { ParagrafDonut } from './charts/ParagrafDonut';
 import { InfoTooltip } from '@/features/markedsforing/components/shared/InfoTooltip';
@@ -11,9 +11,11 @@ type Props = {
   antalBosteder: number;
   kvartal?: string | null;
   hentetKl?: string | null;
+  visFilter?: string;
 };
 
-export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl }: Props) {
+export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFilter }: Props) {
+  const erFiltreret = visFilter === 'privat';
   const totalBorgere = data.reduce((s, k) => s + k.total, 0);
   const totalP107 = data.reduce((s, k) => s + k.p107, 0);
   const totalP108 = data.reduce((s, k) => s + k.p108, 0);
@@ -23,32 +25,40 @@ export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl }: Prop
     {
       label: 'Bosteder i Danmark',
       værdi: antalBosteder.toLocaleString('da-DK'),
-forklaring: 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Tallet kan være højere end det reelle antal bosteder, fordi større organisationer med flere lokationer tæller som én afdeling pr. lokation.',
+      forklaring: erFiltreret
+        ? 'Viser kun private og selvejende §107/§108 afdelinger fra Tilbudsportalen — kommunale og regionale bosteder er fravalgt i dine indstillinger. Skift filter under Indstillinger for at se alle.'
+        : 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Tallet kan være højere end det reelle antal bosteder, fordi større organisationer med flere lokationer tæller som én afdeling pr. lokation.',
+      filtreret: true,
     },
     {
       label: 'Borgere i §107/§108 i alt',
       værdi: totalBorgere.toLocaleString('da-DK'),
-      forklaring: 'Det samlede antal danskere der modtager ydelser i enten et midlertidigt (§107) eller længerevarende (§108) botilbud.',
+      forklaring: 'Nationalt tal fra Danmarks Statistik — kan ikke filtreres på driftsform og viser altid alle borgere uanset dit filter.',
+      filtreret: false,
     },
     {
       label: '§107 – Midlertidigt botilbud',
       værdi: totalP107.toLocaleString('da-DK'),
-      forklaring: '§107 er midlertidigt ophold med støtte. Bruges typisk til personer i en overgangsperiode eller med midlertidigt behov for tæt støtte.',
+      forklaring: '§107 er midlertidigt ophold med støtte. Nationalt tal — ikke påvirket af driftsformfilter.',
+      filtreret: false,
     },
     {
       label: '§108 – Længerevarende botilbud',
       værdi: totalP108.toLocaleString('da-DK'),
-      forklaring: '§108 er langvarigt botilbud til personer med betydelig og varigt nedsat fysisk eller psykisk funktionsevne.',
+      forklaring: '§108 er langvarigt botilbud. Nationalt tal — ikke påvirket af driftsformfilter.',
+      filtreret: false,
     },
     {
       label: 'Kommuner med data',
       værdi: `${data.length}`,
       forklaring: 'Antal kommuner der har indberettet data til Danmarks Statistik for seneste kvartal.',
+      filtreret: false,
     },
     {
       label: 'Størst marked',
       værdi: størsteKommune?.kommune ?? '—',
       forklaring: `${størsteKommune?.kommune} har flest borgere i §107/§108 botilbud med i alt ${størsteKommune?.total.toLocaleString('da-DK')} borgere.`,
+      filtreret: false,
     },
   ];
 
@@ -72,9 +82,27 @@ forklaring: 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Talle
       <div className="dst-info-boks">
         <Info size={14} className="dst-info-ikon" />
         <p>
-          Antal bosteder stammer fra Tilbudsportalen (§107/§108) og følger dit valgte filter for driftsform. Borgere-tallene er hentet fra Danmarks Statistiks åbne API og opdateres kvartalsvist — de kan ikke filtreres på driftsform og viser derfor altid det samlede nationale tal. Tallene viser antal borgere der modtager botilbudsydelser — ikke antal pladser.
+          Borgere-tallene er fra Danmarks Statistiks åbne API og opdateres kvartalsvist — de viser altid det nationale totalbillede uanset filter. Antal bosteder følger dit valgte driftsformfilter. Tallene viser borgere der modtager botilbudsydelser — ikke antal pladser.
         </p>
       </div>
+
+      {erFiltreret && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.5rem',
+          padding: '0.55rem 0.85rem',
+          background: 'color-mix(in srgb, var(--color-accent) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--color-accent) 30%, transparent)',
+          borderRadius: 8,
+          fontSize: 'var(--text-xs)',
+          color: 'var(--color-accent)',
+        }}>
+          <Filter size={13} style={{ flexShrink: 0 }} />
+          <span>
+            <strong>Filter aktivt:</strong> Viser kun private og selvejende bosteder. Borgere-tallene er nationale og påvirkes ikke af filteret. Skift under{' '}
+            <a href="/dashboard/indstillinger" style={{ color: 'inherit', textDecoration: 'underline' }}>Indstillinger</a>.
+          </span>
+        </div>
+      )}
 
       <div className="dst-kpis">
         {kpis.map((kpi) => (
@@ -84,6 +112,17 @@ forklaring: 'Antal §107/§108 afdelinger registreret på Tilbudsportalen. Talle
               <InfoTooltip tekst={kpi.forklaring} />
             </div>
             <div className="dst-kpi-tal">{kpi.værdi}</div>
+            {erFiltreret && kpi.filtreret && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', marginTop: '0.3rem' }}>
+                <Filter size={10} style={{ color: 'var(--color-accent)', flexShrink: 0 }} />
+                <span style={{ fontSize: '0.65rem', color: 'var(--color-accent)' }}>Kun privat/selvejende</span>
+              </div>
+            )}
+            {!kpi.filtreret && kpi.label !== 'Kommuner med data' && kpi.label !== 'Størst marked' && (
+              <div style={{ marginTop: '0.3rem' }}>
+                <span style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>Nationalt tal · alle driftsformer</span>
+              </div>
+            )}
           </div>
         ))}
       </div>
