@@ -1,6 +1,6 @@
 // src/features/monitor/components/LiveMonitorPage/FremgangSektion.tsx
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { FremgangItem } from '@/app/api/scrapers/fremgang/route';
 import type { FremgangSnapshot } from '@/app/api/scrapers/fremgang/historik/route';
 
@@ -119,10 +119,48 @@ const ACCENT_MAP: Record<string, string> = {
 
 type TpStatus = { total: number; mangler: number; matchet: number; medCvr: number };
 
+function useKørselStatus(mangler: number | undefined) {
+  const forrigeMangler = useRef<number | null>(null);
+  const sidsteÆndring  = useRef<Date | null>(null);
+  const [status, setStatus] = useState<'idle' | 'kører' | 'færdig'>('idle');
+  const [færdigKl, setFærdigKl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (mangler === undefined) return;
+
+    if (forrigeMangler.current === null) {
+      forrigeMangler.current = mangler;
+      return;
+    }
+
+    if (mangler < forrigeMangler.current) {
+      // Tallet faldt — kørsel er i gang
+      forrigeMangler.current = mangler;
+      sidsteÆndring.current = new Date();
+      setStatus('kører');
+      setFærdigKl(null);
+      return;
+    }
+
+    // Ingen ændring siden sidst
+    if (status === 'kører' && sidsteÆndring.current) {
+      const stilleMs = Date.now() - sidsteÆndring.current.getTime();
+      if (stilleMs > 120_000) {
+        // 2 minutter uden ændring — anses som færdig
+        setStatus('færdig');
+        setFærdigKl(sidsteÆndring.current.toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' }));
+      }
+    }
+  }, [mangler, status]);
+
+  return { status, færdigKl };
+}
+
 function TpStatusKort({ tp }: { tp: TpStatus }) {
   const medDetaljer = tp.total - tp.mangler;
   const pctDetaljer = tp.total > 0 ? Math.round((medDetaljer / tp.total) * 100) : 0;
   const pctCvr      = tp.total > 0 ? Math.round((tp.medCvr   / tp.total) * 100) : 0;
+  const { status, færdigKl } = useKørselStatus(tp.mangler);
 
   const rækker = [
     { label: 'Detaljer hentet', antal: medDetaljer, pct: pctDetaljer, accent: '#38bdf8' },
@@ -130,16 +168,34 @@ function TpStatusKort({ tp }: { tp: TpStatus }) {
     { label: 'Matchet m. STPS', antal: tp.matchet,  pct: tp.total > 0 ? Math.round((tp.matchet / tp.total) * 100) : 0, accent: '#a78bfa' },
   ];
 
+  const statusBadge = (() => {
+    if (status === 'kører')  return { tekst: 'Kørsel i gang...', farve: '#38bdf8', animation: 'liveBlink 2s ease-in-out infinite' };
+    if (status === 'færdig') return { tekst: `Færdig kl. ${færdigKl}`, farve: '#22c55e', animation: undefined };
+    return null;
+  })();
+
   return (
     <div style={{
       background: '#0b1120', borderRadius: 10, padding: '0.7rem 0.9rem',
-      border: '1px solid #38bdf822', borderLeft: '3px solid #38bdf8',
+      border: `1px solid ${status === 'kører' ? '#38bdf833' : '#38bdf822'}`,
+      borderLeft: `3px solid ${status === 'kører' ? '#38bdf8' : status === 'færdig' ? '#22c55e' : '#38bdf8'}`,
       display: 'flex', flexDirection: 'column', gap: '0.5rem',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-        <span style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', color: '#475569', textTransform: 'uppercase' }}>
-          Tilbudsportalen
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{ fontSize: '0.58rem', fontWeight: 700, letterSpacing: '0.1em', color: '#475569', textTransform: 'uppercase' }}>
+            Tilbudsportalen
+          </span>
+          {statusBadge && (
+            <span style={{
+              fontSize: '0.52rem', fontWeight: 700, color: statusBadge.farve,
+              animation: statusBadge.animation,
+            }}>
+              {status === 'kører' && <span style={{ marginRight: '0.2rem' }}>●</span>}
+              {statusBadge.tekst}
+            </span>
+          )}
+        </div>
         <span style={{ fontSize: '0.6rem', color: '#64748b', fontVariantNumeric: 'tabular-nums' }}>
           {tp.total.toLocaleString('da-DK')} tilbud i alt
         </span>
@@ -163,9 +219,14 @@ function TpStatusKort({ tp }: { tp: TpStatus }) {
         </div>
       ))}
 
-      {tp.mangler > 0 && (
-        <div style={{ fontSize: '0.54rem', color: '#f59e0b', marginTop: '0.1rem' }}>
+      {tp.mangler > 0 && status !== 'færdig' && (
+        <div style={{ fontSize: '0.54rem', color: status === 'kører' ? '#38bdf8' : '#f59e0b', marginTop: '0.1rem' }}>
           {tp.mangler.toLocaleString('da-DK')} mangler stadig detaljer
+        </div>
+      )}
+      {status === 'færdig' && tp.mangler === 0 && (
+        <div style={{ fontSize: '0.54rem', color: '#22c55e', marginTop: '0.1rem' }}>
+          Alle detaljer hentet
         </div>
       )}
     </div>
