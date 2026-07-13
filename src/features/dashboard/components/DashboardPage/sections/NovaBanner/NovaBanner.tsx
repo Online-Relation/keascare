@@ -2,6 +2,7 @@
 
 // src/features/dashboard/components/DashboardPage/sections/NovaBanner/NovaBanner.tsx
 
+import type React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
@@ -39,17 +40,17 @@ function hilsen(navn: string | null, tid: TidContext): string {
 function novaIntro(tid: TidContext): string {
   switch (tid) {
     case 'morgen':
-      return 'Jeg har arbejdet mens du sov. Her er det vigtigste, du bør fokusere på i dag.';
+      return 'Her er dit overblik for i dag. Jeg har arbejdet mens du sov og fundet det vigtigste, du bør fokusere på.';
     case 'formiddag':
-      return 'Jeg har analyseret jeres datakilder i morges. Her er status for dagen.';
+      return 'Her er dit overblik. Jeg har analyseret jeres datakilder i morges og samlet dagens vigtigste signaler.';
     case 'dag':
-      return 'Jeg holder løbende øje med jeres datakilder. Her er det seneste overblik.';
+      return 'Her er dit overblik. Jeg holder løbende øje med jeres datakilder og har samlet det vigtigste til dig.';
     case 'eftermiddag':
-      return 'Jeg har holdt øje hele dagen. Her er hvad der kræver din opmærksomhed.';
+      return 'Her er dagens overblik. Jeg har holdt øje med jeres datakilder og prioriteret det vigtigste for dig.';
     case 'aften':
-      return 'Jeg har analyseret jeres datakilder i dag. Her er dagens vigtigste fund.';
+      return 'Her er dit overblik. Jeg har analyseret jeres datakilder i dag og samlet de vigtigste fund.';
     case 'nat':
-      return 'Jeg arbejder også om natten. Her er det aktuelle overblik.';
+      return 'Her er det aktuelle overblik. Jeg arbejder kontinuerligt og har samlet det vigtigste til dig.';
   }
 }
 
@@ -62,42 +63,85 @@ function beregnNovaFund(data: DashboardData) {
   return { kritiskeAntal, ubearbejdede, kunder, totalRapporter };
 }
 
+function IconAdvarsel() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+    </svg>
+  );
+}
+
+function IconPersoner() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 00-3-3.87"/>
+      <path d="M16 3.13a4 4 0 010 7.75"/>
+    </svg>
+  );
+}
+
+function IconKalender() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+      <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+      <line x1="3" y1="10" x2="21" y2="10"/>
+    </svg>
+  );
+}
+
 export function NovaBanner({ data }: Props) {
   const { navn, loading } = useBrugerRolle();
   const { kritiskeAntal, ubearbejdede, kunder, totalRapporter } = beregnNovaFund(data);
   const tid = getTidContext();
 
-  const fund = [
-    kritiskeAntal > 0 && {
-      tekst: `${kritiskeAntal} ${kritiskeAntal === 1 ? 'bosted med kritisk STPS-tilsyn' : 'bosteder med kritiske STPS-tilsyn'}`,
+  const fundItems = [
+    kritiskeAntal > 0 ? {
+      titel: `${kritiskeAntal} ${kritiskeAntal === 1 ? 'nyt kritisk STPS-tilsyn' : 'nye kritiske STPS-tilsyn'}`,
+      sub: 'Alvorlige fund registreret — kræver handling',
       variant: 'kritisk' as const,
-    },
-    ubearbejdede > 0 && {
-      tekst: `${ubearbejdede} ${ubearbejdede === 1 ? 'potentiel kunde ikke bearbejdet endnu' : 'potentielle kunder ikke bearbejdet endnu'}`,
+      Ikon: IconAdvarsel,
+    } : null,
+    ubearbejdede > 0 ? {
+      titel: `${ubearbejdede} ${ubearbejdede === 1 ? 'ny potentiel kunde' : 'nye potentielle kunder'}`,
+      sub: 'Matcher jeres malgruppe — ikke bearbejdet endnu',
       variant: 'advarsel' as const,
-    },
-    kunder > 0 && {
-      tekst: `${kunder} ${kunder === 1 ? 'eksisterende kunde' : 'eksisterende kunder'} i Monday CRM`,
+      Ikon: IconPersoner,
+    } : null,
+    kunder > 0 ? {
+      titel: `${kunder} ${kunder === 1 ? 'eksisterende kunde' : 'eksisterende kunder'} i Monday`,
+      sub: 'Aktive i jeres CRM',
       variant: 'neutral' as const,
-    },
-  ].filter(Boolean) as { tekst: string; variant: 'kritisk' | 'advarsel' | 'neutral' }[];
+      Ikon: IconKalender,
+    } : null,
+  ].filter(Boolean) as { titel: string; sub: string; variant: 'kritisk' | 'advarsel' | 'neutral'; Ikon: () => React.ReactElement }[];
 
   return (
     <div className="nova-banner">
-      <div className="nova-banner__left">
-        <h1 className="nova-banner__hilsen">
-          {loading ? 'Hej' : hilsen(navn, tid)}
-        </h1>
-        <p className="nova-banner__intro">
-          {novaIntro(tid)}
-        </p>
 
-        {fund.length > 0 && (
+      {/* Kolonne 1: Velkomst + fund + CTA */}
+      <div className="nova-banner__left">
+        <div className="nova-banner__tekst">
+          <h1 className="nova-banner__hilsen">
+            {loading ? 'Hej' : hilsen(navn, tid)}
+          </h1>
+          <p className="nova-banner__intro">{novaIntro(tid)}</p>
+        </div>
+
+        {fundItems.length > 0 && (
           <ul className="nova-banner__fund-liste">
-            {fund.map((f, i) => (
+            {fundItems.map((f, i) => (
               <li key={i} className={`nova-banner__fund-item nova-banner__fund-item--${f.variant}`}>
-                <span className="nova-banner__fund-dot" />
-                <span className="nova-banner__fund-tekst">{f.tekst}</span>
+                <div className="nova-banner__fund-ikon-wrapper">
+                  <f.Ikon />
+                </div>
+                <div className="nova-banner__fund-tekst-wrapper">
+                  <span className="nova-banner__fund-titel">{f.titel}</span>
+                  <span className="nova-banner__fund-sub">{f.sub}</span>
+                </div>
               </li>
             ))}
           </ul>
@@ -108,41 +152,42 @@ export function NovaBanner({ data }: Props) {
         </Link>
       </div>
 
-      <div className="nova-banner__right">
-        <div className="nova-banner__profil">
-          <div className="nova-banner__avatar-wrapper">
-            <Image
-              src="/images/medarbejdere/nova.webp"
-              alt="Nova, Digital Lead Analyst"
-              width={96}
-              height={96}
-              className="nova-banner__avatar"
-              priority
-            />
-            <span className="nova-banner__online-dot" aria-label="Nova er aktiv" />
-          </div>
-          <div className="nova-banner__profil-info">
-            <span className="nova-banner__navn">Nova</span>
-            <span className="nova-banner__titel">Digital Lead Analyst</span>
-            <span className="nova-banner__status">Overvager +1.200 datakilder dognet rundt</span>
-          </div>
+      {/* Kolonne 2: Nova profil centreret */}
+      <div className="nova-banner__center">
+        <div className="nova-banner__avatar-wrapper">
+          <Image
+            src="/images/medarbejdere/nova.webp"
+            alt="Nova, Digital Lead Analyst"
+            width={120}
+            height={120}
+            className="nova-banner__avatar"
+            priority
+          />
+          <span className="nova-banner__online-dot" aria-label="Nova er aktiv" />
         </div>
+        <span className="nova-banner__navn">Nova</span>
+        <span className="nova-banner__titel">Digital Lead Analyst</span>
+        <span className="nova-banner__status">Overvaager +1.200 datakilder dognet rundt</span>
+      </div>
 
-        <div className="nova-banner__kpis">
-          <div className="nova-banner__kpi">
-            <span className="nova-banner__kpi-tal">{totalRapporter}</span>
-            <span className="nova-banner__kpi-label">Rapporter analyseret</span>
-          </div>
-          <div className="nova-banner__kpi">
-            <span className="nova-banner__kpi-tal">{ubearbejdede}</span>
-            <span className="nova-banner__kpi-label">Leads klar</span>
-          </div>
-          <div className="nova-banner__kpi nova-banner__kpi--alert">
-            <span className="nova-banner__kpi-tal">{kritiskeAntal}</span>
-            <span className="nova-banner__kpi-label">Kritiske fund</span>
-          </div>
+      {/* Kolonne 3: KPI-stack */}
+      <div className="nova-banner__kpis">
+        <div className="nova-banner__kpi">
+          <span className="nova-banner__kpi-tal">{totalRapporter}</span>
+          <span className="nova-banner__kpi-label">Rapporter analyseret</span>
+        </div>
+        <div className="nova-banner__kpi-divider" />
+        <div className="nova-banner__kpi">
+          <span className="nova-banner__kpi-tal">{ubearbejdede}</span>
+          <span className="nova-banner__kpi-label">Nye leads fundet</span>
+        </div>
+        <div className="nova-banner__kpi-divider" />
+        <div className="nova-banner__kpi nova-banner__kpi--alert">
+          <span className="nova-banner__kpi-tal">{kritiskeAntal}</span>
+          <span className="nova-banner__kpi-label">Kritiske fund identificeret</span>
         </div>
       </div>
+
     </div>
   );
 }
