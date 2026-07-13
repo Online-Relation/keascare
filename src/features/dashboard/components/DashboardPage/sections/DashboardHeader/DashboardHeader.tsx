@@ -1,11 +1,12 @@
 // src/features/dashboard/components/DashboardPage/sections/DashboardHeader/DashboardHeader.tsx
 
-import { Bell, Star } from 'lucide-react';
+import { Star } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { GlobalSearch } from '@/features/dashboard/components/GlobalSearch';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
+import { NotifikationsCenter } from '@/features/dashboard/components/NotifikationsCenter';
 
 export function DashboardHeader() {
   return (
@@ -24,9 +25,7 @@ export function DashboardHeader() {
         <Link href="/dashboard/favoritter" className="btn btn-ghost btn-sm" aria-label="Fulgte bosteder">
           <Star size={15} />
         </Link>
-        <button className="btn btn-ghost btn-sm" aria-label="Notifikationer">
-          <Bell size={15} />
-        </button>
+        <NotifikationsCenter />
         <Link href="/dashboard/profil" aria-label="Min profil">
           <UserAvatar size={30} fontSize="0.65rem" />
         </Link>
