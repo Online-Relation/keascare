@@ -189,8 +189,8 @@ export function NovaBanner({ data }: Props) {
       {/* Kolonne 1: Velkomst + fund + CTA */}
       <div className="nova-banner__left">
         <div className="nova-banner__tekst">
-          <h1 className="nova-banner__hilsen">
-            {loading ? 'Hej' : hilsen(navn, tid)}
+          <h1 className="nova-banner__hilsen" style={{ visibility: loading ? 'hidden' : 'visible' }}>
+            {hilsen(navn, tid)}
           </h1>
           <p className="nova-banner__intro">{novaIntro(tid)}</p>
         </div>
