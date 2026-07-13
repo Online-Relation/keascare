@@ -156,7 +156,11 @@ export async function scraperListeSider(maxSider = 10): Promise<StpsListeItem[]>
 
     alle.push(...items);
 
-    const totalSider = Math.ceil((svar.data.totalResultCount['All'] ?? 0) / 10);
+    // Brug summen af alle tællere som fallback hvis 'All' mangler
+    const totalCount =
+      svar.data.totalResultCount['All'] ??
+      Object.values(svar.data.totalResultCount).reduce((s, n) => s + n, 0);
+    const totalSider = totalCount > 0 ? Math.ceil(totalCount / 10) : maxSider;
     if (side >= totalSider) break;
 
     if (side < maxSider) await venteMs(SCRAPER_DELAY_MS);
