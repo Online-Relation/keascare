@@ -87,6 +87,14 @@ async function opretSession(): Promise<ScraperSession> {
   return { client, config };
 }
 
+// Konverter DD-MM-YYYY → YYYY-MM-DD (Postgres DATE format)
+function normaliserDato(dato: string): string {
+  if (!dato) return '';
+  const ddmmyyyy = dato.match(/^(\d{2})-(\d{2})-(\d{4})$/);
+  if (ddmmyyyy) return `${ddmmyyyy[3]}-${ddmmyyyy[2]}-${ddmmyyyy[1]}`;
+  return dato.substring(0, 10); // Antag allerede ISO-format
+}
+
 function parseItemsFromHtml(html: string): StpsListeItem[] {
   const $ = load(html);
   const resultater: StpsListeItem[] = [];
@@ -108,12 +116,13 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
 
     if (!navn) return; // Spring over hvis vi ikke kan finde et navn
 
-    const rapportDato =
-      $(el).find('.datetime').attr('data-date')?.substring(0, 10) ||
-      $(el).find('[data-date]').first().attr('data-date')?.substring(0, 10) ||
+    const rapportDatoRå =
+      $(el).find('.datetime').attr('data-date') ||
+      $(el).find('[data-date]').first().attr('data-date') ||
+      $(el).find('time').attr('datetime') ||
       $(el).find('.datetime').text().trim() ||
-      $(el).find('time').attr('datetime')?.substring(0, 10) ||
       '';
+    const rapportDato = normaliserDato(rapportDatoRå);
 
     const tags: string[] = [];
     $(el).find('.labels .label, .tags .tag, [class*="label"], [class*="tag"]').each((_, tagEl) => {
