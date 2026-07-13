@@ -12,6 +12,7 @@ type Props = {
 export function UserAvatar({ size = 30, fontSize = '0.65rem', className = 'sidebar-avatar' }: Props) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [initialer, setInitialer] = useState('');
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseAuthBrowserClient();
@@ -25,8 +26,11 @@ export function UserAvatar({ size = 30, fontSize = '0.65rem', className = 'sideb
         : email.slice(0, 2).toUpperCase();
       setInitialer(init);
       setAvatarUrl(user.user_metadata?.avatar_url ?? null);
+      setLoaded(true);
     });
   }, []);
+
+  if (!loaded) return <div style={{ width: size, height: size, flexShrink: 0 }} />;
 
   if (avatarUrl) {
     return (
