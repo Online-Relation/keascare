@@ -3,6 +3,7 @@
 
 @import "./styles/variables/colors.css";
 @import "./styles/variables/typography.css";
+@import "./styles/components/nova-banner.css";
 @import "./styles/components/badge.css";
 @import "./styles/components/button.css";
 @import "./styles/components/card.css";

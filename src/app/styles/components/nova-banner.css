@@ -1,0 +1,214 @@
+/* src/app/styles/components/nova-banner.css */
+
+.nova-banner {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2rem;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  padding: 2rem 2.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 4px rgba(30, 58, 95, 0.06);
+  align-items: center;
+}
+
+/* ── Venstre ── */
+
+.nova-banner__left {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 560px;
+}
+
+.nova-banner__hilsen {
+  font-size: 1.625rem;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  margin: 0;
+}
+
+.nova-banner__intro {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.nova-banner__fund-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nova-banner__fund-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  font-size: var(--text-sm);
+}
+
+.nova-banner__fund-ikon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.nova-banner__fund-tekst {
+  font-weight: var(--fw-medium);
+}
+
+.nova-banner__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background-color: var(--color-primary);
+  color: #ffffff;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+  padding: 0.625rem 1.25rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  width: fit-content;
+  transition: background-color 0.15s ease;
+}
+
+.nova-banner__cta:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* ── Højre ── */
+
+.nova-banner__right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  min-width: 280px;
+}
+
+.nova-banner__profil {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.nova-banner__avatar-wrapper {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+
+.nova-banner__avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 9999px;
+  object-fit: cover;
+  object-position: top center;
+  border: 3px solid var(--color-border);
+  filter: grayscale(20%);
+}
+
+.nova-banner__online-dot {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 14px;
+  height: 14px;
+  background-color: #22c55e;
+  border-radius: 9999px;
+  border: 2px solid var(--color-card);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.3);
+}
+
+.nova-banner__profil-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+}
+
+.nova-banner__navn {
+  font-size: var(--text-base);
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+}
+
+.nova-banner__titel {
+  font-size: var(--text-xs);
+  font-weight: var(--fw-medium);
+  color: var(--color-primary);
+  letter-spacing: 0.02em;
+}
+
+.nova-banner__status {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ── KPI-række ── */
+
+.nova-banner__kpis {
+  display: flex;
+  gap: 1.25rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+  width: 100%;
+  justify-content: center;
+}
+
+.nova-banner__kpi {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  text-align: center;
+}
+
+.nova-banner__kpi-tal {
+  font-size: 1.375rem;
+  font-weight: var(--fw-bold);
+  color: var(--color-text-primary);
+  line-height: 1;
+}
+
+.nova-banner__kpi--alert .nova-banner__kpi-tal {
+  color: #dc2626;
+}
+
+.nova-banner__kpi-label {
+  font-size: 0.6875rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+/* ── Responsivt ── */
+
+@media (max-width: 900px) {
+  .nova-banner {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+  }
+
+  .nova-banner__right {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    min-width: unset;
+  }
+
+  .nova-banner__kpis {
+    border-top: none;
+    padding-top: 0;
+    border-left: 1px solid var(--color-border);
+    padding-left: 1.25rem;
+  }
+}
