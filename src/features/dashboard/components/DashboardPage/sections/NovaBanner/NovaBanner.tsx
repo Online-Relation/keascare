@@ -131,13 +131,14 @@ export function NovaBanner({ data }: Props) {
   const { navn, loading } = useBrugerRolle();
   const { kritiskeAntal, ubearbejdede, kunder, totalRapporter } = beregnNovaFund(data);
   const tid = getTidContext();
+
+  const [novaBeskeder, setNovaBeskeder] = useState<NovaBesked[] | null>(null);
+  const [novaAktivitet, setNovaAktivitet] = useState<NovaAktivitet | null>(null);
+
   const novaStatus: NovaStatus = novaAktivitet?.status ?? 'aktiv';
   const statusConfig = NOVA_STATUS_CONFIG[novaStatus];
   const erOptaget = novaStatus === 'optaget';
   const erRigtig = novaAktivitet?.erRigtig ?? false;
-
-  const [novaBeskeder, setNovaBeskeder] = useState<NovaBesked[] | null>(null);
-  const [novaAktivitet, setNovaAktivitet] = useState<NovaAktivitet | null>(null);
 
   useEffect(() => {
     fetch('/api/nova/beskeder')
