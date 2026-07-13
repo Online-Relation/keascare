@@ -146,12 +146,22 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
   if (tilbudFejl) throw new Error(`Tilbudsportalen fejl: ${tilbudFejl.message}`);
 
   const alleTilbud = (tilbud ?? []) as TpTilbud[];
+
+  // Virksomheds-total pladser pr. CVR: sum af alle afdelingers §107+§108-pladser
+  const cvrPladserTotal = new Map<string, number>();
+  for (const t of alleTilbud) {
+    if (!t.cvr || !t.pladser) continue;
+    const key = t.cvr.trim();
+    cvrPladserTotal.set(key, (cvrPladserTotal.get(key) ?? 0) + t.pladser);
+  }
+
   const cvrMap = new Map<string, TpData>();
   const navnMap = new Map<string, { data: TpData; kommune: string | null }>();
 
   for (const t of alleTilbud) {
+    const virksomhedsPladser = t.cvr ? (cvrPladserTotal.get(t.cvr.trim()) ?? t.pladser) : t.pladser;
     const data: TpData = {
-      id: t.id, cvr: t.cvr ?? null, tilbudstype: t.tilbudstype, pladser: t.pladser,
+      id: t.id, cvr: t.cvr ?? null, tilbudstype: t.tilbudstype, pladser: virksomhedsPladser,
       p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
       telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
       leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,

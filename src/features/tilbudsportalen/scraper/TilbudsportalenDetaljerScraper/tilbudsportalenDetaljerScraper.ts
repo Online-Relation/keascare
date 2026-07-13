@@ -73,10 +73,15 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
     }
   });
 
-  // Pladser — prøv struktureret #pladser-sektion først, derefter regex på brødtekst
+  // Pladser — kun §107 og §108 tælles; §43 og andre paragraffer ignoreres
   let pladser: number | null = null;
   let pladsTotal = 0;
   $('#pladser').find('div.lh-1').each((_, el) => {
+    const paragrafTekst = $(el).find('h3').text();
+    const paragrafMatch = paragrafTekst.match(/§\s*(\d+)/i);
+    if (!paragrafMatch) return;
+    const paragrafNr = parseInt(paragrafMatch[1], 10);
+    if (paragrafNr !== 107 && paragrafNr !== 108) return;
     const antalTekst = $(el).find('div').first().text();
     const m = antalTekst.match(/(\d+)/);
     if (m) pladsTotal += parseInt(m[1], 10);
@@ -142,12 +147,16 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
   // Tilsynsførende myndighed
   const tilsynsmyndighed: string | null = findLabelVærdi($, 'Tilsynsførende myndighed');
 
-  // Pladser pr. paragraf — parse #pladser sektionen
+  // Pladser pr. paragraf — kun §107 og §108; §43 ignoreres
   const pladsePoster: string[] = [];
   $('#pladser').find('div.lh-1').each((_, el) => {
-    const paragraf = $(el).find('h3').text().match(/§\s*(\d+\w*)/i);
+    const paragrafTekst2 = $(el).find('h3').text();
+    const paragrafMatch2 = paragrafTekst2.match(/§\s*(\d+\w*)/i);
+    if (!paragrafMatch2) return;
+    const paragrafNr2 = parseInt(paragrafMatch2[1], 10);
+    if (paragrafNr2 !== 107 && paragrafNr2 !== 108) return;
     const antal = $(el).find('div').first().text().match(/(\d+)\s+pladser/i);
-    if (paragraf && antal) pladsePoster.push(`${antal[1]} §${paragraf[1]}`);
+    if (antal) pladsePoster.push(`${antal[1]} §${paragrafMatch2[1]}`);
   });
   const pladsePrParagraf: string | null = pladsePoster.length ? pladsePoster.join(', ') : null;
 
