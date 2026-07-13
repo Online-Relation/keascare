@@ -92,32 +92,45 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
   const resultater: StpsListeItem[] = [];
 
   $('.item').each((_, el) => {
+    // Prøv alle kendte URL-placeringer
     const detailUrl =
       $(el).attr('data-url') ||
-      $(el).find('a').first().attr('href') ||
+      $(el).find('[data-url]').first().attr('data-url') ||
+      $(el).find('a[href]').first().attr('href') ||
+      $(el).find('.heading a, h2 a, h3 a').first().attr('href') ||
       '';
 
-    if (!detailUrl) return;
+    // Prøv alle kendte navn-placeringer
+    const navn =
+      $(el).find('.heading a, h2 a, h3 a').first().text().trim() ||
+      $(el).find('.heading, h2, h3').first().text().trim() ||
+      $(el).find('a').first().text().trim();
 
-    const navn = $(el).find('.heading a, h2 a').first().text().trim();
-    if (!navn) return;
+    if (!navn) return; // Spring over hvis vi ikke kan finde et navn
 
     const rapportDato =
       $(el).find('.datetime').attr('data-date')?.substring(0, 10) ||
+      $(el).find('[data-date]').first().attr('data-date')?.substring(0, 10) ||
       $(el).find('.datetime').text().trim() ||
+      $(el).find('time').attr('datetime')?.substring(0, 10) ||
       '';
 
     const tags: string[] = [];
-    $(el).find('.labels .label').each((_, tagEl) => {
+    $(el).find('.labels .label, .tags .tag, [class*="label"], [class*="tag"]').each((_, tagEl) => {
       const tekst = $(tagEl).text().trim();
-      if (tekst) tags.push(tekst);
+      // Undgå at medtage store tekstblokke (kun korte tags)
+      if (tekst && tekst.length < 60) tags.push(tekst);
     });
 
     const besoegsTekst = $(el).find('p').text();
     const besoegsDatoMatch = besoegsTekst.match(/(\d{2}-\d{2}-\d{4})/);
     const besoegsDato = besoegsDatoMatch?.[1] ?? null;
 
-    resultater.push({ navn, rapportDato, tags, detailUrl, besoegsDato });
+    // Brug URL hvis tilgængelig — ellers generer en stabil nøgle fra navn+dato
+    const finalUrl = detailUrl ||
+      `stps://genereret/${encodeURIComponent(navn)}${rapportDato ? `/${rapportDato}` : ''}`;
+
+    resultater.push({ navn, rapportDato, tags, detailUrl: finalUrl, besoegsDato });
   });
 
   return resultater;
