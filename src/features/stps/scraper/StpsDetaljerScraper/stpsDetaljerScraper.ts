@@ -34,17 +34,31 @@ function udtraekPdfUrl(html: string): string | null {
   return href ?? null;
 }
 
+function udtraekCvrFraHtml(html: string): string | null {
+  // CVR vises i STPS detalje-HTML som tekst, f.eks. "CVR-nummer: 12345678"
+  const match = html.match(/CVR-?\s*(?:nummer)?:?\s*(\d{8})/i);
+  return match?.[1] ?? null;
+}
+
+function udtraekPNummerFraHtml(html: string): string | null {
+  const match =
+    html.match(/P-?\s*nummer:?\s*(\d{10})/i) ??
+    html.match(/Produktionsenhed:?\s*(\d{10})/i);
+  return match?.[1] ?? null;
+}
+
 export async function kørDetaljerScraper(batchStørrelse = 50): Promise<DetaljerResultat> {
   const supabase = getSupabaseServerClient();
   const fejlBeskeder: string[] = [];
   let behandlet = 0;
   let fejl = 0;
 
-  // Hent alle rapporter der endnu ikke er PDF-behandlet
+  // Hent rapporter med rigtige STPS-URLs (ikke genererede) der ikke er PDF-behandlet
   const { data, error } = await supabase
     .from('stps_rapporter')
     .select('id, rapport_url, stps_tilbud_navn')
     .eq('pdf_behandlet', false)
+    .not('rapport_url', 'ilike', 'stps://genereret/%')
     .limit(batchStørrelse);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
@@ -54,13 +68,23 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
     const { id, rapport_url, stps_tilbud_navn } = rapporter[i];
 
     try {
-      // 1. Hent detailside for at finde PDF-URL
+      // 1. Hent detailside
       const response = await HTTP_CLIENT.get<string>(rapport_url, { responseType: 'text' });
-      const pdfUrl = udtraekPdfUrl(response.data);
+      const htmlIndhold = response.data;
+
+      // Udtræk CVR og P-nummer direkte fra HTML (hurtigere end PDF)
+      const cvrFraHtml = udtraekCvrFraHtml(htmlIndhold);
+      const pNummerFraHtml = udtraekPNummerFraHtml(htmlIndhold);
+
+      const pdfUrl = udtraekPdfUrl(htmlIndhold);
 
       if (!pdfUrl) {
-        // Ingen PDF fundet — marker som behandlet alligevel
-        await supabase.from('stps_rapporter').update({ pdf_behandlet: true }).eq('id', id);
+        // Ingen PDF — gem hvad vi fandt i HTML og marker behandlet
+        await supabase.from('stps_rapporter').update({
+          cvr: cvrFraHtml,
+          p_nummer: pNummerFraHtml,
+          pdf_behandlet: true,
+        }).eq('id', id);
         behandlet++;
         continue;
       }
@@ -68,15 +92,15 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
       // 2. Parse PDF og udtræk detaljer
       const detaljer = await parsePdfFraUrl(pdfUrl);
 
-      // 3. Gem i Supabase
+      // 3. Gem — CVR fra HTML har forrang hvis PDF-parse fejler
       await supabase.from('stps_rapporter').update({
         pdf_url: pdfUrl,
         pdf_vurdering: detaljer.vurdering,
         pdf_fund: detaljer.fund,
-        cvr: detaljer.cvr,
+        cvr: detaljer.cvr ?? cvrFraHtml,
         adresse: detaljer.adresse,
         pladser: detaljer.pladser,
-        p_nummer: detaljer.pNummer,
+        p_nummer: detaljer.pNummer ?? pNummerFraHtml,
         fund_items: detaljer.fundItems.length > 0 ? detaljer.fundItems : null,
         pdf_behandlet: true,
       }).eq('id', id);
