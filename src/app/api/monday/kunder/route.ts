@@ -21,6 +21,7 @@ export async function GET() {
       navn:             r.navn ?? '',
       gruppe:           (r.gruppe ?? 'ukendt') as MondayGruppe,
       gruppeNavn:       r.gruppe_navn ?? '',
+      cvr:              null,
       adresse:          r.adresse,
       email:            r.email,
       website:          r.website,

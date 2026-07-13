@@ -7,6 +7,7 @@ export type MondayKundeItem = {
   navn: string;
   gruppe: MondayGruppe;
   gruppeNavn: string;
+  cvr: string | null;
   adresse: string | null;
   email: string | null;
   website: string | null;

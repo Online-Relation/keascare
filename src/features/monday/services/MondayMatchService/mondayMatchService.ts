@@ -144,12 +144,31 @@ async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
   });
 }
 
+function udtraekCvr(item: RåMondayItem): string | null {
+  // Prøv kendte CVR-kolonnenavne i Monday
+  const kandidater = ['CVR', 'CVR-nummer', 'CVR nummer', 'cvr', 'Cvr'];
+  for (const titel of kandidater) {
+    const val = findKolonneVærdi(item, titel);
+    if (val) {
+      const tal = val.replace(/\D/g, '');
+      if (tal.length >= 6 && tal.length <= 10) return tal;
+    }
+  }
+  // Prøv at finde et 8-cifret tal i kolonneværdier (CVR er præcis 8 cifre i DK)
+  for (const cv of item.column_values) {
+    const match = cv.text?.match(/\b(\d{8})\b/);
+    if (match) return match[1];
+  }
+  return null;
+}
+
 function mapTilKundeItem(item: RåMondayItem): MondayKundeItem {
   return {
     mondayId:         item.id,
     navn:             item.name,
     gruppe:           mapGruppe(item.group.title),
     gruppeNavn:       item.group.title,
+    cvr:              udtraekCvr(item),
     adresse:          findKolonneVærdi(item, 'Forløb Adresse'),
     email:            findKolonneVærdi(item, 'Kontakt Mail'),
     website:          findKolonneVærdi(item, 'Forløb Website'),
@@ -274,10 +293,28 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
       monday_match_dato: nu,
     };
 
-    // 1. Forsøg: match mod STPS på navn
+    // 1. Forsøg: direkte CVR-match (mest præcist — uafhængig af navneforskelle)
+    if (kunde.cvr) {
+      const cvrKey = kunde.cvr.trim();
+      if (stpsCvrMap.has(cvrKey)) {
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', cvrKey);
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', cvrKey);
+        matchetTilStps++;
+        continue;
+      }
+      // Tjek også TP
+      const tpCvrMatch = tpTilbud.find((t) => t.cvr?.trim() === cvrKey);
+      if (tpCvrMatch) {
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', cvrKey);
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', cvrKey);
+        matchetTilTp++;
+        continue;
+      }
+    }
+
+    // 2. Forsøg: match mod STPS på navn (fallback når Monday mangler CVR)
     const stpsMatch = findNavn(kunde.navn, stpsNavnMap);
     if (stpsMatch) {
-      // Find CVR for denne STPS-rapport og opdater ALLE med samme CVR
       const matchetRapport = stpsRapporter.find((r) => r.id === stpsMatch.id);
       if (matchetRapport?.cvr) {
         await supabase.from('stps_rapporter').update(mondayData).eq('cvr', matchetRapport.cvr);
@@ -289,11 +326,10 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
       continue;
     }
 
-    // 2. Forsøg: match mod Tilbudsportalen på navn
+    // 3. Forsøg: match mod Tilbudsportalen på navn
     const tpMatch = findNavn(kunde.navn, tpNavnMap);
     if (tpMatch) {
       if (tpMatch.cvr) {
-        // Opdater ALLE TP-afdelinger og STPS-rapporter med samme CVR
         await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', tpMatch.cvr.trim());
         await supabase.from('stps_rapporter').update(mondayData).eq('cvr', tpMatch.cvr.trim());
         matchetTilTp++;
