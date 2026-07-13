@@ -3,10 +3,29 @@
 // src/features/dashboard/components/DashboardPage/sections/NovaBanner/NovaBanner.tsx
 
 import type React from 'react';
+import { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import type { DashboardData } from '@/features/dashboard/types/dashboard.types';
+
+type NovaStatus = 'aktiv' | 'optaget' | 'fraværende';
+
+function beregnNovaStatus(): NovaStatus {
+  // Baseret på time + dag — skifter hver time, konsistent i sessionen
+  const now = new Date();
+  const seed = now.getDate() * 100 + now.getHours();
+  const r = ((seed * 1103515245 + 12345) & 0x7fffffff) % 100;
+  if (r < 60) return 'aktiv';
+  if (r < 80) return 'optaget';
+  return 'fraværende';
+}
+
+const NOVA_STATUS_CONFIG: Record<NovaStatus, { farve: string; label: string }> = {
+  aktiv:      { farve: '#22c55e', label: 'Aktiv nu' },
+  optaget:    { farve: '#f59e0b', label: 'Optaget' },
+  fraværende: { farve: '#94a3b8', label: 'Fraværende' },
+};
 
 type Props = {
   data: DashboardData;
@@ -97,6 +116,8 @@ export function NovaBanner({ data }: Props) {
   const { navn, loading } = useBrugerRolle();
   const { kritiskeAntal, ubearbejdede, kunder, totalRapporter } = beregnNovaFund(data);
   const tid = getTidContext();
+  const novaStatus = useMemo(() => beregnNovaStatus(), []);
+  const statusConfig = NOVA_STATUS_CONFIG[novaStatus];
 
   const fundItems = [
     kritiskeAntal > 0 ? {
@@ -163,10 +184,18 @@ export function NovaBanner({ data }: Props) {
             className="nova-banner__avatar"
             priority
           />
-          <span className="nova-banner__online-dot" aria-label="Nova er aktiv" />
+          <span
+            className="nova-banner__online-dot"
+            style={{ backgroundColor: statusConfig.farve }}
+            title={statusConfig.label}
+            aria-label={`Nova: ${statusConfig.label}`}
+          />
         </div>
         <span className="nova-banner__navn">Nova</span>
         <span className="nova-banner__titel">Digital Lead Analyst</span>
+        <span className="nova-banner__nova-status-label" style={{ color: statusConfig.farve }}>
+          {statusConfig.label}
+        </span>
         <span className="nova-banner__status">Overvaager +1.200 datakilder dognet rundt</span>
       </div>
 
