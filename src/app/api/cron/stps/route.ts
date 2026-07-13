@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   // Returnerer kun når nye rapporter er gemt i databasen.
   let listeResultat: { fundet: number; nye: number; fejl: string[] };
   try {
-    listeResultat = await kørStpsScraper({ maxSider: 30 });
+    listeResultat = await kørStpsScraper({ maxSider: 10 });
     await logScraperKørsel('stps-liste', true, listeResultat);
   } catch (err) {
     const besked = err instanceof Error ? err.message : String(err);
