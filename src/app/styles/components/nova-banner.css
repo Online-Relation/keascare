@@ -53,10 +53,21 @@
   font-size: var(--text-sm);
 }
 
-.nova-banner__fund-ikon {
-  font-size: 1rem;
+.nova-banner__fund-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 9999px;
   flex-shrink: 0;
+  background-color: var(--color-text-muted);
 }
+
+.nova-banner__fund-item--kritisk .nova-banner__fund-dot { background-color: #dc2626; }
+.nova-banner__fund-item--advarsel .nova-banner__fund-dot { background-color: #d97706; }
+.nova-banner__fund-item--neutral .nova-banner__fund-dot { background-color: #16a34a; }
+
+.nova-banner__fund-item--kritisk .nova-banner__fund-tekst { color: #dc2626; }
+.nova-banner__fund-item--advarsel .nova-banner__fund-tekst { color: #d97706; }
+.nova-banner__fund-item--neutral .nova-banner__fund-tekst { color: var(--color-text-secondary); }
 
 .nova-banner__fund-tekst {
   font-weight: var(--fw-medium);
