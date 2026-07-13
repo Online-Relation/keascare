@@ -15,7 +15,7 @@ type NovaStatus = 'aktiv' | 'optaget' | 'fraværende';
 const NOVA_STATUS_CONFIG: Record<NovaStatus, { farve: string; label: string }> = {
   aktiv:      { farve: '#22c55e', label: 'Aktiv nu' },
   optaget:    { farve: '#f59e0b', label: 'Optaget' },
-  fraværende: { farve: '#94a3b8', label: 'Fraværende' },
+  fraværende: { farve: '#8b5cf6', label: 'Fraværende' },
 };
 
 type NovaAktivitet = {
@@ -240,18 +240,22 @@ export function NovaBanner({ data }: Props) {
             className="nova-banner__avatar"
             priority
           />
-          <span
-            className={`nova-banner__online-dot${erRigtig ? ' nova-banner__online-dot--pulse' : ''}`}
-            style={{ backgroundColor: statusConfig.farve }}
-            title={statusConfig.label}
-            aria-label={`Nova: ${statusConfig.label}`}
-          />
+          {novaAktivitet !== null && (
+            <span
+              className={`nova-banner__online-dot${erRigtig ? ' nova-banner__online-dot--pulse' : ''}`}
+              style={{ backgroundColor: statusConfig.farve }}
+              title={statusConfig.label}
+              aria-label={`Nova: ${statusConfig.label}`}
+            />
+          )}
         </div>
         <span className="nova-banner__navn">Nova</span>
         <span className="nova-banner__titel">Digital Lead Analyst</span>
-        <span className="nova-banner__nova-status-label" style={{ color: statusConfig.farve }}>
-          {statusConfig.label}
-        </span>
+        {novaAktivitet !== null && (
+          <span className="nova-banner__nova-status-label" style={{ color: statusConfig.farve }}>
+            {statusConfig.label}
+          </span>
+        )}
         {erOptaget && novaAktivitet?.opgave ? (
           <span className="nova-banner__status nova-banner__status--opgave">
             {novaAktivitet.opgave}
