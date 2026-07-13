@@ -1,7 +1,7 @@
 // src/features/dashboard/services/DashboardService/dashboardService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, privatFilterOr } from '@/lib/config/GlobalFilter';
+import { getVisFilter, privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
 type DbRapport = {
@@ -243,7 +243,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     .order('rapport_dato', { ascending: false });
 
   if (visFilter === 'privat') {
-    query = query.or(privatFilterOr());
+    query = query.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
   if (fra) query = query.gte('rapport_dato', fra);
