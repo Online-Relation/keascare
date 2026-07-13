@@ -1,15 +1,12 @@
 // src/app/api/cron/stps/route.ts
 //
-// Bruges af cron-job.org (max 30s timeout).
-// Svarer med 200 OK med det samme — Railway fortsætter arbejdet i baggrunden.
+// Bruges af cron-job.org.
 //
-// Kørserækkefølge (baggrund):
-//   1. STPS liste       — hent nye tilsynsrapporter
-//   2. STPS detaljer    — parse PDF'er
-//   3. STPS fund-items  — udtræk strukturerede målepunkter
-//   4. STPS P-numre     — udtræk P-numre
-//   5. CVR berig        — slå P-numre op i CVR
-//   6. CVR ansatte      — opdater ansatte/branche
+// Trin 1 (synkront): STPS liste — henter nye tilsynsrapporter og returnerer et rigtigt svar.
+//   Cron-job.org får et reelt resultat og kan registrere fejl korrekt.
+//
+// Trin 2-4 (baggrund): Detaljer/fund-items/pnummer/CVR — berigelse der ikke er tidskritisk.
+//   Kører i baggrunden på Railway efter at svaret er sendt.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
@@ -17,7 +14,6 @@ import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
-import { opdaterScraperStatus } from '@/lib/db/ScraperStatus';
 
 function erAutoriseret(req: NextRequest): boolean {
   const secret = process.env.SCRAPER_SECRET;
@@ -25,38 +21,51 @@ function erAutoriseret(req: NextRequest): boolean {
   return req.headers.get('x-scraper-secret') === secret;
 }
 
-async function kørPipeline() {
-  async function trin(id: string, fn: () => Promise<unknown>) {
-    await opdaterScraperStatus(id, 'kører', 0, 0);
-    try {
-      const res = await fn();
-      const behandlet = typeof (res as Record<string, unknown>)?.behandlet === 'number'
-        ? (res as Record<string, unknown>).behandlet as number
-        : 0;
-      await logScraperKørsel(id, true, res as Record<string, unknown>);
-      await opdaterScraperStatus(id, 'idle', behandlet, behandlet);
-    } catch (err) {
-      const besked = err instanceof Error ? err.message : String(err);
-      await logScraperKørsel(id, false, { error: besked });
-      await opdaterScraperStatus(id, 'fejl', 0, 0);
-    }
-  }
-
-  await trin('stps-liste',    () => kørStpsScraper({ maxSider: 10 }));
-  await trin('stps-detaljer', () => kørDetaljerScraper(50));
-
+// Berigelse kører i baggrunden efter at liste-scraper har returneret.
+// Fejl her påvirker ikke det primære svar til cron-job.org.
+async function kørBerigelse() {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
   const secret = process.env.SCRAPER_SECRET ?? '';
   const headers = { 'Content-Type': 'application/json', 'x-scraper-secret': secret };
 
-  await trin('stps-fund-items', () =>
-    fetch(`${base}/api/scrapers/stps/fund-items`, { method: 'POST', headers, body: JSON.stringify({ batch: 30 }) }).then(r => r.json())
-  );
-  await trin('stps-pnummer', () =>
-    fetch(`${base}/api/scrapers/stps/pnummer`, { method: 'POST', headers, body: JSON.stringify({ batch: 50 }) }).then(r => r.json())
-  );
-  await trin('cvr-berig',   () => berigMedCvr(50));
-  await trin('cvr-ansatte', () => opdaterCvrAnsatte(200));
+  try {
+    await kørDetaljerScraper(50);
+    await logScraperKørsel('stps-detaljer', true, {});
+  } catch (err) {
+    await logScraperKørsel('stps-detaljer', false, { error: String(err) });
+  }
+
+  try {
+    const res = await fetch(`${base}/api/scrapers/stps/fund-items`, {
+      method: 'POST', headers, body: JSON.stringify({ batch: 30 }),
+    });
+    const data = await res.json();
+    await logScraperKørsel('stps-fund-items', true, data);
+  } catch (err) {
+    await logScraperKørsel('stps-fund-items', false, { error: String(err) });
+  }
+
+  try {
+    const res = await fetch(`${base}/api/scrapers/stps/pnummer`, {
+      method: 'POST', headers, body: JSON.stringify({ batch: 50 }),
+    });
+    const data = await res.json();
+    await logScraperKørsel('stps-pnummer', true, data);
+  } catch (err) {
+    await logScraperKørsel('stps-pnummer', false, { error: String(err) });
+  }
+
+  try {
+    await berigMedCvr(50);
+  } catch (err) {
+    await logScraperKørsel('cvr-berig', false, { error: String(err) });
+  }
+
+  try {
+    await opdaterCvrAnsatte(100);
+  } catch (err) {
+    await logScraperKørsel('cvr-ansatte', false, { error: String(err) });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -64,11 +73,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
-  // Start pipeline i baggrunden — Railway holder processen i live
-  kørPipeline().catch(async (err) => {
-    await logScraperKørsel('stps-pipeline', false, { error: String(err) });
-  });
+  // Trin 1: Kør liste-scraper synkront — dette er det kritiske trin der finder nye rapporter.
+  // Returnerer kun når nye rapporter er gemt i databasen.
+  let listeResultat: { fundet: number; nye: number; fejl: string[] };
+  try {
+    listeResultat = await kørStpsScraper({ maxSider: 10 });
+    await logScraperKørsel('stps-liste', true, listeResultat);
+  } catch (err) {
+    const besked = err instanceof Error ? err.message : String(err);
+    await logScraperKørsel('stps-liste', false, { error: besked });
+    return NextResponse.json({ ok: false, trin: 'stps-liste', error: besked }, { status: 500 });
+  }
 
-  // Svar inden 1 sekund så cron-job.org ikke timeout'er
-  return NextResponse.json({ ok: true, started: new Date().toISOString() });
+  // Trin 2-5: Berigelse kører i baggrunden — Railway holder processen i live.
+  kørBerigelse().catch(() => {});
+
+  return NextResponse.json({
+    ok: true,
+    fundet: listeResultat.fundet,
+    nye: listeResultat.nye,
+    fejl: listeResultat.fejl.length,
+    kørt: new Date().toISOString(),
+  });
 }
