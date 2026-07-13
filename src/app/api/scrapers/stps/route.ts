@@ -17,19 +17,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Ikke autoriseret' }, { status: 401 });
   }
 
-  const body = await request.json().catch(() => ({}));
-  const maxSider: number = body.maxSider ?? 3;
-  const parsePdf: boolean = body.parsePdf ?? false;
+  // Kør i baggrunden — STPS har ~92 sider (~920 rapporter), tager ~90 sek.
+  // Returnerer straks så browseren ikke timeout'er.
+  kørIBaggrunden().catch(() => {});
 
+  return NextResponse.json({
+    ok: true,
+    besked: 'Kørsel startet — henter alle STPS-sider i baggrunden (~1-2 min)',
+    kørt: new Date().toISOString(),
+  });
+}
+
+async function kørIBaggrunden() {
   try {
-    const resultat = await kørStpsScraper({ maxSider, parsePdf });
-    const svar = { ok: true, fundet: resultat.fundet, nye: resultat.nye, fejl: resultat.fejl };
-    await logScraperKørsel('stps-liste', true, svar);
-    return NextResponse.json(svar);
+    const resultat = await kørStpsScraper({ maxSider: 100 });
+    await logScraperKørsel('stps-liste', true, {
+      fundet: resultat.fundet,
+      nye: resultat.nye,
+      fejl: resultat.fejl.length,
+    });
   } catch (err) {
     const besked = err instanceof Error ? err.message : String(err);
     await logScraperKørsel('stps-liste', false, { error: besked });
-    return NextResponse.json({ ok: false, error: besked }, { status: 500 });
   }
 }
 
