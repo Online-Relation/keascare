@@ -254,7 +254,8 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
   const rapporter = (data ?? []) as DbRapport[];
-  const bosteder = rapporter.map(mapTilBosted);
+  // Kunder i Monday er allerede i CRM — vis dem ikke i tabellen (kun leads og ubearbejdede)
+  const bosteder = rapporter.map(mapTilBosted).filter((b) => b.mondayKunde !== 'kunde');
 
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
