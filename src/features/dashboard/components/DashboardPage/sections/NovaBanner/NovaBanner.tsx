@@ -3,16 +3,16 @@
 // src/features/dashboard/components/DashboardPage/sections/NovaBanner/NovaBanner.tsx
 
 import type React from 'react';
-import { useMemo } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import type { DashboardData } from '@/features/dashboard/types/dashboard.types';
+import type { NovaBesked } from '@/features/nova/types/nova.types';
 
 type NovaStatus = 'aktiv' | 'optaget' | 'fraværende';
 
 function beregnNovaStatus(): NovaStatus {
-  // Baseret på time + dag — skifter hver time, konsistent i sessionen
   const now = new Date();
   const seed = now.getDate() * 100 + now.getHours();
   const r = ((seed * 1103515245 + 12345) & 0x7fffffff) % 100;
@@ -27,9 +27,7 @@ const NOVA_STATUS_CONFIG: Record<NovaStatus, { farve: string; label: string }> =
   fraværende: { farve: '#94a3b8', label: 'Fraværende' },
 };
 
-type Props = {
-  data: DashboardData;
-};
+type Props = { data: DashboardData };
 
 type TidContext = 'morgen' | 'formiddag' | 'dag' | 'eftermiddag' | 'aften' | 'nat';
 
@@ -58,18 +56,12 @@ function hilsen(navn: string | null, tid: TidContext): string {
 
 function novaIntro(tid: TidContext): string {
   switch (tid) {
-    case 'morgen':
-      return 'Her er dit overblik for i dag. Jeg har arbejdet mens du sov og fundet det vigtigste, du bør fokusere på.';
-    case 'formiddag':
-      return 'Her er dit overblik. Jeg har analyseret jeres datakilder i morges og samlet dagens vigtigste signaler.';
-    case 'dag':
-      return 'Her er dit overblik. Jeg holder løbende øje med jeres datakilder og har samlet det vigtigste til dig.';
-    case 'eftermiddag':
-      return 'Her er dagens overblik. Jeg har holdt øje med jeres datakilder og prioriteret det vigtigste for dig.';
-    case 'aften':
-      return 'Her er dit overblik. Jeg har analyseret jeres datakilder i dag og samlet de vigtigste fund.';
-    case 'nat':
-      return 'Her er det aktuelle overblik. Jeg arbejder kontinuerligt og har samlet det vigtigste til dig.';
+    case 'morgen':      return 'Her er dit overblik for i dag. Jeg har arbejdet mens du sov og fundet det vigtigste, du bør fokusere på.';
+    case 'formiddag':   return 'Her er dit overblik. Jeg har analyseret jeres datakilder i morges og samlet dagens vigtigste signaler.';
+    case 'dag':         return 'Her er dit overblik. Jeg holder løbende øje med jeres datakilder og har samlet det vigtigste til dig.';
+    case 'eftermiddag': return 'Her er dagens overblik. Jeg har holdt øje med jeres datakilder og prioriteret det vigtigste for dig.';
+    case 'aften':       return 'Her er dit overblik. Jeg har analyseret jeres datakilder i dag og samlet de vigtigste fund.';
+    case 'nat':         return 'Her er det aktuelle overblik. Jeg arbejder kontinuerligt og har samlet det vigtigste til dig.';
   }
 }
 
@@ -81,6 +73,8 @@ function beregnNovaFund(data: DashboardData) {
   const totalRapporter = data.bosteder.length;
   return { kritiskeAntal, ubearbejdede, kunder, totalRapporter };
 }
+
+// --- Ikoner ---
 
 function IconAdvarsel() {
   return (
@@ -112,6 +106,30 @@ function IconKalender() {
   );
 }
 
+function IconStjerne() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  );
+}
+
+const BESKED_IKON: Record<NovaBesked['ikon'], () => React.ReactElement> = {
+  advarsel: IconAdvarsel,
+  personer:  IconPersoner,
+  kalender:  IconKalender,
+  stjerne:   IconStjerne,
+};
+
+const BESKED_VARIANT_CSS: Record<NovaBesked['variant'], string> = {
+  kritisk:  'nova-banner__fund-item--kritisk',
+  advarsel: 'nova-banner__fund-item--advarsel',
+  neutral:  'nova-banner__fund-item--neutral',
+  succes:   'nova-banner__fund-item--succes',
+};
+
+// --- Komponent ---
+
 export function NovaBanner({ data }: Props) {
   const { navn, loading } = useBrugerRolle();
   const { kritiskeAntal, ubearbejdede, kunder, totalRapporter } = beregnNovaFund(data);
@@ -119,26 +137,38 @@ export function NovaBanner({ data }: Props) {
   const novaStatus = useMemo(() => beregnNovaStatus(), []);
   const statusConfig = NOVA_STATUS_CONFIG[novaStatus];
 
-  const fundItems = [
+  const [novaBeskeder, setNovaBeskeder] = useState<NovaBesked[] | null>(null);
+
+  useEffect(() => {
+    fetch('/api/nova/beskeder')
+      .then((r) => r.json())
+      .then((d: { beskeder: NovaBesked[] }) => setNovaBeskeder(d.beskeder ?? []))
+      .catch(() => setNovaBeskeder([]));
+  }, []);
+
+  // Personaliserede beskeder vises når de er hentet — ellers generiske
+  const visNovaBeskeder = novaBeskeder !== null && novaBeskeder.length > 0;
+
+  const generiskeFundItems = [
     kritiskeAntal > 0 ? {
       titel: `${kritiskeAntal} ${kritiskeAntal === 1 ? 'nyt kritisk STPS-tilsyn' : 'nye kritiske STPS-tilsyn'}`,
       sub: 'Alvorlige fund registreret — kræver handling',
-      variant: 'kritisk' as const,
+      cssVariant: 'nova-banner__fund-item--kritisk',
       Ikon: IconAdvarsel,
     } : null,
     ubearbejdede > 0 ? {
       titel: `${ubearbejdede} ${ubearbejdede === 1 ? 'ny potentiel kunde' : 'nye potentielle kunder'}`,
       sub: 'Matcher jeres malgruppe — ikke bearbejdet endnu',
-      variant: 'advarsel' as const,
+      cssVariant: 'nova-banner__fund-item--advarsel',
       Ikon: IconPersoner,
     } : null,
     kunder > 0 ? {
       titel: `${kunder} ${kunder === 1 ? 'eksisterende kunde' : 'eksisterende kunder'} i Monday`,
       sub: 'Aktive i jeres CRM',
-      variant: 'neutral' as const,
+      cssVariant: 'nova-banner__fund-item--neutral',
       Ikon: IconKalender,
     } : null,
-  ].filter(Boolean) as { titel: string; sub: string; variant: 'kritisk' | 'advarsel' | 'neutral'; Ikon: () => React.ReactElement }[];
+  ].filter(Boolean) as { titel: string; sub: string; cssVariant: string; Ikon: () => React.ReactElement }[];
 
   return (
     <div className="nova-banner">
@@ -152,13 +182,26 @@ export function NovaBanner({ data }: Props) {
           <p className="nova-banner__intro">{novaIntro(tid)}</p>
         </div>
 
-        {fundItems.length > 0 && (
+        {visNovaBeskeder ? (
           <ul className="nova-banner__fund-liste">
-            {fundItems.map((f, i) => (
-              <li key={i} className={`nova-banner__fund-item nova-banner__fund-item--${f.variant}`}>
-                <div className="nova-banner__fund-ikon-wrapper">
-                  <f.Ikon />
-                </div>
+            {novaBeskeder.map((b) => {
+              const Ikon = BESKED_IKON[b.ikon];
+              return (
+                <li key={b.id} className={`nova-banner__fund-item ${BESKED_VARIANT_CSS[b.variant]}`}>
+                  <div className="nova-banner__fund-ikon-wrapper"><Ikon /></div>
+                  <div className="nova-banner__fund-tekst-wrapper">
+                    <span className="nova-banner__fund-titel">{b.titel}</span>
+                    <span className="nova-banner__fund-sub">{b.sub}</span>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : generiskeFundItems.length > 0 ? (
+          <ul className="nova-banner__fund-liste">
+            {generiskeFundItems.map((f, i) => (
+              <li key={i} className={`nova-banner__fund-item ${f.cssVariant}`}>
+                <div className="nova-banner__fund-ikon-wrapper"><f.Ikon /></div>
                 <div className="nova-banner__fund-tekst-wrapper">
                   <span className="nova-banner__fund-titel">{f.titel}</span>
                   <span className="nova-banner__fund-sub">{f.sub}</span>
@@ -166,7 +209,7 @@ export function NovaBanner({ data }: Props) {
               </li>
             ))}
           </ul>
-        )}
+        ) : null}
 
         <Link href="/dashboard/alle-rapporter?fund=kritisk" className="nova-banner__cta">
           Se mine anbefalinger

@@ -1,0 +1,1 @@
+export { beregnNovaBeskeder } from './novaBeskedService';

@@ -308,3 +308,8 @@
     grid-row: 3;
   }
 }
+
+.nova-banner__fund-item--succes .nova-banner__fund-ikon-wrapper {
+  background-color: #e9f5ec;
+  color: #15803d;
+}
