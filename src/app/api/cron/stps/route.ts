@@ -73,26 +73,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
-  // Trin 1: Kør liste-scraper synkront — dette er det kritiske trin der finder nye rapporter.
-  // Returnerer kun når nye rapporter er gemt i databasen.
-  let listeResultat: { fundet: number; nye: number; fejl: string[] };
+  // Start fuld kørsel i baggrunden — Railway holder processen i live efter svar er sendt.
+  // STPS har ~92 sider (~920 rapporter) som tager ~2 min at hente — for lang tid til synkront svar.
+  kørAltIBaggrunden().catch(() => {});
+
+  return NextResponse.json({
+    ok: true,
+    besked: 'Kørsel startet i baggrunden — tjek Systemstatus for resultat',
+    kørt: new Date().toISOString(),
+  });
+}
+
+async function kørAltIBaggrunden() {
+  // Trin 1: Alle listesider (op til 100 sider = 1000 rapporter)
   try {
-    listeResultat = await kørStpsScraper({ maxSider: 10 });
+    const listeResultat = await kørStpsScraper({ maxSider: 100 });
     await logScraperKørsel('stps-liste', true, listeResultat);
   } catch (err) {
     const besked = err instanceof Error ? err.message : String(err);
     await logScraperKørsel('stps-liste', false, { error: besked });
-    return NextResponse.json({ ok: false, trin: 'stps-liste', error: besked }, { status: 500 });
+    return; // Stop hvis liste-scraper fejler
   }
 
-  // Trin 2-5: Berigelse kører i baggrunden — Railway holder processen i live.
-  kørBerigelse().catch(() => {});
-
-  return NextResponse.json({
-    ok: true,
-    fundet: listeResultat.fundet,
-    nye: listeResultat.nye,
-    fejl: listeResultat.fejl.length,
-    kørt: new Date().toISOString(),
-  });
+  // Trin 2-5: Berigelse
+  await kørBerigelse();
 }

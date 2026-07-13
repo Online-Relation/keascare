@@ -15,7 +15,7 @@ export const STPS_HTTP_CONFIG = {
 } as const;
 
 // Forsinkelse mellem HTTP-requests – respekterer STPS's servere
-export const SCRAPER_DELAY_MS = 500;
+export const SCRAPER_DELAY_MS = 100;
 
 // Maks PDF-størrelse vi downloader (15 MB)
 export const MAX_PDF_BYTES = 15 * 1024 * 1024;
