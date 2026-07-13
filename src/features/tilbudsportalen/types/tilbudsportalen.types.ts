@@ -13,6 +13,7 @@ export type TilbudsportalenDetalje = {
   cvr: string | null;
   tilbudstype: string | null;
   pladser: number | null;
+  pladseTotalt: number | null;
   pNummer: string | null;
   kommune: string | null;
   kontaktperson: string | null;

@@ -9,6 +9,7 @@ type TpTilbud = {
   navn: string | null;
   tilbudstype: string | null;
   pladser: number | null;
+  pladser_totalt: number | null;
   p_nummer: string | null;
   kommune: string | null;
   kontaktperson: string | null;
@@ -31,7 +32,7 @@ type StpsRapport = {
   tp_kommune: string | null;
 };
 
-type TpData = Omit<TpTilbud, 'navn'> & { cvr: string | null };
+type TpData = Omit<TpTilbud, 'navn'> & { cvr: string | null; virksomhedsPladserTotalt: number | null };
 
 const STOPORD = new Set([
   'og', 'for', 'til', 'i', 'af', 'med', 'på', 'den', 'det', 'de',
@@ -121,6 +122,7 @@ function findBedsteMatch(
       bedste = {
         data: {
           id: t.id, cvr: t.cvr ?? null, tilbudstype: t.tilbudstype, pladser: t.pladser,
+          pladser_totalt: t.pladser_totalt, virksomhedsPladserTotalt: t.pladser_totalt,
           p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
           telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
           leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
@@ -141,27 +143,31 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const { data: tilbud, error: tilbudFejl } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('id, cvr, navn, tilbudstype, pladser, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform');
+    .select('id, cvr, navn, tilbudstype, pladser, pladser_totalt, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform');
 
   if (tilbudFejl) throw new Error(`Tilbudsportalen fejl: ${tilbudFejl.message}`);
 
   const alleTilbud = (tilbud ?? []) as TpTilbud[];
 
-  // Virksomheds-total pladser pr. CVR: sum af alle afdelingers §107+§108-pladser
-  const cvrPladserTotal = new Map<string, number>();
+  // Virksomheds-total pr. CVR: §107+§108 (pladser) og alle paragraffer (pladser_totalt)
+  const cvrPladser107_108 = new Map<string, number>();
+  const cvrPladserAlle = new Map<string, number>();
   for (const t of alleTilbud) {
-    if (!t.cvr || !t.pladser) continue;
+    if (!t.cvr) continue;
     const key = t.cvr.trim();
-    cvrPladserTotal.set(key, (cvrPladserTotal.get(key) ?? 0) + t.pladser);
+    if (t.pladser) cvrPladser107_108.set(key, (cvrPladser107_108.get(key) ?? 0) + t.pladser);
+    if (t.pladser_totalt) cvrPladserAlle.set(key, (cvrPladserAlle.get(key) ?? 0) + t.pladser_totalt);
   }
 
   const cvrMap = new Map<string, TpData>();
   const navnMap = new Map<string, { data: TpData; kommune: string | null }>();
 
   for (const t of alleTilbud) {
-    const virksomhedsPladser = t.cvr ? (cvrPladserTotal.get(t.cvr.trim()) ?? t.pladser) : t.pladser;
+    const virksomhedsPladser = t.cvr ? (cvrPladser107_108.get(t.cvr.trim()) ?? t.pladser) : t.pladser;
+    const virksomhedsPladserTotalt = t.cvr ? (cvrPladserAlle.get(t.cvr.trim()) ?? t.pladser_totalt) : t.pladser_totalt;
     const data: TpData = {
       id: t.id, cvr: t.cvr ?? null, tilbudstype: t.tilbudstype, pladser: virksomhedsPladser,
+      pladser_totalt: t.pladser_totalt, virksomhedsPladserTotalt,
       p_nummer: t.p_nummer, kommune: t.kommune, kontaktperson: t.kontaktperson,
       telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
       leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
@@ -207,6 +213,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
         ...(m.cvr && !rapport.cvr ? { cvr: m.cvr } : {}),
         tp_tilbudstype: m.tilbudstype,
         tp_pladser: m.pladser?.toString() ?? null,
+        tp_pladser_totalt: m.virksomhedsPladserTotalt?.toString() ?? null,
         tp_p_nummer: m.p_nummer,
         tp_kommune: m.kommune,
         tp_kontaktperson: m.kontaktperson,
