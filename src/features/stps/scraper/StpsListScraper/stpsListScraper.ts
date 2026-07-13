@@ -116,13 +116,32 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
 
     if (!navn) return; // Spring over hvis vi ikke kan finde et navn
 
-    const rapportDatoRå =
-      $(el).find('.datetime').attr('data-date') ||
-      $(el).find('[data-date]').first().attr('data-date') ||
-      $(el).find('time').attr('datetime') ||
-      $(el).find('.datetime').text().trim() ||
-      '';
+    // Besøgsdatoen ("Dato for tilsynsbesøget") er i <p>-teksten
+    const besoegsTekst = $(el).find('p').text();
+    const besoegsDatoMatch = besoegsTekst.match(/tilsynsbes[øo]get[^0-9]*(\d{2}-\d{2}-\d{4})/i);
+    const besoegsDato = besoegsDatoMatch?.[1] ?? null;
+
+    // Publikationsdatoen: prøv item-niveau data-date, derefter .datetime
+    // .datetime[data-date] indeholder BESØGSDATO på STPS — ikke publikationsdato
+    // Publikationsdatoen ses i STPS-UI som den øverste dato på hvert item
+    const kandidater = [
+      $(el).attr('data-date'),                              // item-niveau (ISO eller DD-MM-YYYY)
+      $(el).find('time').attr('datetime'),                  // <time datetime="...">
+      $(el).find('.date').first().text().trim(),            // .date tekst
+      $(el).find('[class*="pub"]').first().attr('data-date'), // .pub-date e.l.
+      $(el).find('.datetime').attr('data-date'),            // .datetime (sandsynligvis besøgsdato)
+      $(el).find('[data-date]').first().attr('data-date'),  // fallback
+    ].filter(Boolean) as string[];
+
+    const rapportDatoRå = kandidater[0] ?? '';
     const rapportDato = normaliserDato(rapportDatoRå);
+
+    // Log de fundne datoer så vi kan debugge hvilket felt der er korrekt
+    if (process.env.NODE_ENV !== 'production' || process.env.STPS_DEBUG === '1') {
+      if (navn.toLowerCase().includes('broen') || navn.toLowerCase().includes('posekær')) {
+        console.log(`[STPS-DATO-DEBUG] "${navn}": kandidater=${JSON.stringify(kandidater)} → valgt="${rapportDatoRå}" besøg="${besoegsDato}"`);
+      }
+    }
 
     const tags: string[] = [];
     $(el).find('.labels .label, .tags .tag, [class*="label"], [class*="tag"]').each((_, tagEl) => {
@@ -130,10 +149,6 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
       // Undgå at medtage store tekstblokke (kun korte tags)
       if (tekst && tekst.length < 60) tags.push(tekst);
     });
-
-    const besoegsTekst = $(el).find('p').text();
-    const besoegsDatoMatch = besoegsTekst.match(/(\d{2}-\d{2}-\d{4})/);
-    const besoegsDato = besoegsDatoMatch?.[1] ?? null;
 
     // Brug URL hvis tilgængelig — ellers generer en stabil nøgle fra navn+dato
     const finalUrl = detailUrl ||

@@ -20,12 +20,17 @@ export async function GET(request: NextRequest) {
 
   const supabase = getSupabaseServerClient();
 
-  const { data, error } = await supabase
+  const erCvr = /^\d{6,8}$/.test(q);
+
+  const baseQuery = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, region, fund_niveau, cvr')
-    .ilike('stps_tilbud_navn', `%${q}%`)
     .order('rapport_dato', { ascending: false })
     .limit(20);
+
+  const { data, error } = erCvr
+    ? await baseQuery.ilike('cvr', `%${q}%`)
+    : await baseQuery.ilike('stps_tilbud_navn', `%${q}%`);
 
   if (error) {
     return NextResponse.json([], { status: 500 });
