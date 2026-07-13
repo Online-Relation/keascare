@@ -116,32 +116,27 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
 
     if (!navn) return; // Spring over hvis vi ikke kan finde et navn
 
-    // Besøgsdatoen ("Dato for tilsynsbesøget") er i <p>-teksten
-    const besoegsTekst = $(el).find('p').text();
-    const besoegsDatoMatch = besoegsTekst.match(/tilsynsbes[øo]get[^0-9]*(\d{2}-\d{2}-\d{4})/i);
+    // STPS HTML-struktur (bekræftet fra detailside):
+    //   <heading>Bostedsnavn</heading>
+    //   <small>07-07-2026</small>          ← publikationsdato (som TEKST)
+    //   <tags>...</tags>
+    //   <p>Dato for tilsynsbesøget: 21-05-2026</p>  ← besøgsdato
+    //
+    // Strategi: udtræk ALLE DD-MM-YYYY fra item-teksten, adskil besøgsdato fra publikationsdato
+
+    const itemTekst = $(el).text();
+
+    // Besøgsdato: datoen direkte efter "tilsynsbesøget"
+    const besoegsDatoMatch = itemTekst.match(/tilsynsbes[øo]get[^0-9]*(\d{2}-\d{2}-\d{4})/i);
     const besoegsDato = besoegsDatoMatch?.[1] ?? null;
 
-    // Publikationsdatoen: prøv item-niveau data-date, derefter .datetime
-    // .datetime[data-date] indeholder BESØGSDATO på STPS — ikke publikationsdato
-    // Publikationsdatoen ses i STPS-UI som den øverste dato på hvert item
-    const kandidater = [
-      $(el).attr('data-date'),                              // item-niveau (ISO eller DD-MM-YYYY)
-      $(el).find('time').attr('datetime'),                  // <time datetime="...">
-      $(el).find('.date').first().text().trim(),            // .date tekst
-      $(el).find('[class*="pub"]').first().attr('data-date'), // .pub-date e.l.
-      $(el).find('.datetime').attr('data-date'),            // .datetime (sandsynligvis besøgsdato)
-      $(el).find('[data-date]').first().attr('data-date'),  // fallback
-    ].filter(Boolean) as string[];
-
-    const rapportDatoRå = kandidater[0] ?? '';
+    // Publikationsdato: den FØRSTE DD-MM-YYYY i teksten der IKKE er besøgsdatoen
+    // (den vises som tekst direkte under titlen, altså tidligst i item-teksten)
+    const alleDatoer = [...itemTekst.matchAll(/(\d{2}-\d{2}-\d{4})/g)].map(m => m[1]);
+    const rapportDatoRå = alleDatoer.find(d => d !== besoegsDato) ?? alleDatoer[0] ?? '';
     const rapportDato = normaliserDato(rapportDatoRå);
 
-    // Log de fundne datoer så vi kan debugge hvilket felt der er korrekt
-    if (process.env.NODE_ENV !== 'production' || process.env.STPS_DEBUG === '1') {
-      if (navn.toLowerCase().includes('broen') || navn.toLowerCase().includes('posekær')) {
-        console.log(`[STPS-DATO-DEBUG] "${navn}": kandidater=${JSON.stringify(kandidater)} → valgt="${rapportDatoRå}" besøg="${besoegsDato}"`);
-      }
-    }
+    console.log(`[STPS] "${navn}": alleDatoer=${JSON.stringify(alleDatoer)} → rapport="${rapportDatoRå}" besøg="${besoegsDato}"`);
 
     const tags: string[] = [];
     $(el).find('.labels .label, .tags .tag, [class*="label"], [class*="tag"]').each((_, tagEl) => {
