@@ -364,9 +364,10 @@
   color: var(--color-text-secondary);
 }
 
-.nova-banner__sidst-opdateret {
+.nova-banner__footer {
+  grid-column: 1 / -1;
+  border-top: 1px solid #c8e0e8;
+  padding: 0.5rem 2rem;
   font-size: var(--text-xs);
-  color: #2fb5a0;
-  font-weight: var(--fw-medium);
-  margin-top: 0.125rem;
+  color: var(--color-text-muted);
 }

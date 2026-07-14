@@ -308,9 +308,6 @@ export function NovaBanner({ data }: Props) {
         ) : (
           <span className="nova-banner__status">Overvåger +1.200 datakilder døgnet rundt</span>
         )}
-        <span className="nova-banner__sidst-opdateret">
-          Sidst opdateret {relativTid(sidstOpdateret)}
-        </span>
       </div>
 
       {/* Kolonne 3: KPI-stack */}
@@ -338,6 +335,11 @@ export function NovaBanner({ data }: Props) {
           </div>
           <span className="nova-banner__kpi-label">Kritiske fund identificeret</span>
         </div>
+      </div>
+
+      {/* Bundlinje: sidst opdateret */}
+      <div className="nova-banner__footer">
+        Sidst opdateret {relativTid(sidstOpdateret)}
       </div>
 
     </div>
