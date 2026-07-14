@@ -17,4 +17,5 @@ export const dashboardMockData: DashboardData = {
   salgsFunnel: { trin: [] },
   datakilder: [],
   sidstOpdateret: null,
+  sidstKritiskDato: null,
 };

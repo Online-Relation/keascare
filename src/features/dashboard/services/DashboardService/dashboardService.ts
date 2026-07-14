@@ -274,6 +274,12 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   const sidstOpdateret = logData.data?.koersel_slut ?? null;
 
+  const sidstKritiskDato = rapporter
+    .filter((r) => r.fund_niveau === 'kritisk' && r.rapport_dato)
+    .map((r) => r.rapport_dato as string)
+    .sort()
+    .at(-1) ?? null;
+
   return {
     kpis:            beregnKpis(rapporter, sidstOpdateret),
     bosteder,
@@ -284,6 +290,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     salgsFunnel:     beregnSalgsFunnel(rapporter),
     datakilder,
     sidstOpdateret,
+    sidstKritiskDato,
   };
 }
 

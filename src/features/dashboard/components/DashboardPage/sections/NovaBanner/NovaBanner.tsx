@@ -74,14 +74,19 @@ function novaIntro(tid: TidContext): string {
   }
 }
 
+function dagesiden(isoStreng: string | null): number | null {
+  if (!isoStreng) return null;
+  return Math.floor((Date.now() - new Date(isoStreng).getTime()) / 86_400_000);
+}
+
 function beregnNovaFund(data: DashboardData) {
   const kritiske = data.kpis.find((k) => k.id === 'kritiske-fund');
   const kritiskeAntal = parseInt(kritiske?.value ?? '0', 10);
   const ubearbejdede = data.salgsFunnel.trin.find((t) => t.label === 'Ikke bearbejdet endnu')?.antal ?? 0;
-  const kunder = data.salgsFunnel.trin.find((t) => t.label === 'Kunder i Monday')?.antal ?? 0;
   const totalRapporter = data.bosteder.length;
   const sidstOpdateret = data.sidstOpdateret ?? null;
-  return { kritiskeAntal, ubearbejdede, kunder, totalRapporter, sidstOpdateret };
+  const dageSidenKritisk = dagesiden(data.sidstKritiskDato ?? null);
+  return { kritiskeAntal, ubearbejdede, totalRapporter, sidstOpdateret, dageSidenKritisk };
 }
 
 // --- Ikoner ---
@@ -173,7 +178,7 @@ const BESKED_VARIANT_CSS: Record<NovaBesked['variant'], string> = {
 
 export function NovaBanner({ data }: Props) {
   const { navn, loading } = useBrugerRolle();
-  const { kritiskeAntal, ubearbejdede, kunder, totalRapporter, sidstOpdateret } = beregnNovaFund(data);
+  const { kritiskeAntal, ubearbejdede, totalRapporter, sidstOpdateret, dageSidenKritisk } = beregnNovaFund(data);
   const tid = getTidContext();
 
   const [novaBeskeder, setNovaBeskeder] = useState<NovaBesked[] | null>(null);
@@ -248,7 +253,19 @@ export function NovaBanner({ data }: Props) {
               );
             })}
           </ul>
-        ) : generiskeFundItems.length > 0 ? (
+        ) : kritiskeAntal === 0 && ubearbejdede === 0 ? (
+          <div className="nova-banner__tomstand">
+            <span className="nova-banner__tomstand-ikon" aria-hidden="true">✅</span>
+            <p className="nova-banner__tomstand-tekst">
+              Ingen leads eller nyheder.{' '}
+              {dageSidenKritisk !== null
+                ? `Det er nu ${dageSidenKritisk} ${dageSidenKritisk === 1 ? 'dag' : 'dage'} siden der kom et nyt kritisk fund fra STPS.`
+                : 'Ingen kritiske fund registreret endnu.'
+              }{' '}
+              Jeg giver dig besked med det samme jeg har et nyt lead til dig.
+            </p>
+          </div>
+        ) : (
           <ul className="nova-banner__fund-liste">
             {generiskeFundItems.map((f, i) => (
               <li key={i} className={`nova-banner__fund-item ${f.cssVariant}`}>
@@ -260,11 +277,13 @@ export function NovaBanner({ data }: Props) {
               </li>
             ))}
           </ul>
-        ) : null}
+        )}
 
-        <Link href="/dashboard/alle-rapporter?fund=kritisk" className="nova-banner__cta">
-          Se mine anbefalinger
-        </Link>
+        {(kritiskeAntal > 0 || ubearbejdede > 0 || visNovaBeskeder) && (
+          <Link href="/dashboard/alle-rapporter?fund=kritisk" className="nova-banner__cta">
+            Se mine anbefalinger
+          </Link>
+        )}
       </div>
 
       {/* Kolonne 2: Nova profil centreret */}

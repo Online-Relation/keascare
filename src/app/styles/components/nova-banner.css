@@ -366,6 +366,28 @@
   }
 }
 
+/* ── Tomstand (alle leads kontaktet) ── */
+
+.nova-banner__tomstand {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.nova-banner__tomstand-ikon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1.4;
+}
+
+.nova-banner__tomstand-tekst {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.6;
+  margin: 0;
+  max-width: 420px;
+}
+
 .nova-banner__fund-item--succes .nova-banner__fund-ikon-wrapper {
   background-color: #e9f5ec;
   color: #15803d;

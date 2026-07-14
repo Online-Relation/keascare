@@ -157,4 +157,5 @@ export type DashboardData = {
   salgsFunnel: SalgsFunnel;
   datakilder: Datakilde[];
   sidstOpdateret: string | null;
+  sidstKritiskDato: string | null;
 };
