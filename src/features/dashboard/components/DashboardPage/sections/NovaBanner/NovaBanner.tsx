@@ -83,7 +83,7 @@ function beregnNovaFund(data: DashboardData) {
   const kritiske = data.kpis.find((k) => k.id === 'kritiske-fund');
   const kritiskeAntal = parseInt(kritiske?.value ?? '0', 10);
   const ubearbejdede = data.salgsFunnel.trin.find((t) => t.label === 'Ikke bearbejdet endnu')?.antal ?? 0;
-  const totalRapporter = data.bosteder.length;
+  const totalRapporter = data.totalRapporter;
   const sidstOpdateret = data.sidstOpdateret ?? null;
   const dageSidenKritisk = dagesiden(data.sidstKritiskDato ?? null);
   return { kritiskeAntal, ubearbejdede, totalRapporter, sidstOpdateret, dageSidenKritisk };

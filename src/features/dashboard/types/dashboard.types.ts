@@ -158,4 +158,5 @@ export type DashboardData = {
   datakilder: Datakilde[];
   sidstOpdateret: string | null;
   sidstKritiskDato: string | null;
+  totalRapporter: number;
 };

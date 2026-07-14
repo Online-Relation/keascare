@@ -291,6 +291,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     datakilder,
     sidstOpdateret,
     sidstKritiskDato,
+    totalRapporter: rapporter.length,
   };
 }
 
