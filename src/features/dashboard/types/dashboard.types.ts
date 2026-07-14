@@ -156,4 +156,5 @@ export type DashboardData = {
   topKommuner: KommuneStat[];
   salgsFunnel: SalgsFunnel;
   datakilder: Datakilde[];
+  sidstOpdateret: string | null;
 };

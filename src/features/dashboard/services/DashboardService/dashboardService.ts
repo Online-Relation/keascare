@@ -272,8 +272,10 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     hentCvrSignaler(),
   ]);
 
+  const sidstOpdateret = logData.data?.koersel_slut ?? null;
+
   return {
-    kpis:            beregnKpis(rapporter, logData.data?.koersel_slut ?? null),
+    kpis:            beregnKpis(rapporter, sidstOpdateret),
     bosteder,
     cvrSignaler,
     stpsFordeling:   beregnFordeling(rapporter),
@@ -281,6 +283,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     tilbudsportalen: beregnTilbudsportalen(rapporter),
     salgsFunnel:     beregnSalgsFunnel(rapporter),
     datakilder,
+    sidstOpdateret,
   };
 }
 

@@ -26,6 +26,18 @@ type NovaAktivitet = {
 
 type Props = { data: DashboardData };
 
+function relativTid(isoStreng: string | null): string {
+  if (!isoStreng) return 'Ukendt';
+  const diffMs = Date.now() - new Date(isoStreng).getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  if (diffMin < 1)  return 'Lige nu';
+  if (diffMin < 60) return `for ${diffMin} minut${diffMin === 1 ? '' : 'ter'} siden`;
+  const diffTimer = Math.floor(diffMin / 60);
+  if (diffTimer < 24) return `for ${diffTimer} time${diffTimer === 1 ? '' : 'r'} siden`;
+  const diffDage = Math.floor(diffTimer / 24);
+  return `for ${diffDage} dag${diffDage === 1 ? '' : 'e'} siden`;
+}
+
 type TidContext = 'morgen' | 'formiddag' | 'dag' | 'eftermiddag' | 'aften' | 'nat';
 
 function getTidContext(): TidContext {
@@ -68,7 +80,8 @@ function beregnNovaFund(data: DashboardData) {
   const ubearbejdede = data.salgsFunnel.trin.find((t) => t.label === 'Ikke bearbejdet endnu')?.antal ?? 0;
   const kunder = data.salgsFunnel.trin.find((t) => t.label === 'Kunder i Monday')?.antal ?? 0;
   const totalRapporter = data.bosteder.length;
-  return { kritiskeAntal, ubearbejdede, kunder, totalRapporter };
+  const sidstOpdateret = data.sidstOpdateret ?? null;
+  return { kritiskeAntal, ubearbejdede, kunder, totalRapporter, sidstOpdateret };
 }
 
 // --- Ikoner ---
@@ -160,7 +173,7 @@ const BESKED_VARIANT_CSS: Record<NovaBesked['variant'], string> = {
 
 export function NovaBanner({ data }: Props) {
   const { navn, loading } = useBrugerRolle();
-  const { kritiskeAntal, ubearbejdede, kunder, totalRapporter } = beregnNovaFund(data);
+  const { kritiskeAntal, ubearbejdede, kunder, totalRapporter, sidstOpdateret } = beregnNovaFund(data);
   const tid = getTidContext();
 
   const [novaBeskeder, setNovaBeskeder] = useState<NovaBesked[] | null>(null);
@@ -295,6 +308,9 @@ export function NovaBanner({ data }: Props) {
         ) : (
           <span className="nova-banner__status">Overvåger +1.200 datakilder døgnet rundt</span>
         )}
+        <span className="nova-banner__sidst-opdateret">
+          Sidst opdateret {relativTid(sidstOpdateret)}
+        </span>
       </div>
 
       {/* Kolonne 3: KPI-stack */}
