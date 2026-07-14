@@ -163,4 +163,5 @@ export type DashboardData = {
   sidstKritiskDato: string | null;
   totalRapporter: number;
   potentieltMarked: number;
+  kritiskeAntal: number;
 };

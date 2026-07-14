@@ -315,6 +315,9 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     sidstKritiskDato,
     totalRapporter: rapporter.length,
     potentieltMarked,
+    kritiskeAntal: new Set(
+      rapporter.filter((r) => r.fund_niveau === 'kritisk').map((r) => r.cvr ?? r.id)
+    ).size,
   };
 }
 
