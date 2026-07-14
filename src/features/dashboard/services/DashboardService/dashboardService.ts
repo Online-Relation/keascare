@@ -1,7 +1,7 @@
 // src/features/dashboard/services/DashboardService/dashboardService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
+import { getVisFilter, privatFilterTpOr, privatFilterCvrOr, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
 type DbRapport = {
@@ -281,9 +281,15 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
       .limit(1)
       .maybeSingle(),
     hentCvrSignaler(),
-    supabase
-      .from('tilbudsportalen_tilbud')
-      .select('*', { count: 'exact', head: true }),
+    (async () => {
+      let q = supabase
+        .from('tilbudsportalen_tilbud')
+        .select('*', { count: 'exact', head: true });
+      if (visFilter === 'privat') {
+        q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
+      }
+      return q;
+    })(),
   ]);
 
   const potentieltMarked = tpCount.count ?? 0;
