@@ -207,25 +207,19 @@ export function NovaBanner({ data }: Props) {
   const visNovaBeskeder = novaBeskeder !== null && novaBeskeder.length > 0;
 
   const generiskeFundItems = [
-    kritiskeAntal > 0 ? {
-      titel: `${kritiskeAntal} ${kritiskeAntal === 1 ? 'nyt kritisk STPS-tilsyn' : 'nye kritiske STPS-tilsyn'}`,
-      sub: 'Alvorlige fund registreret — kræver handling',
+    {
+      titel: `${kritiskeAntal} ${kritiskeAntal === 1 ? 'kritisk tilsyn' : 'kritiske tilsyn'}`,
+      sub: 'Alvorlige fund registreret i seneste rapporter',
       cssVariant: 'nova-banner__fund-item--kritisk',
       Ikon: IconAdvarsel,
-    } : null,
-    ubearbejdede > 0 ? {
-      titel: `${ubearbejdede} ${ubearbejdede === 1 ? 'ny potentiel kunde' : 'nye potentielle kunder'}`,
-      sub: 'Matcher jeres malgruppe — ikke bearbejdet endnu',
+    },
+    {
+      titel: `${ubearbejdede} ${ubearbejdede === 1 ? 'bosted ikke kontaktet' : 'bosteder ikke kontaktet'}`,
+      sub: 'Matcher jeres målgruppe og er ikke i Monday',
       cssVariant: 'nova-banner__fund-item--advarsel',
       Ikon: IconPersoner,
-    } : null,
-    kunder > 0 ? {
-      titel: `${kunder} ${kunder === 1 ? 'eksisterende kunde' : 'eksisterende kunder'} i Monday`,
-      sub: 'Aktive i jeres CRM',
-      cssVariant: 'nova-banner__fund-item--neutral',
-      Ikon: IconKalender,
-    } : null,
-  ].filter(Boolean) as { titel: string; sub: string; cssVariant: string; Ikon: () => React.ReactElement }[];
+    },
+  ] as { titel: string; sub: string; cssVariant: string; Ikon: () => React.ReactElement }[];
 
   return (
     <div className="nova-banner">
