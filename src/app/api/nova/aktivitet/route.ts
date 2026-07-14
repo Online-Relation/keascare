@@ -42,14 +42,19 @@ const SIMULEREDE_OPGAVER = [
 
 // Deterministisk pseudo-tilfældig baseret på dato + 15-min slot
 function simulerAktivitet(nu: Date): NovaAktivitet {
+  // Frokostpause kl. 12:00–12:30
+  if (nu.getHours() === 12 && nu.getMinutes() < 30) {
+    return { status: 'fraværende', opgave: 'Til frokost — er tilbage om lidt', erRigtig: false };
+  }
+
   const slot = Math.floor(nu.getMinutes() / 15); // 0-3
   const seed = nu.getDate() * 10000 + nu.getHours() * 100 + slot;
   const hash = ((seed * 1103515245 + 12345) & 0x7fffffff);
 
-  // ~20% af slots er optaget, ~5% fraværende
+  // 45% aktiv, 50% optaget, 5% fraværende
   const pct = hash % 100;
   if (pct < 5) return { status: 'fraværende', opgave: null, erRigtig: false };
-  if (pct < 25) {
+  if (pct < 55) {
     const opgaveIdx = hash % SIMULEREDE_OPGAVER.length;
     return {
       status: 'optaget',
