@@ -43,7 +43,7 @@
   }
 
   .dashboard-content {
-    padding: 1.5rem;
+    padding: 1.25rem 1.25rem;
     flex: 1;
     min-width: 0;
     max-width: 100%;
@@ -52,17 +52,17 @@
   .page-wrapper {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.25rem;
     max-width: 1100px;
     margin: 0 auto;
-    padding: 1.5rem 0;
+    padding: 1rem 0;
   }
 
   .dashboard-kpis {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
   }
 
   .dashboard-section-header {
@@ -84,7 +84,7 @@
     border: 1px solid var(--color-border);
     border-radius: 0.75rem;
     overflow: hidden;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1rem;
   }
 
   .data-table {

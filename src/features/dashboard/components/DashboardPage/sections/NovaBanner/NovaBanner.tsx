@@ -266,8 +266,8 @@ export function NovaBanner({ data }: Props) {
           <Image
             src="/images/medarbejdere/nova.webp"
             alt="Nova, Digital Lead Analyst"
-            width={120}
-            height={120}
+            width={96}
+            height={96}
             className="nova-banner__avatar"
             priority
           />
