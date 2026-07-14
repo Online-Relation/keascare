@@ -18,5 +18,6 @@ export const dashboardMockData: DashboardData = {
   datakilder: [],
   sidstOpdateret: null,
   sidstKritiskDato: null,
+  potentieltMarked: 1266,
   totalRapporter: 0,
 };

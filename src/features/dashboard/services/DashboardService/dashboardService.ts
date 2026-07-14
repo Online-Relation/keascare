@@ -78,41 +78,52 @@ function mapTilBosted(row: DbRapport): Bosted {
   };
 }
 
-function beregnKpis(rapporter: DbRapport[], sidstKørtDato: string | null): KpiItem[] {
-  const kritiske = rapporter.filter((r) => r.fund_niveau === 'kritisk').length;
-  const kommuner = new Set(rapporter.map((r) => r.kommune).filter(Boolean)).size;
+function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[] {
   const unikkeVirksomheder = new Set(rapporter.map((r) => r.cvr).filter(Boolean)).size;
 
-  const sidstDato = sidstKørtDato
-    ? new Date(sidstKørtDato).toLocaleDateString('da-DK', { day: 'numeric', month: 'short' })
-    : '—';
+  // Varme leads: kritisk/større fund uanset Monday-status
+  const varme = new Set(
+    rapporter
+      .filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? ''))
+      .map((r) => r.cvr ?? r.id)
+  ).size;
+
+  // Ikke kontaktet: varme leads uden Monday-item
+  const ikkeKontaktet = new Set(
+    rapporter
+      .filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id)
+      .map((r) => r.cvr ?? r.id)
+  ).size;
 
   return [
     {
-      id: 'bosteder-fundet',
-      label: 'Virksomheder med rapport',
+      id: 'potentielt-marked',
+      label: 'Potentielt marked',
+      value: String(potentieltMarked),
+      sub: 'Private bosteder i Danmark',
+      ikon: 'marked',
+    },
+    {
+      id: 'kortlagt-af-nova',
+      label: 'Kortlagt af Nova',
       value: String(unikkeVirksomheder),
-      sub: `${rapporter.length} rapporter fra STPS`,
+      sub: `${rapporter.length} rapporter analyseret`,
+      ikon: 'kortlagt',
       trendPositive: true,
     },
     {
-      id: 'kommuner',
-      label: 'Kommuner dækket',
-      value: String(kommuner),
-      sub: 'ud af 98 kommuner',
+      id: 'varme-leads',
+      label: 'Varme leads',
+      value: String(varme),
+      sub: 'Kritisk eller større fund',
+      ikon: 'varm',
     },
     {
-      id: 'kritiske-fund',
-      label: 'Kritiske fund',
-      value: String(kritiske),
-      sub: 'kræver handling nu',
-      trendPositive: false,
-    },
-    {
-      id: 'sidst-opdateret',
-      label: 'Sidst opdateret',
-      value: sidstDato,
-      sub: 'automatisk scraping',
+      id: 'ikke-kontaktet',
+      label: 'Ikke kontaktet',
+      value: String(ikkeKontaktet),
+      sub: 'Matcher målgruppen — ikke i Monday',
+      ikon: 'kontakt',
     },
   ];
 }
@@ -259,7 +270,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
-  const [datakilder, logData, cvrSignaler] = await Promise.all([
+  const [datakilder, logData, cvrSignaler, tpCount] = await Promise.all([
     hentDatakilderStatus(supabase, rapporter),
     supabase
       .from('scraper_log')
@@ -270,7 +281,12 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
       .limit(1)
       .maybeSingle(),
     hentCvrSignaler(),
+    supabase
+      .from('tilbudsportalen_tilbud')
+      .select('*', { count: 'exact', head: true }),
   ]);
+
+  const potentieltMarked = tpCount.count ?? 0;
 
   const sidstOpdateret = logData.data?.koersel_slut ?? null;
 
@@ -281,7 +297,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     .at(-1) ?? null;
 
   return {
-    kpis:            beregnKpis(rapporter, sidstOpdateret),
+    kpis:            beregnKpis(rapporter, potentieltMarked),
     bosteder,
     cvrSignaler,
     stpsFordeling:   beregnFordeling(rapporter),
@@ -292,6 +308,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     sidstOpdateret,
     sidstKritiskDato,
     totalRapporter: rapporter.length,
+    potentieltMarked,
   };
 }
 

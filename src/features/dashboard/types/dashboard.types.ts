@@ -38,6 +38,8 @@ export type Bosted = {
   mondayItemId: string | null;
 };
 
+export type KpiIkon = 'marked' | 'kortlagt' | 'varm' | 'kontakt';
+
 export type KpiItem = {
   id: string;
   label: string;
@@ -45,6 +47,7 @@ export type KpiItem = {
   sub: string;
   trend?: string;
   trendPositive?: boolean;
+  ikon?: KpiIkon;
 };
 
 export type StpsFordeling = {
@@ -159,4 +162,5 @@ export type DashboardData = {
   sidstOpdateret: string | null;
   sidstKritiskDato: string | null;
   totalRapporter: number;
+  potentieltMarked: number;
 };
