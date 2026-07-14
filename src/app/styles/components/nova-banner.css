@@ -334,11 +334,6 @@
     margin-bottom: 0.25rem;
   }
 
-  .nova-banner__titel,
-  .nova-banner__status,
-  .nova-banner__nova-status-label {
-    display: none;
-  }
 
   .nova-banner__kpis {
     grid-row: 3;
