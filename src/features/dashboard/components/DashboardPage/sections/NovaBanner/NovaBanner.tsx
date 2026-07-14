@@ -293,21 +293,23 @@ export function NovaBanner({ data }: Props) {
             />
           )}
         </div>
-        <span className="nova-banner__navn">Nova</span>
-        <span className="nova-banner__titel">Digital Lead Analyst</span>
-        {novaAktivitet !== null && (
-          <span className="nova-banner__nova-status-label" style={{ color: statusConfig.farve }}>
-            {statusConfig.label}
-          </span>
-        )}
-        {erOptaget && novaAktivitet?.opgave ? (
-          <span className="nova-banner__status nova-banner__status--opgave">
-            {novaAktivitet.opgave}
-            <span className="nova-banner__blink-dots" aria-hidden="true">...</span>
-          </span>
-        ) : (
-          <span className="nova-banner__status">Overvåger +1.200 datakilder døgnet rundt</span>
-        )}
+        <div className="nova-banner__center-info">
+          <span className="nova-banner__navn">Nova</span>
+          <span className="nova-banner__titel">Digital Lead Analyst</span>
+          {novaAktivitet !== null && (
+            <span className="nova-banner__nova-status-label" style={{ color: statusConfig.farve }}>
+              {statusConfig.label}
+            </span>
+          )}
+          {erOptaget && novaAktivitet?.opgave ? (
+            <span className="nova-banner__status nova-banner__status--opgave">
+              {novaAktivitet.opgave}
+              <span className="nova-banner__blink-dots" aria-hidden="true">...</span>
+            </span>
+          ) : (
+            <span className="nova-banner__status">Overvåger +1.200 datakilder døgnet rundt</span>
+          )}
+        </div>
       </div>
 
       {/* Kolonne 3: KPI-stack */}
