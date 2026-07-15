@@ -1,16 +1,33 @@
 // src/app/api/system/status/route.ts
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { KOMMUNALE_DRIFTSFORMER, KOMMUNALE_CVR_TYPER } from '@/lib/config/GlobalFilter';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = getSupabaseServerClient();
+  const visFilter = request.nextUrl.searchParams.get('visFilter') ?? 'alle';
+  const privat = visFilter === 'privat';
+
+  const tpOrFilter = `tp_driftsform.is.null,tp_driftsform.not.in.(${KOMMUNALE_DRIFTSFORMER.join(',')})`;
+  const cvrOrFilter = `cvr_virksomhedstype.is.null,cvr_virksomhedstype.not.in.(${KOMMUNALE_CVR_TYPER.join(',')})`;
+
   const igår = new Date();
   igår.setDate(igår.getDate() - 1);
   const igårIso = igår.toISOString();
   const ugeAgo = new Date();
   ugeAgo.setDate(ugeAgo.getDate() - 7);
   const ugeIso = ugeAgo.toISOString();
+
+  let qTotal = supabase.from('stps_rapporter').select('*', { count: 'exact', head: true });
+  let qIgår  = supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }).gte('scraper_dato', igårIso);
+  let qUge   = supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }).gte('scraper_dato', ugeIso);
+
+  if (privat) {
+    qTotal = qTotal.or(tpOrFilter).or(cvrOrFilter);
+    qIgår  = qIgår.or(tpOrFilter).or(cvrOrFilter);
+    qUge   = qUge.or(tpOrFilter).or(cvrOrFilter);
+  }
 
   const [
     { count: stpsTotal },
@@ -24,9 +41,9 @@ export async function GET() {
     { count: mondayMatchet },
     { count: tpMatchet },
   ] = await Promise.all([
-    supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }),
-    supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }).gte('scraper_dato', igårIso),
-    supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }).gte('scraper_dato', ugeIso),
+    qTotal,
+    qIgår,
+    qUge,
     supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }),
     supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }).eq('detaljer_hentet', false),
     supabase.from('stps_rapporter').select('*', { count: 'exact', head: true }).not('cvr', 'is', null),

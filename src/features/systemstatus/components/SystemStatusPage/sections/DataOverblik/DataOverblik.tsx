@@ -31,7 +31,8 @@ export function DataOverblik() {
   const [data, setData] = useState<Status | null>(null);
 
   useEffect(() => {
-    fetch('/api/system/status').then((r) => r.json()).then(setData).catch(() => {});
+    const visFilter = document.cookie.split(';').map((c) => c.trim()).find((c) => c.startsWith('keascare-vis-filter='))?.split('=')[1] ?? 'alle';
+    fetch(`/api/system/status?visFilter=${visFilter}`).then((r) => r.json()).then(setData).catch(() => {});
   }, []);
 
   if (!data) return <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>Henter data...</p>;
