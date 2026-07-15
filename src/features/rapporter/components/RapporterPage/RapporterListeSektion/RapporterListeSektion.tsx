@@ -5,6 +5,7 @@ import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, AlertCircle, CheckCircle, HelpCircle, ExternalLink, Search, ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import type { RapportRække, FundNiveau } from '@/features/rapporter/types/rapporter.types';
+import { beregnLeadVarme } from '@/features/rapporter/utils/LeadVarme';
 
 type FilterValg = 'alle' | FundNiveau;
 
@@ -152,6 +153,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
                   <th>Bosted</th>
                   <th>Kommune</th>
                   <th>Fund</th>
+                  <th>Lead-varme</th>
                   <th>Rapportdato</th>
                   <th>Fokusområder</th>
                   <th></th>
@@ -163,6 +165,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
                   const Ikon = cfg.Ikon;
                   const erKritisk = r.fundNiveau === 'kritisk';
                   const erStoerre = r.fundNiveau === 'stoerre';
+                  const varme = beregnLeadVarme(r.rapportDato);
                   return (
                     <tr
                       key={r.id}
@@ -180,6 +183,27 @@ export function RapporterListeSektion({ rapporter }: Props) {
                         <span className={`badge ${cfg.cls}`}>
                           <Ikon size={10} style={{ marginRight: '0.25rem', flexShrink: 0 }} />
                           {cfg.kortLabel}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          title={varme.beskrivelse}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.375rem',
+                            fontSize: 'var(--text-xs)',
+                            fontWeight: 'var(--fw-medium)',
+                            color: varme.farve,
+                            background: varme.bg,
+                            border: `1px solid ${varme.border}`,
+                            borderRadius: '9999px',
+                            padding: '0.2rem 0.6rem',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: varme.farve, flexShrink: 0 }} />
+                          {varme.label}
                         </span>
                       </td>
                       <td className="table-cell-muted" style={{ whiteSpace: 'nowrap' }}>

@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { ClipboardList, ExternalLink, FileText, RefreshCw } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
+import { beregnLeadVarme } from '@/features/rapporter/utils/LeadVarme';
 
 function HentStpsDetaljerKnap({ bostedId }: { bostedId: string }) {
   const [status, setStatus] = useState<'idle' | 'henter' | 'ok' | 'fejl'>('idle');
@@ -71,6 +72,7 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
 
   const harFokus = bosted.fokusOmraader.length > 0;
   const harTemaer = bosted.temaer.length > 0;
+  const varme = beregnLeadVarme(bosted.rapportDato);
 
   return (
     <div className="bosted-detail-kort">
@@ -90,6 +92,38 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
         <div className="bosted-detail-field">
           <span className="bosted-detail-field-label">Rapportdato</span>
           <span className="bosted-detail-field-value">{dato}</span>
+        </div>
+
+        <div className="bosted-detail-field">
+          <span className="bosted-detail-field-label">Lead-varme</span>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {(['varm', 'køler', 'kold'] as const).map((niveau) => (
+                <div
+                  key={niveau}
+                  title={niveau === varme.niveau ? varme.beskrivelse : undefined}
+                  style={{
+                    flex: 1,
+                    height: '8px',
+                    borderRadius: '9999px',
+                    background: varme.niveau === niveau
+                      ? (niveau === 'varm' ? '#dc2626' : niveau === 'køler' ? '#d97706' : '#9ca3af')
+                      : 'var(--color-border)',
+                    transition: 'background 0.2s',
+                  }}
+                />
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: varme.farve, flexShrink: 0 }} />
+              <span style={{ fontSize: 'var(--text-xs)', color: varme.farve, fontWeight: 'var(--fw-medium)' }}>
+                {varme.label}
+              </span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                — {varme.beskrivelse}
+              </span>
+            </div>
+          </div>
         </div>
 
         <div className="bosted-detail-field">
