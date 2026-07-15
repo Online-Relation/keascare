@@ -17,8 +17,8 @@ type Kilde = 'alle' | 'stps' | 'cvr';
 const RÆKKER_PER_SIDE = 10;
 
 const kolonner = [
-  'Bosted', 'Kommune', 'Region', 'Tilsynsform',
-  'Signal', 'Dato', 'Fokus / Branche', 'Monday', 'Data', 'Handling',
+  'Bosted', 'Region', 'Tilsynsform',
+  'Signal', 'Dato', 'Fokus / Branche', 'Monday', 'Data',
 ];
 
 export function DashboardTableClient({ bosteder, cvrSignaler }: Props) {

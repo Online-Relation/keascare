@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import type { Bosted, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
-import { ExternalLink } from 'lucide-react';
 import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
 
 type TableRowProps = {
@@ -47,7 +46,6 @@ export function TableRow({ bosted }: TableRowProps) {
           )}
         </div>
       </td>
-      <td className="data-table td table-cell-muted">{bosted.kommune ?? '—'}</td>
       <td className="data-table td table-cell-muted">{bosted.region ?? '—'}</td>
       <td className="data-table td table-cell-muted">{bosted.tilsynsform ?? '—'}</td>
       <td className="data-table td">
@@ -74,17 +72,6 @@ export function TableRow({ bosted }: TableRowProps) {
       </td>
       <td className="data-table td">
         <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} />
-      </td>
-      <td className="data-table td">
-        <a
-          href={bosted.rapportLink}
-          className="btn btn-outline btn-sm"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <ExternalLink size={12} />
-          Se rapport
-        </a>
       </td>
     </tr>
   );

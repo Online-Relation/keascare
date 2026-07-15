@@ -19,7 +19,6 @@ export function CvrSignalRow({ signal }: Props) {
           </span>
         </div>
       </td>
-      <td className="data-table td table-cell-muted">{signal.kommune ?? '—'}</td>
       <td className="data-table td table-cell-muted">—</td>
       <td className="data-table td table-cell-muted">—</td>
       <td className="data-table td">
@@ -45,16 +44,6 @@ export function CvrSignalRow({ signal }: Props) {
         )}
       </td>
       <td className="data-table td table-cell-muted">—</td>
-      <td className="data-table td">
-        <a
-          href={`https://datacvr.virk.dk/enhed/virksomhed/${signal.cvr}`}
-          className="btn btn-outline btn-sm"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          CVR
-        </a>
-      </td>
     </tr>
   );
 }
