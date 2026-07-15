@@ -155,48 +155,91 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
   return resultater;
 }
 
+const MAKS_FORSØG = 3;
+
+async function hentSide(
+  client: AxiosInstance,
+  config: unknown,
+  side: number
+): Promise<GbapiSvar> {
+  const userInput = {
+    query: '',
+    months: [],
+    categorizations: [BOSTED_KATEGORISERING_ID],
+    additionalFilters: {},
+    template: 'All',
+    page: side,
+    moduleId: MODULE_ID,
+  };
+
+  const payload = {
+    config,
+    page: side,
+    userInput,
+    lastGroupName: '',
+    rootFolders: null,
+  };
+
+  let sidsteFejl: unknown;
+  for (let forsøg = 1; forsøg <= MAKS_FORSØG; forsøg++) {
+    try {
+      const svar = await client.post<GbapiSvar>(
+        'https://stps.dk/gbapi/search/getPage',
+        payload
+      );
+      return svar.data;
+    } catch (err) {
+      sidsteFejl = err;
+      const ventetid = forsøg * 1000;
+      console.warn(`[STPS] Side ${side} fejlede (forsøg ${forsøg}/${MAKS_FORSØG}), venter ${ventetid}ms: ${err instanceof Error ? err.message : String(err)}`);
+      await venteMs(ventetid);
+    }
+  }
+  throw sidsteFejl;
+}
+
 export async function scraperListeSider(maxSider = 10): Promise<StpsListeItem[]> {
   const { client, config } = await opretSession();
   const alle: StpsListeItem[] = [];
+  const fejledeSider: number[] = [];
+  let totalSider = maxSider;
 
-  for (let side = 1; side <= maxSider; side++) {
-    const userInput = {
-      query: '',
-      months: [],
-      categorizations: [BOSTED_KATEGORISERING_ID],
-      additionalFilters: {},
-      template: 'All',
-      page: side,
-      moduleId: MODULE_ID,
-    };
+  for (let side = 1; side <= Math.min(maxSider, totalSider); side++) {
+    try {
+      const data = await hentSide(client, config, side);
 
-    const payload = {
-      config,
-      page: side,
-      userInput,
-      lastGroupName: '',
-      rootFolders: null,
-    };
+      const items = parseItemsFromHtml(data.pageHtml);
+      console.log(`[STPS] Side ${side}: ${items.length} items`);
 
-    const svar = await client.post<GbapiSvar>(
-      'https://stps.dk/gbapi/search/getPage',
-      payload
-    );
+      if (items.length > 0) {
+        alle.push(...items);
+      } else {
+        console.warn(`[STPS] Side ${side} returnerede 0 items — fortsætter alligevel`);
+        fejledeSider.push(side);
+      }
 
-    const items = parseItemsFromHtml(svar.data.pageHtml);
-    if (items.length === 0) break;
+      // Opdater totalSider fra første side
+      if (side === 1) {
+        const totalCount =
+          data.totalResultCount['All'] ??
+          Object.values(data.totalResultCount).reduce((s, n) => s + n, 0);
+        if (totalCount > 0) {
+          totalSider = Math.min(maxSider, Math.ceil(totalCount / 10));
+          console.log(`[STPS] Total: ${totalCount} resultater → ${totalSider} sider`);
+        }
+      }
+    } catch (err) {
+      console.error(`[STPS] Side ${side} fejlede efter ${MAKS_FORSØG} forsøg:`, err instanceof Error ? err.message : String(err));
+      fejledeSider.push(side);
+    }
 
-    alle.push(...items);
-
-    // Brug summen af alle tællere som fallback hvis 'All' mangler
-    const totalCount =
-      svar.data.totalResultCount['All'] ??
-      Object.values(svar.data.totalResultCount).reduce((s, n) => s + n, 0);
-    const totalSider = totalCount > 0 ? Math.ceil(totalCount / 10) : maxSider;
-    if (side >= totalSider) break;
-
-    if (side < maxSider) await venteMs(SCRAPER_DELAY_MS);
+    if (side < totalSider) await venteMs(SCRAPER_DELAY_MS);
   }
 
+  if (fejledeSider.length > 0) {
+    console.warn(`[STPS] Fejlede sider: ${fejledeSider.join(', ')}`);
+  }
+
+  console.log(`[STPS] Færdig: ${alle.length} items hentet (${fejledeSider.length} sider fejlede)`);
   return alle;
 }
