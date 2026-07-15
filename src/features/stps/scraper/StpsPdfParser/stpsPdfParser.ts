@@ -24,9 +24,20 @@ export type PdfDetaljer = {
 export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
   const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null, fundItems: [] };
   try {
-    // pdf-parse v2 API: URL-based, works in Node.js
+    // Fetch PDF manuelt med browser-headers — STPS blokerer plain Node.js fetch
+    const res = await fetch(pdfUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/pdf,*/*',
+        'Accept-Language': 'da-DK,da;q=0.9,en;q=0.8',
+        'Referer': 'https://stps.dk/',
+      },
+    });
+    if (!res.ok) return tom;
+    const data = new Uint8Array(await res.arrayBuffer());
+
     const { PDFParse } = await import('pdf-parse');
-    const parser = new PDFParse({ url: pdfUrl });
+    const parser = new PDFParse({ data });
     const resultat = await parser.getText();
     const tekst: string = resultat.text ?? '';
 
