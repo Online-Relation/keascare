@@ -185,26 +185,27 @@ export function RapporterListeSektion({ rapporter }: Props) {
                           {cfg.kortLabel}
                         </span>
                       </td>
-                      <td>
-                        <span
-                          title={varme.beskrivelse}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.375rem',
-                            fontSize: 'var(--text-xs)',
-                            fontWeight: 'var(--fw-medium)',
-                            color: varme.farve,
-                            background: varme.bg,
-                            border: `1px solid ${varme.border}`,
-                            borderRadius: '9999px',
-                            padding: '0.2rem 0.6rem',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: varme.farve, flexShrink: 0 }} />
-                          {varme.label}
-                        </span>
+                      <td title={varme.beskrivelse}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '72px' }}>
+                          <div style={{ display: 'flex', gap: '3px' }}>
+                            {(['varm', 'køler', 'kold'] as const).map((niveau) => (
+                              <div
+                                key={niveau}
+                                style={{
+                                  flex: 1,
+                                  height: '6px',
+                                  borderRadius: '9999px',
+                                  background: varme.niveau === niveau
+                                    ? (niveau === 'varm' ? '#dc2626' : niveau === 'køler' ? '#d97706' : '#9ca3af')
+                                    : 'var(--color-border)',
+                                }}
+                              />
+                            ))}
+                          </div>
+                          <span style={{ fontSize: '0.65rem', color: varme.farve, fontWeight: 'var(--fw-medium)', lineHeight: 1 }}>
+                            {varme.dage >= 0 ? `${varme.dage}d` : '—'}
+                          </span>
+                        </div>
                       </td>
                       <td className="table-cell-muted" style={{ whiteSpace: 'nowrap' }}>
                         {r.rapportDato
