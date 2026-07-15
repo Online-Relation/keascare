@@ -48,22 +48,15 @@ export function KritiskePerMånedChart({ data }: Props) {
           width={24}
         />
         <Tooltip content={<CustomTooltip />} />
-        <Bar dataKey="kritisk" radius={[4, 4, 0, 0]} maxBarSize={40}>
+        <Bar dataKey="kritisk" radius={[4, 4, 0, 0]} maxBarSize={32}>
           {data.map((entry, i) => (
             <Cell
               key={i}
               fill={entry.kritisk === 0 ? 'var(--color-border)' : entry.kritisk >= max * 0.7 ? '#DC2626' : '#F87171'}
+              opacity={entry.kritisk === 0 ? 0.4 : 1}
             />
           ))}
         </Bar>
-        <Line
-          type="monotone"
-          dataKey="kritiskLinje"
-          stroke="#991B1B"
-          strokeWidth={2}
-          dot={false}
-          strokeDasharray="4 3"
-        />
       </ComposedChart>
     </ResponsiveContainer>
   );

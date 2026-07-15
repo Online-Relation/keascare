@@ -85,7 +85,7 @@ export function RapporterPage({ data }: Props) {
             <div>
               <h2 className="rap-chart-titel">Kritiske rapporter måned for måned</h2>
               <p className="rap-chart-beskrivelse">
-                Antal rapporter med kritiske fund pr. måned — de sidste 12 måneder. Søjlerne farves mørkere jo højere aktiviteten er. Den stiplede linje viser tendensen.
+                Antal rapporter med kritiske fund pr. måned. Mørkere rød = højere aktivitet.
               </p>
             </div>
           </div>
