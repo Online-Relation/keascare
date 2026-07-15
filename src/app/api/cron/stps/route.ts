@@ -13,6 +13,7 @@ import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper
 import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
+import { matchTilbudsportalenTilStps } from '@/features/tilbudsportalen/matcher/TilbudsportalenMatcher';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 function erAutoriseret(req: NextRequest): boolean {
@@ -65,6 +66,13 @@ async function kørBerigelse() {
     await opdaterCvrAnsatte(100);
   } catch (err) {
     await logScraperKørsel('cvr-ansatte', false, { error: String(err) });
+  }
+
+  try {
+    const resultat = await matchTilbudsportalenTilStps();
+    await logScraperKørsel('tp-match', true, { ok: true, ...resultat });
+  } catch (err) {
+    await logScraperKørsel('tp-match', false, { error: String(err) });
   }
 }
 

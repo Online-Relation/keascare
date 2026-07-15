@@ -11,13 +11,13 @@ type LogEntry = {
 };
 
 const CRON_JOBS: { id: string; label: string }[] = [
-  { id: 'stps',         label: 'Update Styrelsen for patientsikkerhed' },
-  { id: 'stps-detaljer', label: 'STPS — Parse PDFer' },
+  { id: 'stps-liste',      label: 'STPS — Hent nye rapporter' },
+  { id: 'stps-detaljer',   label: 'STPS — Parse PDFer' },
   { id: 'stps-fund-items', label: 'STPS — Fund items' },
-  { id: 'stps-pnummer', label: 'STPS — P-numre fra PDFer' },
-  { id: 'cvr-berig',    label: 'CVR — Berig med CVR og adresse' },
-  { id: 'cvr-ansatte',  label: 'CVR — Ansatte og virksomhedsdata' },
-  { id: 'tilbudsportalen-match', label: 'Tilbudsportalen — Kor matcher' },
+  { id: 'stps-pnummer',    label: 'STPS — P-numre fra PDFer' },
+  { id: 'cvr-berig',       label: 'CVR — Berig med CVR og adresse' },
+  { id: 'cvr-ansatte',     label: 'CVR — Ansatte og virksomhedsdata' },
+  { id: 'tp-match',        label: 'Tilbudsportalen — Kør matcher' },
 ];
 
 function tidSiden(iso: string) {
