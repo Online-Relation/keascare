@@ -94,15 +94,20 @@ export type DstÅrTotal = {
 
 export async function hentDstÅrligeData(fraÅr = 2016): Promise<DstÅrTotal[]> {
   const nuÅr = new Date().getFullYear();
-  // Brug Q4 for hvert afsluttet år — Q1 for indeværende år (nyeste tilgængelige)
+
+  // Hent tilgængelige kvartaler fra DST, brug kun dem der faktisk eksisterer
+  const { ids, senesteKvartal } = await hentKommuneIds();
+
+  // Byg kun kvartaler op til og med seneste kendte kvartal fra DST
+  const [senesteÅr, senesteQ] = senesteKvartal.split('K').map(Number);
   const kvartaler: string[] = [];
   for (let år = fraÅr; år <= nuÅr; år++) {
-    kvartaler.push(`${år}K4`);
+    const maxQ = år < senesteÅr ? 4 : år === senesteÅr ? senesteQ : 0;
+    for (let q = 1; q <= maxQ; q++) {
+      kvartaler.push(`${år}K${q}`);
+    }
   }
-  // Tilføj indeværende Q1/Q2/Q3 som fallback for indeværende år
-  kvartaler.push(`${nuÅr}K3`, `${nuÅr}K2`, `${nuÅr}K1`);
-
-  const { ids } = await hentKommuneIds();
+  if (!kvartaler.length) return [];
 
   const payload = {
     table: 'HAND01',

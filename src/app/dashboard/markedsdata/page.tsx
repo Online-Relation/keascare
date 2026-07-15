@@ -20,7 +20,7 @@ export default async function MarkedsdataSide() {
   const [cacheResultat, tpTæl, årligeData] = await Promise.all([
     hentDstFraCache(),
     tpQuery,
-    hentDstÅrligeData(2016),
+    hentDstÅrligeData(2016).catch(() => []),
   ]);
 
   let dstData = cacheResultat.data;
