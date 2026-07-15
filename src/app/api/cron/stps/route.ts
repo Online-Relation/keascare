@@ -1,18 +1,25 @@
 // src/app/api/cron/stps/route.ts
 //
-// Bruges af cron-job.org.
+// Daglig cron-kørsel — startes af cron-job.org eller Railway scheduler.
+// Returnerer straks et svar; al scraping kører i baggrunden på Railway.
 //
-// Trin 1 (synkront): STPS liste — henter nye tilsynsrapporter og returnerer et rigtigt svar.
-//   Cron-job.org får et reelt resultat og kan registrere fejl korrekt.
-//
-// Trin 2-4 (baggrund): Detaljer/fund-items/pnummer/CVR — berigelse der ikke er tidskritisk.
-//   Kører i baggrunden på Railway efter at svaret er sendt.
+// Kørserækkefølge:
+//   1. STPS liste        — henter nye tilsynsrapporter
+//   2. STPS detaljer     — parser PDF'er for rapporter der mangler data
+//   3. STPS fund-items   — udtræk strukturerede målepunkter fra PDF'er
+//   4. STPS P-numre      — udtræk P-numre fra PDF'er
+//   5. CVR berig         — slå P-numre op i CVR og hent CVR-nummer
+//   6. CVR ansatte       — opdater ansatte/branche for kendte CVR-numre
+//   7. TP liste          — hent alle tilbud fra Tilbudsportalen
+//   8. TP detaljer+match — hent detaljer og match mod STPS-rapporter
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
 import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
+import { scraperTilbudsportalenListe } from '@/features/tilbudsportalen/scraper/TilbudsportalenListScraper';
+import { scraperTilbudsportalenDetaljer } from '@/features/tilbudsportalen/scraper/TilbudsportalenDetaljerScraper';
 import { matchTilbudsportalenTilStps } from '@/features/tilbudsportalen/matcher/TilbudsportalenMatcher';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
@@ -22,67 +29,11 @@ function erAutoriseret(req: NextRequest): boolean {
   return req.headers.get('x-scraper-secret') === secret;
 }
 
-// Berigelse kører i baggrunden efter at liste-scraper har returneret.
-// Fejl her påvirker ikke det primære svar til cron-job.org.
-async function kørBerigelse() {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
-  const secret = process.env.SCRAPER_SECRET ?? '';
-  const headers = { 'Content-Type': 'application/json', 'x-scraper-secret': secret };
-
-  try {
-    await kørDetaljerScraper(50);
-    await logScraperKørsel('stps-detaljer', true, {});
-  } catch (err) {
-    await logScraperKørsel('stps-detaljer', false, { error: String(err) });
-  }
-
-  try {
-    const res = await fetch(`${base}/api/scrapers/stps/fund-items`, {
-      method: 'POST', headers, body: JSON.stringify({ batch: 30 }),
-    });
-    const data = await res.json();
-    await logScraperKørsel('stps-fund-items', true, data);
-  } catch (err) {
-    await logScraperKørsel('stps-fund-items', false, { error: String(err) });
-  }
-
-  try {
-    const res = await fetch(`${base}/api/scrapers/stps/pnummer`, {
-      method: 'POST', headers, body: JSON.stringify({ batch: 50 }),
-    });
-    const data = await res.json();
-    await logScraperKørsel('stps-pnummer', true, data);
-  } catch (err) {
-    await logScraperKørsel('stps-pnummer', false, { error: String(err) });
-  }
-
-  try {
-    await berigMedCvr(50);
-  } catch (err) {
-    await logScraperKørsel('cvr-berig', false, { error: String(err) });
-  }
-
-  try {
-    await opdaterCvrAnsatte(100);
-  } catch (err) {
-    await logScraperKørsel('cvr-ansatte', false, { error: String(err) });
-  }
-
-  try {
-    const resultat = await matchTilbudsportalenTilStps();
-    await logScraperKørsel('tp-match', true, { ok: true, ...resultat });
-  } catch (err) {
-    await logScraperKørsel('tp-match', false, { error: String(err) });
-  }
-}
-
 export async function POST(request: NextRequest) {
   if (!erAutoriseret(request)) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
-  // Start fuld kørsel i baggrunden — Railway holder processen i live efter svar er sendt.
-  // STPS har ~92 sider (~920 rapporter) som tager ~2 min at hente — for lang tid til synkront svar.
   kørAltIBaggrunden().catch(() => {});
 
   return NextResponse.json({
@@ -92,17 +43,63 @@ export async function POST(request: NextRequest) {
   });
 }
 
-async function kørAltIBaggrunden() {
-  // Trin 1: Alle listesider (op til 100 sider = 1000 rapporter)
+async function forsøg<T>(
+  id: string,
+  fn: () => Promise<T>,
+  stopVedFejl = false,
+): Promise<boolean> {
   try {
-    const listeResultat = await kørStpsScraper({ maxSider: 100 });
-    await logScraperKørsel('stps-liste', true, listeResultat);
+    const res = await fn();
+    await logScraperKørsel(id, true, res as Record<string, unknown>);
+    return true;
   } catch (err) {
     const besked = err instanceof Error ? err.message : String(err);
-    await logScraperKørsel('stps-liste', false, { error: besked });
-    return; // Stop hvis liste-scraper fejler
+    await logScraperKørsel(id, false, { error: besked });
+    return !stopVedFejl;
   }
+}
 
-  // Trin 2-5: Berigelse
-  await kørBerigelse();
+async function kørAltIBaggrunden() {
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+  const secret = process.env.SCRAPER_SECRET ?? '';
+  const headers = { 'Content-Type': 'application/json', 'x-scraper-secret': secret };
+
+  // 1. STPS liste — stop hele kørsel ved fejl
+  const listeOk = await forsøg('stps-liste', () => kørStpsScraper({ maxSider: 100 }), true);
+  if (!listeOk) return;
+
+  // 2. STPS detaljer
+  await forsøg('stps-detaljer', () => kørDetaljerScraper(50));
+
+  // 3. STPS fund-items
+  await forsøg('stps-fund-items', async () => {
+    const res = await fetch(`${base}/api/scrapers/stps/fund-items`, {
+      method: 'POST', headers, body: JSON.stringify({ batch: 30 }),
+    });
+    return res.json() as Promise<Record<string, unknown>>;
+  });
+
+  // 4. STPS P-numre
+  await forsøg('stps-pnummer', async () => {
+    const res = await fetch(`${base}/api/scrapers/stps/pnummer`, {
+      method: 'POST', headers, body: JSON.stringify({ batch: 50 }),
+    });
+    return res.json() as Promise<Record<string, unknown>>;
+  });
+
+  // 5. CVR berig
+  await forsøg('cvr-berig', () => berigMedCvr(50));
+
+  // 6. CVR ansatte
+  await forsøg('cvr-ansatte', () => opdaterCvrAnsatte(100));
+
+  // 7. Tilbudsportalen liste (op til 50 sider)
+  await forsøg('tp-liste', () => scraperTilbudsportalenListe(50));
+
+  // 8. Tilbudsportalen detaljer + match mod STPS (match køres automatisk i detaljer-scraper)
+  await forsøg('tp-detaljer', async () => {
+    const detaljer = await scraperTilbudsportalenDetaljer(30);
+    const match = await matchTilbudsportalenTilStps();
+    return { ...detaljer, match };
+  });
 }
