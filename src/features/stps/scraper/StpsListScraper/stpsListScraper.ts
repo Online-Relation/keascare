@@ -149,7 +149,7 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
     const finalUrl = detailUrl ||
       `stps://genereret/${encodeURIComponent(navn)}${rapportDato ? `/${rapportDato}` : ''}`;
 
-    resultater.push({ navn, rapportDato, tags, detailUrl: finalUrl, besoegsDato });
+    resultater.push({ navn, rapportDato, tags, detailUrl: finalUrl, besoegsDato: besoegsDato ? normaliserDato(besoegsDato) : null });
   });
 
   return resultater;
