@@ -54,8 +54,7 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
   const aktivLabel = findPresetLabel(fra, til);
 
   const vælgPreset = useCallback((preset: DatoPeriode) => {
-    try { localStorage.setItem('keascare-dato-fra', preset.fra); } catch {}
-    try { localStorage.setItem('keascare-dato-til', preset.til); } catch {}
+    try { localStorage.setItem('keascare-dato-preset', preset.label); } catch {}
     const sp = new URLSearchParams(params.toString());
     sp.set('fra', preset.fra);
     sp.set('til', preset.til);
@@ -66,15 +65,11 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
 
   useEffect(() => {
     if (!fra || !til) {
-      const gemt = {
-        fra: (() => { try { return localStorage.getItem('keascare-dato-fra'); } catch { return null; } })(),
-        til: (() => { try { return localStorage.getItem('keascare-dato-til'); } catch { return null; } })(),
-      };
-      const valgtFra = gemt.fra ?? DEFAULT_PRESET.fra;
-      const valgtTil = gemt.til ?? DEFAULT_PRESET.til;
+      const gemetLabel = (() => { try { return localStorage.getItem('keascare-dato-preset'); } catch { return null; } })();
+      const valgtPreset = PRESETS.find((p) => p.label === gemetLabel) ?? DEFAULT_PRESET;
       const sp = new URLSearchParams(params.toString());
-      sp.set('fra', valgtFra);
-      sp.set('til', valgtTil);
+      sp.set('fra', valgtPreset.fra);
+      sp.set('til', valgtPreset.til);
       router.replace(`?${sp.toString()}`, { scroll: false });
     }
   }, [fra, til, params, router]);
