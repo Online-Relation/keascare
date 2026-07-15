@@ -107,7 +107,7 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[]
       id: 'kortlagt-af-nova',
       label: 'Kortlagt af Nova',
       value: String(unikkeVirksomheder),
-      sub: `${rapporter.length} rapporter analyseret`,
+      sub: `${rapporter.length} STPS-rapporter i valgte periode`,
       ikon: 'kortlagt',
       trendPositive: true,
     },
