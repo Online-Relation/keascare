@@ -146,9 +146,24 @@ export function BorgereÅrChart({ data }: Props) {
       </ResponsiveContainer>
 
       {harBefolkning && (
-        <p style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
-          Rate (lilla stiplet) viser §107+§108 borgere pr. 1.000 indbyggere — stiger raten hurtigere end befolkningen, vokser behovet relativt. Kilde: DST · HAND01 + FOLK1A
-        </p>
+        <div style={{
+          marginTop: '1rem',
+          padding: '0.75rem 1rem',
+          background: 'var(--color-surface)',
+          borderLeft: '3px solid #9333ea',
+          borderRadius: '0 0.375rem 0.375rem 0',
+          fontSize: 'var(--text-xs)',
+          color: 'var(--color-text-secondary)',
+          lineHeight: 1.6,
+        }}>
+          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Hvad viser den lilla linje?</span>
+          {' '}Den viser antallet af borgere i §107/§108 botilbud pr. 1.000 danskere. Fra 2016 til 2024 er raten steget fra ca. 1,6 til 2,0 — en stigning på over 25 % — mens Danmarks befolkning kun er vokset ca. 5 % i samme periode.{' '}
+          <span style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Behovet for botilbud vokser altså markant hurtigere end befolkningen.</span>
+          {' '}Den kraftigste stigning skete fra 2017 til 2020, hvorefter niveauet har holdt sig stabilt på ~2,0 pr. 1.000.
+          <span style={{ display: 'block', marginTop: '0.25rem', color: 'var(--color-text-muted)' }}>
+            Kilde: DST · HAND01 (borgere) + FOLK1A (folketal pr. 1. januar)
+          </span>
+        </div>
       )}
     </div>
   );
