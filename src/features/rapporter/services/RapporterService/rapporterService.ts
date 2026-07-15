@@ -77,14 +77,27 @@ function beregnKpis(alle: DbRapport[], totalIDatabase: number) {
 
 function beregnKritiskeMåneder(alle: DbRapport[]): MånedligKritisk[] {
   const nu = new Date();
-  const måneder: MånedligKritisk[] = [];
 
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
-    const nøgle = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const label = d.toLocaleDateString('da-DK', { month: 'short', year: '2-digit' });
+  // Find ældste rapportdato i data — byg fra den måned frem til i dag
+  const datoer = alle
+    .map((r) => r.rapport_dato)
+    .filter(Boolean) as string[];
+
+  const ældste = datoer.length
+    ? new Date(datoer.reduce((a, b) => (a < b ? a : b)))
+    : new Date(nu.getFullYear(), nu.getMonth() - 11, 1);
+
+  const start = new Date(ældste.getFullYear(), ældste.getMonth(), 1);
+  const slut = new Date(nu.getFullYear(), nu.getMonth(), 1);
+
+  const måneder: MånedligKritisk[] = [];
+  const cursor = new Date(start);
+  while (cursor <= slut) {
+    const nøgle = `${cursor.getFullYear()}-${String(cursor.getMonth() + 1).padStart(2, '0')}`;
+    const label = cursor.toLocaleDateString('da-DK', { month: 'short', year: '2-digit' });
     const kritisk = alle.filter((r) => r.rapport_dato?.startsWith(nøgle) && r.fund_niveau === 'kritisk').length;
     måneder.push({ måned: label, kritisk, kritiskLinje: kritisk });
+    cursor.setMonth(cursor.getMonth() + 1);
   }
   return måneder;
 }
