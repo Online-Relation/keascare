@@ -186,21 +186,26 @@ export function RapporterListeSektion({ rapporter }: Props) {
                         </span>
                       </td>
                       <td title={varme.beskrivelse}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: '72px' }}>
-                          <div style={{ display: 'flex', gap: '3px' }}>
-                            {(['varm', 'køler', 'kold'] as const).map((niveau) => (
-                              <div
-                                key={niveau}
-                                style={{
-                                  flex: 1,
-                                  height: '6px',
-                                  borderRadius: '9999px',
-                                  background: varme.niveau === niveau
-                                    ? (niveau === 'varm' ? '#dc2626' : niveau === 'køler' ? '#d97706' : '#9ca3af')
-                                    : 'var(--color-border)',
-                                }}
-                              />
-                            ))}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', minWidth: '80px' }}>
+                          <div style={{ position: 'relative', height: '16px', display: 'flex', alignItems: 'center' }}>
+                            <div style={{
+                              width: '100%',
+                              height: '6px',
+                              borderRadius: '9999px',
+                              background: 'linear-gradient(to right, #16a34a, #eab308, #dc2626)',
+                            }} />
+                            {varme.dage >= 0 && (
+                              <div style={{
+                                position: 'absolute',
+                                left: `calc(${varme.markerPct}% - 6px)`,
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: '50%',
+                                background: '#fff',
+                                border: `2px solid ${varme.farve}`,
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+                              }} />
+                            )}
                           </div>
                           <span style={{ fontSize: '0.65rem', color: varme.farve, fontWeight: 'var(--fw-medium)', lineHeight: 1 }}>
                             {varme.dage >= 0 ? `${varme.dage}d` : '—'}

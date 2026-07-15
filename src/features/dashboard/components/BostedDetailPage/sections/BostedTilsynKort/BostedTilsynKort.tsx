@@ -96,32 +96,42 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
 
         <div className="bosted-detail-field">
           <span className="bosted-detail-field-label">Lead-varme</span>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              {(['varm', 'køler', 'kold'] as const).map((niveau) => (
-                <div
-                  key={niveau}
-                  title={niveau === varme.niveau ? varme.beskrivelse : undefined}
-                  style={{
-                    flex: 1,
-                    height: '8px',
-                    borderRadius: '9999px',
-                    background: varme.niveau === niveau
-                      ? (niveau === 'varm' ? '#dc2626' : niveau === 'køler' ? '#d97706' : '#9ca3af')
-                      : 'var(--color-border)',
-                    transition: 'background 0.2s',
-                  }}
-                />
-              ))}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
+            {/* Gradient-slider med markør */}
+            <div style={{ position: 'relative', height: '20px', display: 'flex', alignItems: 'center' }}>
+              {/* Gradient-bar */}
+              <div style={{
+                width: '100%',
+                height: '8px',
+                borderRadius: '9999px',
+                background: 'linear-gradient(to right, #16a34a, #eab308, #dc2626)',
+              }} />
+              {/* Markør */}
+              {varme.dage >= 0 && (
+                <div style={{
+                  position: 'absolute',
+                  left: `calc(${varme.markerPct}% - 7px)`,
+                  width: '14px',
+                  height: '14px',
+                  borderRadius: '50%',
+                  background: '#fff',
+                  border: `2.5px solid ${varme.farve}`,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.18)',
+                  pointerEvents: 'none',
+                }} />
+              )}
             </div>
+            {/* Labels */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--color-text-muted)' }}>
+              <span style={{ color: '#16a34a' }}>Varmt</span>
+              <span style={{ color: '#d97706' }}>Køler</span>
+              <span style={{ color: '#dc2626' }}>Koldt</span>
+            </div>
+            {/* Status-tekst */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-              <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: varme.farve, flexShrink: 0 }} />
-              <span style={{ fontSize: 'var(--text-xs)', color: varme.farve, fontWeight: 'var(--fw-medium)' }}>
-                {varme.label}
-              </span>
-              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
-                — {varme.beskrivelse}
-              </span>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: varme.farve, flexShrink: 0 }} />
+              <span style={{ fontSize: 'var(--text-xs)', color: varme.farve, fontWeight: 'var(--fw-medium)' }}>{varme.label}</span>
+              <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>— {varme.beskrivelse}</span>
             </div>
           </div>
         </div>
