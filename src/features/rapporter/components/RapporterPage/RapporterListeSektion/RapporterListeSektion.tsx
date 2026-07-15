@@ -3,7 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { AlertTriangle, AlertCircle, CheckCircle, HelpCircle, ExternalLink, Search, ChevronLeft, ChevronRight, Flame } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, HelpCircle, Search, ChevronLeft, ChevronRight, Flame } from 'lucide-react';
 import type { RapportRække, FundNiveau } from '@/features/rapporter/types/rapporter.types';
 import { beregnLeadVarme } from '@/features/rapporter/utils/LeadVarme';
 
@@ -155,8 +155,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
                   <th>Fund</th>
                   <th>Lead-varme</th>
                   <th>Rapportdato</th>
-                  <th>Fokusområder</th>
-                  <th></th>
                 </tr>
               </thead>
               <tbody>
@@ -218,22 +216,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
                               day: 'numeric', month: 'short', year: 'numeric',
                             })
                           : '—'}
-                      </td>
-                      <td className="table-cell-muted">
-                        {r.temaer.slice(0, 2).join(', ') || '—'}
-                      </td>
-                      <td>
-                        {r.rapportLink && (
-                          <a
-                            href={r.rapportLink}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="btn btn-outline btn-sm"
-                          >
-                            <ExternalLink size={12} />
-                            Se rapport
-                          </a>
-                        )}
                       </td>
                     </tr>
                   );
