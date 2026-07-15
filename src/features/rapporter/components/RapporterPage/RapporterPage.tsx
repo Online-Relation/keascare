@@ -4,13 +4,14 @@ import { AlertTriangle, AlertCircle, CheckCircle, TrendingUp, Percent } from 'lu
 import { FundTrendChart } from './charts/FundTrendChart';
 import { KommuneFundChart } from './charts/KommuneFundChart';
 import { KritiskePerMånedChart } from './charts/KritiskePerMånedChart';
+import { DriftsformKritiskChart } from './charts/DriftsformKritiskChart';
 import { RapporterListeSektion } from './RapporterListeSektion';
 import type { RapporterData } from '@/features/rapporter/types/rapporter.types';
 
 type Props = { data: RapporterData };
 
 export function RapporterPage({ data }: Props) {
-  const { kpis, trend, kritiskeMåneder, topKommuner, temaer, rapporter } = data;
+  const { kpis, trend, kritiskeMåneder, driftsformKritiske, topKommuner, temaer, rapporter } = data;
   const maxTema = temaer[0]?.antal ?? 1;
 
   return (
@@ -109,6 +110,18 @@ export function RapporterPage({ data }: Props) {
             </div>
           </div>
           <KommuneFundChart data={topKommuner} />
+        </div>
+
+        <div className="rap-chart-kort">
+          <div className="rap-chart-header">
+            <div>
+              <h2 className="rap-chart-titel">Privat vs. kommunal – kritiske fund</h2>
+              <p className="rap-chart-beskrivelse">
+                Antal kritiske rapporter fordelt på driftsform. Procenten viser andelen af gruppens egne rapporter.
+              </p>
+            </div>
+          </div>
+          <DriftsformKritiskChart data={driftsformKritiske} />
         </div>
 
       </div>

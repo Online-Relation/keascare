@@ -1,9 +1,9 @@
 // src/features/rapporter/services/RapporterService/rapporterService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
+import { getVisFilter, privatFilterTpOr, privatFilterCvrOr, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 import type {
-  RapporterData, RapportRække, MånedligTrend, MånedligKritisk, KommuneFundStat, TemaStat, FundNiveau,
+  RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
 
 type DbRapport = {
@@ -14,6 +14,7 @@ type DbRapport = {
   rapport_dato: string | null;
   rapport_url: string | null;
   temaer: string[] | null;
+  tp_driftsform: string | null;
 };
 
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
@@ -22,7 +23,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer')
+    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform')
     .order('rapport_dato', { ascending: false });
 
   if (visFilter === 'privat') {
@@ -49,12 +50,13 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
   return {
-    kpis:            beregnKpis(alle, totalIDatabase, kritiskeMåneder),
-    trend:           beregnTrend(alle),
+    kpis:               beregnKpis(alle, totalIDatabase, kritiskeMåneder),
+    trend:              beregnTrend(alle),
     kritiskeMåneder,
-    topKommuner:     beregnTopKommuner(alle),
-    temaer:          beregnTemaer(alle),
-    rapporter:       mapFundRapporter(alle),
+    driftsformKritiske: beregnDriftsformKritiske(alle),
+    topKommuner:        beregnTopKommuner(alle),
+    temaer:             beregnTemaer(alle),
+    rapporter:          mapFundRapporter(alle),
   };
 }
 
@@ -104,6 +106,28 @@ function beregnKritiskeMåneder(alle: DbRapport[]): MånedligKritisk[] {
     cursor.setMonth(cursor.getMonth() + 1);
   }
   return måneder;
+}
+
+function erKommunal(driftsform: string | null): boolean {
+  return !!driftsform && KOMMUNALE_DRIFTSFORMER.includes(driftsform);
+}
+
+function beregnDriftsformKritiske(alle: DbRapport[]): DriftsformKritiskStat[] {
+  const grupper = [
+    { navn: 'Privat / selvejende', test: (r: DbRapport) => !erKommunal(r.tp_driftsform) },
+    { navn: 'Kommunal / offentlig', test: (r: DbRapport) => erKommunal(r.tp_driftsform) },
+  ];
+
+  return grupper.map(({ navn, test }) => {
+    const gruppe = alle.filter(test);
+    const kritiske = gruppe.filter((r) => r.fund_niveau === 'kritisk').length;
+    return {
+      navn,
+      kritiske,
+      total: gruppe.length,
+      pct: gruppe.length > 0 ? Math.round((kritiske / gruppe.length) * 100) : 0,
+    };
+  });
 }
 
 function beregnTrend(alle: DbRapport[]): MånedligTrend[] {
