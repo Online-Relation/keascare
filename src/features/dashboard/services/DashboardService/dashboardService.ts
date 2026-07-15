@@ -78,22 +78,57 @@ function mapTilBosted(row: DbRapport): Bosted {
   };
 }
 
+function månedNøgle(dato: string): string {
+  return dato.slice(0, 7); // "YYYY-MM"
+}
+
+function seneste12Måneder(): string[] {
+  const nu = new Date();
+  const nøgler: string[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+    nøgler.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+  }
+  return nøgler;
+}
+
 function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[] {
   const unikkeVirksomheder = new Set(rapporter.map((r) => r.cvr).filter(Boolean)).size;
 
-  // Varme leads: kritisk/større fund uanset Monday-status
   const varme = new Set(
     rapporter
       .filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? ''))
       .map((r) => r.cvr ?? r.id)
   ).size;
 
-  // Ikke kontaktet: varme leads uden Monday-item og ikke markeret som tabt
   const ikkeKontaktet = new Set(
     rapporter
       .filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id && r.monday_gruppe !== 'tabt')
       .map((r) => r.cvr ?? r.id)
   ).size;
+
+  // Beregn månedlige sparklines fra rapport_dato
+  const måneder = seneste12Måneder();
+
+  const bostedPoints = måneder.map((nøgle) =>
+    new Set(rapporter.filter((r) => r.rapport_dato && månedNøgle(r.rapport_dato) === nøgle).map((r) => r.cvr ?? r.id)).size
+  );
+
+  const varmePoints = måneder.map((nøgle) =>
+    new Set(
+      rapporter
+        .filter((r) => r.rapport_dato && månedNøgle(r.rapport_dato) === nøgle && ['kritisk', 'stoerre'].includes(r.fund_niveau ?? ''))
+        .map((r) => r.cvr ?? r.id)
+    ).size
+  );
+
+  const ikkeKontaktetPoints = måneder.map((nøgle) =>
+    new Set(
+      rapporter
+        .filter((r) => r.rapport_dato && månedNøgle(r.rapport_dato) === nøgle && ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id && r.monday_gruppe !== 'tabt')
+        .map((r) => r.cvr ?? r.id)
+    ).size
+  );
 
   return [
     {
@@ -110,6 +145,7 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[]
       sub: 'Unikke bosteder Nova har registreret via STPS-tilsyn i perioden',
       ikon: 'kortlagt',
       trendPositive: true,
+      sparkPoints: bostedPoints,
     },
     {
       id: 'varme-leads',
@@ -117,6 +153,7 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[]
       value: String(varme),
       sub: 'Bosteder med kritisk eller større fund — størst behov for KeasCare',
       ikon: 'varm',
+      sparkPoints: varmePoints,
     },
     {
       id: 'ikke-kontaktet',
@@ -124,6 +161,7 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[]
       value: String(ikkeKontaktet),
       sub: 'Varme leads der endnu ikke er oprettet som kunde i Monday',
       ikon: 'kontakt',
+      sparkPoints: ikkeKontaktetPoints,
     },
   ];
 }

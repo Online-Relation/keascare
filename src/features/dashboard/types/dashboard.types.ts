@@ -48,6 +48,7 @@ export type KpiItem = {
   trend?: string;
   trendPositive?: boolean;
   ikon?: KpiIkon;
+  sparkPoints?: number[]; // reelle månedlige datapunkter til sparkline
 };
 
 export type StpsFordeling = {

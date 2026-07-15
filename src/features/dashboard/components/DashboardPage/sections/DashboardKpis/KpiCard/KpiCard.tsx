@@ -53,13 +53,37 @@ const IKON_CONFIG: Record<KpiIkon, { bg: string; farve: string; svg: React.React
   },
 };
 
-function Sparkline({ farve, positiv }: { farve: string; positiv?: boolean }) {
-  const points = positiv !== false
+function Sparkline({ farve, positiv, points: rawPoints }: { farve: string; positiv?: boolean; points?: number[] }) {
+  // Brug reelle datapunkter hvis tilgængelige, ellers fallback til statisk kurve
+  if (rawPoints && rawPoints.length >= 2 && rawPoints.some((v) => v > 0)) {
+    const W = 90;
+    const H = 32;
+    const PAD = 3;
+    const min = Math.min(...rawPoints);
+    const max = Math.max(...rawPoints);
+    const range = max - min || 1;
+    const xs = rawPoints.map((_, i) => PAD + (i / (rawPoints!.length - 1)) * (W - PAD * 2));
+    const ys = rawPoints.map((v) => H - PAD - ((v - min) / range) * (H - PAD * 2));
+
+    // Smooth linje via cubic bezier
+    let d = `M${xs[0].toFixed(1)},${ys[0].toFixed(1)}`;
+    for (let i = 1; i < xs.length; i++) {
+      const cpX = (xs[i - 1] + xs[i]) / 2;
+      d += ` C${cpX.toFixed(1)},${ys[i - 1].toFixed(1)} ${cpX.toFixed(1)},${ys[i].toFixed(1)} ${xs[i].toFixed(1)},${ys[i].toFixed(1)}`;
+    }
+    return (
+      <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} fill="none" aria-hidden="true">
+        <path d={d} stroke={farve} strokeWidth="2" strokeLinecap="round" opacity="0.7" />
+      </svg>
+    );
+  }
+
+  const path = positiv !== false
     ? 'M0,28 C10,26 20,22 30,20 C40,18 50,14 60,10 C70,7 80,5 90,3'
     : 'M0,8 C10,9 20,12 30,15 C40,18 50,20 60,22 C70,24 80,26 90,27';
   return (
     <svg width="90" height="32" viewBox="0 0 90 32" fill="none" aria-hidden="true">
-      <path d={points} stroke={farve} strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
+      <path d={path} stroke={farve} strokeWidth="2" strokeLinecap="round" opacity="0.5"/>
     </svg>
   );
 }
@@ -81,7 +105,7 @@ export function KpiCard({ kpi }: KpiCardProps) {
         </div>
         {config && (
           <div className="kpi-card__sparkline">
-            <Sparkline farve={config.farve} positiv={kpi.trendPositive} />
+            <Sparkline farve={config.farve} positiv={kpi.trendPositive} points={kpi.sparkPoints} />
           </div>
         )}
       </div>
