@@ -1,15 +1,16 @@
 // src/features/rapporter/components/RapporterPage/RapporterPage.tsx
 
-import { AlertTriangle, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
+import { AlertTriangle, AlertCircle, CheckCircle, TrendingUp, Percent } from 'lucide-react';
 import { FundTrendChart } from './charts/FundTrendChart';
 import { KommuneFundChart } from './charts/KommuneFundChart';
+import { KritiskePerMånedChart } from './charts/KritiskePerMånedChart';
 import { RapporterListeSektion } from './RapporterListeSektion';
 import type { RapporterData } from '@/features/rapporter/types/rapporter.types';
 
 type Props = { data: RapporterData };
 
 export function RapporterPage({ data }: Props) {
-  const { kpis, trend, topKommuner, temaer, rapporter } = data;
+  const { kpis, trend, kritiskeMåneder, topKommuner, temaer, rapporter } = data;
   const maxTema = temaer[0]?.antal ?? 1;
 
   return (
@@ -58,6 +59,14 @@ export function RapporterPage({ data }: Props) {
             <div className="rap-kpi-label">Rapporter i alt</div>
           </div>
         </div>
+        <div className="rap-kpi rap-kpi-kritisk">
+          <Percent size={20} className="rap-kpi-ikon" />
+          <div>
+            <div className="rap-kpi-tal">{kpis.kritiskePct}%</div>
+            <div className="rap-kpi-label">Kritiske af database</div>
+          </div>
+          <span className="rap-kpi-sub">ud af {kpis.totalIDatabase.toLocaleString('da-DK')} rapporter</span>
+        </div>
       </div>
 
       {/* Trend + kommuner */}
@@ -66,7 +75,19 @@ export function RapporterPage({ data }: Props) {
         <div className="rap-chart-kort rap-chart-bred">
           <div className="rap-chart-header">
             <div>
-              <h2 className="rap-chart-titel">Udvikling over 12 måneder</h2>
+              <h2 className="rap-chart-titel">Kritiske rapporter måned for måned</h2>
+              <p className="rap-chart-beskrivelse">
+                Antal rapporter med kritiske fund pr. måned — de sidste 12 måneder. Søjlerne farves mørkere jo højere aktiviteten er. Den stiplede linje viser tendensen.
+              </p>
+            </div>
+          </div>
+          <KritiskePerMånedChart data={kritiskeMåneder} />
+        </div>
+
+        <div className="rap-chart-kort rap-chart-bred">
+          <div className="rap-chart-header">
+            <div>
+              <h2 className="rap-chart-titel">Udvikling over 12 måneder – alle fund</h2>
               <p className="rap-chart-beskrivelse">
                 Stablede søjler viser alle rapporter. Den røde linje viser kritiske fund — følg om kurven stiger.
               </p>

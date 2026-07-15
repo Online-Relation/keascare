@@ -3,7 +3,7 @@
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
 import type {
-  RapporterData, RapportRække, MånedligTrend, KommuneFundStat, TemaStat, FundNiveau,
+  RapporterData, RapportRække, MånedligTrend, MånedligKritisk, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
 
 type DbRapport = {
@@ -32,34 +32,61 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (fra) query = query.gte('rapport_dato', fra);
   if (til) query = query.lte('rapport_dato', til);
 
-  const { data, error } = await query;
+  // Hent total i database (uden datofilter) til procentberegning
+  let dbTotalQuery = supabase
+    .from('stps_rapporter')
+    .select('*', { count: 'exact', head: true });
+  if (visFilter === 'privat') {
+    dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
+  }
+
+  const [{ data, error }, { count: dbTotal }] = await Promise.all([query, dbTotalQuery]);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
   const alle = (data ?? []) as DbRapport[];
+  const totalIDatabase = dbTotal ?? alle.length;
 
   return {
-    kpis:        beregnKpis(alle),
-    trend:       beregnTrend(alle),
-    topKommuner: beregnTopKommuner(alle),
-    temaer:      beregnTemaer(alle),
-    rapporter:   mapFundRapporter(alle),
+    kpis:            beregnKpis(alle, totalIDatabase),
+    trend:           beregnTrend(alle),
+    kritiskeMåneder: beregnKritiskeMåneder(alle),
+    topKommuner:     beregnTopKommuner(alle),
+    temaer:          beregnTemaer(alle),
+    rapporter:       mapFundRapporter(alle),
   };
 }
 
-function beregnKpis(alle: DbRapport[]) {
+function beregnKpis(alle: DbRapport[], totalIDatabase: number) {
   const grænse30 = new Date();
   grænse30.setDate(grænse30.getDate() - 30);
+  const kritiske = alle.filter((r) => r.fund_niveau === 'kritisk').length;
 
   return {
-    kritiske:          alle.filter((r) => r.fund_niveau === 'kritisk').length,
+    kritiske,
     mindreOgStørre:    alle.filter((r) => r.fund_niveau === 'mindre').length,
     ingen:             alle.filter((r) => r.fund_niveau === 'ingen').length,
     total:             alle.length,
     kritiskeSidste30:  alle.filter(
       (r) => r.fund_niveau === 'kritisk' && r.rapport_dato && new Date(r.rapport_dato) >= grænse30
     ).length,
+    kritiskePct:       totalIDatabase > 0 ? Math.round((kritiske / totalIDatabase) * 100) : 0,
+    totalIDatabase,
   };
+}
+
+function beregnKritiskeMåneder(alle: DbRapport[]): MånedligKritisk[] {
+  const nu = new Date();
+  const måneder: MånedligKritisk[] = [];
+
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date(nu.getFullYear(), nu.getMonth() - i, 1);
+    const nøgle = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('da-DK', { month: 'short', year: '2-digit' });
+    const kritisk = alle.filter((r) => r.rapport_dato?.startsWith(nøgle) && r.fund_niveau === 'kritisk').length;
+    måneder.push({ måned: label, kritisk, kritiskLinje: kritisk });
+  }
+  return måneder;
 }
 
 function beregnTrend(alle: DbRapport[]): MånedligTrend[] {

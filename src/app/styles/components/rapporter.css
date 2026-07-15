@@ -103,6 +103,12 @@
     border-radius: 9999px;
   }
 
+  .rap-kpi-sub {
+    font-size: 10px;
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+  }
+
   /* Chart grid */
   .rap-chart-grid {
     display: grid;

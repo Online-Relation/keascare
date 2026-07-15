@@ -33,6 +33,12 @@ export type TemaStat = {
   pct: number;
 };
 
+export type MånedligKritisk = {
+  måned: string;
+  kritisk: number;
+  kritiskLinje: number;
+};
+
 export type RapporterData = {
   kpis: {
     kritiske: number;
@@ -40,8 +46,11 @@ export type RapporterData = {
     ingen: number;
     total: number;
     kritiskeSidste30: number;
+    kritiskePct: number;
+    totalIDatabase: number;
   };
   trend: MånedligTrend[];
+  kritiskeMåneder: MånedligKritisk[];
   topKommuner: KommuneFundStat[];
   temaer: TemaStat[];
   rapporter: RapportRække[];
