@@ -32,11 +32,12 @@ const FUND_BADGE: Record<string, { label: string; color: string }> = {
 
 type Props = {
   funnel: SalgsFunnel;
+  totalRapporter: number;
   fra?: string;
   til?: string;
 };
 
-export function SalgstragtKlient({ funnel, fra, til }: Props) {
+export function SalgstragtKlient({ funnel, totalRapporter, fra, til }: Props) {
   const [åbentTrin, setÅbentTrin] = useState<string | null>(null);
   const [bosteder, setBosteder] = useState<Record<string, TrinBosted[]>>({});
   const [loading, setLoading] = useState<Record<string, boolean>>({});
@@ -94,8 +95,15 @@ export function SalgstragtKlient({ funnel, fra, til }: Props) {
                   </div>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div className="mp-funnel-trin-antal" style={{ color: farve.tekst }}>
-                    {trin.antal.toLocaleString('da-DK')}
+                  <div style={{ textAlign: 'right' }}>
+                    <div className="mp-funnel-trin-antal" style={{ color: farve.tekst }}>
+                      {trin.antal.toLocaleString('da-DK')}
+                    </div>
+                    {totalRapporter > 0 && (
+                      <div style={{ fontSize: 'var(--text-xs)', color: farve.tekst, opacity: 0.7, marginTop: '0.1rem' }}>
+                        {Math.round((trin.antal / totalRapporter) * 100)}% af {totalRapporter.toLocaleString('da-DK')} rapporter
+                      </div>
+                    )}
                   </div>
                   {åben
                     ? <ChevronUp size={16} color={farve.tekst} />

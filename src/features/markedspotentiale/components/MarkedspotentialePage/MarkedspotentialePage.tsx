@@ -8,12 +8,13 @@ import { PipelineStats } from './PipelineStats';
 
 type Props = {
   funnel: SalgsFunnel;
+  totalRapporter: number;
   dstData: DstKommuneRå[];
   fra?: string;
   til?: string;
 };
 
-export function MarkedspotentialePage({ funnel, dstData, fra, til }: Props) {
+export function MarkedspotentialePage({ funnel, totalRapporter, dstData, fra, til }: Props) {
   const totalBorgere = dstData.reduce((s, k) => s + k.total, 0);
   const ikkeBearbejdet = funnel.trin[2]?.antal ?? 0;
   const kunder = funnel.trin[3]?.antal ?? 0;
@@ -74,7 +75,7 @@ export function MarkedspotentialePage({ funnel, dstData, fra, til }: Props) {
           </p>
         </div>
 
-        <SalgstragtKlient funnel={funnel} fra={fra} til={til} />
+        <SalgstragtKlient funnel={funnel} totalRapporter={totalRapporter} fra={fra} til={til} />
       </div>
 
       <PipelineStats />
