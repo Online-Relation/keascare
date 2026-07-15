@@ -1,6 +1,6 @@
 // src/features/monday/types/monday.types.ts
 
-export type MondayGruppe = 'nye_forloeb' | 'aktive_forloeb' | 'afsluttet_forloeb' | 'ukendt';
+export type MondayGruppe = 'nye_forloeb' | 'aktive_forloeb' | 'afsluttet_forloeb' | 'tabt' | 'ukendt';
 
 export type MondayKundeItem = {
   mondayId: string;

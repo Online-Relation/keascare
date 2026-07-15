@@ -18,7 +18,7 @@ export type DataKvalitet = {
   max: number;
 };
 
-export type MondayKundeStatus = 'kunde' | 'ingen';
+export type MondayKundeStatus = 'kunde' | 'ingen' | 'tabt';
 
 export type Bosted = {
   id: string;

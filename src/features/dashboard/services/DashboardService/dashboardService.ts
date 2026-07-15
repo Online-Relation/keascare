@@ -72,7 +72,7 @@ function mapTilBosted(row: DbRapport): Bosted {
     rapportLink:  row.rapport_url,
     erNy:         erNyRapport(row.rapport_dato),
     dataKvalitet: beregnDataKvalitet(row),
-    mondayKunde:  row.monday_item_id ? 'kunde' : 'ingen',
+    mondayKunde:  row.monday_item_id ? (row.monday_gruppe === 'tabt' ? 'tabt' : 'kunde') : 'ingen',
     mondayGruppe: row.monday_gruppe ?? null,
     mondayItemId: row.monday_item_id ?? null,
   };
@@ -88,10 +88,10 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[]
       .map((r) => r.cvr ?? r.id)
   ).size;
 
-  // Ikke kontaktet: varme leads uden Monday-item
+  // Ikke kontaktet: varme leads uden Monday-item og ikke markeret som tabt
   const ikkeKontaktet = new Set(
     rapporter
-      .filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id)
+      .filter((r) => ['kritisk', 'stoerre'].includes(r.fund_niveau ?? '') && !r.monday_item_id && r.monday_gruppe !== 'tabt')
       .map((r) => r.cvr ?? r.id)
   ).size;
 

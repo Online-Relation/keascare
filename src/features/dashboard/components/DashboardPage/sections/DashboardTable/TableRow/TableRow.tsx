@@ -66,6 +66,10 @@ export function TableRow({ bosted }: TableRowProps) {
             <span className="badge-dot" />
             Kunde
           </span>
+        ) : bosted.mondayKunde === 'tabt' ? (
+          <span className="badge badge-ukendt" style={{ color: '#6b7280', background: '#f3f4f6', border: '1px solid #e5e7eb' }} title="Har afvist kontakt med KeasCare">
+            Afvist
+          </span>
         ) : (
           <span className="badge badge-ukendt">—</span>
         )}

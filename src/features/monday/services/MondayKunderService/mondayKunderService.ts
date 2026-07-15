@@ -4,6 +4,7 @@ import type { MondayKundeItem, MondayGruppe } from '@/features/monday/types/mond
 const BOARD_ID = process.env.MONDAY_BOARD_ID;
 const AKTIVE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb'];
 const AFSLUTTEDE_GRUPPE_NAVNE = ['afsluttede deals', 'tabte deals'];
+const TABTE_GRUPPE_NAVNE = ['tabte', 'tabt'];
 
 type Kolonne = { id: string; text: string | null; type: string; column: { title: string } };
 type RåItem = { id: string; name: string; group: { id: string; title: string }; column_values: Kolonne[] };
@@ -16,9 +17,10 @@ function findKolonne(item: RåItem, titel: string): string | null {
 }
 
 function mapGruppe(gruppeNavn: string): MondayGruppe {
-  const norm = gruppeNavn.toLowerCase();
+  const norm = gruppeNavn.toLowerCase().trim();
   if (norm.includes('nye')) return 'nye_forloeb';
   if (norm.includes('aktive')) return 'aktive_forloeb';
+  if (TABTE_GRUPPE_NAVNE.some((n) => norm === n)) return 'tabt';
   if (norm.includes('afsluttede') || norm.includes('tabte')) return 'afsluttet_forloeb';
   return 'ukendt';
 }
@@ -54,10 +56,11 @@ export async function hentAlleMondayKunder(): Promise<MondayKundeItem[]> {
 
   const relevanteIds = alleGrupper
     .filter((g) => {
-      const norm = g.title.toLowerCase();
+      const norm = g.title.toLowerCase().trim();
       return (
         AKTIVE_GRUPPE_NAVNE.some((navn) => norm === navn) ||
-        AFSLUTTEDE_GRUPPE_NAVNE.some((navn) => norm.includes(navn))
+        AFSLUTTEDE_GRUPPE_NAVNE.some((navn) => norm.includes(navn)) ||
+        TABTE_GRUPPE_NAVNE.some((navn) => norm === navn)
       );
     })
     .map((g) => g.id);
