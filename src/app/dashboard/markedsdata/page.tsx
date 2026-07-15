@@ -1,7 +1,7 @@
 // src/app/dashboard/markedsdata/page.tsx
 
 import { MarkedsdataPage } from '@/features/markedsdata/components/MarkedsdataPage';
-import { hentDstFraCache, hentDstKommuneData } from '@/lib/api/DstClient';
+import { hentDstFraCache, hentDstKommuneData, hentDstÅrligeData } from '@/lib/api/DstClient';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 
@@ -17,9 +17,10 @@ export default async function MarkedsdataSide() {
   }
 
   // Forsøg at læse fra Supabase-cache — fald tilbage til live DST-kald hvis tom
-  const [cacheResultat, tpTæl] = await Promise.all([
+  const [cacheResultat, tpTæl, årligeData] = await Promise.all([
     hentDstFraCache(),
     tpQuery,
+    hentDstÅrligeData(2016),
   ]);
 
   let dstData = cacheResultat.data;
@@ -42,6 +43,7 @@ export default async function MarkedsdataSide() {
       kvartal={kvartal}
       hentetKl={hentetKl}
       visFilter={visFilter}
+      årligeData={årligeData}
     />
   );
 }

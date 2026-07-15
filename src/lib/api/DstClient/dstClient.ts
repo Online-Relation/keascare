@@ -1,4 +1,5 @@
 // src/lib/api/DstClient/dstClient.ts
+// DST HAND01: §107/§108 borgere pr. kommune og pr. år
 
 const DST_TABLEINFO = 'https://api.statbank.dk/v1/tableinfo/HAND01?lang=da';
 const DST_DATA = 'https://api.statbank.dk/v1/data';
@@ -82,6 +83,78 @@ export async function hentDstKommuneData(): Promise<DstKommuneRå[]> {
 
   const csv = await res.text();
   return parseKommuneCsv(csv, senesteKvartal);
+}
+
+export type DstÅrTotal = {
+  år: number;
+  p107: number;
+  p108: number;
+  total: number;
+};
+
+export async function hentDstÅrligeData(fraÅr = 2016): Promise<DstÅrTotal[]> {
+  const nuÅr = new Date().getFullYear();
+  // Brug Q4 for hvert afsluttet år — Q1 for indeværende år (nyeste tilgængelige)
+  const kvartaler: string[] = [];
+  for (let år = fraÅr; år <= nuÅr; år++) {
+    kvartaler.push(`${år}K4`);
+  }
+  // Tilføj indeværende Q1/Q2/Q3 som fallback for indeværende år
+  kvartaler.push(`${nuÅr}K3`, `${nuÅr}K2`, `${nuÅr}K1`);
+
+  const { ids } = await hentKommuneIds();
+
+  const payload = {
+    table: 'HAND01',
+    format: 'CSV',
+    lang: 'da',
+    variables: [
+      { code: 'OMRÅDE', values: ids },
+      { code: 'YDELSESTYPE', values: [YDELSE_107, YDELSE_108] },
+      { code: 'Tid', values: kvartaler },
+    ],
+  };
+
+  const res = await fetch(DST_DATA, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
+    body: JSON.stringify(payload),
+    next: { revalidate: 86400 },
+  });
+
+  if (!res.ok) throw new Error(`DST API fejl: ${res.status}`);
+
+  const csv = await res.text();
+  return parseÅrCsv(csv, fraÅr, nuÅr);
+}
+
+function parseÅrCsv(csv: string, fraÅr: number, tilÅr: number): DstÅrTotal[] {
+  const linjer = csv.replace(/^﻿/, '').trim().split('\n').slice(1);
+  // kvartal → { p107, p108 }
+  const kvartalMap = new Map<string, { p107: number; p108: number }>();
+
+  for (const linje of linjer) {
+    const dele = linje.split(';');
+    if (dele.length < 4) continue;
+    const ydelse = dele[1].replace(/^"|"$/g, '');
+    const kvartal = dele[2].replace(/^"|"$/g, '');
+    const antal = parseFloat(dele[3].replace(/^"|"$/g, '').replace(',', '.')) || 0;
+
+    if (!kvartalMap.has(kvartal)) kvartalMap.set(kvartal, { p107: 0, p108: 0 });
+    const entry = kvartalMap.get(kvartal)!;
+    if (ydelse.includes('108')) entry.p108 += antal;
+    else entry.p107 += antal;
+  }
+
+  const resultater: DstÅrTotal[] = [];
+  for (let år = fraÅr; år <= tilÅr; år++) {
+    // Foretruk Q4, ellers Q3, Q2, Q1
+    const kandidat = [`${år}K4`, `${år}K3`, `${år}K2`, `${år}K1`].find((k) => kvartalMap.has(k));
+    if (!kandidat) continue;
+    const { p107, p108 } = kvartalMap.get(kandidat)!;
+    resultater.push({ år, p107: Math.round(p107), p108: Math.round(p108), total: Math.round(p107 + p108) });
+  }
+  return resultater;
 }
 
 function parseKommuneCsv(csv: string, senesteKvartal: string): DstKommuneRå[] {

@@ -3,8 +3,9 @@
 import { Database } from 'lucide-react';
 import { KommuneBarChart } from './charts/KommuneBarChart';
 import { ParagrafDonut } from './charts/ParagrafDonut';
+import { BorgereÅrChart } from './charts/BorgereÅrChart';
 import { InfoTooltip } from '@/features/markedsforing/components/shared/InfoTooltip';
-import type { DstKommuneRå } from '@/lib/api/DstClient';
+import type { DstKommuneRå, DstÅrTotal } from '@/lib/api/DstClient';
 
 type Props = {
   data: DstKommuneRå[];
@@ -12,9 +13,10 @@ type Props = {
   kvartal?: string | null;
   hentetKl?: string | null;
   visFilter?: string;
+  årligeData?: DstÅrTotal[];
 };
 
-export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFilter }: Props) {
+export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFilter, årligeData = [] }: Props) {
   const erFiltreret = visFilter === 'privat';
   const totalBorgere = data.reduce((s, k) => s + k.total, 0);
   const totalP107 = data.reduce((s, k) => s + k.p107, 0);
@@ -107,6 +109,19 @@ export function MarkedsdataPage({ data, antalBosteder, kvartal, hentetKl, visFil
       </div>
 
       <div className="dst-chart-grid">
+
+        <div className="dst-chart-kort dst-chart-bred">
+          <div className="dst-chart-header">
+            <div>
+              <h2 className="mf-chart-titel">Borgere i §107/§108 botilbud – 2016 til i dag</h2>
+              <p className="mf-chart-beskrivelse">
+                Historisk udvikling i antallet af borgere i midlertidige og længerevarende botilbud. Kilde: Danmarks Statistik · HAND01 · Q4 hvert år.
+              </p>
+            </div>
+            <InfoTooltip tekst="Data hentes fra DST's HAND01-tabel. For hvert afsluttet år vises Q4-tallene. For indeværende år vises det senest tilgængelige kvartal." />
+          </div>
+          <BorgereÅrChart data={årligeData} />
+        </div>
 
         <div className="dst-chart-kort dst-chart-bred">
           <div className="dst-chart-header">
