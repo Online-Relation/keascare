@@ -4,8 +4,6 @@
 const DST_TABLEINFO = 'https://api.statbank.dk/v1/tableinfo/HAND01?lang=da';
 const DST_DATA = 'https://api.statbank.dk/v1/data';
 
-// FOLK1A: Folketal pr. 1. januar — hele landet, alle aldre, begge køn
-const FOLK1A_OMRÅDE = '000'; // Hele landet
 
 const YDELSE_107 = '30182'; // Midlertidige botilbud (§107)
 const YDELSE_108 = '30181'; // Længerevarende botilbud (§108)
@@ -97,42 +95,25 @@ export type DstÅrTotal = {
   prTusind?: number;
 };
 
-export async function hentDstBefolkning(fraÅr = 2016): Promise<Map<number, number>> {
-  const nuÅr = new Date().getFullYear();
-  const år: string[] = [];
-  for (let y = fraÅr; y <= nuÅr; y++) år.push(String(y));
+// Officielle DST FOLK1A-tal (pr. 1. januar) — hele landet
+const BEFOLKNING_KENDTE: Record<number, number> = {
+  2016: 5707251,
+  2017: 5748769,
+  2018: 5781190,
+  2019: 5806081,
+  2020: 5822763,
+  2021: 5840045,
+  2022: 5873420,
+  2023: 5932654,
+  2024: 5961256,
+  2025: 5990000, // foreløbigt estimat
+};
 
-  const payload = {
-    table: 'FOLK1A',
-    format: 'CSV',
-    lang: 'da',
-    variables: [
-      { code: 'OMRÅDE', values: [FOLK1A_OMRÅDE] },
-      { code: 'KØN', values: ['TOT'] },
-      { code: 'ALDER', values: ['IALT'] },
-      { code: 'Tid', values: år.map((y) => `${y}K1`) },
-    ],
-  };
-
-  const res = await fetch(DST_DATA, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json; charset=utf-8' },
-    body: JSON.stringify(payload),
-    next: { revalidate: 86400 },
-  });
-
+export function hentDstBefolkning(fraÅr = 2016): Map<number, number> {
   const map = new Map<number, number>();
-  if (!res.ok) return map;
-
-  const csv = await res.text();
-  const linjer = csv.replace(/^﻿/, '').trim().split('\n').slice(1);
-  for (const linje of linjer) {
-    const dele = linje.split(';');
-    if (dele.length < 5) continue;
-    const tid = dele[3].replace(/^"|"$/g, ''); // e.g. "2022K1"
-    const antal = parseFloat(dele[4].replace(/^"|"$/g, '').replace(',', '.')) || 0;
-    const y = parseInt(tid.split('K')[0]);
-    if (y && antal) map.set(y, Math.round(antal));
+  const nuÅr = new Date().getFullYear();
+  for (let y = fraÅr; y <= nuÅr; y++) {
+    if (BEFOLKNING_KENDTE[y]) map.set(y, BEFOLKNING_KENDTE[y]);
   }
   return map;
 }
@@ -174,10 +155,8 @@ export async function hentDstÅrligeData(fraÅr = 2016): Promise<DstÅrTotal[]> 
 
   if (!res.ok) throw new Error(`DST API fejl: ${res.status}`);
 
-  const [csv, befolkningMap] = await Promise.all([
-    res.text(),
-    hentDstBefolkning(fraÅr).catch(() => new Map<number, number>()),
-  ]);
+  const csv = await res.text();
+  const befolkningMap = hentDstBefolkning(fraÅr);
 
   const rækker = parseÅrCsv(csv, fraÅr, nuÅr);
   return rækker.map((r) => {

@@ -69,7 +69,7 @@ export function BorgereÅrChart({ data }: Props) {
         </span>
         {harBefolkning && (
           <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-            <span style={{ width: 24, height: 3, background: '#9333ea', borderRadius: 2, display: 'inline-block', borderTop: '2px dashed #9333ea', borderBottom: 'none', height: '0' }} />
+            <span style={{ width: 24, height: 0, borderTop: '2px dashed #9333ea', display: 'inline-block' }} />
             Rate pr. 1.000 indbyggere (højre akse)
           </span>
         )}
