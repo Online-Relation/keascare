@@ -94,7 +94,7 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           <span className="bosted-detail-field-value">{dato}</span>
         </div>
 
-        <div className="bosted-detail-field">
+        {(bosted.fundNiveau === 'kritisk' || bosted.fundNiveau === 'stoerre') && <div className="bosted-detail-field">
           <span className="bosted-detail-field-label">Lead-varme</span>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', width: '100%' }}>
             {/* Gradient-slider med markør */}
@@ -134,7 +134,7 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
               <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>— {varme.beskrivelse}</span>
             </div>
           </div>
-        </div>
+        </div>}
 
         <div className="bosted-detail-field">
           <span className="bosted-detail-field-label">Tilsynsform</span>
