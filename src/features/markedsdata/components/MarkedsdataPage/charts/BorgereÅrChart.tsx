@@ -2,17 +2,20 @@
 // src/features/markedsdata/components/MarkedsdataPage/charts/BorgereÅrChart.tsx
 
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, ReferenceLine,
+  ComposedChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, ReferenceLine, Legend,
 } from 'recharts';
 import type { DstÅrTotal } from '@/lib/api/DstClient';
 
 type Props = { data: DstÅrTotal[] };
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; dataKey: string }[]; label?: string }) {
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number; dataKey: string; color: string }[]; label?: string }) {
   if (!active || !payload?.length) return null;
   const p107 = payload.find((p) => p.dataKey === 'p107')?.value ?? 0;
   const p108 = payload.find((p) => p.dataKey === 'p108')?.value ?? 0;
+  const prTusind = payload.find((p) => p.dataKey === 'prTusind')?.value;
+  const befolkning = payload.find((p) => p.dataKey === 'befolkning')?.value;
+
   return (
     <div style={{
       background: 'var(--color-card)',
@@ -21,6 +24,7 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
       padding: '0.75rem 1rem',
       boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
       fontSize: 'var(--text-xs)',
+      minWidth: '200px',
     }}>
       <p style={{ fontWeight: 'var(--fw-semibold)', marginBottom: '0.375rem', color: 'var(--color-text-primary)' }}>{label}</p>
       <p style={{ color: '#2fb5a0' }}>§107 Midlertidigt: {p107.toLocaleString('da-DK')}</p>
@@ -28,23 +32,33 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
       <p style={{ color: 'var(--color-text-muted)', borderTop: '1px solid var(--color-border)', marginTop: '0.375rem', paddingTop: '0.375rem' }}>
         I alt: {(p107 + p108).toLocaleString('da-DK')} borgere
       </p>
+      {befolkning && (
+        <p style={{ color: 'var(--color-text-muted)' }}>
+          Befolkning: {befolkning.toLocaleString('da-DK')}
+        </p>
+      )}
+      {prTusind !== undefined && (
+        <p style={{ color: '#9333ea', fontWeight: 600 }}>
+          Rate: {prTusind.toFixed(1)} pr. 1.000 indb.
+        </p>
+      )}
     </div>
   );
 }
 
 export function BorgereÅrChart({ data }: Props) {
   if (!data.length) return (
-    <div style={{ height: 260, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
+    <div style={{ height: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)' }}>
       Ingen historiske data tilgængelige
     </div>
   );
 
+  const harBefolkning = data.some((d) => d.prTusind !== undefined);
   const covidÅr = 2020;
 
   return (
     <div>
-      {/* Legende */}
-      <div style={{ display: 'flex', gap: '1.25rem', marginBottom: '1rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+      <div style={{ display: 'flex', gap: '1.25rem', marginBottom: '1rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)', flexWrap: 'wrap' }}>
         <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
           <span style={{ width: 24, height: 3, background: '#2fb5a0', borderRadius: 2, display: 'inline-block' }} />
           §107 Midlertidigt botilbud
@@ -53,10 +67,16 @@ export function BorgereÅrChart({ data }: Props) {
           <span style={{ width: 24, height: 3, background: '#1d6fa0', borderRadius: 2, display: 'inline-block' }} />
           §108 Længerevarende botilbud
         </span>
+        {harBefolkning && (
+          <span style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+            <span style={{ width: 24, height: 3, background: '#9333ea', borderRadius: 2, display: 'inline-block', borderTop: '2px dashed #9333ea', borderBottom: 'none', height: '0' }} />
+            Rate pr. 1.000 indbyggere (højre akse)
+          </span>
+        )}
       </div>
 
-      <ResponsiveContainer width="100%" height={260}>
-        <LineChart data={data} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={300}>
+        <ComposedChart data={data} margin={{ top: 8, right: harBefolkning ? 48 : 16, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="år"
@@ -65,20 +85,35 @@ export function BorgereÅrChart({ data }: Props) {
             tickLine={false}
           />
           <YAxis
+            yAxisId="borgere"
             tick={{ fontSize: 11, fill: 'var(--color-text-muted)' }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
             width={36}
           />
+          {harBefolkning && (
+            <YAxis
+              yAxisId="rate"
+              orientation="right"
+              tick={{ fontSize: 11, fill: '#9333ea' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v) => `${v.toFixed(1)}`}
+              width={40}
+              domain={['auto', 'auto']}
+            />
+          )}
           <Tooltip content={<CustomTooltip />} />
           <ReferenceLine
+            yAxisId="borgere"
             x={covidÅr}
             stroke="var(--color-border)"
             strokeDasharray="4 4"
             label={{ value: 'COVID-19', position: 'insideTopRight', fontSize: 10, fill: 'var(--color-text-muted)' }}
           />
           <Line
+            yAxisId="borgere"
             type="monotone"
             dataKey="p107"
             stroke="#2fb5a0"
@@ -87,6 +122,7 @@ export function BorgereÅrChart({ data }: Props) {
             activeDot={{ r: 6 }}
           />
           <Line
+            yAxisId="borgere"
             type="monotone"
             dataKey="p108"
             stroke="#1d6fa0"
@@ -94,8 +130,26 @@ export function BorgereÅrChart({ data }: Props) {
             dot={{ r: 4, fill: '#1d6fa0', strokeWidth: 0 }}
             activeDot={{ r: 6 }}
           />
-        </LineChart>
+          {harBefolkning && (
+            <Line
+              yAxisId="rate"
+              type="monotone"
+              dataKey="prTusind"
+              stroke="#9333ea"
+              strokeWidth={2}
+              strokeDasharray="5 3"
+              dot={{ r: 3, fill: '#9333ea', strokeWidth: 0 }}
+              activeDot={{ r: 5 }}
+            />
+          )}
+        </ComposedChart>
       </ResponsiveContainer>
+
+      {harBefolkning && (
+        <p style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '0.5rem' }}>
+          Rate (lilla stiplet) viser §107+§108 borgere pr. 1.000 indbyggere — stiger raten hurtigere end befolkningen, vokser behovet relativt. Kilde: DST · HAND01 + FOLK1A
+        </p>
+      )}
     </div>
   );
 }
