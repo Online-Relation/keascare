@@ -67,6 +67,14 @@ export function RapporterPage({ data }: Props) {
           </div>
           <span className="rap-kpi-sub">ud af {kpis.totalIDatabase.toLocaleString('da-DK')} rapporter</span>
         </div>
+        <div className="rap-kpi rap-kpi-kritisk">
+          <AlertTriangle size={20} className="rap-kpi-ikon" />
+          <div>
+            <div className="rap-kpi-tal">{kpis.kritiskePerMåned.toLocaleString('da-DK', { maximumFractionDigits: 1 })}</div>
+            <div className="rap-kpi-label">Kritiske pr. måned</div>
+          </div>
+          <span className="rap-kpi-sub">gennemsnit i perioden</span>
+        </div>
       </div>
 
       {/* Trend + kommuner */}

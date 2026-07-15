@@ -48,6 +48,7 @@ export type RapporterData = {
     kritiskeSidste30: number;
     kritiskePct: number;
     totalIDatabase: number;
+    kritiskePerMåned: number;
   };
   trend: MånedligTrend[];
   kritiskeMåneder: MånedligKritisk[];

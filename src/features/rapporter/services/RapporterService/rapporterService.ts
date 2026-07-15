@@ -46,18 +46,19 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   const alle = (data ?? []) as DbRapport[];
   const totalIDatabase = dbTotal ?? alle.length;
+  const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
   return {
-    kpis:            beregnKpis(alle, totalIDatabase),
+    kpis:            beregnKpis(alle, totalIDatabase, kritiskeMåneder),
     trend:           beregnTrend(alle),
-    kritiskeMåneder: beregnKritiskeMåneder(alle),
+    kritiskeMåneder,
     topKommuner:     beregnTopKommuner(alle),
     temaer:          beregnTemaer(alle),
     rapporter:       mapFundRapporter(alle),
   };
 }
 
-function beregnKpis(alle: DbRapport[], totalIDatabase: number) {
+function beregnKpis(alle: DbRapport[], totalIDatabase: number, kritiskeMåneder: { kritisk: number }[]) {
   const grænse30 = new Date();
   grænse30.setDate(grænse30.getDate() - 30);
   const kritiske = alle.filter((r) => r.fund_niveau === 'kritisk').length;
@@ -72,6 +73,9 @@ function beregnKpis(alle: DbRapport[], totalIDatabase: number) {
     ).length,
     kritiskePct:       totalIDatabase > 0 ? Math.round((kritiske / totalIDatabase) * 100) : 0,
     totalIDatabase,
+    kritiskePerMåned:  kritiskeMåneder.length > 0
+      ? Math.round((kritiskeMåneder.reduce((s, m) => s + m.kritisk, 0) / kritiskeMåneder.length) * 10) / 10
+      : 0,
   };
 }
 
