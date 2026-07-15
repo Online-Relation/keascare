@@ -34,9 +34,6 @@ export function RapporterPage({ data }: Props) {
             <div className="rap-kpi-tal">{kpis.kritiske}</div>
             <div className="rap-kpi-label">Kritiske fund</div>
           </div>
-          {kpis.kritiskeSidste30 > 0 && (
-            <span className="rap-kpi-ny">{kpis.kritiskeSidste30} seneste 30 dage</span>
-          )}
         </div>
         <div className="rap-kpi rap-kpi-mindre">
           <AlertCircle size={20} className="rap-kpi-ikon" />
