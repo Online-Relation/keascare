@@ -10,17 +10,15 @@
 //   4. STPS P-numre      — udtræk P-numre fra PDF'er
 //   5. CVR berig         — slå P-numre op i CVR og hent CVR-nummer
 //   6. CVR ansatte       — opdater ansatte/branche for kendte CVR-numre
-//   7. TP liste          — hent alle tilbud fra Tilbudsportalen
-//   8. TP detaljer+match — hent detaljer og match mod STPS-rapporter
+//
+// Tilbudsportalen køres IKKE her — Cloudflare blokerer Railway's IP.
+// Brug scripts/kør-tilbudsportalen.sh lokalt fra din Mac.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
 import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
-import { scraperTilbudsportalenListe } from '@/features/tilbudsportalen/scraper/TilbudsportalenListScraper';
-import { scraperTilbudsportalenDetaljer } from '@/features/tilbudsportalen/scraper/TilbudsportalenDetaljerScraper';
-import { matchTilbudsportalenTilStps } from '@/features/tilbudsportalen/matcher/TilbudsportalenMatcher';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 function erAutoriseret(req: NextRequest): boolean {
@@ -93,13 +91,4 @@ async function kørAltIBaggrunden() {
   // 6. CVR ansatte
   await forsøg('cvr-ansatte', () => opdaterCvrAnsatte(100));
 
-  // 7. Tilbudsportalen liste (op til 50 sider)
-  await forsøg('tp-liste', () => scraperTilbudsportalenListe(50));
-
-  // 8. Tilbudsportalen detaljer + match mod STPS (match køres automatisk i detaljer-scraper)
-  await forsøg('tp-detaljer', async () => {
-    const detaljer = await scraperTilbudsportalenDetaljer(30);
-    const match = await matchTilbudsportalenTilStps();
-    return { ...detaljer, match };
-  });
 }
