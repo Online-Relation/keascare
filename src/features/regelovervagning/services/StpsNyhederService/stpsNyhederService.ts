@@ -38,6 +38,12 @@ const EKSKLUDER_ORD = [
   'erhvervsskole', 'uddannelsescenter',
   // §85 støtte er ambulant — ikke §107/§108 botilbud
   '§85', 'stoetteteam', 'støtteteam',
+  // Herberg (§110 natvarmestue/herberg — ikke §107/§108)
+  'herberg',
+  // Massage / wellness / alternativ behandling
+  'massage', 'wellness', 'velvaere', 'velvære', 'spa ',
+  // Pleje-steder der ikke er botilbud (standalone pleje i slutningen af navn)
+  ' pleje',
 ];
 
 type StpsItem = {
