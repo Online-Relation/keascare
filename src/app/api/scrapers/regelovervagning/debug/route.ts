@@ -1,38 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const GOPUBLIC_SEARCH_URL = 'https://cdn1.gopublic.dk/Assets/GoBasic/Applications/search/api/search';
-
-const STPS_SEARCH_CONTEXT = {
-  options: {
-    specification: {
-      siteSearch: false,
-      pdfSearch: false,
-      contextPath: '',
-      filter: {
-        t: ['NewsPage'],
-        df: '01-01-2020',
-        dt: '31-12-2030',
-        cids: ['d96adbb4-54b8-4d61-9bd1-7783d2e3080f'],
-        rf: ['e20d306a-c02d-4354-8c7b-8ca9995f9fbb'],
-        r: true,
-        ivr: true,
-        exactMatch: false,
-        sma: false,
-        co: 'Or',
-        cto: 'And',
-        euco: 'Or',
-      },
-      options: {
-        showTeaser: true,
-        teaserTextLength: 160,
-        showCategorizations: false,
-        showDate: true,
-        doNotShowInitialResults: false,
-      },
-    },
-  },
-};
-
 export async function GET(req: NextRequest) {
   const secret = req.nextUrl.searchParams.get('secret') ?? '';
   if (secret !== process.env.SCRAPER_SECRET) {
@@ -40,30 +7,44 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(GOPUBLIC_SEARCH_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': 'Mozilla/5.0 KeasCare-Monitor/1.0',
-        'Origin': 'https://stps.dk',
-        'Referer': 'https://stps.dk/nyt-fra-styrelsen-for-patientsikkerhed',
-      },
-      body: JSON.stringify({
-        context: Buffer.from(JSON.stringify(STPS_SEARCH_CONTEXT)).toString('base64'),
-        query: '',
-        page: 1,
-        pageSize: 20,
-        id: '0f88a17a-3b62-4a8d-aa3c-4180fd0784e5',
-      }),
+    const res = await fetch('https://stps.dk/nyt-fra-styrelsen-for-patientsikkerhed', {
+      headers: { 'User-Agent': 'Mozilla/5.0 KeasCare-Monitor/1.0' },
       cache: 'no-store',
     });
+    const html = await res.text();
 
-    const tekst = await res.text();
+    // Find apiUrl og andre relevante parametre i HTML
+    const apiUrlMatch = html.match(/["\']?apiUrl["\']?\s*[:=]\s*["\']([^"\']+)["\']/) ??
+                        html.match(/api[_-]?url["\']?\s*[:=]\s*["\']([^"\']+)["\']/) ??
+                        html.match(/gopublic[^"\']{0,200}search[^"\']{0,100}/i);
+
+    // Find alle gopublic CDN URL'er
+    const gopublicUrls = [...html.matchAll(/https:\/\/[^"'\s]{0,100}gopublic[^"'\s]{0,100}/gi)]
+      .map(m => m[0])
+      .filter((v, i, a) => a.indexOf(v) === i);
+
+    // Find data-attributter der indeholder søge-config
+    const dataAttrs = [...html.matchAll(/data-[a-z-]+="[^"]{20,500}"/gi)]
+      .map(m => m[0].slice(0, 200))
+      .slice(0, 10);
+
+    // Kig efter fetch/ajax kald i HTML
+    const fetchUrls = [...html.matchAll(/fetch\s*\(\s*['"](https?:\/\/[^'"]+)['"]/gi)]
+      .map(m => m[1])
+      .slice(0, 10);
+
+    // Søg specifikt efter søge-API i scripts
+    const searchApiMatch = html.match(/(https?:\/\/[^"'\s]+\/search[^"'\s]*)/gi)?.slice(0, 10);
+
     return NextResponse.json({
       status: res.status,
-      contentType: res.headers.get('content-type'),
-      længde: tekst.length,
-      snippet: tekst.slice(0, 3000),
+      htmlLængde: html.length,
+      apiUrlMatch: apiUrlMatch?.[0] ?? null,
+      gopublicUrls: gopublicUrls.slice(0, 15),
+      dataAttrs,
+      fetchUrls,
+      searchApiMatch,
+      snippet70k: html.slice(70000, 72000),
     });
   } catch (err) {
     return NextResponse.json({ fejl: err instanceof Error ? err.message : String(err) });
