@@ -25,7 +25,6 @@ const gruppeOverblik: NavItem[] = [
 
 const gruppeMarked: NavItem[] = [
   { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
-  { label: 'Kommuner',          href: '/dashboard/kommuner',          icon: MapPin },
   { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },
 ];
 
