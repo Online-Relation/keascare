@@ -11,7 +11,6 @@ export async function GET() {
     const { data, error } = await supabase
       .from('monday_kunder')
       .select('*')
-      .neq('gruppe', 'afsluttet_forloeb')
       .order('oprettet_dato', { ascending: false });
 
     if (error) throw new Error(error.message);
