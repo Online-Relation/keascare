@@ -130,6 +130,20 @@ const SCRAPERS: Scraper[] = [
     endpoint: '/api/scrapers/monday/match',
     body: {},
   },
+  {
+    id: 'retsinformation',
+    titel: 'Regelovervågning — Retsinformation',
+    beskrivelse: 'Henter nye love, bekendtgørelser og vejledninger fra Retsinformation der er relevante for botilbud. Max 1 kald pr. 10 sek. — kan tage 1-2 minutter.',
+    endpoint: '/api/scrapers/regelovervagning',
+    body: { kilder: ['retsinformation'] },
+  },
+  {
+    id: 'stps-nyheder',
+    titel: 'Regelovervågning — STPS-nyheder',
+    beskrivelse: 'Scraper nye nyheder og OBS-meddelelser fra stps.dk og vurderer relevans for botilbud.',
+    endpoint: '/api/scrapers/regelovervagning',
+    body: { kilder: ['stps'] },
+  },
 ];
 
 type CvrStatus = { manglerCvr: number; manglerData: number; total: number };

@@ -8,15 +8,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
+  const body = await req.json().catch(() => ({})) as { kilder?: string[] };
+  const kilder = body.kilder ?? ['retsinformation', 'stps'];
+
+  const køRets = kilder.includes('retsinformation');
+  const køStps = kilder.includes('stps');
+
   const [retsinformation, stpsNyheder] = await Promise.allSettled([
-    kørRetsinformationImport(),
-    kørStpsNyhederImport(),
+    køRets ? kørRetsinformationImport() : Promise.resolve(null),
+    køStps ? kørStpsNyhederImport()     : Promise.resolve(null),
   ]);
 
   return NextResponse.json({
     ok: true,
+    behandlet: 1,
     kørt: new Date().toISOString(),
-    retsinformation: retsinformation.status === 'fulfilled' ? retsinformation.value : { fejl: String(retsinformation.reason) },
-    stpsNyheder:     stpsNyheder.status === 'fulfilled'     ? stpsNyheder.value     : { fejl: String(stpsNyheder.reason) },
+    retsinformation: køRets ? (retsinformation.status === 'fulfilled' ? retsinformation.value : { fejl: String(retsinformation.reason) }) : 'sprunget over',
+    stpsNyheder:     køStps ? (stpsNyheder.status === 'fulfilled'     ? stpsNyheder.value     : { fejl: String(stpsNyheder.reason) })     : 'sprunget over',
   });
 }
