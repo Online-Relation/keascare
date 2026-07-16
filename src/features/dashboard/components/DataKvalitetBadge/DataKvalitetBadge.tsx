@@ -7,7 +7,7 @@ type Props = {
   vis?: 'kompakt' | 'fuld';
 };
 
-const KILDER = ['PDF', 'CVR', 'P-nr', 'TP', 'Kontakt', 'Adresse', 'Website', 'Pladser'];
+const KILDER = ['STPS', 'CVR', 'TP', 'Kontakt', 'Adresse', 'Website', 'Pladser'];
 
 function farveKlasse(score: number, max: number): string {
   const pct = score / max;

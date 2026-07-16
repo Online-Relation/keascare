@@ -62,7 +62,6 @@ function beregnDataKvalitet(r: DbRapport): DataKvalitet {
   const point = [
     !!r.pdf_vurdering,
     !!r.cvr,
-    !!r.tp_p_nummer,
     !!r.tp_tilbudstype,
     !!(r.tp_email || r.tp_telefon),
     !!(r.tp_adresse || r.adresse),
