@@ -24,7 +24,7 @@ export function KunderTabel({ kunder }: Props) {
     .filter((k) => {
       if (filter === 'aktive') return k.gruppe === 'aktive_forloeb';
       if (filter === 'nye') return k.gruppe === 'nye_forloeb';
-      return true;
+      return k.gruppe === 'aktive_forloeb' || k.gruppe === 'nye_forloeb';
     })
     .sort((a, b) => {
       if (!a.oprettetDato && !b.oprettetDato) return 0;
