@@ -7,6 +7,7 @@ import { vurderRelevans } from '@/features/regelovervagning/services/RelevansSer
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 const STPS_NYHEDER_URL = 'https://stps.dk/da/nyheder';
+const STPS_RSS_URL = 'https://stps.dk/api/rss/nyheder';
 
 type StpsNyhed = {
   externalId: string;
@@ -107,6 +108,27 @@ function bestemKildetype(url: string, title: string): string {
   return 'nyhed';
 }
 
+function parseRss(xml: string): StpsNyhed[] {
+  const nyheder: StpsNyhed[] = [];
+  const itemRegex = /<item>([\s\S]*?)<\/item>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = itemRegex.exec(xml)) !== null) {
+    const blok = m[1];
+    const title = blok.match(/<title><!\[CDATA\[([\s\S]*?)\]\]><\/title>/i)?.[1]?.trim()
+      ?? blok.match(/<title>([\s\S]*?)<\/title>/i)?.[1]?.trim() ?? '';
+    const link = blok.match(/<link>([\s\S]*?)<\/link>/i)?.[1]?.trim()
+      ?? blok.match(/<guid[^>]*>([\s\S]*?)<\/guid>/i)?.[1]?.trim() ?? '';
+    const pubDate = blok.match(/<pubDate>([\s\S]*?)<\/pubDate>/i)?.[1]?.trim() ?? null;
+    const description = blok.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/i)?.[1]?.replace(/<[^>]+>/g, '').trim()
+      ?? blok.match(/<description>([\s\S]*?)<\/description>/i)?.[1]?.trim() ?? null;
+    if (!title || !link) continue;
+    const externalId = link.replace(/https?:\/\/stps\.dk/, '').replace(/\W+/g, '-').slice(0, 80);
+    const publishedAt = pubDate ? new Date(pubDate).toISOString().slice(0, 10) : null;
+    nyheder.push({ externalId, title, publishedAt, summary: description ?? null, sourceUrl: link, sourceType: bestemKildetype(link, title) });
+  }
+  return nyheder;
+}
+
 export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: number; fejl: number }> {
   const supabase = getSupabaseServerClient();
   let hentet = 0;
@@ -114,14 +136,33 @@ export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: n
   let fejl = 0;
 
   try {
-    const res = await fetch(STPS_NYHEDER_URL, {
-      headers: { 'User-Agent': 'Mozilla/5.0 KeasCare-Monitor/1.0', Accept: 'text/html' },
+    // Prøv RSS-feed først — meget mere stabilt end HTML-scraping
+    let nyheder: StpsNyhed[] = [];
+    const rssRes = await fetch(STPS_RSS_URL, {
+      headers: { 'User-Agent': 'KeasCare-Monitor/1.0', Accept: 'application/rss+xml, text/xml' },
+      cache: 'no-store',
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const html = await res.text();
-    console.log('[STPS-nyheder] HTML længde:', html.length, 'bytes');
-    const nyheder = parseNyheder(html);
+    if (rssRes.ok) {
+      const xml = await rssRes.text();
+      console.log('[STPS-nyheder] RSS længde:', xml.length, 'bytes');
+      nyheder = parseRss(xml);
+    }
+
+    // Fallback: HTML-scraping
+    if (nyheder.length === 0) {
+      const res = await fetch(STPS_NYHEDER_URL, {
+        headers: { 'User-Agent': 'Mozilla/5.0 KeasCare-Monitor/1.0', Accept: 'text/html' },
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      console.log('[STPS-nyheder] HTML længde:', html.length, 'bytes');
+      nyheder = parseNyheder(html);
+    }
+
+    console.log('[STPS-nyheder] Fandt', nyheder.length, 'nyheder');
     hentet = nyheder.length;
+
 
     for (const nyhed of nyheder) {
       const tekst = [nyhed.title, nyhed.summary ?? ''].join(' ');

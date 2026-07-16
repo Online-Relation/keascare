@@ -34,13 +34,17 @@ async function ventMs(ms: number) {
 }
 
 async function hentDokumenterForTerm(term: string): Promise<RetsDoc[]> {
-  const filter = `contains(title,'${term}')`;
-  const url = `${API_BASE}/documents?$filter=${encodeURIComponent(filter)}&$top=25&$orderby=modificationDate%20desc`;
+  // Retsinformation understøtter $search (fuld tekstsøgning) og $filter med contains
+  // Vi prøver $search først, da det er mest robust
+  const url = `${API_BASE}/documents?$search=${encodeURIComponent(term)}&$top=25&$orderby=modificationDate%20desc`;
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },
     cache: 'no-store',
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status} for term "${term}"`);
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status} for term "${term}": ${body.slice(0, 200)}`);
+  }
   const json = await res.json() as RetsResponse;
   return json.message ?? [];
 }
