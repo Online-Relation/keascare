@@ -34,12 +34,13 @@ async function ventMs(ms: number) {
 }
 
 async function hentDokumenterForTerm(term: string): Promise<RetsDoc[]> {
-  const url = `${API_BASE}/documents?$filter=contains(title,'${encodeURIComponent(term)}')&$top=25&$orderby=modificationDate desc`;
+  const filter = `contains(title,'${term}')`;
+  const url = `${API_BASE}/documents?$filter=${encodeURIComponent(filter)}&$top=25&$orderby=modificationDate%20desc`;
   const res = await fetch(url, {
     headers: { Accept: 'application/json' },
-    next: { revalidate: 0 },
+    cache: 'no-store',
   });
-  if (!res.ok) return [];
+  if (!res.ok) throw new Error(`HTTP ${res.status} for term "${term}"`);
   const json = await res.json() as RetsResponse;
   return json.message ?? [];
 }
@@ -109,6 +110,7 @@ export async function kørRetsinformationImport(): Promise<{ hentet: number; gem
         gemt++;
       }
     } catch (err) {
+      console.error('[Retsinformation]', err instanceof Error ? err.message : err);
       fejl++;
     }
     await ventMs(10_000); // Respekter max 1 kald pr. 10 sek

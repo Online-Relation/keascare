@@ -17,52 +17,69 @@ type StpsNyhed = {
   sourceType: string;
 };
 
-function parseNyheder(html: string, baseUrl: string): StpsNyhed[] {
+function parseNyheder(html: string): StpsNyhed[] {
   const nyheder: StpsNyhed[] = [];
+  const set = new Set<string>();
 
-  // STPS nyhedsliste — find artikel-links og titler
+  // Strategi 1: <article>-tags
   const artikelRegex = /<article[^>]*>([\s\S]*?)<\/article>/gi;
-  let artikelMatch;
-
-  while ((artikelMatch = artikelRegex.exec(html)) !== null) {
-    const artikel = artikelMatch[1];
-
-    const titleMatch = artikel.match(/<h[23][^>]*>\s*<a[^>]*href="([^"]+)"[^>]*>([^<]+)<\/a>/i)
-      ?? artikel.match(/<a[^>]*href="([^"]+)"[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)<\/a>/i);
-
-    if (!titleMatch) continue;
-
-    const href = titleMatch[1].startsWith('http') ? titleMatch[1] : `https://stps.dk${titleMatch[1]}`;
-    const title = titleMatch[2].trim();
-    const externalId = href.replace(/https?:\/\/stps\.dk/, '').replace(/\//g, '-').slice(1, 80);
-
-    const datoMatch = artikel.match(/(\d{1,2})[.\s]+(\w+)\s+(\d{4})/);
-    const publishedAt = datoMatch ? parseDanskDato(datoMatch[0]) : null;
-
-    const summaryMatch = artikel.match(/<p[^>]*>([\s\S]{20,400}?)<\/p>/);
-    const summary = summaryMatch ? summaryMatch[1].replace(/<[^>]+>/g, '').trim() : null;
-
-    const sourceType = bestemKildetype(href, title);
-
-    nyheder.push({ externalId, title, publishedAt, summary, sourceUrl: href, sourceType });
+  let m: RegExpExecArray | null;
+  while ((m = artikelRegex.exec(html)) !== null) {
+    const blok = m[1];
+    const linkM = blok.match(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]{5,200}?)<\/a>/i);
+    if (!linkM) continue;
+    const href = linkM[1].startsWith('http') ? linkM[1] : `https://stps.dk${linkM[1]}`;
+    const title = linkM[2].replace(/<[^>]+>/g, '').trim();
+    if (!title || set.has(href)) continue;
+    set.add(href);
+    const externalId = href.replace(/https?:\/\/stps\.dk/, '').replace(/\W+/g, '-').slice(0, 80);
+    const datoM = blok.match(/(\d{1,2})[.]\s*(\w+)\s+(\d{4})/);
+    const summaryM = blok.match(/<p[^>]*>([\s\S]{20,400}?)<\/p>/);
+    nyheder.push({
+      externalId,
+      title,
+      publishedAt: datoM ? parseDanskDato(datoM[0]) : null,
+      summary: summaryM ? summaryM[1].replace(/<[^>]+>/g, '').trim() : null,
+      sourceUrl: href,
+      sourceType: bestemKildetype(href, title),
+    });
   }
 
-  // Fallback: søg efter nyhedslinks hvis ingen article-tags
+  // Strategi 2: li/div-blokke med nyhedslinks
   if (nyheder.length === 0) {
-    const linkRegex = /<a[^>]+href="(\/da\/nyheder\/[^"]+)"[^>]*>([^<]{10,200})<\/a>/gi;
-    let linkMatch;
-    while ((linkMatch = linkRegex.exec(html)) !== null) {
-      const href = `https://stps.dk${linkMatch[1]}`;
-      const title = linkMatch[2].trim();
-      const externalId = linkMatch[1].replace(/\//g, '-').slice(1, 80);
+    const blokRegex = /<(?:li|div)[^>]*>([\s\S]{30,1000}?)<\/(?:li|div)>/gi;
+    while ((m = blokRegex.exec(html)) !== null) {
+      const blok = m[1];
+      const linkM = blok.match(/<a[^>]+href="(\/da\/(?:nyheder|udgivelser|obs-meddelelser)[^"]+)"[^>]*>([\s\S]{5,200}?)<\/a>/i);
+      if (!linkM) continue;
+      const href = `https://stps.dk${linkM[1]}`;
+      const title = linkM[2].replace(/<[^>]+>/g, '').trim();
+      if (!title || title.length < 5 || set.has(href)) continue;
+      set.add(href);
+      const externalId = linkM[1].replace(/\W+/g, '-').slice(0, 80);
+      const datoM = blok.match(/(\d{1,2})[.]\s*(\w+)\s+(\d{4})/);
+      const summaryM = blok.match(/<p[^>]*>([\s\S]{20,400}?)<\/p>/);
       nyheder.push({
         externalId,
         title,
-        publishedAt: null,
-        summary: null,
+        publishedAt: datoM ? parseDanskDato(datoM[0]) : null,
+        summary: summaryM ? summaryM[1].replace(/<[^>]+>/g, '').trim() : null,
         sourceUrl: href,
-        sourceType: 'nyhed',
+        sourceType: bestemKildetype(href, title),
       });
+    }
+  }
+
+  // Strategi 3: bare links med nyhedssti
+  if (nyheder.length === 0) {
+    const linkRegex = /<a[^>]+href="(\/da\/(?:nyheder|udgivelser|obs-meddelelser)\/\d[^"]+)"[^>]*>([^<]{10,200})<\/a>/gi;
+    while ((m = linkRegex.exec(html)) !== null) {
+      const href = `https://stps.dk${m[1]}`;
+      const title = m[2].trim();
+      if (!title || set.has(href)) continue;
+      set.add(href);
+      const externalId = m[1].replace(/\W+/g, '-').slice(0, 80);
+      nyheder.push({ externalId, title, publishedAt: null, summary: null, sourceUrl: href, sourceType: bestemKildetype(href, title) });
     }
   }
 
@@ -102,7 +119,8 @@ export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: n
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const html = await res.text();
-    const nyheder = parseNyheder(html, STPS_NYHEDER_URL);
+    console.log('[STPS-nyheder] HTML længde:', html.length, 'bytes');
+    const nyheder = parseNyheder(html);
     hentet = nyheder.length;
 
     for (const nyhed of nyheder) {
