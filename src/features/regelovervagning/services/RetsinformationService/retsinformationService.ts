@@ -8,9 +8,12 @@ import { vurderRelevans } from '@/features/regelovervagning/services/RelevansSer
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 const API_BASE = 'https://data.retsinformation.dk/api/v1';
-const SØGE_TERMER = [
-  'botilbud', 'bosted', 'opholdssted', 'medicinhåndtering',
-  'patientsikkerhed', 'journalføring', 'delegation', 'magtanvendelse',
+
+// Relevante nøgleord til at filtrere dokumenter efter hentning
+const RELEVANTE_ORD = [
+  'botilbud', 'bosted', 'opholdssted', 'medicin', 'patientsikkerhed',
+  'journalføring', 'delegation', 'magtanvendelse', 'serviceloven',
+  'tilsyn', 'handicap', 'psykiatri', 'plejetilbud',
 ];
 
 type RetsDoc = {
@@ -29,24 +32,9 @@ type RetsResponse = {
   totalResults?: number;
 };
 
-async function ventMs(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function hentDokumenterForTerm(term: string): Promise<RetsDoc[]> {
-  // Retsinformation understøtter $search (fuld tekstsøgning) og $filter med contains
-  // Vi prøver $search først, da det er mest robust
-  const url = `${API_BASE}/documents?$search=${encodeURIComponent(term)}&$top=25&$orderby=modificationDate%20desc`;
-  const res = await fetch(url, {
-    headers: { Accept: 'application/json' },
-    cache: 'no-store',
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status} for term "${term}": ${body.slice(0, 200)}`);
-  }
-  const json = await res.json() as RetsResponse;
-  return json.message ?? [];
+function erRelevant(doc: RetsDoc): boolean {
+  const tekst = [doc.title ?? '', doc.type ?? '', doc.changeReason ?? ''].join(' ').toLowerCase();
+  return RELEVANTE_ORD.some((ord) => tekst.includes(ord));
 }
 
 export async function kørRetsinformationImport(): Promise<{ hentet: number; gemt: number; fejl: number; fejlBeskeder?: string[] }> {
@@ -56,71 +44,83 @@ export async function kørRetsinformationImport(): Promise<{ hentet: number; gem
   let fejl = 0;
   const fejlBeskeder: string[] = [];
 
-  for (const term of SØGE_TERMER) {
-    try {
-      const docs = await hentDokumenterForTerm(term);
-      hentet += docs.length;
+  try {
+    // Ét enkelt kald — hent de 100 senest ændrede dokumenter og filtrer lokalt
+    const url = `${API_BASE}/documents?$top=100&$orderby=modificationDate%20desc`;
+    const res = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      cache: 'no-store',
+    });
 
-      for (const doc of docs) {
-        const externalId = doc.accessionNumber ?? String(doc.id ?? doc.documentId ?? '');
-        if (!externalId) continue;
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`HTTP ${res.status}: ${body.slice(0, 300)}`);
+    }
 
-        const tekst = [doc.title ?? '', doc.type ?? '', doc.changeReason ?? ''].join(' ');
-        const { score, level, topics, recommendedAction } = vurderRelevans(tekst);
+    const json = await res.json() as RetsResponse;
+    const docs = json.message ?? [];
+    console.log('[Retsinformation] Hentet', docs.length, 'dokumenter fra API');
 
-        if (level === 'lav') continue; // Spring uinteressante over
+    const relevante = docs.filter(erRelevant);
+    hentet = relevante.length;
+    console.log('[Retsinformation]', relevante.length, 'er relevante efter filtrering');
 
-        const nytItem = {
-          source: 'retsinformation',
-          external_id: externalId,
-          source_type: doc.type ?? null,
-          title: doc.title ?? externalId,
-          summary: doc.changeReason ?? null,
-          source_url: doc.href ?? `https://www.retsinformation.dk/eli/${externalId}`,
-          published_at: doc.modificationDate ?? null,
-          changed_at_source: doc.modificationDate ?? null,
-          last_seen_at: new Date().toISOString(),
-          relevance_score: score,
-          relevance_level: level,
-          topics,
-          recommended_action: recommendedAction,
-          raw_payload: doc as unknown as Record<string, unknown>,
-        };
+    for (const doc of relevante) {
+      const externalId = doc.accessionNumber ?? String(doc.id ?? doc.documentId ?? '');
+      if (!externalId) continue;
 
-        // Tjek om dokumentet allerede eksisterer
-        const { data: eksisterende } = await supabase
+      const tekst = [doc.title ?? '', doc.type ?? '', doc.changeReason ?? ''].join(' ');
+      const { score, level, topics, recommendedAction } = vurderRelevans(tekst);
+
+      if (level === 'lav') continue;
+
+      const nytItem = {
+        source: 'retsinformation',
+        external_id: externalId,
+        source_type: doc.type ?? null,
+        title: doc.title ?? externalId,
+        summary: doc.changeReason ?? null,
+        source_url: doc.href ?? `https://www.retsinformation.dk/eli/${externalId}`,
+        published_at: doc.modificationDate ?? null,
+        changed_at_source: doc.modificationDate ?? null,
+        last_seen_at: new Date().toISOString(),
+        relevance_score: score,
+        relevance_level: level,
+        topics,
+        recommended_action: recommendedAction,
+        raw_payload: doc as unknown as Record<string, unknown>,
+      };
+
+      const { data: eksisterende } = await supabase
+        .from('regulatory_items')
+        .select('id, title, relevance_score')
+        .eq('source', 'retsinformation')
+        .eq('external_id', externalId)
+        .single();
+
+      if (eksisterende) {
+        await supabase.from('regulatory_item_history').insert({
+          item_id: eksisterende.id,
+          change_reason: doc.changeReason ?? 'Opdateret ved import',
+          snapshot: eksisterende as unknown as Record<string, unknown>,
+        });
+        await supabase
           .from('regulatory_items')
-          .select('id, title, relevance_score')
-          .eq('source', 'retsinformation')
-          .eq('external_id', externalId)
-          .single();
-
-        if (eksisterende) {
-          // Gem historik og opdater
-          await supabase.from('regulatory_item_history').insert({
-            item_id: eksisterende.id,
-            change_reason: doc.changeReason ?? 'Opdateret ved import',
-            snapshot: eksisterende as unknown as Record<string, unknown>,
-          });
-          await supabase
-            .from('regulatory_items')
-            .update({ ...nytItem, first_seen_at: undefined })
-            .eq('id', eksisterende.id);
-        } else {
-          await supabase.from('regulatory_items').insert({
-            ...nytItem,
-            first_seen_at: new Date().toISOString(),
-          });
-        }
+          .update({ ...nytItem, first_seen_at: undefined })
+          .eq('id', eksisterende.id);
+      } else {
+        await supabase.from('regulatory_items').insert({
+          ...nytItem,
+          first_seen_at: new Date().toISOString(),
+        });
         gemt++;
       }
-    } catch (err) {
-      const besked = err instanceof Error ? err.message : String(err);
-      console.error('[Retsinformation]', besked);
-      fejlBeskeder.push(`${term}: ${besked}`);
-      fejl++;
     }
-    await ventMs(10_000); // Respekter max 1 kald pr. 10 sek
+  } catch (err) {
+    const besked = err instanceof Error ? err.message : String(err);
+    console.error('[Retsinformation]', besked);
+    fejlBeskeder.push(besked);
+    fejl++;
   }
 
   await logScraperKørsel('retsinformation', fejl === 0, { hentet, gemt, fejl });
