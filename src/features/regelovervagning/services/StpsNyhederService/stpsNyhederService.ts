@@ -8,16 +8,28 @@ import { logScraperKørsel } from '@/lib/db/ScraperLog';
 const STPS_SITEMAP_URL = 'https://stps.dk/sitemap.xml';
 const DAGE_TILBAGE = 90;
 
-// Ord i titlen der indikerer at påbuddet IKKE er rettet mod et botilbud
+// Ord i titlen der indikerer at påbuddet IKKE er rettet mod et botilbud.
+// Inkluderer både dansk (æøå) og URL-ASCII-form (ae/oe/aa) da titler stammer fra URL-slugs.
 const EKSKLUDER_ORD = [
+  // Tandlæger
   'tandlæge', 'tandlægerne', 'tandklinik', 'tandlægehuset',
-  'hjemmepleje', 'hjemmeplejen', 'hjemmeplejeenheden',
-  'plejehjem', 'plejecenter', 'plejehjemmet',
+  'tandlaege', 'tandlaegerne', 'tandklinik', 'tandlaegehuset',
+  // Hjemmepleje / sygepleje
+  'hjemmepleje', 'hjemmeplejen', 'hjemmeplejeenhed',
+  'hjemmesygepleje', 'hjemmesygeplejen',
+  'sygeplejeklinik', 'sygeplejestation',
+  // Plejehjem
+  'plejehjem', 'plejecenter', 'plejehjemmet', 'plejebolig',
+  // Apotek
   'apotek', 'apoteket',
+  // Sygehus / hospital
   'sygehus', 'hospital', 'hospitalet',
+  // Borger-teams (kommunale enheder, ikke botilbud)
   'borgerteam', 'borgerservice',
-  'lægepraksis', 'lægehus', 'lægeklinik',
-  'akutteam', 'sygeplejeklinik',
+  // Lægepraksis
+  'lægepraksis', 'laegepraksis', 'lægehus', 'laegehus', 'lægeklinik', 'laegeklinik',
+  // Akut
+  'akutteam', 'akutfunktion',
 ];
 
 type StpsItem = {
