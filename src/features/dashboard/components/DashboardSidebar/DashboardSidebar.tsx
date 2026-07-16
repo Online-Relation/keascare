@@ -43,9 +43,10 @@ const gruppeMarkedsforing = [
   { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
 ];
 
-const gruppeRegelovervagning = [
-  { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation' },
-  { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder' },
+const gruppeRegelovervagning: NavItem[] = [
+  { label: 'Overblik',        href: '/dashboard/regelovervagning',                icon: ShieldCheck },
+  { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation', icon: Scale },
+  { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder',    icon: Newspaper },
 ];
 
 const gruppeSystem: NavItem[] = [
@@ -151,23 +152,7 @@ export function DashboardSidebar() {
         )}
 
         {vis('/dashboard/regelovervagning') && (
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">Regelovervågning</p>
-            <Link
-              href="/dashboard/regelovervagning"
-              className={`sidebar-nav-item${pathname === '/dashboard/regelovervagning' ? ' active' : ''}`}
-            >
-              <ShieldCheck className="sidebar-nav-item-icon" size={16} />
-              Overblik
-            </Link>
-            <div className="sidebar-subnav">
-              {gruppeRegelovervagning.map(({ label, href }) => (
-                <Link key={href} href={href} className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`}>
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </div>
+          <NavGruppe label="Regelovervågning" items={gruppeRegelovervagning} pathname={pathname} />
         )}
 
         {gruppeSystem.some((i) => vis(i.href)) && (
