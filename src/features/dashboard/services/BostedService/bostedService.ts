@@ -135,7 +135,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret, er_gigant')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret')
     .eq('id', id)
     .single();
 
@@ -153,5 +153,18 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
     cvrAntalAfdelinger = count ?? null;
   }
 
-  return { ...mapTilBostedDetail(rapport), cvrAntalAfdelinger };
+  // Hent er_gigant separat — kolonnen kan mangle hvis migration ikke er kørt endnu
+  let erGigant = false;
+  try {
+    const { data: gigantData } = await supabase
+      .from('stps_rapporter')
+      .select('er_gigant')
+      .eq('id', id)
+      .single();
+    erGigant = (gigantData as { er_gigant: boolean } | null)?.er_gigant ?? false;
+  } catch {
+    // Kolonnen eksisterer ikke endnu — ignorer
+  }
+
+  return { ...mapTilBostedDetail(rapport), cvrAntalAfdelinger, erGigant };
 }
