@@ -6,7 +6,7 @@ import { vurderRelevans } from '@/features/regelovervagning/services/RelevansSer
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 const STPS_SITEMAP_URL = 'https://stps.dk/sitemap.xml';
-const DAGE_TILBAGE = 90;
+const DAGE_TILBAGE = 365;
 
 // Ord i titlen der indikerer at påbuddet IKKE er rettet mod et botilbud.
 // Inkluderer både dansk (æøå) og URL-ASCII-form (ae/oe/aa) da titler stammer fra URL-slugs.
