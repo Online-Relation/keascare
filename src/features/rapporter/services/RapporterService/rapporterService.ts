@@ -30,8 +30,10 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     query = query.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
+  const idag = new Date().toISOString().slice(0, 10);
   if (fra) query = query.gte('rapport_dato', fra);
-  if (til) query = query.lte('rapport_dato', til);
+  const effektivTil = til && til >= idag ? til : idag;
+  query = query.lte('rapport_dato', effektivTil);
 
   // Hent total i database (uden datofilter) til procentberegning
   let dbTotalQuery = supabase

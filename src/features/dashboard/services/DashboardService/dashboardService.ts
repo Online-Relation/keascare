@@ -295,8 +295,11 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     query = query.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
+  const idag = new Date().toISOString().slice(0, 10);
   if (fra) query = query.gte('rapport_dato', fra);
-  if (til) query = query.lte('rapport_dato', til);
+  // Brug aldrig en til-dato fra fortiden — det skærer nye rapporter fra
+  const effektivTil = til && til >= idag ? til : idag;
+  query = query.lte('rapport_dato', effektivTil);
 
   const { data, error } = await query;
 
