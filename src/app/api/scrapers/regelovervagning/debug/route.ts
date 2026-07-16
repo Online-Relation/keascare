@@ -22,18 +22,18 @@ export async function GET(req: NextRequest) {
         redirect: 'follow',
       });
       const tekst = await res.text();
-      // Find alle links der ligner nyhedslinks
-      const links = [...tekst.matchAll(/<a[^>]+href="([^"]+)"[^>]*>([^<]{5,150})<\/a>/g)]
-        .map(m => ({ href: m[1], tekst: m[2].trim() }))
-        .filter(l => l.href.includes('nyheder') || l.href.includes('obs') || l.href.includes('udgivelse'))
-        .slice(0, 20);
+      // Alle links med stps.dk i href
+      const alleLinks = [...tekst.matchAll(/href="(https?:\/\/stps\.dk\/[^"]{10,150})"/g)]
+        .map(m => m[1])
+        .filter((v, i, a) => a.indexOf(v) === i) // unikke
+        .slice(0, 40);
 
       resultater[url] = {
         status: res.status,
         contentType: res.headers.get('content-type'),
         længde: tekst.length,
-        links,
-        snippet: tekst.slice(20000, 21000), // midt i HTML — der er typisk nyheder
+        alleLinks,
+        snippet50k: tekst.slice(50000, 51500), // sidst i HTML — nyheder er typisk nederst
       };
     } catch (err) {
       resultater[url] = { fejl: err instanceof Error ? err.message : String(err) };
