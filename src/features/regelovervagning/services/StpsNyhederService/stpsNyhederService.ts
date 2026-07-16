@@ -161,6 +161,11 @@ export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: n
     }
 
     console.log('[STPS-nyheder] Fandt', nyheder.length, 'nyheder');
+    if (nyheder.length === 0) {
+      // Debug: vis første 500 tegn af HTML/RSS så vi kan se strukturen
+      const snippet = (await (rssRes.ok ? fetch(STPS_RSS_URL, { cache: 'no-store' }) : fetch(STPS_NYHEDER_URL, { cache: 'no-store' })).then(r => r.text()).catch(() => 'fetch fejl')).slice(0, 500);
+      console.log('[STPS-nyheder] HTML snippet:', snippet);
+    }
     hentet = nyheder.length;
 
 

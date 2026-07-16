@@ -133,9 +133,10 @@ const SCRAPERS: Scraper[] = [
   {
     id: 'retsinformation',
     titel: 'Regelovervågning — Retsinformation',
-    beskrivelse: 'Henter nye love, bekendtgørelser og vejledninger fra Retsinformation der er relevante for botilbud. Max 1 kald pr. 10 sek. — kan tage 1-2 minutter.',
+    beskrivelse: 'Henter nye love, bekendtgørelser og vejledninger fra Retsinformation der er relevante for botilbud. Kræver lokal kørsel — data.retsinformation.dk er blokeret fra Railway.',
     endpoint: '/api/scrapers/regelovervagning',
     body: { kilder: ['retsinformation'] },
+    advarsel: 'data.retsinformation.dk er blokeret fra Railway. Kør fra Synology eller lokalt.',
   },
   {
     id: 'stps-nyheder',
