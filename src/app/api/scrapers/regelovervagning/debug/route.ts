@@ -22,11 +22,18 @@ export async function GET(req: NextRequest) {
         redirect: 'follow',
       });
       const tekst = await res.text();
+      // Find alle links der ligner nyhedslinks
+      const links = [...tekst.matchAll(/<a[^>]+href="([^"]+)"[^>]*>([^<]{5,150})<\/a>/g)]
+        .map(m => ({ href: m[1], tekst: m[2].trim() }))
+        .filter(l => l.href.includes('nyheder') || l.href.includes('obs') || l.href.includes('udgivelse'))
+        .slice(0, 20);
+
       resultater[url] = {
         status: res.status,
         contentType: res.headers.get('content-type'),
         længde: tekst.length,
-        snippet: tekst.slice(0, 800),
+        links,
+        snippet: tekst.slice(20000, 21000), // midt i HTML — der er typisk nyheder
       };
     } catch (err) {
       resultater[url] = { fejl: err instanceof Error ? err.message : String(err) };
