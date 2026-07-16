@@ -8,6 +8,18 @@ import { logScraperKørsel } from '@/lib/db/ScraperLog';
 const STPS_SITEMAP_URL = 'https://stps.dk/sitemap.xml';
 const DAGE_TILBAGE = 90;
 
+// Ord i titlen der indikerer at påbuddet IKKE er rettet mod et botilbud
+const EKSKLUDER_ORD = [
+  'tandlæge', 'tandlægerne', 'tandklinik', 'tandlægehuset',
+  'hjemmepleje', 'hjemmeplejen', 'hjemmeplejeenheden',
+  'plejehjem', 'plejecenter', 'plejehjemmet',
+  'apotek', 'apoteket',
+  'sygehus', 'hospital', 'hospitalet',
+  'borgerteam', 'borgerservice',
+  'lægepraksis', 'lægehus', 'lægeklinik',
+  'akutteam', 'sygeplejeklinik',
+];
+
 type StpsItem = {
   externalId: string;
   title: string;
@@ -56,10 +68,32 @@ function erNy(lastmod: string | null): boolean {
   return new Date(lastmod) >= grænse;
 }
 
-export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: number; fejl: number }> {
+async function rydIrrelevante(supabase: ReturnType<typeof getSupabaseServerClient>): Promise<number> {
+  const { data } = await supabase
+    .from('regulatory_items')
+    .select('id, title')
+    .eq('source', 'stps');
+
+  if (!data) return 0;
+
+  const sletIds = data
+    .filter((item) => {
+      const norm = item.title.toLowerCase();
+      return EKSKLUDER_ORD.some((ord) => norm.includes(ord));
+    })
+    .map((item) => item.id);
+
+  if (sletIds.length === 0) return 0;
+
+  await supabase.from('regulatory_items').delete().in('id', sletIds);
+  return sletIds.length;
+}
+
+export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: number; slettet: number; fejl: number }> {
   const supabase = getSupabaseServerClient();
   let hentet = 0;
   let gemt = 0;
+  let slettet = 0;
   let fejl = 0;
 
   try {
@@ -82,6 +116,9 @@ export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: n
     hentet = relevante.length;
 
     for (const item of relevante) {
+      const titelNorm = item.title.toLowerCase();
+      if (EKSKLUDER_ORD.some((ord) => titelNorm.includes(ord))) continue;
+
       const tekst = item.title;
       const { score, level, topics, recommendedAction } = vurderRelevans(tekst);
 
@@ -125,9 +162,12 @@ export async function kørStpsNyhederImport(): Promise<{ hentet: number; gemt: n
     const besked = err instanceof Error ? err.message : 'Ukendt fejl';
     console.error('[STPS-nyheder]', besked);
     await logScraperKørsel('stps-nyheder', false, { error: besked });
-    return { hentet, gemt, fejl: 1 };
+    return { hentet, gemt, slettet, fejl: 1 };
   }
 
-  await logScraperKørsel('stps-nyheder', true, { hentet, gemt, fejl });
-  return { hentet, gemt, fejl };
+  slettet = await rydIrrelevante(supabase);
+  console.log('[STPS-nyheder] Slettet', slettet, 'irrelevante items');
+
+  await logScraperKørsel('stps-nyheder', true, { hentet, gemt, slettet, fejl });
+  return { hentet, gemt, slettet, fejl };
 }
