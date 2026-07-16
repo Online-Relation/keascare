@@ -9,6 +9,7 @@ import { ForløbsansvarligGraf } from './sections/ForløbsansvarligGraf';
 import { KunderTabel } from './sections/KunderTabel/KunderTabel';
 import { KunderKort } from './sections/KunderKort';
 import { AfsluttedeKunderTabel } from './sections/AfsluttedeKunderTabel';
+import { TabteKunderTabel } from './sections/TabteKunderTabel';
 
 export function KunderPage() {
   const [kunder, setKunder] = useState<MondayKundeItem[]>([]);
@@ -52,6 +53,7 @@ export function KunderPage() {
           <ForløbsansvarligGraf kunder={kunder} />
           <KunderTabel kunder={kunder} />
           <AfsluttedeKunderTabel kunder={kunder} />
+          <TabteKunderTabel kunder={kunder} />
           <KunderKort />
         </>
       )}

@@ -1,0 +1,1 @@
+export { TabteKunderTabel } from './TabteKunderTabel';
