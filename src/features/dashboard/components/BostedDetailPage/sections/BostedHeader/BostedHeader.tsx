@@ -2,7 +2,8 @@
 
 'use client';
 
-import { MapPin, Globe, ClipboardList, Star } from 'lucide-react';
+import { useState } from 'react';
+import { MapPin, Globe, ClipboardList, Star, Crown } from 'lucide-react';
 import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
 import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
 import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
@@ -27,9 +28,18 @@ const fundBadgeKlasse: Record<StpsFundNiveau, string> = {
   ukendt:  'badge-ukendt',
 };
 
+async function toggleGigantApi(id: string, næsteVærdi: boolean) {
+  await fetch('/api/bosteder/gigant', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id, erGigant: næsteVærdi }),
+  });
+}
+
 export function BostedHeader({ bosted }: BostedHeaderProps) {
   const { erFavorit, toggleFavorit } = useFavoritter();
   const erStjernet = erFavorit(bosted.id);
+  const [erGigant, setErGigant] = useState(bosted.erGigant);
 
   const dato = bosted.rapportDato
     ? new Date(bosted.rapportDato).toLocaleDateString('da-DK', {
@@ -78,6 +88,20 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
           </div>
 
           <button
+            className={`gigant-knap${erGigant ? ' aktiv' : ''}`}
+            onClick={() => {
+              const ny = !erGigant;
+              setErGigant(ny);
+              toggleGigantApi(bosted.id, ny);
+            }}
+            aria-label={erGigant ? 'Fjern gigant-markering' : 'Markér som gigant'}
+            title={erGigant ? 'Gigant — klik for at fjerne' : 'Markér som gigant'}
+            style={{ flexShrink: 0 }}
+          >
+            <Crown size={18} fill={erGigant ? 'currentColor' : 'none'} />
+          </button>
+
+          <button
             className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
             onClick={() => toggleFavorit({
               id: bosted.id,
@@ -95,6 +119,12 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
         </div>
 
         <div className="bosted-detail-header-badges">
+          {erGigant && (
+            <span className="badge badge-gigant">
+              <Crown size={11} fill="currentColor" style={{ marginRight: '0.25rem', flexShrink: 0 }} />
+              Gigant
+            </span>
+          )}
           <span className={`badge ${fundBadgeKlasse[bosted.fundNiveau]}`}>
             <span className="badge-dot" />
             {fundLabels[bosted.fundNiveau]}

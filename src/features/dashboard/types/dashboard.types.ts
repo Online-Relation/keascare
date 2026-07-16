@@ -123,6 +123,7 @@ export type BostedDetail = {
   mondayKunde: MondayKundeStatus;
   mondayGruppe: string | null;
   mondayItemId: string | null;
+  erGigant: boolean;
   regnskabAar: number | null;
   regnskabNettoomsaetning: number | null;
   regnskabBruttofortjeneste: number | null;

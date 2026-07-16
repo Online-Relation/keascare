@@ -55,6 +55,7 @@ type DbRapport = {
   regnskab_egenkapital: number | null;
   regnskab_balance: number | null;
   regnskab_opdateret: string | null;
+  er_gigant: boolean | null;
 };
 
 function beregnDataKvalitet(r: DbRapport): DataKvalitet {
@@ -118,6 +119,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     mondayKunde: r.monday_item_id ? 'kunde' : 'ingen',
     mondayGruppe: r.monday_gruppe ?? null,
     mondayItemId: r.monday_item_id ?? null,
+    erGigant: r.er_gigant ?? false,
     cvrAntalAfdelinger: null,
     regnskabAar: r.regnskab_aar ?? null,
     regnskabNettoomsaetning: r.regnskab_nettoomsaetning ?? null,
@@ -133,7 +135,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret, er_gigant')
     .eq('id', id)
     .single();
 

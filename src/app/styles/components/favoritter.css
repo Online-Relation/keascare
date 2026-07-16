@@ -144,4 +144,29 @@
     border-color: #f59e0b;
     background: #fef3c7;
   }
+
+  /* Gigant-knap */
+  .gigant-knap {
+    background: none;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: 0.375rem 0.5rem;
+    cursor: pointer;
+    color: var(--color-text-muted);
+    display: flex;
+    align-items: center;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+  }
+
+  .gigant-knap:hover {
+    color: #15803d;
+    border-color: #15803d;
+    background: #dcfce7;
+  }
+
+  .gigant-knap.aktiv {
+    color: #15803d;
+    border-color: #15803d;
+    background: #dcfce7;
+  }
 }
