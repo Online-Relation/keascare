@@ -30,6 +30,14 @@ const EKSKLUDER_ORD = [
   'lægepraksis', 'laegepraksis', 'lægehus', 'laegehus', 'lægeklinik', 'laegeklinik',
   // Akut
   'akutteam', 'akutfunktion',
+  // Sygepleje (kommunal hjemmesygepleje — ikke botilbud)
+  'sygepleje',
+  // Hospice
+  'hospice',
+  // Skoler / uddannelse
+  'erhvervsskole', 'uddannelsescenter',
+  // §85 støtte er ambulant — ikke §107/§108 botilbud
+  '§85', 'stoetteteam', 'støtteteam',
 ];
 
 type StpsItem = {
