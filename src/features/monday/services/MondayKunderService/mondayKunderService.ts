@@ -20,8 +20,9 @@ function mapGruppe(gruppeNavn: string): MondayGruppe {
   const norm = gruppeNavn.toLowerCase().trim();
   if (norm.includes('nye')) return 'nye_forloeb';
   if (norm.includes('aktive')) return 'aktive_forloeb';
-  if (TABTE_GRUPPE_NAVNE.some((n) => norm === n)) return 'tabt';
-  if (norm.includes('afsluttede') || norm.includes('tabte')) return 'afsluttet_forloeb';
+  // Tabt tjekkes FØR afsluttet — "tabte kunder" skal ikke ende som afsluttet
+  if (norm.includes('tabt')) return 'tabt';
+  if (norm.includes('afsluttede')) return 'afsluttet_forloeb';
   return 'ukendt';
 }
 
@@ -60,7 +61,7 @@ export async function hentAlleMondayKunder(): Promise<MondayKundeItem[]> {
       return (
         AKTIVE_GRUPPE_NAVNE.some((navn) => norm === navn) ||
         AFSLUTTEDE_GRUPPE_NAVNE.some((navn) => norm.includes(navn)) ||
-        TABTE_GRUPPE_NAVNE.some((navn) => norm === navn)
+        norm.includes('tabt')
       );
     })
     .map((g) => g.id);
@@ -99,6 +100,11 @@ export async function hentAlleMondayKunder(): Promise<MondayKundeItem[]> {
   }
 
   return råItems
-    .filter((item) => findKolonne(item, 'Type')?.toLowerCase() === 'bosted')
+    .filter((item) => {
+      const type = findKolonne(item, 'Type')?.toLowerCase();
+      const gruppe = mapGruppe(item.group.title);
+      // Tabte items inkluderes selv om Type ikke er sat
+      return type === 'bosted' || gruppe === 'tabt';
+    })
     .map(mapItem);
 }
