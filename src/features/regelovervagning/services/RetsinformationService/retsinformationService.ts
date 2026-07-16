@@ -49,11 +49,12 @@ async function hentDokumenterForTerm(term: string): Promise<RetsDoc[]> {
   return json.message ?? [];
 }
 
-export async function kørRetsinformationImport(): Promise<{ hentet: number; gemt: number; fejl: number }> {
+export async function kørRetsinformationImport(): Promise<{ hentet: number; gemt: number; fejl: number; fejlBeskeder?: string[] }> {
   const supabase = getSupabaseServerClient();
   let hentet = 0;
   let gemt = 0;
   let fejl = 0;
+  const fejlBeskeder: string[] = [];
 
   for (const term of SØGE_TERMER) {
     try {
@@ -114,12 +115,14 @@ export async function kørRetsinformationImport(): Promise<{ hentet: number; gem
         gemt++;
       }
     } catch (err) {
-      console.error('[Retsinformation]', err instanceof Error ? err.message : err);
+      const besked = err instanceof Error ? err.message : String(err);
+      console.error('[Retsinformation]', besked);
+      fejlBeskeder.push(`${term}: ${besked}`);
       fejl++;
     }
     await ventMs(10_000); // Respekter max 1 kald pr. 10 sek
   }
 
   await logScraperKørsel('retsinformation', fejl === 0, { hentet, gemt, fejl });
-  return { hentet, gemt, fejl };
+  return { hentet, gemt, fejl, fejlBeskeder: fejlBeskeder.length > 0 ? fejlBeskeder : undefined };
 }
