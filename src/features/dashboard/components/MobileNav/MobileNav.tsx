@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight, Activity,
+  TrendingUp, BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, MapPin, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight, Activity, ShieldCheck, Scale, Newspaper,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
@@ -48,6 +48,14 @@ const navGrupper = [
       { label: 'Meta',       href: '/dashboard/markedsforing/meta',     icon: Megaphone },
       { label: 'Google Ads', href: '/dashboard/markedsforing/google',   icon: Megaphone },
       { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin', icon: Megaphone },
+    ],
+  },
+  {
+    label: 'Regelovervågning',
+    items: [
+      { label: 'Overblik',        href: '/dashboard/regelovervagning',                icon: ShieldCheck },
+      { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation', icon: Scale },
+      { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder',    icon: Newspaper },
     ],
   },
   {
