@@ -1,0 +1,1 @@
+export { vurderRelevans } from './relevansService';

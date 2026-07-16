@@ -1,0 +1,162 @@
+/* Regelovervågning */
+
+.regulatory-kpi-række {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.regulatory-kpi {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 140px;
+}
+
+.regulatory-kpi-tal {
+  font-size: var(--text-2xl);
+  font-weight: var(--fw-bold);
+  color: var(--color-text);
+}
+
+.regulatory-kpi-tal--høj {
+  color: var(--color-accent);
+}
+
+.regulatory-kpi-label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.regulatory-import-status {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+}
+
+.regulatory-import-status.ok   { color: var(--color-success, #16a34a); }
+.regulatory-import-status.fejl { color: var(--color-accent); }
+
+/* Fund-liste */
+.regulatory-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.regulatory-kort {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.regulatory-kort:last-child {
+  border-bottom: none;
+}
+
+.regulatory-kort-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.regulatory-dato {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.regulatory-titel {
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+  color: var(--color-text);
+  margin: 0;
+}
+
+.regulatory-summary {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.regulatory-anbefaling {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt, var(--color-surface));
+  border-left: 3px solid var(--color-primary);
+  padding: 0.4rem 0.75rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin: 0;
+}
+
+.regulatory-kort-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.regulatory-status-vælger {
+  font-size: var(--text-xs);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+}
+
+/* Filtre */
+.regulatory-filter-række {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.regulatory-søg {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+.regulatory-select {
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+/* Topic-badge */
+.badge-topic {
+  background: var(--color-primary-subtle, #e0e7ff);
+  color: var(--color-primary);
+  font-size: var(--text-xs);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--radius-full, 9999px);
+  font-weight: var(--fw-medium);
+}
+
+@media (prefers-color-scheme: dark) {
+  .badge-topic {
+    background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+    color: var(--color-primary-light, #a5b4fc);
+  }
+}

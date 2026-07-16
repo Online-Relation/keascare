@@ -78,5 +78,8 @@ export async function POST(request: NextRequest) {
     resultater['cvr-signaler'] = { springetOver: 'CVR_USER/CVR_PASS ikke sat' };
   }
 
+  // 8. Regelovervågning — Retsinformation + STPS-nyheder
+  await kør('regelovervagning', () => kald('/api/scrapers/regelovervagning', {}, secret), resultater);
+
   return NextResponse.json({ ok: true, kørt: new Date().toISOString(), ...resultater });
 }

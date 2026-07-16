@@ -1,0 +1,1 @@
+export { kørRetsinformationImport } from './retsinformationService';

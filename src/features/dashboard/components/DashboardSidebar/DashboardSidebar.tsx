@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity, FlaskConical,
+  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -41,6 +41,11 @@ const gruppeMarkedsforing = [
   { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
   { label: 'Google Ads', href: '/dashboard/markedsforing/google' },
   { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
+];
+
+const gruppeRegelovervagning = [
+  { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation' },
+  { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder' },
 ];
 
 const gruppeSystem: NavItem[] = [
@@ -142,6 +147,26 @@ export function DashboardSidebar() {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {vis('/dashboard/regelovervagning') && (
+          <div className="sidebar-nav-gruppe-sektion">
+            <p className="sidebar-section-label">Regelovervågning</p>
+            <Link
+              href="/dashboard/regelovervagning"
+              className={`sidebar-nav-item${pathname === '/dashboard/regelovervagning' ? ' active' : ''}`}
+            >
+              <ShieldCheck className="sidebar-nav-item-icon" size={16} />
+              Overblik
+            </Link>
+            <div className="sidebar-subnav">
+              {gruppeRegelovervagning.map(({ label, href }) => (
+                <Link key={href} href={href} className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`}>
+                  {label}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 

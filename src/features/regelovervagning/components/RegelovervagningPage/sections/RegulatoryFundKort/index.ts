@@ -1,0 +1,1 @@
+export { RegulatoryFundKort } from './RegulatoryFundKort';
