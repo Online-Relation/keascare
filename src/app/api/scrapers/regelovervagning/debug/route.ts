@@ -6,32 +6,30 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
-  const urls = [
-    'https://stps.dk/sitemap.xml',
-    'https://stps.dk/sitemap_index.xml',
-    'https://stps.dk/umbraco/api/newsapi/getnews',
-    'https://stps.dk/api/news',
-  ];
+  const res = await fetch('https://stps.dk/sitemap.xml', {
+    headers: { 'User-Agent': 'Mozilla/5.0 KeasCare-Monitor/1.0' },
+    cache: 'no-store',
+  });
+  const xml = await res.text();
 
-  const resultater: Record<string, unknown> = {};
+  // Udtræk alle URL + lastmod par
+  const urls = [...xml.matchAll(/<loc>(https:\/\/stps\.dk\/[^<]+)<\/loc>\s*(?:<lastmod>([^<]+)<\/lastmod>)?/g)]
+    .map(m => ({ url: m[1], lastmod: m[2] ?? null }));
 
-  for (const url of urls) {
-    try {
-      const res = await fetch(url, {
-        headers: { 'User-Agent': 'Mozilla/5.0 KeasCare-Monitor/1.0', Accept: '*/*' },
-        cache: 'no-store',
-      });
-      const tekst = await res.text();
-      resultater[url] = {
-        status: res.status,
-        contentType: res.headers.get('content-type'),
-        længde: tekst.length,
-        snippet: tekst.slice(0, 500),
-      };
-    } catch (err) {
-      resultater[url] = { fejl: err instanceof Error ? err.message : String(err) };
-    }
-  }
+  // Filtrer nyheds-lignende URL'er
+  const nyheder = urls.filter(u =>
+    u.url.includes('nyheder') ||
+    u.url.includes('nyt-fra') ||
+    u.url.includes('obs-meddelelse') ||
+    u.url.includes('udgivelse') ||
+    u.url.includes('klog-paa') ||
+    u.url.includes('paabud')
+  ).slice(0, 30);
 
-  return NextResponse.json(resultater);
+  return NextResponse.json({
+    totalUrls: urls.length,
+    nyhedsUrls: nyheder.length,
+    eksempler: nyheder.slice(0, 20),
+    alleNyhederPrefix: urls.filter(u => u.url.match(/stps\.dk\/[^/]+\/20\d\d\//)).slice(0, 10),
+  });
 }
