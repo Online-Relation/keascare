@@ -12,16 +12,7 @@ export type DatoPeriode = {
   label: string;
 };
 
-export const PRESETS: DatoPeriode[] = [
-  { label: 'Seneste 30 dage',    fra: dageRetur(30),  til: idag() },
-  { label: 'Seneste 3 måneder',  fra: dageRetur(90),  til: idag() },
-  { label: 'Seneste 6 måneder',  fra: dageRetur(180), til: idag() },
-  { label: 'Seneste år',         fra: dageRetur(365), til: idag() },
-  { label: 'Alle tid',           fra: '2000-01-01',   til: idag() },
-];
-
-export const DEFAULT_PRESET = PRESETS[3]; // Seneste år
-
+// Funktioner beregner datoen ved kørselstidspunkt — ikke ved build-tidspunkt
 function idag(): string {
   return new Date().toISOString().slice(0, 10);
 }
@@ -32,9 +23,24 @@ function dageRetur(dage: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+export function getPresets(): DatoPeriode[] {
+  return [
+    { label: 'Seneste 30 dage',    fra: dageRetur(30),  til: idag() },
+    { label: 'Seneste 3 måneder',  fra: dageRetur(90),  til: idag() },
+    { label: 'Seneste 6 måneder',  fra: dageRetur(180), til: idag() },
+    { label: 'Seneste år',         fra: dageRetur(365), til: idag() },
+    { label: 'Alle tid',           fra: '2000-01-01',   til: idag() },
+  ];
+}
+
+export const DEFAULT_PRESET_LABEL = 'Seneste år';
+
 function findPresetLabel(fra: string | null, til: string | null): string {
-  if (!fra || !til) return DEFAULT_PRESET.label;
-  const match = PRESETS.find((p) => p.fra === fra && p.til === til);
+  if (!fra || !til) return DEFAULT_PRESET_LABEL;
+  const presets = getPresets();
+  // Matcher kun på label — `til` vil aldrig eksakt matche den gemte URL-dato
+  // da idag() ændrer sig dagligt. Vi tjekker i stedet om fra-datoen passer.
+  const match = presets.find((p) => p.fra === fra);
   return match?.label ?? `${fra} → ${til}`;
 }
 
@@ -49,9 +55,8 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
   const [åben, setÅben] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  const fra = params.get('fra');
-  const til = params.get('til');
-  const aktivLabel = findPresetLabel(fra, til);
+  const fraParam = params.get('fra');
+  const aktivLabel = findPresetLabel(fraParam, params.get('til'));
 
   const vælgPreset = useCallback((preset: DatoPeriode) => {
     try { localStorage.setItem('keascare-dato-preset', preset.label); } catch {}
@@ -63,16 +68,35 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
     onLuk?.();
   }, [params, router, onLuk]);
 
+  // Sæt default preset hvis ingen periode er valgt i URL
   useEffect(() => {
-    if (!fra || !til) {
+    if (!fraParam) {
       const gemetLabel = (() => { try { return localStorage.getItem('keascare-dato-preset'); } catch { return null; } })();
-      const valgtPreset = PRESETS.find((p) => p.label === gemetLabel) ?? DEFAULT_PRESET;
+      const presets = getPresets();
+      const valgtPreset = presets.find((p) => p.label === gemetLabel) ?? presets[3]; // Seneste år
       const sp = new URLSearchParams(params.toString());
       sp.set('fra', valgtPreset.fra);
       sp.set('til', valgtPreset.til);
       router.replace(`?${sp.toString()}`, { scroll: false });
     }
-  }, [fra, til, params, router]);
+  }, [fraParam, params, router]);
+
+  // Opdater `til` i URL'en til dags dato ved hvert sidebesøg
+  // så nye rapporter ikke skæres fra af en gammel `til`-dato
+  useEffect(() => {
+    const tilParam = params.get('til');
+    const dagensDato = idag();
+    if (tilParam && tilParam !== dagensDato && tilParam !== '2000-01-01') {
+      // Kun opdater hvis det er et preset (ikke en brugerdefineret slutdato)
+      const presets = getPresets();
+      const erPreset = presets.some((p) => p.fra === fraParam);
+      if (erPreset) {
+        const sp = new URLSearchParams(params.toString());
+        sp.set('til', dagensDato);
+        router.replace(`?${sp.toString()}`, { scroll: false });
+      }
+    }
+  }, []); // Kør kun ved mount
 
   useEffect(() => {
     if (!åben) return;
@@ -83,12 +107,14 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
     return () => document.removeEventListener('mousedown', handleClick);
   }, [åben]);
 
+  const presets = getPresets();
+
   if (variant === 'mobil') {
     return (
       <div className="datovælger-mobil">
         <p className="datovælger-mobil-titel">Vælg periode</p>
         <div className="datovælger-presets">
-          {PRESETS.map((preset) => (
+          {presets.map((preset) => (
             <button
               key={preset.label}
               className={`datovælger-preset-knap${aktivLabel === preset.label ? ' aktiv' : ''}`}
@@ -122,7 +148,7 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
               <X size={13} />
             </button>
           </div>
-          {PRESETS.map((preset) => (
+          {presets.map((preset) => (
             <button
               key={preset.label}
               className={`datovælger-option${aktivLabel === preset.label ? ' aktiv' : ''}`}
