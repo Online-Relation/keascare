@@ -73,11 +73,20 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
     }
   });
 
-  // Pladser — §107+§108 i 'pladser'; alle paragraffer samlet i 'pladseTotalt'
+  // Pladser — forsøg først "Pladser på hele tilbuddet" (vises øverst på siden),
+  // derefter §107+§108 summeret, og til sidst fritekst-fallback.
   let pladser: number | null = null;
   let pladseTotalt: number | null = null;
   let pladser107_108 = 0;
   let pladserAlle = 0;
+
+  // "Pladser på hele tilbuddet" er det mest præcise tal — det dækker alle afdelinger
+  const heleMatch = bodyTekst.match(/Pladser p[åa] hele tilbuddet[\s\S]{0,80}?(\d+)\s+pladser/i);
+  if (heleMatch) {
+    const helePladser = parseInt(heleMatch[1], 10);
+    if (helePladser > 0 && helePladser < 2000) pladseTotalt = helePladser;
+  }
+
   $('#pladser').find('div.lh-1').each((_, el) => {
     const paragrafTekst = $(el).find('h3').text();
     const paragrafMatch = paragrafTekst.match(/§\s*(\d+)/i);
@@ -92,7 +101,7 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
     }
   });
   if (pladser107_108 > 0 && pladser107_108 < 2000) pladser = pladser107_108;
-  if (pladserAlle > 0 && pladserAlle < 2000) pladseTotalt = pladserAlle;
+  if (!pladseTotalt && pladserAlle > 0 && pladserAlle < 2000) pladseTotalt = pladserAlle;
   if (!pladseTotalt) {
     const pladsMatch = bodyTekst.match(/(\d+)\s+pladser/i);
     if (pladsMatch) {
@@ -100,6 +109,8 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
       if (!isNaN(parsed) && parsed > 0 && parsed < 1000) pladseTotalt = parsed;
     }
   }
+  // Brug helePladser som primært pladser-tal hvis §107/§108-sum mangler
+  if (!pladser && pladseTotalt) pladser = pladseTotalt;
 
   // Kommune — fra "Driftsaftale med" tekst
   let kommune: string | null = null;
