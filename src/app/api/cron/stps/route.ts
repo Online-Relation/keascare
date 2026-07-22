@@ -17,6 +17,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
 import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper';
+import { kørFundItemsScraper } from '@/features/stps/services/StpsFundItemsService';
+import { kørPNummerScraper } from '@/features/stps/services/StpsPNummerService';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
@@ -69,21 +71,11 @@ async function kørAltIBaggrunden() {
   // 2. STPS detaljer
   await forsøg('stps-detaljer', () => kørDetaljerScraper(50));
 
-  // 3. STPS fund-items
-  await forsøg('stps-fund-items', async () => {
-    const res = await fetch(`${base}/api/scrapers/stps/fund-items`, {
-      method: 'POST', headers, body: JSON.stringify({ batch: 30 }),
-    });
-    return res.json() as Promise<Record<string, unknown>>;
-  });
+  // 3. STPS fund-items — kaldes direkte (ikke via HTTP for at undgå Railway self-request timeout)
+  await forsøg('stps-fund-items', () => kørFundItemsScraper(30));
 
-  // 4. STPS P-numre
-  await forsøg('stps-pnummer', async () => {
-    const res = await fetch(`${base}/api/scrapers/stps/pnummer`, {
-      method: 'POST', headers, body: JSON.stringify({ batch: 50 }),
-    });
-    return res.json() as Promise<Record<string, unknown>>;
-  });
+  // 4. STPS P-numre — kaldes direkte
+  await forsøg('stps-pnummer', () => kørPNummerScraper(50));
 
   // 5. CVR berig
   await forsøg('cvr-berig', () => berigMedCvr(50));

@@ -1,0 +1,1 @@
+export { kørFundItemsScraper } from './stpsFundItemsService';
