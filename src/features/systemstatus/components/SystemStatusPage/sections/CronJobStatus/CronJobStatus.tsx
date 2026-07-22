@@ -17,8 +17,8 @@ const CRON_JOBS: { id: string; label: string }[] = [
   { id: 'stps-pnummer',    label: 'STPS — P-numre fra PDFer' },
   { id: 'cvr-berig',       label: 'CVR — Berig med CVR og adresse' },
   { id: 'cvr-ansatte',     label: 'CVR — Ansatte og virksomhedsdata' },
-  { id: 'tp-liste',        label: 'Tilbudsportalen — Hent liste (lokal Mac)' },
-  { id: 'tp-detaljer',     label: 'Tilbudsportalen — Detaljer og match (lokal Mac)' },
+  { id: 'tp-liste',        label: 'Tilbudsportalen — Hent liste (Synology)' },
+  { id: 'tp-detaljer',     label: 'Tilbudsportalen — Detaljer og match (Synology)' },
 ];
 
 function tidSiden(iso: string) {
