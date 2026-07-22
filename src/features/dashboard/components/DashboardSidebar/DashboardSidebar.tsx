@@ -81,6 +81,8 @@ export function DashboardSidebar() {
   const { rolle, loading } = useBrugerRolle();
   const erMarkedsforingAktiv = pathname.startsWith('/dashboard/markedsforing');
   const [markedsforingÅben, setMarkedsforingÅben] = useState(erMarkedsforingAktiv);
+  const erRegelovervagningAktiv = pathname.startsWith('/dashboard/regelovervagning');
+  const [regelovervagningÅben, setRegelovervagningÅben] = useState(erRegelovervagningAktiv);
 
   const vis = (href: string) => !loading && harAdgang(rolle, href);
 
@@ -152,7 +154,26 @@ export function DashboardSidebar() {
         )}
 
         {vis('/dashboard/regelovervagning') && (
-          <NavGruppe label="Regelovervågning" items={gruppeRegelovervagning} pathname={pathname} />
+          <div className="sidebar-nav-gruppe-sektion">
+            <p className="sidebar-section-label">Regelovervågning</p>
+            <button
+              className={`sidebar-nav-item sidebar-nav-gruppe${erRegelovervagningAktiv ? ' active' : ''}`}
+              onClick={() => setRegelovervagningÅben((v) => !v)}
+            >
+              <ShieldCheck className="sidebar-nav-item-icon" size={16} />
+              <span style={{ flex: 1, textAlign: 'left' }}>Regelovervågning</span>
+              {regelovervagningÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            </button>
+            {regelovervagningÅben && (
+              <div className="sidebar-subnav">
+                {gruppeRegelovervagning.map(({ label, href }) => (
+                  <Link key={href} href={href} className={`sidebar-subnav-item${pathname === href || (href !== '/dashboard/regelovervagning' && pathname.startsWith(href)) ? ' active' : ''}`}>
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
         )}
 
         {gruppeSystem.some((i) => vis(i.href)) && (
