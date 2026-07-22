@@ -19,6 +19,7 @@ const CRON_JOBS: { id: string; label: string }[] = [
   { id: 'cvr-ansatte',     label: 'CVR — Ansatte og virksomhedsdata' },
   { id: 'tp-liste',        label: 'Tilbudsportalen — Hent liste (Synology)' },
   { id: 'tp-detaljer',     label: 'Tilbudsportalen — Detaljer og match (Synology)' },
+  { id: 'regnskab',        label: 'Regnskab — Hent årsregnskab (Synology)' },
 ];
 
 function tidSiden(iso: string) {
