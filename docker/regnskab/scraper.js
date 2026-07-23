@@ -141,22 +141,38 @@ async function kørRegnskabScraper() {
   console.log(`\n\nFærdig: ${opdateret} opdateret, ${ingenData} ingen data, ${fejl} fejl`);
 }
 
-// Loop til alle er behandlet
-let runde = 0;
-while (true) {
-  runde++;
-  if (runde > 1) console.log(`\nRunde ${runde}...`);
-  await kørRegnskabScraper();
-
-  const { count } = await supabase
-    .from('stps_rapporter')
-    .select('*', { count: 'exact', head: true })
-    .not('cvr', 'is', null)
-    .is('regnskab_aar', null)
-    .is('regnskab_opdateret', null);
-
-  if (!count || count === 0) break;
-  console.log(`${count} tilbage uden forsøg...`);
+async function logKørsel(ok, resultat) {
+  await supabase.from('scraper_log').insert({
+    scraper_id: 'regnskab',
+    ok,
+    resultat,
+    kørt_kl: new Date().toISOString(),
+  });
 }
 
-console.log('Done ✓');
+// Loop til alle er behandlet
+let runde = 0;
+try {
+  while (true) {
+    runde++;
+    if (runde > 1) console.log(`\nRunde ${runde}...`);
+    await kørRegnskabScraper();
+
+    const { count } = await supabase
+      .from('stps_rapporter')
+      .select('*', { count: 'exact', head: true })
+      .not('cvr', 'is', null)
+      .is('regnskab_aar', null)
+      .is('regnskab_opdateret', null);
+
+    if (!count || count === 0) break;
+    console.log(`${count} tilbage uden forsøg...`);
+  }
+
+  console.log('Done ✓');
+  await logKørsel(true, { ok: true, runder: runde });
+} catch (err) {
+  console.error('Kritisk fejl:', err.message);
+  await logKørsel(false, { error: err.message }).catch(() => {});
+  process.exit(1);
+}

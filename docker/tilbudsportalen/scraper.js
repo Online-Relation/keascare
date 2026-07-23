@@ -280,16 +280,28 @@ async function nulstilDetaljerMaanedligt() {
   else console.log(`Nulstillede detaljer for tilbud ældre end 14 dage`);
 }
 
+async function logKørsel(id, ok, resultat) {
+  await supabase.from('scraper_log').insert({
+    scraper_id: id,
+    ok,
+    resultat,
+    kørt_kl: new Date().toISOString(),
+  });
+}
+
 // Main
 const kommando = process.argv[2] ?? 'begge';
 try {
   if (kommando === 'liste') {
     await scraperListe();
+    await logKørsel('tp-liste', true, { ok: true });
   } else if (kommando === 'detaljer') {
     await scraperDetaljer(100);
+    await logKørsel('tp-detaljer', true, { ok: true });
   } else {
     await nulstilDetaljerMaanedligt();
     await scraperListe();
+    await logKørsel('tp-liste', true, { ok: true });
     // Kør detaljer i loop til alt er hentet
     let runde = 0;
     while (true) {
@@ -302,9 +314,11 @@ try {
       console.log(`\nDetaljer runde ${runde} — ${count} tilbage...`);
       await scraperDetaljer(100);
     }
+    await logKørsel('tp-detaljer', true, { ok: true });
   }
   console.log('Done ✓');
 } catch (err) {
   console.error('Kritisk fejl:', err.message);
+  await logKørsel(kommando === 'detaljer' ? 'tp-detaljer' : 'tp-liste', false, { error: err.message }).catch(() => {});
   process.exit(1);
 }
