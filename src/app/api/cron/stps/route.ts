@@ -10,9 +10,10 @@
 //   4. STPS P-numre      — udtræk P-numre fra PDF'er
 //   5. CVR berig         — slå P-numre op i CVR og hent CVR-nummer
 //   6. CVR ansatte       — opdater ansatte/branche for kendte CVR-numre
+//   7. Regnskab          — hent årsregnskab fra regnskab.virk.dk (offentlig API)
 //
 // Tilbudsportalen køres IKKE her — Cloudflare blokerer Railway's IP.
-// Brug scripts/kør-tilbudsportalen.sh lokalt fra din Mac.
+// Kører fra Synology Docker task kl. 03:30.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
@@ -21,6 +22,7 @@ import { kørFundItemsScraper } from '@/features/stps/services/StpsFundItemsServ
 import { kørPNummerScraper } from '@/features/stps/services/StpsPNummerService';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
+import { opdaterRegnskab } from '@/features/stps/services/RegnskabService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 function erAutoriseret(req: NextRequest): boolean {
@@ -82,5 +84,8 @@ async function kørAltIBaggrunden() {
 
   // 6. CVR ansatte
   await forsøg('cvr-ansatte', () => opdaterCvrAnsatte(100));
+
+  // 7. Regnskab — regnskab.virk.dk er offentlig API, ikke Cloudflare-beskyttet
+  await forsøg('regnskab', () => opdaterRegnskab(50));
 
 }
