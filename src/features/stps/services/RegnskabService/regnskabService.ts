@@ -23,7 +23,7 @@ export async function opdaterRegnskab(batch = 50): Promise<RegnskabResultat> {
     .from('stps_rapporter')
     .select('id, cvr')
     .not('cvr', 'is', null)
-    .or('regnskab_aar.is.null,regnskab_opdateret.lt.' + nyligGraense())
+    .or('regnskab_opdateret.is.null,regnskab_opdateret.lt.' + nyligGraense())
     .order('regnskab_opdateret', { ascending: true, nullsFirst: true })
     .limit(batch);
 
