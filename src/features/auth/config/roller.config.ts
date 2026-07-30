@@ -51,6 +51,7 @@ export const ROLLE_ADGANG: Record<BrugerRolle, string[] | '*'> = {
     '/dashboard/admin/brugere',
   ],
   sygeplejerske: [
+    '/dashboard',
     '/dashboard/markedspotentiale',
     '/dashboard/kommuner',
     '/dashboard/markedsdata',
