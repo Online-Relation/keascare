@@ -31,7 +31,7 @@ export function SystemStatusPage() {
           <div style={{ minWidth: 0 }}>
             <p style={{ fontWeight: 'var(--fw-medium)', fontSize: 'var(--text-sm)' }}>Afventer adgang til CVR-distributionssystemet</p>
             <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginTop: '0.2rem' }}>
-              Når CVR_USER og CVR_PASS er sat op, vises her automatisk nye bosteder (§107, §108, §108a)
+              Når CVR_USER og CVR_PASS er sat op, vises her automatisk nye bosteder (§43, §107, §108, §108a)
               der er registreret i CVR-registret inden for de seneste 30 dage.
               Kontakt Charlotte Schierbeck hos Erhvervsstyrelsen for adgang.
             </p>
