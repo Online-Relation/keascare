@@ -92,7 +92,7 @@ function seneste12Måneder(): string[] {
   return nøgler;
 }
 
-function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[] {
+function beregnKpis(rapporter: DbRapport[], potentieltMarked: number, fordeling?: { p107: number; p108: number; p43: number }): KpiItem[] {
   const unikkeVirksomheder = new Set(rapporter.map((r) => r.cvr).filter(Boolean)).size;
 
   const varme = new Set(
@@ -135,7 +135,9 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number): KpiItem[]
       id: 'potentielt-marked',
       label: 'Potentielt marked',
       value: String(potentieltMarked),
-      sub: 'Alle private bosteder i Danmark — jeres samlede marked',
+      sub: fordeling
+        ? `§107: ${fordeling.p107} · §108: ${fordeling.p108} · §43: ${fordeling.p43}`
+        : 'Alle bosteder i Danmark — jeres samlede marked',
       ikon: 'marked',
     },
     {
@@ -312,7 +314,20 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
-  const [datakilder, logData, cvrSignaler, tpCount] = await Promise.all([
+  function tpQuery(paragraf?: string) {
+    let q = supabase
+      .from('tilbudsportalen_tilbud')
+      .select('*', { count: 'exact', head: true });
+    if (visFilter === 'privat') {
+      q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
+    }
+    if (paragraf) {
+      q = q.or(`tilbudstype.ilike.%§ ${paragraf}%,tilbudstype.ilike.%§${paragraf}%`);
+    }
+    return q;
+  }
+
+  const [datakilder, logData, cvrSignaler, tpCount, tp107, tp108, tp43] = await Promise.all([
     hentDatakilderStatus(supabase, rapporter),
     supabase
       .from('scraper_log')
@@ -323,18 +338,18 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
       .limit(1)
       .maybeSingle(),
     hentCvrSignaler(),
-    (async () => {
-      let q = supabase
-        .from('tilbudsportalen_tilbud')
-        .select('*', { count: 'exact', head: true });
-      if (visFilter === 'privat') {
-        q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
-      }
-      return q;
-    })(),
+    tpQuery(),
+    tpQuery('107'),
+    tpQuery('108'),
+    tpQuery('43'),
   ]);
 
   const potentieltMarked = tpCount.count ?? 0;
+  const potentieltMarkedFordeling = {
+    p107: tp107.count ?? 0,
+    p108: tp108.count ?? 0,
+    p43:  tp43.count ?? 0,
+  };
 
   const sidstOpdateret = logData.data?.koersel_slut ?? null;
 
@@ -345,7 +360,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     .at(-1) ?? null;
 
   return {
-    kpis:            beregnKpis(rapporter, potentieltMarked),
+    kpis:            beregnKpis(rapporter, potentieltMarked, potentieltMarkedFordeling),
     bosteder,
     cvrSignaler,
     stpsFordeling:   beregnFordeling(rapporter),
