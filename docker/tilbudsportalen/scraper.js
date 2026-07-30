@@ -36,7 +36,7 @@ const TP_FILTER_PARAMS_BORN =
   '&tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.plejefamiliedoegn' +
   '&sortering=RELEVANS';
 const TP_RESULTATER_PR_SIDE = 20;
-const TP_DELAY_MS = 1000;
+const TP_DELAY_MS = 200;
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
