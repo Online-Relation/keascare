@@ -31,7 +31,10 @@ const TP_FILTER_PARAMS_VOKSNE =
 
 // Børne- og ungetilbud (§43 m.fl.)
 const TP_LISTE_URL_BORN = 'https://tilbudsportalen.dk/tilbudssoegning/SoegBoernOgUngeTilbud/index';
-const TP_FILTER_PARAMS_BORN = 'sortering=RELEVANS';
+const TP_FILTER_PARAMS_BORN =
+  'tilbudstyperBoern=juridiskgrundlag.boernogunge.bo.almindeligdoegninstitution' +
+  '&tilbudstyperBoern=juridiskgrundlag.boernogunge.bo.almindeligtopholdssted' +
+  '&sortering=RELEVANS';
 const TP_RESULTATER_PR_SIDE = 20;
 const TP_DELAY_MS = 200;
 
