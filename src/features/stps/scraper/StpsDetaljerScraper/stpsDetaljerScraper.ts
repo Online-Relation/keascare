@@ -53,22 +53,22 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
   let behandlet = 0;
   let fejl = 0;
 
-  // Hent rapporter der ikke er PDF-behandlet med rigtige STPS-URLs
-  const { data: data1, error } = await supabase
-    .from('stps_rapporter')
-    .select('id, rapport_url, pdf_url, stps_tilbud_navn')
-    .eq('pdf_behandlet', false)
-    .not('rapport_url', 'ilike', 'stps://genereret/%')
-    .limit(batchStørrelse);
-
-  if (error) throw new Error(`Supabase fejl: ${error.message}`);
-
-  // Hent også rækker der har pdf_url men mangler deltager-data (uanset pdf_behandlet)
-  const { data: data2 } = await supabase
+  // Prioritér rækker der mangler deltager-data men har pdf_url
+  const { data: data1, error: error1 } = await supabase
     .from('stps_rapporter')
     .select('id, rapport_url, pdf_url, stps_tilbud_navn')
     .not('pdf_url', 'is', null)
     .is('tilsyn_deltagere_stps', null)
+    .limit(batchStørrelse);
+
+  if (error1) throw new Error(`Supabase fejl: ${error1.message}`);
+
+  // Hent derudover rapporter der ikke er PDF-behandlet (nye rapporter)
+  const { data: data2 } = await supabase
+    .from('stps_rapporter')
+    .select('id, rapport_url, pdf_url, stps_tilbud_navn')
+    .eq('pdf_behandlet', false)
+    .not('rapport_url', 'ilike', 'stps://genereret/%')
     .limit(batchStørrelse);
 
   // Slå de to lister sammen og deduplisér på id
