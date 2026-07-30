@@ -30,7 +30,7 @@ const TP_FILTER_PARAMS_VOKSNE =
   '&sortering=RELEVANS';
 
 // Børne- og ungetilbud (§43 m.fl.)
-const TP_LISTE_URL_BORN = 'https://tilbudsportalen.dk/tilbudssoegning/SoegBoernTilbud/index';
+const TP_LISTE_URL_BORN = 'https://tilbudsportalen.dk/tilbudssoegning/SoegTilbud/index';
 const TP_FILTER_PARAMS_BORN =
   'tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.opholdssteddoegn' +
   '&tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.plejefamiliedoegn' +
@@ -118,8 +118,13 @@ async function scraperListe(maxSider = 100) {
   const voksne = await scraperListeUrl(TP_LISTE_URL_VOKSNE, TP_FILTER_PARAMS_VOKSNE, maxSider);
   console.log(`Voksne: ${voksne.length} tilbud`);
 
-  const born = await scraperListeUrl(TP_LISTE_URL_BORN, TP_FILTER_PARAMS_BORN, maxSider);
-  console.log(`Børn/unge: ${born.length} tilbud`);
+  let born = [];
+  try {
+    born = await scraperListeUrl(TP_LISTE_URL_BORN, TP_FILTER_PARAMS_BORN, maxSider);
+    console.log(`Børn/unge: ${born.length} tilbud`);
+  } catch (err) {
+    console.warn(`Børn/unge-scraping fejlede (fortsætter): ${err.message}`);
+  }
 
   const unikke = new Map();
   for (const item of [...voksne, ...born]) unikke.set(item.afdelingsid, item);
