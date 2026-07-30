@@ -30,11 +30,8 @@ const TP_FILTER_PARAMS_VOKSNE =
   '&sortering=RELEVANS';
 
 // Børne- og ungetilbud (§43 m.fl.)
-const TP_LISTE_URL_BORN = 'https://tilbudsportalen.dk/tilbudssoegning/SoegTilbud/index';
-const TP_FILTER_PARAMS_BORN =
-  'tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.opholdssteddoegn' +
-  '&tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.plejefamiliedoegn' +
-  '&sortering=RELEVANS';
+const TP_LISTE_URL_BORN = 'https://tilbudsportalen.dk/tilbudssoegning/SoegBoernOgUngeTilbud/index';
+const TP_FILTER_PARAMS_BORN = 'sortering=RELEVANS';
 const TP_RESULTATER_PR_SIDE = 20;
 const TP_DELAY_MS = 200;
 
