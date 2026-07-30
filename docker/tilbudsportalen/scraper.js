@@ -183,8 +183,12 @@ function parseDetalje(html, tilbudsid, afdelingsid) {
   let tilbudstype = null;
   $('h3.h5, h3, h4').each((_, el) => {
     const tekst = $(el).text().trim();
-    if (tekst.match(/§\s*10[0-9]/) && !tilbudstype) tilbudstype = tekst;
+    if (tekst.match(/§\s*\d+/) && !tilbudstype) tilbudstype = tekst;
   });
+  if (!tilbudstype) {
+    const m = $('body').text().match(/(Børne-[^,\n]{0,80}§\s*\d+[^,\n]{0,60})/i);
+    if (m) tilbudstype = m[1].trim();
+  }
 
   let pladser = null;
   let pladsTotal = 0;
