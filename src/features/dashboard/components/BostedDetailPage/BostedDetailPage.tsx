@@ -48,7 +48,7 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
       )}
 
 
-      {bosted.fundNiveau !== 'ingen' && bosted.fundNiveau !== 'ukendt' && (
+      {(bosted.fundNiveau === 'kritisk' || bosted.fundNiveau === 'stoerre') && (
         <BostedSalgsAfsnit bostedId={bosted.id} cachetAnbefalinger={bosted.salgsAnbefalinger} />
       )}
 
