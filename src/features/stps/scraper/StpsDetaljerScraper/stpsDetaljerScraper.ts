@@ -53,30 +53,48 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
   let behandlet = 0;
   let fejl = 0;
 
-  // Hent rapporter med rigtige STPS-URLs (ikke genererede) der ikke er PDF-behandlet
-  const { data, error } = await supabase
+  // Hent rapporter der ikke er PDF-behandlet med rigtige STPS-URLs
+  const { data: data1, error } = await supabase
     .from('stps_rapporter')
-    .select('id, rapport_url, stps_tilbud_navn')
+    .select('id, rapport_url, pdf_url, stps_tilbud_navn')
     .eq('pdf_behandlet', false)
     .not('rapport_url', 'ilike', 'stps://genereret/%')
     .limit(batchStørrelse);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
-  const rapporter = data ?? [];
+
+  // Hent også rækker der har pdf_url men mangler deltager-data (uanset pdf_behandlet)
+  const { data: data2 } = await supabase
+    .from('stps_rapporter')
+    .select('id, rapport_url, pdf_url, stps_tilbud_navn')
+    .not('pdf_url', 'is', null)
+    .is('tilsyn_deltagere_stps', null)
+    .limit(batchStørrelse);
+
+  // Slå de to lister sammen og deduplisér på id
+  const seenIds = new Set<string>();
+  const rapporter = [...(data1 ?? []), ...(data2 ?? [])].filter((r) => {
+    if (seenIds.has(r.id)) return false;
+    seenIds.add(r.id);
+    return true;
+  });
 
   for (let i = 0; i < rapporter.length; i++) {
-    const { id, rapport_url, stps_tilbud_navn } = rapporter[i];
+    const { id, rapport_url, pdf_url: eksisterendePdfUrl, stps_tilbud_navn } = rapporter[i] as { id: string; rapport_url: string; pdf_url: string | null; stps_tilbud_navn: string };
 
     try {
-      // 1. Hent detailside
-      const response = await HTTP_CLIENT.get<string>(rapport_url, { responseType: 'text' });
-      const htmlIndhold = response.data;
+      let pdfUrl: string | null = eksisterendePdfUrl ?? null;
+      let cvrFraHtml: string | null = null;
+      let pNummerFraHtml: string | null = null;
 
-      // Udtræk CVR og P-nummer direkte fra HTML (hurtigere end PDF)
-      const cvrFraHtml = udtraekCvrFraHtml(htmlIndhold);
-      const pNummerFraHtml = udtraekPNummerFraHtml(htmlIndhold);
-
-      const pdfUrl = udtraekPdfUrl(htmlIndhold);
+      // 1. Hent detailside — kun hvis vi ikke allerede har pdf_url
+      if (!pdfUrl && !rapport_url.startsWith('stps://genereret/')) {
+        const response = await HTTP_CLIENT.get<string>(rapport_url, { responseType: 'text' });
+        const htmlIndhold = response.data;
+        cvrFraHtml = udtraekCvrFraHtml(htmlIndhold);
+        pNummerFraHtml = udtraekPNummerFraHtml(htmlIndhold);
+        pdfUrl = udtraekPdfUrl(htmlIndhold);
+      }
 
       if (!pdfUrl) {
         // Ingen PDF — gem hvad vi fandt i HTML og marker behandlet
