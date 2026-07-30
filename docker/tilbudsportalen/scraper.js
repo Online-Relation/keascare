@@ -19,12 +19,21 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
   realtime: { transport: ws },
 });
 
-const TP_LISTE_URL = 'https://tilbudsportalen.dk/tilbudssoegning/SoegVoksneTilbud/index';
 const TP_DETALJE_URL = 'https://tilbudsportalen.dk/tilbudssoegning/tilbudDetaljeside/index';
-const TP_FILTER_PARAMS =
+
+// Voksne botilbud (§107/§108)
+const TP_LISTE_URL_VOKSNE = 'https://tilbudsportalen.dk/tilbudssoegning/SoegVoksneTilbud/index';
+const TP_FILTER_PARAMS_VOKSNE =
   'tilbudstyperVoksne=juridiskgrundlag.voksne.bo.botilbudmaalrettetunge' +
   '&tilbudstyperVoksne=juridiskgrundlag.voksne.laengerevarendebo.laengerevarendebo' +
   '&tilbudstyperVoksne=juridiskgrundlag.voksne.laengerevarendebo.midlertidigtbo' +
+  '&sortering=RELEVANS';
+
+// Børne- og ungetilbud (§43 m.fl.)
+const TP_LISTE_URL_BORN = 'https://tilbudsportalen.dk/tilbudssoegning/SoegBoernTilbud/index';
+const TP_FILTER_PARAMS_BORN =
+  'tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.opholdssteddoegn' +
+  '&tilbudstyperBoern=juridiskgrundlag.boern.anbringelse.plejefamiliedoegn' +
   '&sortering=RELEVANS';
 const TP_RESULTATER_PR_SIDE = 20;
 const TP_DELAY_MS = 1000;
@@ -64,12 +73,11 @@ function parseListeSide(html) {
   return items;
 }
 
-async function scraperListe(maxSider = 100) {
-  console.log('Starter liste-scraping...');
+async function scraperListeUrl(listeUrl, filterParams, maxSider = 100) {
   const alle = [];
   let cookieStr = '';
 
-  const init = await client.get(`${TP_LISTE_URL}?${TP_FILTER_PARAMS}&offset=0`, { responseType: 'text' });
+  const init = await client.get(`${listeUrl}?${filterParams}&offset=0`, { responseType: 'text' });
   const rawCookies = init.headers['set-cookie'] ?? [];
   cookieStr = rawCookies.map((c) => c.split(';')[0]).join('; ');
 
@@ -82,14 +90,14 @@ async function scraperListe(maxSider = 100) {
   }
 
   const antalSider = Math.min(maxSider, Math.ceil(total / TP_RESULTATER_PR_SIDE));
-  console.log(`Fandt ${total} resultater på ${antalSider} sider`);
+  console.log(`  Fandt ${total} resultater på ${antalSider} sider`);
 
   alle.push(...parseListeSide(init.data));
 
   for (let side = 2; side <= antalSider; side++) {
     const offset = (side - 1) * TP_RESULTATER_PR_SIDE;
     try {
-      const res = await client.get(`${TP_LISTE_URL}?${TP_FILTER_PARAMS}&offset=${offset}`, {
+      const res = await client.get(`${listeUrl}?${filterParams}&offset=${offset}`, {
         responseType: 'text',
         headers: { Cookie: cookieStr },
       });
@@ -100,11 +108,23 @@ async function scraperListe(maxSider = 100) {
       console.error(`\nFejl på side ${side}: ${err.message}`);
     }
   }
+  console.log('');
+  return alle;
+}
 
-  console.log(`\nHentede ${alle.length} tilbud — gemmer i Supabase...`);
+async function scraperListe(maxSider = 100) {
+  console.log('Starter liste-scraping (voksne + børn/unge)...');
+
+  const voksne = await scraperListeUrl(TP_LISTE_URL_VOKSNE, TP_FILTER_PARAMS_VOKSNE, maxSider);
+  console.log(`Voksne: ${voksne.length} tilbud`);
+
+  const born = await scraperListeUrl(TP_LISTE_URL_BORN, TP_FILTER_PARAMS_BORN, maxSider);
+  console.log(`Børn/unge: ${born.length} tilbud`);
 
   const unikke = new Map();
-  for (const item of alle) unikke.set(item.afdelingsid, item);
+  for (const item of [...voksne, ...born]) unikke.set(item.afdelingsid, item);
+
+  console.log(`\nHentede ${unikke.size} unikke tilbud — gemmer i Supabase...`);
 
   const rækker = Array.from(unikke.values()).map((item) => ({
     tilbudsid: item.tilbudsid,
