@@ -217,49 +217,50 @@ function udtraekFundItems(tekst: string): FundItem[] {
   return items;
 }
 
-function udtraekDeltagere(tekst: string): { stps: TilsynDeltager[]; bosted: TilsynDeltager[] } {
-  // STPS rapporter har en "Deltagere i tilsynet" sektion i baggrundsoplysninger
-  const sektionIdx = tekst.search(/Deltagere i tilsynet/i);
-  if (sektionIdx === -1) return { stps: [], bosted: [] };
+function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
+  // Find næste overskriftsblok eller slutning af tekst
+  const efter = tekst.substring(startIdx);
+  const slutIdx = efter.search(/\n(?:Tilsynet blev foretaget af|Ved tilsynet[\s\S]{0,10}deltog|Lovgrundlag|Baggrundsoplysninger|--\s*\d)/i);
+  const blok = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 1500);
 
-  // Find slutningen af deltagersektionen (næste større sektion)
-  const efter = tekst.substring(sektionIdx);
-  const slutIdx = efter.search(/\n(?:4\.|Bilag|Tilsynsrapport[\s\S]{0,40}Side \d)/i);
-  const afsnit = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 2000);
-
-  const linjer = afsnit.split('\n').map((l) => l.trim()).filter(Boolean);
-
-  const stps: TilsynDeltager[] = [];
-  const bosted: TilsynDeltager[] = [];
-
-  // STPS-deltagere markeres typisk med "Fra Styrelsen..." eller "STPS" heading
-  // Bosted-deltagere markeres med bostedsnavnet eller "Fra tilbuddet"/"Fra bostedet"
-  let aktuelGruppe: 'stps' | 'bosted' | null = null;
+  const deltagere: TilsynDeltager[] = [];
+  const linjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
 
   for (const linje of linjer) {
-    if (/^Deltagere i tilsynet$/i.test(linje)) continue;
+    // Spring sektionsoverskrifter over
+    if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
 
-    // Grupper-overskrifter
-    if (/fra\s+styrel|fra\s+stps|stps[-\s]repræsentant|tilsynsførende/i.test(linje)) {
-      aktuelGruppe = 'stps';
-      continue;
+    // Format: "Navn Efternavn, titel" eller blot "Navn Efternavn"
+    // Navne starter med stort bogstav, titler er typisk med lille
+    const kommaIdx = linje.indexOf(',');
+    if (kommaIdx !== -1) {
+      const muligNavn = linje.substring(0, kommaIdx).trim();
+      const muligTitel = linje.substring(kommaIdx + 1).trim();
+      if (/^[A-ZÆØÅ][a-zæøå]+(?:\s+[A-Za-zÆØÅæøå\-]+){1,4}$/.test(muligNavn)) {
+        deltagere.push({ navn: muligNavn, titel: muligTitel || null });
+        continue;
+      }
     }
-    if (/fra\s+tilbuddet|fra\s+bostedet|fra\s+institutionen|fra\s+organisationen|repræsentant\s+fra/i.test(linje)) {
-      aktuelGruppe = 'bosted';
-      continue;
-    }
-
-    // Linje med navn + evt. titel: "Fornavn Efternavn, Titel" eller "Fornavn Efternavn\nTitel"
-    const navnMatch = linje.match(/^([A-ZÆØÅ][a-zæøå]+(?:\s+[A-ZÆØÅ][a-zæøå]+){1,4})(?:,\s*(.+))?$/);
-    if (navnMatch && aktuelGruppe) {
-      const deltager: TilsynDeltager = {
-        navn: navnMatch[1].trim(),
-        titel: navnMatch[2]?.trim() ?? null,
-      };
-      if (aktuelGruppe === 'stps') stps.push(deltager);
-      else bosted.push(deltager);
+    // Ingen komma — enten bare navn eller bare titel (fx "En sygeplejerske")
+    if (/^[A-ZÆØÅ][a-zæøå]+(?:\s+[A-Za-zÆØÅæøå\-]+){1,4}$/.test(linje)) {
+      deltagere.push({ navn: linje, titel: null });
+    } else if (linje.length > 3 && linje.length < 80) {
+      // Titel uden navn (fx "En sygeplejerske")
+      deltagere.push({ navn: linje, titel: null });
     }
   }
+
+  return deltagere;
+}
+
+function udtraekDeltagere(tekst: string): { stps: TilsynDeltager[]; bosted: TilsynDeltager[] } {
+  // "Tilsynet blev foretaget af:" = STPS-inspektører
+  const stpsIdx = tekst.search(/Tilsynet blev foretaget af/i);
+  // "Ved tilsynet og den afsluttende opsamling deltog:" = bostedets personale
+  const bostedIdx = tekst.search(/Ved tilsynet[\s\S]{0,20}deltog/i);
+
+  const stps = stpsIdx !== -1 ? parsDeltagereBlok(tekst, stpsIdx) : [];
+  const bosted = bostedIdx !== -1 ? parsDeltagereBlok(tekst, bostedIdx) : [];
 
   return { stps, bosted };
 }

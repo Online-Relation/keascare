@@ -172,6 +172,19 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           </div>
         )}
 
+        {bosted.tilsynDeltagereBosted && bosted.tilsynDeltagereBosted.length > 0 && (
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">Fra tilbuddet ved tilsynet</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+              {bosted.tilsynDeltagereBosted.map((d, i) => (
+                <span key={i} style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-primary)' }}>
+                  {d.navn}{d.titel ? <span style={{ color: 'var(--color-text-muted)', fontWeight: 'normal' }}>, {d.titel}</span> : null}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {!bosted.tilsynsform && !bosted.pdfUrl && (
           <HentStpsDetaljerKnap bostedId={bosted.id} />
         )}

@@ -36,29 +36,20 @@ function DeltagereGruppe({ titel, deltagere }: { titel: string; deltagere: Tilsy
 
 export function BostedDeltagereKort({ bosted }: Props) {
   const harStps = bosted.tilsynDeltagereStps && bosted.tilsynDeltagereStps.length > 0;
-  const harBosted = bosted.tilsynDeltagereBosted && bosted.tilsynDeltagereBosted.length > 0;
 
-  if (!harStps && !harBosted) return null;
+  if (!harStps) return null;
 
   return (
     <div className="bosted-detail-kort" style={{ marginTop: '1.25rem' }}>
       <div className="bosted-detail-kort-header">
         <Users size={15} />
-        <span className="bosted-detail-kort-titel">Deltagere i tilsynet</span>
+        <span className="bosted-detail-kort-titel">STPS-inspektører</span>
       </div>
-      <div className="bosted-detail-kort-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-        {harStps && (
-          <DeltagereGruppe
-            titel="Fra Styrelsen for Patientsikkerhed (STPS)"
-            deltagere={bosted.tilsynDeltagereStps!}
-          />
-        )}
-        {harBosted && (
-          <DeltagereGruppe
-            titel="Fra tilbuddet"
-            deltagere={bosted.tilsynDeltagereBosted!}
-          />
-        )}
+      <div className="bosted-detail-kort-body">
+        <DeltagereGruppe
+          titel="Tilsynet blev foretaget af"
+          deltagere={bosted.tilsynDeltagereStps!}
+        />
       </div>
     </div>
   );

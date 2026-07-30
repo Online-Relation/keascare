@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper,
+  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -29,8 +29,9 @@ const gruppeMarked: NavItem[] = [
 ];
 
 const gruppeTilsyn: NavItem[] = [
-  { label: 'Kritiske rapporter', href: '/dashboard/rapporter',    icon: ClipboardList },
-  { label: 'Alle rapporter',   href: '/dashboard/alle-rapporter', icon: FileText },
+  { label: 'Kritiske rapporter', href: '/dashboard/rapporter',              icon: ClipboardList },
+  { label: 'Alle rapporter',     href: '/dashboard/alle-rapporter',         icon: FileText },
+  { label: 'STPS-inspektører',  href: '/dashboard/rapporter/inspektoerer', icon: UserCheck },
 ];
 
 const gruppeCrm: NavItem[] = [
