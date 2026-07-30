@@ -324,9 +324,11 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
       .maybeSingle(),
     hentCvrSignaler(),
     (async () => {
+      // Kun §107 og §108 — ikke §43 (børne/unge), som er et andet marked
       let q = supabase
         .from('tilbudsportalen_tilbud')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .or('tilbudstype.ilike.%§ 107%,tilbudstype.ilike.%§ 108%,tilbudstype.ilike.%§107%,tilbudstype.ilike.%§108%');
       if (visFilter === 'privat') {
         q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
       }
