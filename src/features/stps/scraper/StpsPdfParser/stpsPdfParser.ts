@@ -217,8 +217,12 @@ function udtraekFundItems(tekst: string): FundItem[] {
   return items;
 }
 
+// Matcher et dansk personnavn: mindst fornavn + efternavn, kun bogstaver og bindestreg
+const NAVN_REGEX = /^[A-ZÆØÅ][a-zæøå]+(?:[-\s][A-ZÆØÅ]?[a-zæøå]+){1,5}$/;
+// Kendte titel-ord der indikerer en person uden navn opgivet
+const TITEL_REGEX = /^[Ee]n\s+(sygeplejerske|oversygeplejerske|læge|leder|souschef|pædagog|social)/;
+
 function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
-  // Find næste overskriftsblok eller slutning af tekst
   const efter = tekst.substring(startIdx);
   const slutIdx = efter.search(/\n(?:Tilsynet blev foretaget af|Ved tilsynet[\s\S]{0,10}deltog|Lovgrundlag|Baggrundsoplysninger|--\s*\d)/i);
   const blok = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 1500);
@@ -227,25 +231,29 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
   const linjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
 
   for (const linje of linjer) {
-    // Spring sektionsoverskrifter over
+    // Spring overskrifter, sagsnumre og linje med kolon-data over
     if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
+    if (/[:\/\d]/.test(linje)) continue; // sagsnr, datoer, URLs
 
-    // Format: "Navn Efternavn, titel" eller blot "Navn Efternavn"
-    // Navne starter med stort bogstav, titler er typisk med lille
+    // Format: "Fornavn Efternavn, titel"
     const kommaIdx = linje.indexOf(',');
     if (kommaIdx !== -1) {
       const muligNavn = linje.substring(0, kommaIdx).trim();
       const muligTitel = linje.substring(kommaIdx + 1).trim();
-      if (/^[A-ZÆØÅ][a-zæøå]+(?:\s+[A-Za-zÆØÅæøå\-]+){1,4}$/.test(muligNavn)) {
+      if (NAVN_REGEX.test(muligNavn)) {
         deltagere.push({ navn: muligNavn, titel: muligTitel || null });
         continue;
       }
     }
-    // Ingen komma — enten bare navn eller bare titel (fx "En sygeplejerske")
-    if (/^[A-ZÆØÅ][a-zæøå]+(?:\s+[A-Za-zÆØÅæøå\-]+){1,4}$/.test(linje)) {
+
+    // Bare et navn uden titel
+    if (NAVN_REGEX.test(linje)) {
       deltagere.push({ navn: linje, titel: null });
-    } else if (linje.length > 3 && linje.length < 80) {
-      // Titel uden navn (fx "En sygeplejerske")
+      continue;
+    }
+
+    // "En sygeplejerske" o.l. — person uden navn
+    if (TITEL_REGEX.test(linje)) {
       deltagere.push({ navn: linje, titel: null });
     }
   }
