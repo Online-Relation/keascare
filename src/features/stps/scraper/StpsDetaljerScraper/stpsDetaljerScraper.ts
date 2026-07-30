@@ -89,12 +89,34 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
         continue;
       }
 
-      // 2. Parse PDF og udtræk detaljer
+      // 2. Download PDF-bytes og upload til Supabase Storage
+      let pdfStorageUrl: string | null = null;
+      try {
+        const pdfRes = await fetch(pdfUrl, {
+          headers: { 'User-Agent': STPS_HTTP_CONFIG.headers['User-Agent'] },
+        });
+        if (pdfRes.ok) {
+          const pdfBytes = await pdfRes.arrayBuffer();
+          const filnavn = `${id}.pdf`;
+          const { error: uploadFejl } = await supabase.storage
+            .from('stps-pdfer')
+            .upload(filnavn, pdfBytes, { contentType: 'application/pdf', upsert: true });
+          if (!uploadFejl) {
+            const { data: urlData } = supabase.storage.from('stps-pdfer').getPublicUrl(filnavn);
+            pdfStorageUrl = urlData?.publicUrl ?? null;
+          }
+        }
+      } catch {
+        // Upload-fejl stopper ikke parsing
+      }
+
+      // 3. Parse PDF og udtræk detaljer
       const detaljer = await parsePdfFraUrl(pdfUrl);
 
-      // 3. Gem — CVR fra HTML har forrang hvis PDF-parse fejler
+      // 4. Gem — CVR fra HTML har forrang hvis PDF-parse fejler
       await supabase.from('stps_rapporter').update({
         pdf_url: pdfUrl,
+        pdf_storage_url: pdfStorageUrl,
         pdf_vurdering: detaljer.vurdering,
         pdf_fund: detaljer.fund,
         cvr: detaljer.cvr ?? cvrFraHtml,

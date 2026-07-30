@@ -189,9 +189,9 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
                 Åbn rapport på STPS
               </a>
             )}
-            {bosted.pdfUrl && (
+            {(bosted.pdfUrl || bosted.pdfStorageUrl) && (
               <a
-                href={bosted.pdfUrl}
+                href={bosted.pdfStorageUrl ?? bosted.pdfUrl ?? ''}
                 className="btn btn-outline btn-sm"
                 target="_blank"
                 rel="noopener noreferrer"

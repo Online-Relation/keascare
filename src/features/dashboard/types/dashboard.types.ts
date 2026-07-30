@@ -81,6 +81,7 @@ export type BostedDetail = {
   besoegDato: string | null;
   rapportUrl: string;
   pdfUrl: string | null;
+  pdfStorageUrl: string | null;
   stpsKonklusion: string | null;
   fundNiveau: StpsFundNiveau;
   fokusOmraader: string[];
