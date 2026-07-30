@@ -22,6 +22,7 @@ export function KunderTabel({ kunder }: Props) {
 
   const filtrerede = kunder
     .filter((k) => {
+      if (k.status?.toLowerCase() === 'afsluttet') return false;
       if (filter === 'aktive') return k.gruppe === 'aktive_forloeb';
       if (filter === 'nye') return k.gruppe === 'nye_forloeb';
       return k.gruppe === 'aktive_forloeb' || k.gruppe === 'nye_forloeb';

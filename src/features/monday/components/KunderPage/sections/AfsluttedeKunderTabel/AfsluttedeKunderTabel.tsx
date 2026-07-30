@@ -27,7 +27,7 @@ function formaterLevetid(måneder: number | null): string {
 
 export function AfsluttedeKunderTabel({ kunder }: Props) {
   const afsluttede = kunder
-    .filter((k) => k.gruppe === 'afsluttet_forloeb')
+    .filter((k) => k.gruppe === 'afsluttet_forloeb' || k.status?.toLowerCase() === 'afsluttet')
     .sort((a, b) => {
       if (!a.afsluttetDato && !b.afsluttetDato) return 0;
       if (!a.afsluttetDato) return 1;
