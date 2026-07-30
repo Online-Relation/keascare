@@ -124,6 +124,8 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
         pladser: detaljer.pladser,
         p_nummer: detaljer.pNummer ?? pNummerFraHtml,
         fund_items: detaljer.fundItems.length > 0 ? detaljer.fundItems : null,
+        tilsyn_deltagere_stps: detaljer.deltagereStps.length > 0 ? detaljer.deltagereStps : null,
+        tilsyn_deltagere_bosted: detaljer.deltagereBosted.length > 0 ? detaljer.deltagereBosted : null,
         pdf_behandlet: true,
       }).eq('id', id);
 

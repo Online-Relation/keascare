@@ -10,6 +10,11 @@ export type FundItem = {
   kommentar: string | null;
 };
 
+export type TilsynDeltager = {
+  navn: string;
+  titel: string | null;
+};
+
 export type PdfDetaljer = {
   pdfUrl: string;
   vurdering: string | null;
@@ -19,10 +24,12 @@ export type PdfDetaljer = {
   pladser: string | null;
   pNummer: string | null;
   fundItems: FundItem[];
+  deltagereStps: TilsynDeltager[];
+  deltagereBosted: TilsynDeltager[];
 };
 
 export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
-  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null, fundItems: [] };
+  const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null, fundItems: [], deltagereStps: [], deltagereBosted: [] };
   try {
     // Fetch PDF manuelt med browser-headers — STPS blokerer plain Node.js fetch
     const res = await fetch(pdfUrl, {
@@ -41,6 +48,7 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
     const resultat = await parser.getText();
     const tekst: string = resultat.text ?? '';
 
+    const { stps, bosted } = udtraekDeltagere(tekst);
     return {
       pdfUrl,
       vurdering: udtraekVurdering(tekst),
@@ -50,6 +58,8 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
       pladser: udtraekPladser(tekst),
       pNummer: udtraekPNummer(tekst),
       fundItems: udtraekFundItems(tekst),
+      deltagereStps: stps,
+      deltagereBosted: bosted,
     };
   } catch {
     return tom;
@@ -205,6 +215,53 @@ function udtraekFundItems(tekst: string): FundItem[] {
 
   gemItem();
   return items;
+}
+
+function udtraekDeltagere(tekst: string): { stps: TilsynDeltager[]; bosted: TilsynDeltager[] } {
+  // STPS rapporter har en "Deltagere i tilsynet" sektion i baggrundsoplysninger
+  const sektionIdx = tekst.search(/Deltagere i tilsynet/i);
+  if (sektionIdx === -1) return { stps: [], bosted: [] };
+
+  // Find slutningen af deltagersektionen (næste større sektion)
+  const efter = tekst.substring(sektionIdx);
+  const slutIdx = efter.search(/\n(?:4\.|Bilag|Tilsynsrapport[\s\S]{0,40}Side \d)/i);
+  const afsnit = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 2000);
+
+  const linjer = afsnit.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  const stps: TilsynDeltager[] = [];
+  const bosted: TilsynDeltager[] = [];
+
+  // STPS-deltagere markeres typisk med "Fra Styrelsen..." eller "STPS" heading
+  // Bosted-deltagere markeres med bostedsnavnet eller "Fra tilbuddet"/"Fra bostedet"
+  let aktuelGruppe: 'stps' | 'bosted' | null = null;
+
+  for (const linje of linjer) {
+    if (/^Deltagere i tilsynet$/i.test(linje)) continue;
+
+    // Grupper-overskrifter
+    if (/fra\s+styrel|fra\s+stps|stps[-\s]repræsentant|tilsynsførende/i.test(linje)) {
+      aktuelGruppe = 'stps';
+      continue;
+    }
+    if (/fra\s+tilbuddet|fra\s+bostedet|fra\s+institutionen|fra\s+organisationen|repræsentant\s+fra/i.test(linje)) {
+      aktuelGruppe = 'bosted';
+      continue;
+    }
+
+    // Linje med navn + evt. titel: "Fornavn Efternavn, Titel" eller "Fornavn Efternavn\nTitel"
+    const navnMatch = linje.match(/^([A-ZÆØÅ][a-zæøå]+(?:\s+[A-ZÆØÅ][a-zæøå]+){1,4})(?:,\s*(.+))?$/);
+    if (navnMatch && aktuelGruppe) {
+      const deltager: TilsynDeltager = {
+        navn: navnMatch[1].trim(),
+        titel: navnMatch[2]?.trim() ?? null,
+      };
+      if (aktuelGruppe === 'stps') stps.push(deltager);
+      else bosted.push(deltager);
+    }
+  }
+
+  return { stps, bosted };
 }
 
 function udtraekPladser(tekst: string): string | null {

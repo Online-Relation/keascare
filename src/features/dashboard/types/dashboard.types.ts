@@ -1,5 +1,6 @@
 // src/features/dashboard/types/dashboard.types.ts
 import type { SalgsAnbefalinger } from './salg.types';
+import type { TilsynDeltager } from '@/features/stps/scraper/StpsPdfParser';
 
 export type StpsFundNiveau = 'kritisk' | 'stoerre' | 'mindre' | 'ingen' | 'ukendt';
 
@@ -121,6 +122,8 @@ export type BostedDetail = {
   dataKvalitet: DataKvalitet;
   fundItems: FundItem[] | null;
   salgsAnbefalinger: SalgsAnbefalinger | null;
+  tilsynDeltagereStps: TilsynDeltager[] | null;
+  tilsynDeltagereBosted: TilsynDeltager[] | null;
   mondayKunde: MondayKundeStatus;
   mondayGruppe: string | null;
   mondayItemId: string | null;

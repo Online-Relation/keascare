@@ -1,0 +1,1 @@
+export { BostedDeltagereKort } from './BostedDeltagereKort';
