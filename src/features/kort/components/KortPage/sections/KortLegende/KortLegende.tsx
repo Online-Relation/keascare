@@ -1,8 +1,11 @@
 // src/features/kort/components/KortPage/sections/KortLegende/KortLegende.tsx
 
 const LEGENDE = [
-  { farve: '#3b82f6', label: 'Eksisterende kunde' },
-  { farve: '#ef4444', label: 'Ikke kunde' },
+  { farve: '#ef4444', label: 'Kritiske fund' },
+  { farve: '#f97316', label: 'Større fund' },
+  { farve: '#eab308', label: 'Mindre fund' },
+  { farve: '#22c55e', label: 'Ingen fund' },
+  { farve: '#6b7280', label: 'Ukendt' },
 ];
 
 export function KortLegende() {
