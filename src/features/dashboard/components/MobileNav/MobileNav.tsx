@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight, Activity, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map,
+  BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight, Activity, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Users,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
@@ -293,6 +293,7 @@ export function MobileNav() {
             <NavLink href="/dashboard/systemstatus" icon={Activity} label="Systemstatus" />
             <NavLink href="/dashboard/scrapers" icon={RefreshCw} label="Scrapers" />
             <NavLink href="/dashboard/indstillinger" icon={Settings} label="Indstillinger" />
+            <NavLink href="/dashboard/admin/brugere" icon={Users} label="Brugere" />
           </div>
         </div>
 
