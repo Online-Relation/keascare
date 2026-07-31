@@ -1,523 +1,154 @@
 /* produkter.css */
 
 .produkter-layout {
-  max-width: 1100px;
+  max-width: 860px;
   margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
+  padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
-  gap: 2.5rem;
+  gap: 2rem;
 }
 
-.sektion-titel {
-  font-size: 1.1rem;
+.produkter-header {}
+
+.produkter-titel {
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--color-text-primary);
-  margin: 0 0 1.25rem;
-  letter-spacing: -0.01em;
+  margin: 0 0 0.25rem;
 }
 
-/* ──────────────── HERO ──────────────── */
-
-.produkter-hero {
-  background: linear-gradient(135deg, #0f0c29 0%, #1e1b4b 35%, #312e81 70%, #4338ca 100%);
-  border-radius: 20px;
-  padding: 2.5rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-/* dekorative cirkler */
-.produkter-hero::before {
-  content: '';
-  position: absolute;
-  top: -80px; right: -80px;
-  width: 320px; height: 320px;
-  background: radial-gradient(circle, rgba(167,139,250,0.18) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-.produkter-hero::after {
-  content: '';
-  position: absolute;
-  bottom: -60px; left: 40%;
-  width: 220px; height: 220px;
-  background: radial-gradient(circle, rgba(56,189,248,0.12) 0%, transparent 70%);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.produkter-hero-indhold {
-  display: flex;
-  align-items: center;
-  gap: 3rem;
-  position: relative;
-  z-index: 1;
-}
-
-.produkter-hero-venstre {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 1.75rem;
-  min-width: 0;
-}
-
-.produkter-hero-top {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.produkter-hero-titel {
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: white;
-  margin: 0 0 0.3rem;
-  letter-spacing: -0.03em;
-}
-
-.produkter-hero-subtitle {
+.produkter-subtitle {
   font-size: 0.85rem;
-  color: rgba(255,255,255,0.55);
+  color: var(--color-text-muted);
   margin: 0;
 }
 
-.produkter-hero-badge {
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 20px;
-  padding: 0.3rem 0.85rem;
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.75);
-  white-space: nowrap;
-  flex-shrink: 0;
-  backdrop-filter: blur(4px);
-}
-
-.produkter-hero-kpier {
+/* KPI-kort grid */
+.produkt-kort-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
 }
 
-.hero-kpi {
-  background: rgba(255,255,255,0.07);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 14px;
+.produkt-kort {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
-  backdrop-filter: blur(8px);
-  transition: background 0.2s;
+  gap: 0.5rem;
 }
 
-.hero-kpi:hover {
-  background: rgba(255,255,255,0.11);
-}
-
-.hero-kpi-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.45);
-}
-
-.hero-kpi-værdi {
-  font-size: 1.55rem;
-  font-weight: 900;
-  color: white;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-
-.hero-kpi-sub {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.4);
-}
-
-.hero-kpi-accent {
-  border-color: rgba(167,139,250,0.35);
-  background: rgba(167,139,250,0.1);
-}
-
-.hero-kpi-accent .hero-kpi-værdi { color: #c4b5fd; }
-
-.hero-kpi-guld {
-  border-color: rgba(251,191,36,0.3);
-  background: rgba(251,191,36,0.08);
-}
-
-.hero-kpi-guld .hero-kpi-værdi { color: #fde68a; }
-
-.produkter-hero-donut {
-  flex-shrink: 0;
+.produkt-kort-header {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 0.5rem;
 }
 
-/* ──────────────── OMSÆTNINGSCHART ──────────────── */
-
-.omsætning-chart-wrapper {
-  background: var(--color-card, var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  padding: 1.75rem 2rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.omsætning-chart-header {
-  display: flex;
-  align-items: baseline;
-  gap: 0.75rem;
-}
-
-.omsætning-chart-titel {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--color-text-primary);
-  margin: 0;
-  letter-spacing: -0.01em;
-}
-
-.omsætning-chart-subtitle {
-  font-size: 0.78rem;
-  color: var(--color-text-muted);
-  margin: 0;
-}
-
-.omsætning-chart-bars {
-  display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-}
-
-.omsætning-bar-række {
-  display: grid;
-  grid-template-columns: 220px 1fr 130px;
-  align-items: center;
-  gap: 1rem;
-  cursor: default;
-  border-radius: 8px;
-  padding: 0.2rem 0;
-  transition: background 0.15s;
-}
-
-.omsætning-bar-række.hovered {
-  background: var(--color-surface-alt, rgba(0,0,0,0.03));
-}
-
-.omsætning-bar-label {
-  font-size: 0.83rem;
-  font-weight: 600;
-  color: var(--color-text-secondary, var(--color-text-muted));
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.omsætning-bar-track {
+.produkt-dot {
+  width: 10px;
   height: 10px;
-  background: var(--color-border);
-  border-radius: 5px;
-  overflow: visible;
-  position: relative;
-}
-
-.omsætning-bar-fill {
-  height: 100%;
-  border-radius: 5px;
-  transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
-  position: relative;
-}
-
-.omsætning-tooltip {
-  position: absolute;
-  top: -54px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--color-card, white);
-  border: 1.5px solid;
-  border-radius: 10px;
-  padding: 0.5rem 0.75rem;
-  white-space: nowrap;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
-  z-index: 10;
-  pointer-events: none;
-}
-
-.omsætning-tooltip::after {
-  content: '';
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-top-color: var(--color-border);
-}
-
-.omsætning-tooltip-navn {
-  font-size: 0.75rem;
-  font-weight: 700;
-  margin-bottom: 0.15rem;
-}
-
-.omsætning-tooltip-tal {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--color-text-primary);
-}
-
-.omsætning-tooltip-meta {
-  font-size: 0.72rem;
-  color: var(--color-text-muted);
-  margin-top: 0.1rem;
-}
-
-.omsætning-bar-værdi {
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--color-text-secondary, var(--color-text-muted));
-  text-align: right;
-  transition: color 0.15s;
-}
-
-/* ──────────────── PRODUKT KORT ──────────────── */
-
-.produkt-kort-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
-  gap: 1.25rem;
-}
-
-.produkt-kort-v2 {
-  background: var(--color-card, var(--color-surface));
-  border: 1px solid var(--color-border);
-  border-radius: 16px;
-  overflow: hidden;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
-  cursor: pointer;
-  position: relative;
-}
-
-/* farvet venstre kant */
-.produkt-kort-v2::before {
-  content: '';
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 4px;
-  background: var(--produkt-farve, #6b7280);
-  border-radius: 16px 0 0 16px;
-}
-
-.produkt-kort-v2:hover {
-  box-shadow: 0 6px 28px rgba(0,0,0,0.1);
-  transform: translateY(-3px);
-}
-
-.produkt-kort-v2.åben {
-  box-shadow: 0 6px 28px rgba(0,0,0,0.12);
-}
-
-.produkt-kort-top {
-  padding: 1.25rem 1.5rem 0.75rem 1.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.produkt-kort-nav {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
-}
-
-.produkt-ikon {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.15rem;
+  border-radius: 50%;
   flex-shrink: 0;
 }
 
-.produkt-kort-navn {
-  font-size: 0.93rem;
-  font-weight: 700;
+.produkt-navn {
+  font-size: 0.9rem;
+  font-weight: 600;
   color: var(--color-text-primary);
   flex: 1;
-  margin: 0;
 }
 
-.produkt-pil {
-  color: var(--color-text-muted);
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-}
-
-.produkt-kort-v2.åben .produkt-pil { transform: rotate(180deg); }
-
-.produkt-kort-tal-række {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-}
-
-.produkt-stort-tal {
-  font-size: 3rem;
-  font-weight: 900;
-  letter-spacing: -0.05em;
-  line-height: 1;
-}
-
-.produkt-stort-tal-label {
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-  margin-top: 0.15rem;
-  font-weight: 500;
-}
-
-.produkt-kort-meta {
-  text-align: right;
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  align-items: flex-end;
-}
-
-.produkt-omsætning {
-  font-size: 1.15rem;
-  font-weight: 800;
+.produkt-antal {
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--color-text-primary);
-}
-
-.produkt-pris-label {
-  font-size: 0.7rem;
-  color: var(--color-text-muted);
-}
-
-.produkt-badge-mrr {
-  display: inline-block;
-  background: #dcfce7;
-  color: #166534;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 0.15rem 0.55rem;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-.produkt-badge-engangspris {
-  display: inline-block;
-  background: #eff6ff;
-  color: #1d4ed8;
-  font-size: 0.65rem;
-  font-weight: 800;
-  padding: 0.15rem 0.55rem;
-  border-radius: 20px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-}
-
-@media (prefers-color-scheme: dark) {
-  .produkt-badge-mrr { background: rgba(34,197,94,0.15); color: #86efac; }
-  .produkt-badge-engangspris { background: rgba(59,130,246,0.15); color: #93c5fd; }
 }
 
 .produkt-bar-track {
-  height: 4px;
+  height: 6px;
   background: var(--color-border);
-  border-radius: 2px;
+  border-radius: 3px;
   overflow: hidden;
-  margin: 0.25rem 1.5rem 1.25rem 1.75rem;
 }
 
 .produkt-bar-fill {
   height: 100%;
-  border-radius: 2px;
-  transition: width 0.7s cubic-bezier(0.4,0,0.2,1);
+  border-radius: 3px;
+  transition: width 0.4s ease;
 }
 
-/* ── Bostedliste ── */
-.produkt-bosteder {
-  border-top: 1px solid var(--color-border);
-  background: var(--color-surface-alt, rgba(0,0,0,0.02));
-  max-height: 300px;
-  overflow-y: auto;
-}
-
-.produkt-bosteder-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.55rem 1.5rem 0.55rem 1.75rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
+.produkt-label-sub {
+  font-size: 0.78rem;
   color: var(--color-text-muted);
-  border-bottom: 1px solid var(--color-border);
-  position: sticky;
-  top: 0;
-  background: inherit;
 }
 
-.produkt-bosted-række {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.5rem 1.5rem 0.5rem 1.75rem;
-  font-size: 0.81rem;
-  border-bottom: 1px solid var(--color-border);
-  gap: 0.5rem;
-  transition: background 0.1s;
+/* Tabel */
+.produkt-tabel-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
 }
 
-.produkt-bosted-række:hover { background: var(--color-surface-alt, rgba(0,0,0,0.03)); }
-.produkt-bosted-række:last-child { border-bottom: none; }
-
-.produkt-bosted-navn {
+.produkt-tabel-titel {
+  font-size: 1rem;
+  font-weight: 600;
   color: var(--color-text-primary);
-  flex: 1;
+  padding: 1rem 1.25rem 0.75rem;
+  margin: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
-.produkt-bosted-dato {
+.produkt-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.produkt-tabel thead tr {
+  background: var(--color-surface-alt, var(--color-surface));
+}
+
+.produkt-tabel th {
+  padding: 0.6rem 1.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
   color: var(--color-text-muted);
-  font-size: 0.73rem;
-  white-space: nowrap;
-  flex-shrink: 0;
+  border-bottom: 1px solid var(--color-border);
 }
 
-/* ──────────────── RESPONSIV ──────────────── */
-
-@media (max-width: 900px) {
-  .produkter-hero-indhold { flex-direction: column; gap: 2rem; }
-  .produkter-hero-donut { align-self: flex-start; }
-  .produkter-hero-kpier { grid-template-columns: repeat(2, 1fr); }
+.produkt-tabel-rad td {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
 }
 
-@media (max-width: 768px) {
-  .produkter-hero { padding: 1.5rem 1.25rem; border-radius: 14px; }
-  .hero-kpi-værdi { font-size: 1.25rem; }
-  .produkt-kort-grid { grid-template-columns: 1fr; }
-  .produkter-layout { padding: 1rem 0.75rem 2rem; gap: 1.75rem; }
-  .omsætning-bar-række { grid-template-columns: 140px 1fr 100px; }
-  .omsætning-chart-wrapper { padding: 1.25rem; }
+.produkt-tabel-rad:hover td {
+  background: var(--color-surface-alt, rgba(0,0,0,0.02));
 }
 
-@media (max-width: 500px) {
-  .omsætning-bar-række { grid-template-columns: 110px 1fr; }
-  .omsætning-bar-værdi { display: none; }
-  .produkter-hero-kpier { grid-template-columns: 1fr 1fr; }
+.produkt-tabel-detail td {
+  padding: 0 1.25rem 0.75rem;
+  background: var(--color-surface-alt, rgba(0,0,0,0.02));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.produkt-bosted-liste {
+  margin: 0;
+  padding: 0.5rem 0 0 1rem;
+  list-style: disc;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 2rem;
+}
+
+.produkt-bosted-liste li {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, var(--color-text-muted));
 }
