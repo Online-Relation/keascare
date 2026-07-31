@@ -230,7 +230,11 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
   const deltagere: TilsynDeltager[] = [];
   const linjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
 
-  for (const linje of linjer) {
+  for (const rawLinje of linjer) {
+    // Strip leading bullet points (• or - or *)
+    const linje = rawLinje.replace(/^[•\-\*]\s*/, '').trim();
+    if (!linje) continue;
+
     // Spring overskrifter, sagsnumre og linje med kolon-data over
     if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
     if (/[:\/\d]/.test(linje)) continue; // sagsnr, datoer, URLs
