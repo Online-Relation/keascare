@@ -1,0 +1,1 @@
+export { KommuneFilter } from './KommuneFilter';

@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer,
+  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -26,6 +26,7 @@ const gruppeOverblik: NavItem[] = [
 const gruppeMarked: NavItem[] = [
   { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
   { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },
+  { label: 'Bosteder på kort',  href: '/dashboard/kort',              icon: Map },
 ];
 
 const gruppeTilsyn: NavItem[] = [

@@ -1,0 +1,1 @@
+export { KortLegende } from './KortLegende';

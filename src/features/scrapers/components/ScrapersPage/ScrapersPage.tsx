@@ -124,6 +124,13 @@ const SCRAPERS: Scraper[] = [
     body: {},
   },
   {
+    id: 'geocoder',
+    titel: 'Geocoder — Koordinater via DAWA',
+    beskrivelse: 'Slår adresser op i Danmarks Adressers Web API og gemmer lat/lng koordinater til kortvisning. Kør indtil alle bosteder er geocodet.',
+    endpoint: '/api/scrapers/geocoder',
+    body: { batch: 50 },
+  },
+  {
     id: 'monday-match',
     titel: 'Monday — Synkroniser kunder',
     beskrivelse: 'Henter Bosted-kunder fra Monday (Nye + Aktive Forløb) og matcher mod STPS-bosteder på navn. Sætter "Kunde"-badge i dashboardet.',
