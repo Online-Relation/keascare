@@ -2,15 +2,41 @@
 
 import { mondayQuery } from '@/lib/api/MondayClient';
 
+export type ProduktPris = {
+  pris: number;
+  type: 'engangspris' | 'månedlig';
+};
+
+export const PRODUKT_PRISER: Record<string, ProduktPris> = {
+  'Medicinkursus':                    { pris: 9995,  type: 'engangspris' },
+  'Dokumentationskursus':             { pris: 9995,  type: 'engangspris' },
+  'Minitilsyn':                       { pris: 8995,  type: 'engangspris' },
+  'Instrukser':                       { pris: 8995,  type: 'engangspris' },
+  'Brand- og førstehjælpskursus':     { pris: 9995,  type: 'engangspris' },
+  'brand- og førstehjælpskursus':     { pris: 9995,  type: 'engangspris' },
+  'Basispakke':                       { pris: 1895,  type: 'månedlig' },
+};
+
+export type BostedOptagelse = {
+  navn: string;
+  dato: string | null;
+};
+
 export type ProduktLinje = {
   produkt: string;
   antal: number;
-  bostedNavne: string[];
+  bostedNavne: string[];           // bagudkompatibilitet
+  bosteder: BostedOptagelse[];
+  pris: number | null;
+  prisType: 'engangspris' | 'månedlig' | null;
+  omsætning: number | null;
 };
 
 export type ProdukterResultat = {
   linjer: ProduktLinje[];
   totalBosteder: number;
+  totalEngangsomsætning: number;
+  totalMrr: number;
   hentetMs: number;
 };
 
@@ -59,6 +85,19 @@ function udtraekProdukt(subitem: RåSubitem): string | null {
   return col?.text?.trim() || null;
 }
 
+function udtraekDato(subitem: RåSubitem): string | null {
+  const datoKol = subitem.column_values.find((cv) => {
+    const titel = cv.column.title.toLowerCase();
+    return (
+      titel.includes('dato') ||
+      titel.includes('start') ||
+      titel.includes('oprettet') ||
+      titel.includes('created')
+    );
+  });
+  return datoKol?.text?.trim() || null;
+}
+
 export async function hentProduktStatistik(): Promise<ProdukterResultat> {
   const boardId = process.env.MONDAY_BOARD_ID;
   if (!boardId) throw new Error('MONDAY_BOARD_ID mangler');
@@ -77,8 +116,8 @@ export async function hentProduktStatistik(): Promise<ProdukterResultat> {
     cursor = næste.next_items_page?.cursor ?? null;
   }
 
-  // Tæl produkter
-  const map = new Map<string, Set<string>>();
+  // Byg map: produkt → Map<bostedNavn, dato>
+  const map = new Map<string, Map<string, string | null>>();
 
   for (const item of alleItems) {
     const seeneProdukter = new Set<string>();
@@ -87,20 +126,52 @@ export async function hentProduktStatistik(): Promise<ProdukterResultat> {
       if (!produkt || seeneProdukter.has(produkt)) continue;
       seeneProdukter.add(produkt);
 
-      if (!map.has(produkt)) map.set(produkt, new Set());
-      map.get(produkt)!.add(item.name);
+      const dato = udtraekDato(subitem);
+      if (!map.has(produkt)) map.set(produkt, new Map());
+      map.get(produkt)!.set(item.name, dato);
     }
   }
 
+  let totalEngangsomsætning = 0;
+  let totalMrr = 0;
+
   const linjer: ProduktLinje[] = Array.from(map.entries())
-    .map(([produkt, navne]) => ({
-      produkt,
-      antal: navne.size,
-      bostedNavne: Array.from(navne).sort(),
-    }))
-    .sort((a, b) => b.antal - a.antal);
+    .map(([produkt, bostedMap]) => {
+      const bosteder: BostedOptagelse[] = Array.from(bostedMap.entries())
+        .map(([navn, dato]) => ({ navn, dato }))
+        .sort((a, b) => {
+          if (a.dato && b.dato) return b.dato.localeCompare(a.dato);
+          return a.navn.localeCompare(b.navn);
+        });
 
-  const totalBosteder = new Set(alleItems.filter((i) => i.subitems?.length > 0).map((i) => i.name)).size;
+      const prisInfo = PRODUKT_PRISER[produkt] ?? null;
+      const antal = bosteder.length;
+      const omsætning = prisInfo ? prisInfo.pris * antal : null;
 
-  return { linjer, totalBosteder, hentetMs: Date.now() - start };
+      if (prisInfo?.type === 'engangspris' && omsætning) totalEngangsomsætning += omsætning;
+      if (prisInfo?.type === 'månedlig' && omsætning) totalMrr += omsætning;
+
+      return {
+        produkt,
+        antal,
+        bostedNavne: bosteder.map((b) => b.navn),
+        bosteder,
+        pris: prisInfo?.pris ?? null,
+        prisType: prisInfo?.type ?? null,
+        omsætning,
+      };
+    })
+    .sort((a, b) => (b.omsætning ?? 0) - (a.omsætning ?? 0));
+
+  const totalBosteder = new Set(
+    alleItems.filter((i) => i.subitems?.length > 0).map((i) => i.name),
+  ).size;
+
+  return {
+    linjer,
+    totalBosteder,
+    totalEngangsomsætning,
+    totalMrr,
+    hentetMs: Date.now() - start,
+  };
 }
