@@ -41,7 +41,11 @@ export function ProduktKort({ linje, max }: Props) {
   const pct = max > 0 ? Math.round((linje.antal / max) * 100) : 0;
 
   return (
-    <div className={`produkt-kort-v2${åben ? ' åben' : ''}`} onClick={() => setÅben((v) => !v)}>
+    <div
+      className={`produkt-kort-v2${åben ? ' åben' : ''}`}
+      onClick={() => setÅben((v) => !v)}
+      style={{ '--produkt-farve': farve } as React.CSSProperties}
+    >
       <div className="produkt-kort-top">
         <div className="produkt-kort-nav">
           <div className="produkt-ikon" style={{ background: `${farve}18` }}>
