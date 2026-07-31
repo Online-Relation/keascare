@@ -231,8 +231,8 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
   const linjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
 
   for (const rawLinje of linjer) {
-    // Strip leading bullet points (• or - or *)
-    const linje = rawLinje.replace(/^[•\-\*]\s*/, '').trim();
+    // Strip alt ikke-bogstav foran selve teksten (•, -, *, tal+punktum, osv.)
+    const linje = rawLinje.replace(/^[^A-Za-zÆØÅæøå]+/, '').trim();
     if (!linje) continue;
 
     // Spring overskrifter, sagsnumre og linje med kolon-data over
