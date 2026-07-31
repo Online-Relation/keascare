@@ -81,5 +81,8 @@ export async function POST(request: NextRequest) {
   // 8. Regelovervågning — Retsinformation + STPS-nyheder
   await kør('regelovervagning', () => kald('/api/scrapers/regelovervagning', {}, secret), resultater);
 
+  // 9. Geocoder — koordinater til kortvisning (batch 100)
+  await kør('geocoder', () => kald('/api/scrapers/geocoder', { batch: 100 }, secret), resultater);
+
   return NextResponse.json({ ok: true, kørt: new Date().toISOString(), ...resultater });
 }
