@@ -270,7 +270,21 @@
   padding: 0.4rem 0.75rem;
 }
 
+/* Mobil-linje under topbar */
+.mobil-tr-bar {
+  background: var(--color-card);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.4rem 1rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.mobil-tr-bar .tr-widget {
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
 @media (max-width: 600px) {
   .tr-widget-kategori { display: none; }
-  .tr-widget { padding: 0.25rem 0.5rem; }
 }

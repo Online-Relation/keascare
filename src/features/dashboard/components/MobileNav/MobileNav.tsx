@@ -14,6 +14,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
+import { TidsregistreringWidget } from '@/features/tidsregistrering/components/TidsregistreringWidget';
 
 type Søgeresultat = {
   id: string;
@@ -145,6 +146,12 @@ export function MobileNav() {
           </>
         )}
       </header>
+
+      {!søgningÅben && (rolle === 'bostedsansvarlig' || rolle === 'development') && (
+        <div className="mobil-tr-bar">
+          <TidsregistreringWidget />
+        </div>
+      )}
 
       {søgningÅben && resultater.length > 0 && (
         <div className="mobil-søg-resultater">
