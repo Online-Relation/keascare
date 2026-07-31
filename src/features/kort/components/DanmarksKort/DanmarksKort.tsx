@@ -104,8 +104,21 @@ function opdaterPins(
     if ((layer as { _isPinLayer?: boolean })._isPinLayer) map.removeLayer(layer);
   });
 
+  // Tæl dubletter for at jittere overlappende koordinater
+  const koordinatTæller = new Map<string, number>();
+
   pins.forEach((pin) => {
     if (!pin.lat || !pin.lng || (pin.lat === 0 && pin.lng === 0)) return;
+
+    const nøgle = `${pin.lat.toFixed(5)},${pin.lng.toFixed(5)}`;
+    const antal = koordinatTæller.get(nøgle) ?? 0;
+    koordinatTæller.set(nøgle, antal + 1);
+
+    // Jitter overlappende pins i en cirkel (~30m radius per trin)
+    const vinkel = (antal * 137.5 * Math.PI) / 180; // gylden vinkel
+    const radius = antal === 0 ? 0 : 0.0003 * Math.sqrt(antal);
+    const lat = pin.lat + radius * Math.cos(vinkel);
+    const lng = pin.lng + radius * Math.sin(vinkel);
 
     const farve = pinFarve(pin.fundNiveau);
     const ikon = L.divIcon({
@@ -120,7 +133,7 @@ function opdaterPins(
       popupAnchor: [0, -10],
     });
 
-    const marker = L.marker([pin.lat, pin.lng], { icon: ikon });
+    const marker = L.marker([lat, lng], { icon: ikon });
     (marker as unknown as { _isPinLayer: boolean })._isPinLayer = true;
 
     marker.bindPopup(`
