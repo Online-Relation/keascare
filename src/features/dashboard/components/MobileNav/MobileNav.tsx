@@ -149,7 +149,7 @@ export function MobileNav() {
         )}
       </header>
 
-      {!søgningÅben && (rolle === 'bostedsansvarlig' || rolle === 'development') && (
+      {!søgningÅben && (
         <div className="mobil-tr-bar">
           <TidsregistreringWidget />
         </div>
@@ -225,9 +225,7 @@ export function MobileNav() {
             <p className="sidebar-section-label">CRM</p>
             <NavLink href="/dashboard/kunder" icon={Building2} label="Kunder" />
             <NavLink href="/dashboard/produkter" icon={Package} label="Produkter" />
-            {(rolle === 'bostedsansvarlig' || rolle === 'development') && (
-              <NavLink href="/dashboard/tidsregistrering" icon={Timer} label="Tidsregistrering" />
-            )}
+            <NavLink href="/dashboard/tidsregistrering" icon={Timer} label="Tidsregistrering" />
           </div>
 
           {/* Markedsføring — collapsible */}

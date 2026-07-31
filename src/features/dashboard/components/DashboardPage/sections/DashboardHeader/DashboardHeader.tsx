@@ -10,12 +10,8 @@ import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { NotifikationsCenter } from '@/features/dashboard/components/NotifikationsCenter';
 import { TidsregistreringWidget } from '@/features/tidsregistrering/components/TidsregistreringWidget';
-import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 
 export function DashboardHeader() {
-  const { rolle } = useBrugerRolle();
-  const visTidsregistrering = rolle === 'bostedsansvarlig' || rolle === 'development';
-
   return (
     <header className="dashboard-topbar">
       <div className="dashboard-topbar-venstre">
@@ -29,7 +25,7 @@ export function DashboardHeader() {
       </div>
 
       <div className="dashboard-topbar-højre">
-        {visTidsregistrering && <TidsregistreringWidget />}
+        <TidsregistreringWidget />
         <Link href="/dashboard/favoritter" className="btn btn-ghost btn-sm" aria-label="Fulgte bosteder">
           <Star size={15} />
         </Link>

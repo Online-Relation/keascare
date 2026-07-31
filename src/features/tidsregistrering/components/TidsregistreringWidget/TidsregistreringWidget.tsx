@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Play, Square, Clock } from 'lucide-react';
 import { hentKategorier, startTimer, stopTimer } from '@/features/tidsregistrering/services/TidsregistreringService';
 import type { TidsregistreringKategori } from '@/features/tidsregistrering/types/tidsregistrering.types';
+import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 
 const LS_ID  = 'tr_aktiv_id';
 const LS_KAT = 'tr_aktiv_kategori';
@@ -20,6 +21,7 @@ function formatTid(sek: number): string {
 }
 
 export function TidsregistreringWidget() {
+  const { rolle, loading } = useBrugerRolle();
   const [kategorier, setKategorier]     = useState<TidsregistreringKategori[]>([]);
   const [valgtId, setValgtId]           = useState<string>('');
   const [kører, setKører]               = useState(false);
@@ -78,6 +80,8 @@ export function TidsregistreringWidget() {
     setGemmer(false);
   }, [aktivRegistreringId]);
 
+  if (loading) return null;
+  if (rolle !== 'bostedsansvarlig' && rolle !== 'development') return null;
   if (kategorier.length === 0) return null;
 
   return (
