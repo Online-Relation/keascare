@@ -104,7 +104,7 @@ export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[
     id: r.id,
     brugerId: r.bruger_id,
     kategoriId: r.kategori_id,
-    kategoriNavn: (r.tidsregistrering_kategorier as { navn: string } | null)?.navn ?? '—',
+    kategoriNavn: (r.tidsregistrering_kategorier as unknown as { navn: string } | null)?.navn ?? '—',
     startTid: r.start_tid,
     slutTid: r.slut_tid,
     varighedMinutter: r.varighed_minutter,
