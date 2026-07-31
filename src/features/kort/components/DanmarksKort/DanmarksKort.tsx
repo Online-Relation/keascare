@@ -114,9 +114,9 @@ function opdaterPins(
     const antal = koordinatTæller.get(nøgle) ?? 0;
     koordinatTæller.set(nøgle, antal + 1);
 
-    // Jitter overlappende pins i en cirkel (~30m radius per trin)
+    // Jitter overlappende pins i en spiral (~300m radius per trin)
     const vinkel = (antal * 137.5 * Math.PI) / 180; // gylden vinkel
-    const radius = antal === 0 ? 0 : 0.0003 * Math.sqrt(antal);
+    const radius = antal === 0 ? 0 : 0.003 * Math.sqrt(antal);
     const lat = pin.lat + radius * Math.cos(vinkel);
     const lng = pin.lng + radius * Math.sin(vinkel);
 
