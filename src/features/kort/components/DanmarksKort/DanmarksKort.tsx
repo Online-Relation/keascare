@@ -12,6 +12,7 @@ export type KortPin = {
   lng: number;
   fundNiveau: string | null;
   kommune: string | null;
+  erKunde: boolean;
 };
 
 type Props = {
@@ -20,12 +21,8 @@ type Props = {
   onVælgKommune: (kommune: string | null) => void;
 };
 
-function pinFarve(fundNiveau: string | null): string {
-  if (fundNiveau === 'kritisk') return '#ef4444';
-  if (fundNiveau === 'stoerre') return '#f97316';
-  if (fundNiveau === 'mindre') return '#eab308';
-  if (fundNiveau === 'ingen') return '#22c55e';
-  return '#6b7280';
+function pinFarve(erKunde: boolean): string {
+  return erKunde ? '#3b82f6' : '#ef4444';
 }
 
 export function DanmarksKort({ pins, valgtKommune, onVælgKommune }: Props) {
@@ -106,7 +103,7 @@ function opdaterPins(
   pins.forEach((pin) => {
     if (!pin.lat || !pin.lng || (pin.lat === 0 && pin.lng === 0)) return;
 
-    const farve = pinFarve(pin.fundNiveau);
+    const farve = pinFarve(pin.erKunde);
     const ikon = L.divIcon({
       className: '',
       html: `<div style="

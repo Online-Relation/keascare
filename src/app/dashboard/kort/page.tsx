@@ -11,7 +11,7 @@ export default async function KortServerPage() {
 
   const { data } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, lat, lng, fund_niveau, kommune')
+    .select('id, stps_tilbud_navn, lat, lng, fund_niveau, kommune, monday_item_id')
     .not('lat', 'is', null)
     .neq('lat', 0);
 
@@ -22,6 +22,7 @@ export default async function KortServerPage() {
     lng: r.lng,
     fundNiveau: r.fund_niveau,
     kommune: r.kommune,
+    erKunde: !!r.monday_item_id,
   }));
 
   return <KortPage allePins={pins} />;
