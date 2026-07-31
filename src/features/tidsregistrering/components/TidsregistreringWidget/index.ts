@@ -1,0 +1,1 @@
+export { TidsregistreringWidget } from './TidsregistreringWidget';

@@ -1,0 +1,1 @@
+export { KategoriAdmin } from './KategoriAdmin';

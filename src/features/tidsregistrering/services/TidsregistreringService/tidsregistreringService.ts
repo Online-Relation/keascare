@@ -1,0 +1,130 @@
+// src/features/tidsregistrering/services/TidsregistreringService/tidsregistreringService.ts
+
+import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
+import type { Tidsregistrering, TidsregistreringKategori } from '@/features/tidsregistrering/types/tidsregistrering.types';
+
+function supabase() {
+  return getSupabaseAuthBrowserClient();
+}
+
+export async function hentKategorier(): Promise<TidsregistreringKategori[]> {
+  const { data, error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .select('id, navn, aktiv, oprettet')
+    .eq('aktiv', true)
+    .order('oprettet');
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    navn: r.navn,
+    aktiv: r.aktiv,
+    oprettet: r.oprettet,
+  }));
+}
+
+export async function hentAlleKategorier(): Promise<TidsregistreringKategori[]> {
+  const { data, error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .select('id, navn, aktiv, oprettet')
+    .order('oprettet');
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    navn: r.navn,
+    aktiv: r.aktiv,
+    oprettet: r.oprettet,
+  }));
+}
+
+export async function opretKategori(navn: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .insert({ navn });
+  if (error) throw error;
+}
+
+export async function opdaterKategori(id: string, navn: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .update({ navn })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function skiftKategoriAktiv(id: string, aktiv: boolean): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .update({ aktiv })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function startTimer(kategoriId: string): Promise<string> {
+  const { data: { user } } = await supabase().auth.getUser();
+  if (!user) throw new Error('Ikke logget ind');
+
+  const { data, error } = await supabase()
+    .from('tidsregistreringer')
+    .insert({ bruger_id: user.id, kategori_id: kategoriId, start_tid: new Date().toISOString() })
+    .select('id')
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+export async function stopTimer(id: string): Promise<void> {
+  const slutTid = new Date().toISOString();
+  const { data, error } = await supabase()
+    .from('tidsregistreringer')
+    .select('start_tid')
+    .eq('id', id)
+    .single();
+  if (error) throw error;
+
+  const varighedMs = new Date(slutTid).getTime() - new Date(data.start_tid).getTime();
+  const varighedMinutter = Math.round(varighedMs / 60000);
+
+  const { error: updateFejl } = await supabase()
+    .from('tidsregistreringer')
+    .update({ slut_tid: slutTid, varighed_minutter: varighedMinutter })
+    .eq('id', id);
+  if (updateFejl) throw updateFejl;
+}
+
+export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[]> {
+  const { data, error } = await supabase()
+    .from('tidsregistreringer')
+    .select('id, bruger_id, kategori_id, tidsregistrering_kategorier(navn), start_tid, slut_tid, varighed_minutter, note, oprettet')
+    .not('slut_tid', 'is', null)
+    .order('start_tid', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    brugerId: r.bruger_id,
+    kategoriId: r.kategori_id,
+    kategoriNavn: (r.tidsregistrering_kategorier as { navn: string } | null)?.navn ?? '—',
+    startTid: r.start_tid,
+    slutTid: r.slut_tid,
+    varighedMinutter: r.varighed_minutter,
+    note: r.note,
+    oprettet: r.oprettet,
+  }));
+}
+
+export async function opdaterNote(id: string, note: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistreringer')
+    .update({ note })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function sletRegistrering(id: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistreringer')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}

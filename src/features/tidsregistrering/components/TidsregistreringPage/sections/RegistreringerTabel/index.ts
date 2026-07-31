@@ -1,0 +1,1 @@
+export { RegistreringerTabel } from './RegistreringerTabel';

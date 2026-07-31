@@ -26,6 +26,7 @@
 @import "./styles/components/kunder.css";
 @import "./styles/components/regelovervagning.css";
 @import "./styles/components/produkter.css";
+@import "./styles/components/tidsregistrering.css";
 
 @layer base {
   *, *::before, *::after {

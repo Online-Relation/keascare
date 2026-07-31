@@ -1,0 +1,1 @@
+export { TidsregistreringPage } from './TidsregistreringPage';
