@@ -110,14 +110,14 @@ function opdaterPins(
     const farve = pinFarve(pin.fundNiveau);
     const ikon = L.divIcon({
       className: '',
-      html: `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="34" viewBox="0 0 24 34">
-        <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 22 12 22S24 21 24 12C24 5.373 18.627 0 12 0z"
-          fill="${farve}" stroke="white" stroke-width="1.5"/>
-        <circle cx="12" cy="12" r="5" fill="white" opacity="0.85"/>
-      </svg>`,
-      iconSize: [24, 34],
-      iconAnchor: [12, 34],
-      popupAnchor: [0, -34],
+      html: `<div style="
+        width:16px;height:16px;border-radius:50%;
+        background:${farve};border:2.5px solid white;
+        box-shadow:0 1px 4px rgba(0,0,0,0.5);
+      "></div>`,
+      iconSize: [16, 16],
+      iconAnchor: [8, 8],
+      popupAnchor: [0, -10],
     });
 
     const marker = L.marker([pin.lat, pin.lng], { icon: ikon });
