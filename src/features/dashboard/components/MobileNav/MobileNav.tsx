@@ -39,6 +39,7 @@ export function MobileNav() {
   const [datoÅben, setDatoÅben] = useState(false);
   const [brugerNavn, setBrugerNavn] = useState('');
   const [brugerEmail, setBrugerEmail] = useState('');
+  const [rolle, setRolle] = useState<string | null>(null);
   const [søgeTekst, setSøgeTekst] = useState('');
   const [resultater, setResultater] = useState<Søgeresultat[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,6 +51,7 @@ export function MobileNav() {
       if (!user) return;
       setBrugerNavn(user.user_metadata?.navn ?? '');
       setBrugerEmail(user.email ?? '');
+      setRolle(user.user_metadata?.rolle ?? null);
     });
   }, []);
 
