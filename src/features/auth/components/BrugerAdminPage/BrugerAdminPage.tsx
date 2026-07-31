@@ -5,6 +5,7 @@ import { UserPlus, Trash2, Users, Eye, EyeOff, Shield } from 'lucide-react';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import { rollerTilgængeligeFor, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
 import { RolleAdgangOversigt } from '@/features/auth/components/RolleAdgangOversigt/RolleAdgangOversigt';
+import { RettighederPanel } from '@/features/auth/components/RettighederPanel';
 
 type Bruger = {
   id: string;
@@ -194,6 +195,11 @@ export function BrugerAdminPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Rollerettigheder */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <RettighederPanel />
       </div>
     </div>
   );

@@ -1,0 +1,1 @@
+export { RettighederPanel } from './RettighederPanel';
