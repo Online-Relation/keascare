@@ -1,0 +1,154 @@
+/* produkter.css */
+
+.produkter-layout {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.produkter-header {}
+
+.produkter-titel {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.produkter-subtitle {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* KPI-kort grid */
+.produkt-kort-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.produkt-kort {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.produkt-kort-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.produkt-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.produkt-navn {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.produkt-antal {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.produkt-bar-track {
+  height: 6px;
+  background: var(--color-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.produkt-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+
+.produkt-label-sub {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+/* Tabel */
+.produkt-tabel-wrapper {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.produkt-tabel-titel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  padding: 1rem 1.25rem 0.75rem;
+  margin: 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.produkt-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.produkt-tabel thead tr {
+  background: var(--color-surface-alt, var(--color-surface));
+}
+
+.produkt-tabel th {
+  padding: 0.6rem 1.25rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.produkt-tabel-rad td {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.produkt-tabel-rad:hover td {
+  background: var(--color-surface-alt, rgba(0,0,0,0.02));
+}
+
+.produkt-tabel-detail td {
+  padding: 0 1.25rem 0.75rem;
+  background: var(--color-surface-alt, rgba(0,0,0,0.02));
+  border-bottom: 1px solid var(--color-border);
+}
+
+.produkt-bosted-liste {
+  margin: 0;
+  padding: 0.5rem 0 0 1rem;
+  list-style: disc;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 2rem;
+}
+
+.produkt-bosted-liste li {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary, var(--color-text-muted));
+}

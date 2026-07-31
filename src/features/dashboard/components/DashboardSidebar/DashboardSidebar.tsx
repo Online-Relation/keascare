@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck,
+  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -35,7 +35,8 @@ const gruppeTilsyn: NavItem[] = [
 ];
 
 const gruppeCrm: NavItem[] = [
-  { label: 'Kunder', href: '/dashboard/kunder', icon: Building2 },
+  { label: 'Kunder',    href: '/dashboard/kunder',    icon: Building2 },
+  { label: 'Produkter', href: '/dashboard/produkter', icon: Package },
 ];
 
 const gruppeMarkedsforing = [

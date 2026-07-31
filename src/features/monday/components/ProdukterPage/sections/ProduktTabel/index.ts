@@ -1,0 +1,1 @@
+export { ProduktTabel } from './ProduktTabel';

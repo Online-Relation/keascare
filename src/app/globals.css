@@ -25,6 +25,7 @@
 @import "./styles/components/auth.css";
 @import "./styles/components/kunder.css";
 @import "./styles/components/regelovervagning.css";
+@import "./styles/components/produkter.css";
 
 @layer base {
   *, *::before, *::after {
