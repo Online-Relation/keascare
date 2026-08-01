@@ -185,11 +185,9 @@ function httpsPatch(url, body) {
 // ── Hent rapporter uden pdf_url ────────────────────────────────────────────
 
 async function hentRapporterUdenPdf() {
-  // pdf_behandlet=neq.true ekskluderer både false og null, så 404-rapporter ikke gentages
   const url = `${SUPABASE_URL}/rest/v1/stps_rapporter` +
     `?select=id,stps_tilbud_navn,rapport_url` +
     `&pdf_url=is.null` +
-    `&pdf_behandlet=neq.true` +
     `&limit=${BATCH}`;
 
   const { status, body } = await httpsGet(url);
@@ -400,9 +398,9 @@ async function main() {
       ok++;
     } catch (e) {
       console.error(`[${i+1}/${rapporter.length}] FEJL: ${stps_tilbud_navn} — ${e.message}`);
-      // Marker som behandlet ved 404 så vi ikke forsøger igen
+      // Gem 'not-found' som pdf_url ved 404/400 så rapporten ikke gentages
       if (e.message.includes('HTTP 404') || e.message.includes('HTTP 400') || e.message.includes('manuel:')) {
-        await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_behandlet: true }).catch(() => {});
+        await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_url: 'not-found', pdf_behandlet: true }).catch(() => {});
       }
       fejl++;
     }
