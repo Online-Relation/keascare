@@ -36,11 +36,15 @@ export function PakkerPage({ data, mondayIdMap, registreringer }: Props) {
         />
       )}
 
-      {!basispakke && !mellempakke && (
-        <p style={{ color: 'var(--color-text-muted)', fontSize: '0.875rem', padding: '2rem 0' }}>
-          Ingen basispakke- eller mellempakkekunder fundet i Monday.
-        </p>
-      )}
+      {/* Midlertidig debug — fjernes når navne er bekræftet */}
+      <details style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+        <summary>Produktnavne fra Monday (debug)</summary>
+        <ul>
+          {data.linjer.map((l) => (
+            <li key={l.produkt}><strong>{l.produkt}</strong> — {l.antal} kunder</li>
+          ))}
+        </ul>
+      </details>
     </div>
   );
 }
