@@ -218,6 +218,7 @@ function parseZipEntryStream(zipBuf, entry) {
         if (!l) continue;
         if (!headers) {
           headers = parseRække(l).map((h) => h.trim().toLowerCase().replace(/\s+/g, '_'));
+          console.log('CSV kolonner:', headers.join(', '));
         } else {
           const vals = parseRække(l);
           const obj = {};
