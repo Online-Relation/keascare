@@ -83,7 +83,12 @@ export function RegistreringerTabel() {
               <tbody>
                 {rækker.map((r) => (
                   <tr key={r.id}>
-                    <td>{r.kategoriNavn}</td>
+                    <td>
+                      <span>{r.kategoriNavn}</span>
+                      {r.underpunktNavn && (
+                        <span className="tr-underpunkt-label"> · {r.underpunktNavn}</span>
+                      )}
+                    </td>
                     <td className="tr-tid-celle">
                       {formatKlokkeslet(r.startTid)} – {r.slutTid ? formatKlokkeslet(r.slutTid) : '…'}
                     </td>

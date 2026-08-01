@@ -1,7 +1,7 @@
 // src/features/tidsregistrering/services/TidsregistreringService/tidsregistreringService.ts
 
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
-import type { Tidsregistrering, TidsregistreringKategori } from '@/features/tidsregistrering/types/tidsregistrering.types';
+import type { Tidsregistrering, TidsregistreringKategori, TidsregistreringUnderpunkt } from '@/features/tidsregistrering/types/tidsregistrering.types';
 
 function supabase() {
   return getSupabaseAuthBrowserClient();
@@ -59,6 +59,60 @@ export async function skiftKategoriAktiv(id: string, aktiv: boolean): Promise<vo
   if (error) throw error;
 }
 
+export async function hentUnderpunkter(kategoriId: string): Promise<TidsregistreringUnderpunkt[]> {
+  const { data, error } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .select('id, kategori_id, navn, aktiv, oprettet')
+    .eq('kategori_id', kategoriId)
+    .order('oprettet');
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    kategoriId: r.kategori_id,
+    navn: r.navn,
+    aktiv: r.aktiv,
+    oprettet: r.oprettet,
+  }));
+}
+
+export async function hentAlleUnderpunkterForKategorier(): Promise<TidsregistreringUnderpunkt[]> {
+  const { data, error } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .select('id, kategori_id, navn, aktiv, oprettet')
+    .order('oprettet');
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    kategoriId: r.kategori_id,
+    navn: r.navn,
+    aktiv: r.aktiv,
+    oprettet: r.oprettet,
+  }));
+}
+
+export async function opretUnderpunkt(kategoriId: string, navn: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .insert({ kategori_id: kategoriId, navn });
+  if (error) throw error;
+}
+
+export async function opdaterUnderpunkt(id: string, navn: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .update({ navn })
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function skiftUnderpunktAktiv(id: string, aktiv: boolean): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .update({ aktiv })
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function startTimer(kategoriId: string): Promise<string> {
   const { data: { user } } = await supabase().auth.getUser();
   if (!user) throw new Error('Ikke logget ind');
@@ -72,7 +126,7 @@ export async function startTimer(kategoriId: string): Promise<string> {
   return data.id;
 }
 
-export async function stopTimer(id: string, note?: string): Promise<void> {
+export async function stopTimer(id: string, note?: string, underpunktId?: string, underpunktNavn?: string): Promise<void> {
   const slutTid = new Date().toISOString();
   const { data, error } = await supabase()
     .from('tidsregistreringer')
@@ -86,7 +140,13 @@ export async function stopTimer(id: string, note?: string): Promise<void> {
 
   const { error: updateFejl } = await supabase()
     .from('tidsregistreringer')
-    .update({ slut_tid: slutTid, varighed_minutter: varighedMinutter, note: note ?? null })
+    .update({
+      slut_tid: slutTid,
+      varighed_minutter: varighedMinutter,
+      note: note ?? null,
+      underpunkt_id: underpunktId ?? null,
+      underpunkt_navn: underpunktNavn ?? null,
+    })
     .eq('id', id);
   if (updateFejl) throw updateFejl;
 }
@@ -94,7 +154,7 @@ export async function stopTimer(id: string, note?: string): Promise<void> {
 export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[]> {
   const { data, error } = await supabase()
     .from('tidsregistreringer')
-    .select('id, bruger_id, kategori_id, tidsregistrering_kategorier(navn), start_tid, slut_tid, varighed_minutter, note, oprettet')
+    .select('id, bruger_id, kategori_id, tidsregistrering_kategorier(navn), underpunkt_id, underpunkt_navn, start_tid, slut_tid, varighed_minutter, note, oprettet')
     .not('slut_tid', 'is', null)
     .order('start_tid', { ascending: false })
     .limit(limit);
@@ -105,6 +165,8 @@ export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[
     brugerId: r.bruger_id,
     kategoriId: r.kategori_id,
     kategoriNavn: (r.tidsregistrering_kategorier as unknown as { navn: string } | null)?.navn ?? '—',
+    underpunktId: r.underpunkt_id ?? null,
+    underpunktNavn: r.underpunkt_navn ?? null,
     startTid: r.start_tid,
     slutTid: r.slut_tid,
     varighedMinutter: r.varighed_minutter,

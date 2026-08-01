@@ -4,8 +4,8 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Square, Clock, X } from 'lucide-react';
-import { hentKategorier, startTimer, stopTimer } from '@/features/tidsregistrering/services/TidsregistreringService';
-import type { TidsregistreringKategori } from '@/features/tidsregistrering/types/tidsregistrering.types';
+import { hentKategorier, hentUnderpunkter, startTimer, stopTimer } from '@/features/tidsregistrering/services/TidsregistreringService';
+import type { TidsregistreringKategori, TidsregistreringUnderpunkt } from '@/features/tidsregistrering/types/tidsregistrering.types';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 
 const LS_ID    = 'tr_aktiv_id';
@@ -30,6 +30,8 @@ export function TidsregistreringWidget() {
   const [gemmer, setGemmer]                     = useState(false);
   const [visStopModal, setVisStopModal]         = useState(false);
   const [note, setNote]                         = useState('');
+  const [underpunkter, setUnderpunkter]         = useState<TidsregistreringUnderpunkt[]>([]);
+  const [valgtUnderpunktId, setValgtUnderpunktId] = useState<string>('');
   const noteRef                                 = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -73,15 +75,21 @@ export function TidsregistreringWidget() {
     setKører(true);
   }, [valgtId]);
 
-  function åbnStopModal() {
+  async function åbnStopModal() {
     setNote('');
+    setValgtUnderpunktId('');
     setVisStopModal(true);
+    if (valgtId) {
+      const up = await hentUnderpunkter(valgtId);
+      setUnderpunkter(up.filter((u) => u.aktiv));
+    }
   }
 
   const handleGem = useCallback(async () => {
     if (!aktivRegistreringId) return;
     setGemmer(true);
-    await stopTimer(aktivRegistreringId, note.trim() || undefined);
+    const up = underpunkter.find((u) => u.id === valgtUnderpunktId);
+    await stopTimer(aktivRegistreringId, note.trim() || undefined, up?.id, up?.navn);
     localStorage.removeItem(LS_ID);
     localStorage.removeItem(LS_KAT);
     localStorage.removeItem(LS_START);
@@ -91,6 +99,8 @@ export function TidsregistreringWidget() {
     setGemmer(false);
     setVisStopModal(false);
     setNote('');
+    setUnderpunkter([]);
+    setValgtUnderpunktId('');
   }, [aktivRegistreringId, note]);
 
   function lukModal() {
@@ -155,6 +165,21 @@ export function TidsregistreringWidget() {
             </div>
 
             <div className="tr-modal-body">
+              {underpunkter.length > 0 && (
+                <div style={{ marginBottom: '0.75rem' }}>
+                  <label className="tr-modal-label">Underpunkt</label>
+                  <select
+                    className="tr-modal-select"
+                    value={valgtUnderpunktId}
+                    onChange={(e) => setValgtUnderpunktId(e.target.value)}
+                  >
+                    <option value="">— Vælg underpunkt —</option>
+                    {underpunkter.map((u) => (
+                      <option key={u.id} value={u.id}>{u.navn}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <label className="tr-modal-label">Kommentar <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(valgfri)</span></label>
               <textarea
                 ref={noteRef}

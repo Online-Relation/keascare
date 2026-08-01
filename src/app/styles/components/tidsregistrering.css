@@ -195,6 +195,24 @@
   color: var(--color-text-primary);
 }
 
+.tr-modal-select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1.5px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.tr-modal-select:focus {
+  border-color: #4f46e5;
+}
+
 .tr-modal-textarea {
   width: 100%;
   box-sizing: border-box;
@@ -367,6 +385,11 @@
   font-size: 0.82rem;
 }
 
+.tr-underpunkt-label {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
 .tr-note-edit {
   display: flex;
   align-items: center;
@@ -413,22 +436,86 @@
   margin-bottom: 1rem;
 }
 
+.tr-kategori-gruppe {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tr-kategori-gruppe.inaktiv { opacity: 0.45; }
+
 .tr-kategori-rad {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 7px;
 }
 
-.tr-kategori-rad.inaktiv { opacity: 0.45; }
+.tr-kategori-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--color-text-muted);
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tr-chevron {
+  transition: transform 0.18s ease;
+}
+
+.tr-chevron.åben {
+  transform: rotate(180deg);
+}
 
 .tr-kategori-navn {
   flex: 1;
   font-size: 0.875rem;
+  font-weight: 600;
   color: var(--color-text-primary);
+}
+
+.tr-up-tæller {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.tr-underpunkter {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-card, var(--color-bg));
+  padding: 0.25rem 0.5rem 0.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tr-underpunkt-rad {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 5px;
+}
+
+.tr-underpunkt-rad.inaktiv { opacity: 0.4; }
+
+.tr-underpunkt-navn {
+  flex: 1;
+  font-size: 0.82rem;
+  color: var(--color-text-primary);
+}
+
+.tr-ny-underpunkt {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  margin-top: 0.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px dashed var(--color-border);
 }
 
 .tr-ny-kategori {
