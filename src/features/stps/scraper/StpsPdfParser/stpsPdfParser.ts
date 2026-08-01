@@ -217,8 +217,21 @@ function udtraekFundItems(tekst: string): FundItem[] {
   return items;
 }
 
-// Matcher et dansk personnavn: mindst fornavn + efternavn, kun bogstaver og bindestreg
-const NAVN_REGEX = /^[A-ZÆØÅ][a-zæøå]+(?:[-\s][A-ZÆØÅ]?[a-zæøå]+){1,5}$/;
+// Matcher et dansk personnavn: mindst ét fornavn + efternavn
+// Tillader: bindestreg, punktum (initialer), store bogstaver, mellemnavne
+const NAVN_REGEX = /^[A-ZÆØÅ][A-Za-zæøå\-\.]+(?:\s+[A-Za-zæøå\-\.]+){1,5}$/;
+
+// For kort til at være et navn (under 4 tegn eller kun ét ord)
+function erSandsynligtNavn(s: string): boolean {
+  if (s.length < 4) return false;
+  const ord = s.trim().split(/\s+/);
+  if (ord.length < 2) return false; // kræver mindst to ord
+  if (!NAVN_REGEX.test(s)) return false;
+  // Undgå falske positiver: rene tal-strenge, kendte ikke-navne-ord
+  if (/^(Side|Dato|Tilsyn|Rapport|Sted|Leder|Bosted|Navn|Titel)$/i.test(s)) return false;
+  return true;
+}
+
 // Kendte titel-ord der indikerer en person uden navn opgivet
 const TITEL_REGEX = /^[Ee]n\s+(sygeplejerske|oversygeplejerske|læge|leder|souschef|pædagog|social)/;
 
@@ -228,35 +241,54 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
   const blok = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 1500);
 
   const deltagere: TilsynDeltager[] = [];
-  const linjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
+
+  // Saml naboline hvis de danner ét navn (fornavn på én linje, efternavn på næste)
+  const råLinjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
+  const linjer: string[] = [];
+  for (let i = 0; i < råLinjer.length; i++) {
+    const cur = råLinjer[i];
+    const næste = råLinjer[i + 1] ?? '';
+    // Hvis nuværende linje er ét ord (fornavn) og næste er ét ord (efternavn), slå dem sammen
+    if (
+      /^[A-ZÆØÅ][a-zæøå\-]+$/.test(cur) &&
+      /^[A-ZÆØÅ][a-zæøå\-]+(,.*)?$/.test(næste)
+    ) {
+      linjer.push(`${cur} ${næste}`);
+      i++; // spring næste over
+    } else {
+      linjer.push(cur);
+    }
+  }
 
   for (const rawLinje of linjer) {
-    // Strip alt ikke-bogstav foran selve teksten (•, -, *, tal+punktum, osv.)
-    const linje = rawLinje.replace(/^[^A-Za-zÆØÅæøå]+/, '').trim();
+    // Strip bullet-tegn og lignende foran teksten
+    const linje = rawLinje.replace(/^[•\-\*\–\—\·\d\.]\s*/, '').trim();
     if (!linje) continue;
 
-    // Spring overskrifter, sagsnumre og linje med kolon-data over
+    // Spring overskrifter og metadata over
     if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
-    if (/[:\/\d]/.test(linje)) continue; // sagsnr, datoer, URLs
+    if (/\d{2}[-\.]\d{2}[-\.]\d{4}/.test(linje)) continue; // datoer
+    if (linje.includes('://') || linje.includes('@')) continue; // URLs, emails
+    if (/^[A-Z]{2,}\s*\d/.test(linje)) continue; // sagsnumre som "STPS 2024-123"
 
     // Format: "Fornavn Efternavn, titel"
     const kommaIdx = linje.indexOf(',');
-    if (kommaIdx !== -1) {
+    if (kommaIdx !== -1 && kommaIdx > 3) {
       const muligNavn = linje.substring(0, kommaIdx).trim();
       const muligTitel = linje.substring(kommaIdx + 1).trim();
-      if (NAVN_REGEX.test(muligNavn)) {
+      if (erSandsynligtNavn(muligNavn)) {
         deltagere.push({ navn: muligNavn, titel: muligTitel || null });
         continue;
       }
     }
 
-    // Bare et navn uden titel
-    if (NAVN_REGEX.test(linje)) {
+    // Navn uden titel
+    if (erSandsynligtNavn(linje)) {
       deltagere.push({ navn: linje, titel: null });
       continue;
     }
 
-    // "En sygeplejerske" o.l. — person uden navn
+    // "En sygeplejerske" o.l.
     if (TITEL_REGEX.test(linje)) {
       deltagere.push({ navn: linje, titel: null });
     }
