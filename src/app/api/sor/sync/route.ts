@@ -1,5 +1,5 @@
 // src/app/api/sor/sync/route.ts
-// POST: Synkroniserer SOR-enheder til Supabase-cache
+// POST: Synkroniserer SOR-enheder til cache og matcher CVR mod stps_rapporter + tilbudsportalen_tilbud
 
 import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
@@ -19,6 +19,7 @@ export async function POST() {
     return NextResponse.json({ ok: false, fejl: 'SOR returnerede 0 enheder — tjek API-format' });
   }
 
+  // 1. Upsert til cache
   const rækker = enheder.map((e) => ({
     sor_kode: e.sorKode,
     navn: e.navn,
@@ -30,11 +31,25 @@ export async function POST() {
     synkroniseret: new Date().toISOString(),
   }));
 
-  const { error } = await supabase
+  const { error: cacheError } = await supabase
     .from('sor_bosteder_cache')
     .upsert(rækker, { onConflict: 'sor_kode' });
 
-  if (error) return NextResponse.json({ ok: false, fejl: error.message }, { status: 500 });
+  if (cacheError) return NextResponse.json({ ok: false, fejl: cacheError.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true, synkroniseret: rækker.length });
+  // 2. Kør CVR-match direkte i Supabase med én SQL-sætning pr. tabel
+  //    UPDATE tabel SET sor_kode = cache.sor_kode FROM sor_bosteder_cache WHERE tabel.cvr = cache.cvr
+  const [stpsResult, tpResult] = await Promise.all([
+    supabase.rpc('match_sor_paa_stps'),
+    supabase.rpc('match_sor_paa_tp'),
+  ]);
+
+  return NextResponse.json({
+    ok: true,
+    synkroniseret: rækker.length,
+    stpsMatchet: stpsResult.data ?? 0,
+    tpMatchet: tpResult.data ?? 0,
+    stpsFejl: stpsResult.error?.message ?? null,
+    tpFejl: tpResult.error?.message ?? null,
+  });
 }
