@@ -5,11 +5,13 @@
 import { useState } from 'react';
 import { MapPin, Globe, ClipboardList, Star, Crown } from 'lucide-react';
 import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
 import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
 import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
 
 type BostedHeaderProps = {
   bosted: BostedDetail;
+  pakker?: KundePakke[];
 };
 
 const fundLabels: Record<StpsFundNiveau, string> = {
@@ -36,7 +38,7 @@ async function toggleGigantApi(id: string, næsteVærdi: boolean) {
   });
 }
 
-export function BostedHeader({ bosted }: BostedHeaderProps) {
+export function BostedHeader({ bosted, pakker = [] }: BostedHeaderProps) {
   const { erFavorit, toggleFavorit } = useFavoritter();
   const erStjernet = erFavorit(bosted.id);
   const [erGigant, setErGigant] = useState(bosted.erGigant);
@@ -136,6 +138,28 @@ export function BostedHeader({ bosted }: BostedHeaderProps) {
             </span>
           )}
           <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} vis="fuld" />
+          {pakker.map((p, i) => (
+            <span
+              key={i}
+              style={{
+                background: p.farve,
+                color: p.tekstFarve,
+                padding: '0.2rem 0.6rem',
+                borderRadius: '6px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {p.navn}
+              {p.startdato && (
+                <span style={{ opacity: 0.75, fontWeight: 400 }}>· {p.startdato}</span>
+              )}
+            </span>
+          ))}
         </div>
       </div>
     </div>

@@ -3,6 +3,7 @@
 import { notFound } from 'next/navigation';
 import { BostedDetailPage } from '@/features/dashboard/components/BostedDetailPage';
 import { hentBostedById } from '@/features/dashboard/services/BostedService';
+import { hentKundePakker } from '@/features/monday/services/MondayProdukterService';
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -14,5 +15,9 @@ export default async function BostedDetailRoute({ params }: PageProps) {
 
   if (!bosted) notFound();
 
-  return <BostedDetailPage bosted={bosted} />;
+  const pakker = bosted.mondayItemId
+    ? await hentKundePakker(bosted.mondayItemId).catch(() => [])
+    : [];
+
+  return <BostedDetailPage bosted={bosted} pakker={pakker} />;
 }

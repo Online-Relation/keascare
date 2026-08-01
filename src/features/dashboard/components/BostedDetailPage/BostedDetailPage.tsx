@@ -4,6 +4,7 @@
 
 import { useState, Suspense } from 'react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
+import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
 import { NyOprettetBanner } from './sections/NyOprettetBanner';
 import { BostedHeader } from './sections/BostedHeader';
 import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
@@ -20,9 +21,10 @@ import { BostedDeltagereKort } from './sections/BostedDeltagereKort';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
+  pakker?: KundePakke[];
 };
 
-export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
+export function BostedDetailPage({ bosted, pakker = [] }: BostedDetailPageProps) {
   const [historikOpdater, setHistorikOpdater] = useState(0);
 
   return (
@@ -31,7 +33,7 @@ export function BostedDetailPage({ bosted }: BostedDetailPageProps) {
         <NyOprettetBanner />
       </Suspense>
 
-      <BostedHeader bosted={bosted} />
+      <BostedHeader bosted={bosted} pakker={pakker} />
 
       <div className="bosted-detail-grid">
         <BostedTilsynKort bosted={bosted} />
