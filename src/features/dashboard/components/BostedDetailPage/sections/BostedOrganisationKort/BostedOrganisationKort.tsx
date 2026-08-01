@@ -91,7 +91,7 @@ export function BostedOrganisationKort({ bosted }: Props) {
           {bosted.sorKode && (
             <div className="bosted-detail-field">
               <span className="bosted-detail-field-label">SOR-kode</span>
-              <span className="bosted-sor-badge">{bosted.sorKode}</span>
+              <span className="bosted-sor-badge">{bosted.sorKode.replace(/^="?|"?$/g, '')}</span>
             </div>
           )}
           {bosted.cvrAntalAfdelinger != null && bosted.cvrAntalAfdelinger > 1 && (

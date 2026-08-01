@@ -152,10 +152,16 @@ function felt(obj, ...kandidater) {
   return null;
 }
 
+// Strip Excel ="..." format fra værdier
+function stripExcel(v) {
+  if (!v) return v;
+  return v.replace(/^="?|"?$/g, '');
+}
+
 // Map CSV-række til SOR-enhed (kolonner fra SOREntity.csv)
 function mapRække(r) {
   // sorid kan have BOM-præfiks på første kolonne
-  const sorKode = felt(r, 'sorid', '﻿sorid', 'ï»¿sorid');
+  const sorKode = stripExcel(felt(r, 'sorid', '﻿sorid', 'ï»¿sorid'));
   if (!sorKode) return null;
 
   // Aktiv = ingen todate sat
@@ -169,7 +175,7 @@ function mapRække(r) {
   return {
     sor_kode: sorKode,
     navn: felt(r, 'entityname') ?? '',
-    cvr: felt(r, 'institutionownercvrnumberid'),
+    cvr: stripExcel(felt(r, 'institutionownercvrnumberid')),
     adresse: adresse || null,
     postnummer: felt(r, 'postaladdresspostcodeid'),
     by: felt(r, 'postaladdressdistrictname'),
