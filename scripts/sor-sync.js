@@ -8,9 +8,6 @@
 const https = require('https');
 const http  = require('http');
 const zlib  = require('zlib');
-const fs    = require('fs');
-const path  = require('path');
-const { execSync } = require('child_process');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -147,6 +144,46 @@ function mapRække(r) {
   };
 }
 
+// Minimal ZIP-parser i ren Node.js — ingen eksterne afhængigheder
+// Læser alle filer i ZIP og returnerer indholdet af den største CSV-fil
+function udpakZipTilCsv(buf) {
+  const entries = [];
+  let offset = 0;
+  while (offset < buf.length - 4) {
+    const sig = buf.readUInt32LE(offset);
+    if (sig !== 0x04034b50) { offset++; continue; }
+    const compression  = buf.readUInt16LE(offset + 8);
+    const compSize     = buf.readUInt32LE(offset + 18);
+    const uncompSize   = buf.readUInt32LE(offset + 22);
+    const nameLen      = buf.readUInt16LE(offset + 26);
+    const extraLen     = buf.readUInt16LE(offset + 28);
+    const name         = buf.slice(offset + 30, offset + 30 + nameLen).toString('utf-8');
+    const dataStart    = offset + 30 + nameLen + extraLen;
+    const compData     = buf.slice(dataStart, dataStart + compSize);
+
+    if (name.match(/\.csv$/i) && compSize > 0) {
+      let data;
+      if (compression === 0) {
+        data = compData;
+      } else if (compression === 8) {
+        data = zlib.inflateRawSync(compData);
+      }
+      if (data) entries.push({ name, size: uncompSize, data });
+    }
+    offset = dataStart + compSize;
+  }
+
+  if (entries.length === 0) throw new Error('Ingen CSV-filer fundet i ZIP');
+  console.log(`ZIP indeholder CSV-filer: ${entries.map((e) => `${e.name} (${e.size} bytes)`).join(', ')}`);
+
+  // Brug den største
+  entries.sort((a, b) => b.size - a.size);
+  const valgt = entries[0];
+  console.log(`Bruger: ${valgt.name}`);
+  const tekst = valgt.data.toString('latin1');
+  return tekst.includes(';') || tekst.includes(',') ? tekst : valgt.data.toString('utf-8');
+}
+
 async function hentSorData() {
   let fileUrl;
   try {
@@ -162,30 +199,7 @@ async function hentSorData() {
   if (fileUrl.endsWith('.gz')) {
     tekst = zlib.gunzipSync(buf).toString('utf-8');
   } else if (fileUrl.endsWith('.zip')) {
-    // Udpak ZIP med system-unzip og find den største CSV-fil
-    const tmpDir = `/tmp/sor-sync-${Date.now()}`;
-    const tmpZip = `${tmpDir}.zip`;
-    fs.mkdirSync(tmpDir, { recursive: true });
-    fs.writeFileSync(tmpZip, buf);
-    try {
-      execSync(`unzip -o "${tmpZip}" -d "${tmpDir}"`, { stdio: 'pipe' });
-    } catch (e) {
-      throw new Error(`unzip fejlede: ${e.message}`);
-    }
-    // Find den største CSV-fil i den udpakkede mappe
-    const csvFiler = execSync(`find "${tmpDir}" -name "*.csv" -o -name "*.CSV"`, { encoding: 'utf-8' })
-      .trim().split('\n').filter(Boolean);
-    console.log(`Udpakkede CSV-filer: ${csvFiler.join(', ')}`);
-    if (csvFiler.length === 0) throw new Error('Ingen CSV-filer fundet i ZIP');
-    // Brug den største fil
-    const størsteFil = csvFiler.sort((a, b) =>
-      fs.statSync(b).size - fs.statSync(a).size
-    )[0];
-    console.log(`Bruger: ${størsteFil} (${fs.statSync(størsteFil).size} bytes)`);
-    tekst = fs.readFileSync(størsteFil, 'latin1');
-    if (!tekst.includes(';') && !tekst.includes(',')) tekst = fs.readFileSync(størsteFil, 'utf-8');
-    // Ryd op
-    try { execSync(`rm -rf "${tmpDir}" "${tmpZip}"`); } catch {}
+    tekst = udpakZipTilCsv(buf);
   } else {
     tekst = buf.toString('utf-8');
     if (!tekst.includes(';') && !tekst.includes(',')) {
