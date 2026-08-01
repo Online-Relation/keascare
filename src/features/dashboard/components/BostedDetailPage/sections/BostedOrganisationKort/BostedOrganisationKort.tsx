@@ -91,10 +91,10 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <div className="bosted-detail-field">
             <span className="bosted-detail-field-label">Sundhedsvæsenets Organisationsregister</span>
             {bosted.sorKode
-              ? <span className="bosted-sor-badge">Ja</span>
+              ? <span className="bosted-sor-badge">Registreret</span>
               : bosted.cvr
-                ? <span className="bosted-sor-badge bosted-sor-badge--mangler">Nej</span>
-                : <span className="bosted-detail-placeholder">Ukendt — mangler CVR</span>
+                ? <span className="bosted-sor-badge bosted-sor-badge--mangler">Ikke registreret</span>
+                : <span className="bosted-detail-placeholder">Ukendt</span>
             }
           </div>
           {bosted.cvrAntalAfdelinger != null && bosted.cvrAntalAfdelinger > 1 && (
