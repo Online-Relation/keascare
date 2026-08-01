@@ -90,7 +90,7 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <FeltRække label="CVR-nummer" value={bosted.cvr} />
           {bosted.sorKode && (
             <div className="bosted-detail-field">
-              <span className="bosted-detail-field-label">SOR-kode</span>
+              <span className="bosted-detail-field-label">Sundhedsvæsenets Organisationsregister</span>
               <span className="bosted-sor-badge">{bosted.sorKode.replace(/^="?|"?$/g, '')}</span>
             </div>
           )}
