@@ -9,20 +9,20 @@ import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 export async function GET(req: NextRequest) {
   const pdfUrl = req.nextUrl.searchParams.get('url');
 
-  // Hvis ingen URL givet: hent en rapport fra databasen med pdf_url
+  // Hvis ingen URL givet: hent en rapport fra databasen med pdf_storage_url
   if (!pdfUrl) {
     const supabase = getSupabaseServerClient();
     const { data } = await supabase
       .from('stps_rapporter')
-      .select('id, stps_tilbud_navn, pdf_url, tilsyn_deltagere_stps')
-      .not('pdf_url', 'is', null)
+      .select('id, stps_tilbud_navn, pdf_url, pdf_storage_url, tilsyn_deltagere_stps')
+      .not('pdf_storage_url', 'is', null)
       .limit(5);
 
     return NextResponse.json({
-      besked: 'Giv ?url=<pdf-url> for at parse en specifik PDF. Her er 5 rapporter med pdf_url:',
+      besked: 'Giv ?url=<pdf_storage_url> for at parse en specifik PDF (brug pdf_storage_url, ikke pdf_url — gopublic.dk blokerer Railway)',
       eksempler: (data ?? []).map((r) => ({
         navn: r.stps_tilbud_navn,
-        pdfUrl: r.pdf_url,
+        pdfStorageUrl: r.pdf_storage_url,
         harDeltagere: r.tilsyn_deltagere_stps !== null,
       })),
     });

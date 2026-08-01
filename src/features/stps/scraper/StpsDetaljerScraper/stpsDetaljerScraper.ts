@@ -128,8 +128,9 @@ export async function kørDetaljerScraper(batchStørrelse = 50): Promise<Detalje
         // Upload-fejl stopper ikke parsing
       }
 
-      // 3. Parse PDF og udtræk detaljer
-      const detaljer = await parsePdfFraUrl(pdfUrl);
+      // 3. Parse PDF — brug Supabase Storage URL hvis tilgængelig (gopublic.dk blokerer Railway)
+      const parseUrl = pdfStorageUrl ?? pdfUrl;
+      const detaljer = await parsePdfFraUrl(parseUrl);
 
       // 4. Gem — CVR fra HTML har forrang hvis PDF-parse fejler
       await supabase.from('stps_rapporter').update({
