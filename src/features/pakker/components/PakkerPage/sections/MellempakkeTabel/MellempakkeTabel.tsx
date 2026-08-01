@@ -3,7 +3,7 @@
 // src/features/pakker/components/PakkerPage/sections/MellempakkeTabel/MellempakkeTabel.tsx
 
 import { useState } from 'react';
-import { Save } from 'lucide-react';
+import { Save, Pencil } from 'lucide-react';
 import type { BostedOptagelse } from '@/features/monday/services/MondayProdukterService';
 import type { BeboerRegistrering } from '@/features/pakker/services/PakkerService';
 import { gemBeboerRegistrering } from '@/features/pakker/services/PakkerService';
@@ -80,6 +80,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
   const [gemmer, setGemmer]           = useState<Record<string, boolean>>({});
   const [gemt, setGemt]               = useState<Record<string, string | null>>({});
   const [fejl, setFejl]               = useState<Record<string, string>>({});
+  const [redigerer, setRedigerer]     = useState<Record<string, boolean>>({});
 
   const nøgle = (navn: string) => `${navn}__${valgtAar}__${valgtMaaned}`;
 
@@ -115,6 +116,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
       await gemBeboerRegistrering(mondayId, b.navn, 'FMK pakke', valgtAar, valgtMaaned, antal);
       const nu = new Date().toISOString();
       setGemt((g) => ({ ...g, [k]: nu }));
+      setRedigerer((r) => ({ ...r, [k]: false }));
       setTimeout(() => setGemt((g) => ({ ...g, [k]: null })), 3000);
     } catch {
       setFejl((f) => ({ ...f, [k]: 'Fejl ved gem' }));
@@ -180,6 +182,8 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               const sidstOpdateret = gemt[k] ?? eks?.opdateret ?? null;
               const netopGemt = !!gemt[k];
               const mdr = måanederAktiv(b.dato, valgtAar, valgtMaaned);
+              const harGemtVærdi = eks != null || netopGemt;
+              const erLåst = harGemtVærdi && !redigerer[k];
 
               return (
                 <tr key={b.navn}>
@@ -190,10 +194,12 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                     <input
                       type="number"
                       min={0}
-                      className="pakker-antal-input"
+                      className={`pakker-antal-input${erLåst ? ' låst' : ''}`}
                       value={raw}
                       placeholder="—"
+                      readOnly={erLåst}
                       onChange={(e) => {
+                        if (erLåst) return;
                         setInputs((prev) => ({ ...prev, [k]: e.target.value }));
                         setFejl((f) => ({ ...f, [k]: '' }));
                       }}
@@ -210,13 +216,24 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                     }
                   </td>
                   <td>
-                    <button
-                      className={`pakker-gem-knap${netopGemt ? ' gemt' : ''}`}
-                      onClick={() => gem(b)}
-                      disabled={gemmer[k] || raw === ''}
-                    >
-                      {netopGemt ? '✓ Gemt' : gemmer[k] ? '…' : <><Save size={13} /> Gem</>}
-                    </button>
+                    <div className="pakker-knap-gruppe">
+                      {erLåst && (
+                        <button
+                          className="pakker-rediger-knap"
+                          onClick={() => setRedigerer((r) => ({ ...r, [k]: true }))}
+                          title="Rediger"
+                        >
+                          <Pencil size={13} /> Rediger
+                        </button>
+                      )}
+                      <button
+                        className={`pakker-gem-knap${netopGemt ? ' gemt' : ''}`}
+                        onClick={() => gem(b)}
+                        disabled={gemmer[k] || raw === '' || erLåst}
+                      >
+                        {netopGemt ? '✓ Gemt' : gemmer[k] ? '…' : <><Save size={13} /> Gem</>}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
