@@ -80,8 +80,9 @@ async function findSenesteFilUrl() {
   }
 
   // Ingen direkte filer — søg i undermapper (ét niveau)
+  // Mapper er URL'er der slutter med / men ikke er selve roden
   const mapper = udtrækLinks(html, SOR_BASE)
-    .filter((u) => u.startsWith(SOR_BASE) && u !== SOR_BASE && !u.includes('.'));
+    .filter((u) => u.startsWith(SOR_BASE) && u !== SOR_BASE && u.endsWith('/'));
 
   console.log(`Ingen direkte filer — søger i ${mapper.length} undermappe(r):`, mapper);
 
