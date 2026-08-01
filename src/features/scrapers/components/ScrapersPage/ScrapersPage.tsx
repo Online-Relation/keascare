@@ -131,6 +131,13 @@ const SCRAPERS: Scraper[] = [
     body: { batch: 50 },
   },
   {
+    id: 'sor-sync',
+    titel: 'SOR — Synkroniser organisationsregister',
+    beskrivelse: 'Henter alle enheder fra NSI\'s SOR API og gemmer i Supabase-cache. Bruges til at vise SOR-badge på kunder og finde nye potentielle leads under SOR Register.',
+    endpoint: '/api/sor/sync',
+    body: {},
+  },
+  {
     id: 'monday-match',
     titel: 'Monday — Synkroniser kunder',
     beskrivelse: 'Henter Bosted-kunder fra Monday (Nye + Aktive Forløb) og matcher mod STPS-bosteder på navn. Sætter "Kunde"-badge i dashboardet.',

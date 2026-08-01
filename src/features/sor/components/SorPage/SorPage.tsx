@@ -3,7 +3,7 @@
 // src/features/sor/components/SorPage/SorPage.tsx
 
 import { useState } from 'react';
-import { RefreshCw, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 import type { SorCacheEnhed } from '@/features/sor/services/SorService';
 
 type Props = {
@@ -13,39 +13,15 @@ type Props = {
 };
 
 function formaterDato(iso: string | null): string {
-  if (!iso) return 'Aldrig';
+  if (!iso) return 'Ikke synkroniseret endnu — gå til Scrapers';
   return new Date(iso).toLocaleString('da-DK', {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   });
 }
 
-export function SorPage({ nyeLeads: initialLeads, antalIAlt, sidstSynkroniseret: initialSynk }: Props) {
-  const [synker, setSynker] = useState(false);
-  const [synkStatus, setSynkStatus] = useState<string | null>(null);
-  const [sidstSynk, setSidstSynk] = useState(initialSynk);
-  const [nyeLeads, setNyeLeads] = useState(initialLeads);
+export function SorPage({ nyeLeads, antalIAlt, sidstSynkroniseret }: Props) {
   const [søgeTekst, setSøgeTekst] = useState('');
-
-  async function kørSync() {
-    setSynker(true);
-    setSynkStatus(null);
-    try {
-      const res = await fetch('/api/sor/sync', { method: 'POST' });
-      const json = await res.json();
-      if (json.ok) {
-        setSynkStatus(`✓ Synkroniseret ${json.synkroniseret} enheder`);
-        setSidstSynk(new Date().toISOString());
-        window.location.reload();
-      } else {
-        setSynkStatus(`Fejl: ${json.fejl}`);
-      }
-    } catch {
-      setSynkStatus('Netværksfejl ved synkronisering');
-    } finally {
-      setSynker(false);
-    }
-  }
 
   const filtreredeLeads = nyeLeads.filter((e) =>
     !søgeTekst || e.navn.toLowerCase().includes(søgeTekst.toLowerCase()) ||
@@ -59,16 +35,8 @@ export function SorPage({ nyeLeads: initialLeads, antalIAlt, sidstSynkroniseret:
         <div>
           <h1 className="sor-page-titel">SOR Register</h1>
           <p className="sor-page-undertitel">
-            Sundhedsvæsenets Organisationsregister · {antalIAlt} enheder i cache
+            Sundhedsvæsenets Organisationsregister · {antalIAlt} enheder i cache · Sidst synk: {formaterDato(sidstSynkroniseret)}
           </p>
-        </div>
-        <div className="sor-sync-boks">
-          <span className="sor-sync-dato">Sidst synk: {formaterDato(sidstSynk)}</span>
-          <button className="sor-sync-knap" onClick={kørSync} disabled={synker}>
-            <RefreshCw size={14} className={synker ? 'sor-spin' : ''} />
-            {synker ? 'Synkroniserer…' : 'Synkroniser nu'}
-          </button>
-          {synkStatus && <span className="sor-sync-status">{synkStatus}</span>}
         </div>
       </div>
 
