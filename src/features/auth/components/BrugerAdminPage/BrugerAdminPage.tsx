@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { UserPlus, Trash2, Users, Eye, EyeOff, Shield } from 'lucide-react';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
-import { rollerTilgængeligeFor, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
+import { ROLLE_LABELS, ROLLE_HIERARKI, type BrugerRolle } from '@/features/auth/config/roller.config';
 import { RolleAdgangOversigt } from '@/features/auth/components/RolleAdgangOversigt/RolleAdgangOversigt';
 import { RettighederPanel } from '@/features/auth/components/RettighederPanel';
 
@@ -16,9 +16,13 @@ type Bruger = {
   sidstLoggetInd: string | null;
 };
 
+// Alle roller sorteret fra højest til lavest niveau
+const ALLE_ROLLER = (Object.keys(ROLLE_HIERARKI) as BrugerRolle[])
+  .sort((a, b) => ROLLE_HIERARKI[b] - ROLLE_HIERARKI[a]);
+
 export function BrugerAdminPage() {
   const { rolle: minRolle } = useBrugerRolle();
-  const tilgængeligeRoller = rollerTilgængeligeFor(minRolle);
+  const tilgængeligeRoller = ALLE_ROLLER;
 
   const [brugere, setBrugere] = useState<Bruger[]>([]);
   const [loader, setLoader] = useState(true);
