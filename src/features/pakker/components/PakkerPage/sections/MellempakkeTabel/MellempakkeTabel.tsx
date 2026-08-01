@@ -3,10 +3,11 @@
 // src/features/pakker/components/PakkerPage/sections/MellempakkeTabel/MellempakkeTabel.tsx
 
 import { useState } from 'react';
-import { Save, Pencil } from 'lucide-react';
+import { Save, Pencil, ChevronDown } from 'lucide-react';
 import type { BostedOptagelse } from '@/features/monday/services/MondayProdukterService';
 import type { BeboerRegistrering } from '@/features/pakker/services/PakkerService';
 import { gemBeboerRegistrering } from '@/features/pakker/services/PakkerService';
+import { BostedHistorik } from './BostedHistorik';
 
 const FAST_PRIS = 1895;
 const BEBOER_PRIS = 289;
@@ -70,8 +71,8 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
   const [gemt, setGemt]                 = useState<Record<string, string | null>>({});
   const [fejl, setFejl]                 = useState<Record<string, string>>({});
   const [redigerer, setRedigerer]       = useState<Record<string, boolean>>({});
-  // Per-række periode når man redigerer (kan afvige fra global periode)
   const [redigerPeriode, setRedigerPeriode] = useState<Record<string, Periode>>({});
+  const [åbenHistorik, setÅbenHistorik] = useState<string | null>(null);
 
   const nøgle = (navn: string) => `${navn}__${valgtAar}__${valgtMaaned}`;
 
@@ -176,9 +177,21 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               const rowPeriode = redigerPeriode[k] ?? { aar: valgtAar, maaned: valgtMaaned };
               const rowAar = [rowPeriode.aar - 1, rowPeriode.aar, rowPeriode.aar + 1];
 
+              const historikÅben = åbenHistorik === b.navn;
+
               return (
-                <tr key={b.navn}>
-                  <td>{b.navn}</td>
+                <>
+                <tr key={b.navn} className={historikÅben ? 'pakker-rad-aktiv' : ''}>
+                  <td>
+                    <button
+                      className="pakker-bosted-knap"
+                      onClick={() => setÅbenHistorik(historikÅben ? null : b.navn)}
+                      aria-expanded={historikÅben}
+                    >
+                      <ChevronDown size={14} className={`pakker-chevron${historikÅben ? ' åben' : ''}`} />
+                      {b.navn}
+                    </button>
+                  </td>
                   <td>{b.dato ?? '—'}</td>
                   <td className="pakker-td-tal">{mdr != null ? `${mdr} mdr.` : '—'}</td>
                   <td className="pakker-td-tal">
@@ -243,6 +256,17 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                     </div>
                   </td>
                 </tr>
+                {historikÅben && (
+                  <tr className="pakker-historik-rad">
+                    <td colSpan={7} className="pakker-historik-celle">
+                      <BostedHistorik
+                        bostedNavn={b.navn}
+                        registreringer={eksisterendeRegistreringer}
+                      />
+                    </td>
+                  </tr>
+                )}
+                </>
               );
             })}
           </tbody>

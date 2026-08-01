@@ -1,0 +1,1 @@
+export { BostedHistorik } from './BostedHistorik';

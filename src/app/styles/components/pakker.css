@@ -238,6 +238,172 @@
   color: #0073ea;
 }
 
+/* ── Bosted klik-knap ── */
+.pakker-bosted-knap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: inherit;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  padding: 0;
+  text-align: left;
+}
+
+.pakker-chevron {
+  color: var(--color-text-muted);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.pakker-chevron.åben {
+  transform: rotate(180deg);
+}
+
+.pakker-rad-aktiv {
+  background: var(--color-surface);
+}
+
+/* ── Historik-række ── */
+.pakker-historik-rad td {
+  padding: 0 !important;
+  border-bottom: 2px solid #0073ea22;
+}
+
+.pakker-historik-celle {
+  padding: 0 !important;
+}
+
+/* ── Historik-panel ── */
+.bosted-historik {
+  padding: 1.25rem 1.5rem 1rem;
+  background: var(--color-surface);
+  border-top: 1px solid var(--color-border);
+  animation: slideDown 0.18s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.bosted-historik-header {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.bosted-historik-titel {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.bosted-historik-meta {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.bosted-historik-svg-wrapper {
+  position: relative;
+}
+
+.bosted-historik-svg {
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  display: block;
+}
+
+/* ── Tooltip ── */
+.bosted-historik-tooltip {
+  position: fixed;
+  background: var(--color-bg, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.6rem 0.85rem;
+  box-shadow: 0 4px 16px #0002;
+  font-size: 0.8rem;
+  pointer-events: none;
+  z-index: 100;
+  transform: translate(-50%, -100%);
+  white-space: nowrap;
+}
+
+.bosted-historik-tooltip-label {
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  color: var(--color-text-primary);
+}
+
+.bosted-historik-tooltip-antal {
+  color: #0073ea;
+  font-weight: 600;
+}
+
+.bosted-historik-tooltip-beloeb {
+  color: var(--color-text-secondary);
+  font-size: 0.75rem;
+}
+
+.bosted-historik-tooltip-dato {
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  margin-top: 0.2rem;
+}
+
+/* ── Måneds-chips ── */
+.bosted-historik-chips {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.75rem;
+}
+
+.bosted-historik-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.72rem;
+  min-width: 36px;
+  cursor: default;
+}
+
+.bosted-historik-chip.har-data {
+  background: #0073ea18;
+  border: 1px solid #0073ea44;
+}
+
+.bosted-historik-chip.mangler {
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  opacity: 0.6;
+}
+
+.chip-mdr {
+  font-weight: 600;
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.chip-antal {
+  font-weight: 700;
+  color: var(--color-text-primary);
+  font-size: 0.82rem;
+}
+
+.bosted-historik-chip.har-data .chip-antal {
+  color: #0073ea;
+}
+
 .pakker-select-sm {
   padding: 0.25rem 0.4rem;
   font-size: 0.78rem;
