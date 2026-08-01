@@ -188,6 +188,20 @@
   border-color: transparent;
 }
 
+.pakker-antal-input.carry-forward {
+  border-color: #0073ea44;
+  background: #0073ea08;
+  color: #0073ea;
+  font-style: italic;
+}
+
+.pakker-carry-label {
+  font-size: 0.72rem;
+  color: #0073ea;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 .pakker-fejl {
   display: block;
   font-size: 0.7rem;

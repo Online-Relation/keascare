@@ -82,11 +82,34 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
     );
   }
 
+  // Finder seneste registrering FØR den valgte periode (carry-forward)
+  function senesteTidligereReg(navn: string): BeboerRegistrering | undefined {
+    const nuPeriodeTal = valgtAar * 12 + valgtMaaned;
+    return eksisterendeRegistreringer
+      .filter(
+        (r) =>
+          r.bostedNavn === navn &&
+          r.pakke === 'FMK pakke' &&
+          r.aar * 12 + r.maaned < nuPeriodeTal,
+      )
+      .sort((a, b) => (b.aar * 12 + b.maaned) - (a.aar * 12 + a.maaned))[0];
+  }
+
   function værdiFeltet(navn: string): string {
     const k = nøgle(navn);
     if (k in inputs) return inputs[k];
     const eks = eksisterendeReg(navn);
-    return eks != null ? String(eks.antalBeboere) : '';
+    if (eks != null) return String(eks.antalBeboere);
+    // Ingen registrering for denne periode — brug seneste tidligere som forslag
+    const carryFwd = senesteTidligereReg(navn);
+    return carryFwd != null ? String(carryFwd.antalBeboere) : '';
+  }
+
+  function erCarryForward(navn: string): BeboerRegistrering | undefined {
+    if (eksisterendeReg(navn) != null) return undefined;
+    const k = nøgle(navn);
+    if (k in inputs) return undefined; // brugeren har ændret det
+    return senesteTidligereReg(navn);
   }
 
   function startRediger(navn: string) {
@@ -176,6 +199,10 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               const erLåst = harGemtVærdi && !redigerer[k];
               const rowPeriode = redigerPeriode[k] ?? { aar: valgtAar, maaned: valgtMaaned };
               const rowAar = [rowPeriode.aar - 1, rowPeriode.aar, rowPeriode.aar + 1];
+              const carryFwd = erCarryForward(b.navn);
+              const carryLabel = carryFwd
+                ? `Fra ${MÅNEDER[carryFwd.maaned - 1].slice(0, 3)} ${carryFwd.aar}`
+                : null;
 
               const historikÅben = åbenHistorik === b.navn;
 
@@ -198,7 +225,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                     <input
                       type="number"
                       min={0}
-                      className={`pakker-antal-input${erLåst ? ' låst' : ''}`}
+                      className={`pakker-antal-input${erLåst ? ' låst' : ''}${carryFwd ? ' carry-forward' : ''}`}
                       value={raw}
                       placeholder="—"
                       readOnly={erLåst}
@@ -216,6 +243,8 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                   <td className="pakker-opdateret">
                     {netopGemt
                       ? <span style={{ color: '#16a34a', fontWeight: 600 }}>Gemt nu ✓</span>
+                      : carryLabel
+                      ? <span className="pakker-carry-label">↩ {carryLabel}</span>
                       : <span>{formaterDato(sidstOpdateret)}</span>
                     }
                   </td>
