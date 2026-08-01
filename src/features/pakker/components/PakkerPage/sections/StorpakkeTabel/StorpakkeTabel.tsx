@@ -7,11 +7,14 @@ import { Save, Pencil } from 'lucide-react';
 import type { BostedOptagelse } from '@/features/monday/services/MondayProdukterService';
 import type { StorPrisRegistrering } from '@/features/pakker/services/PakkerService';
 import { gemStorPris } from '@/features/pakker/services/PakkerService';
+import { SorBadge } from '@/features/sor/components/SorBadge';
+import type { SorCacheEnhed } from '@/features/sor/services/SorService';
 
 type Props = {
   bosteder: BostedOptagelse[];
   mondayIdMap: Record<string, string>;
   eksisterendePriser: StorPrisRegistrering[];
+  sorMatchMap?: Record<string, SorCacheEnhed | null>;
 };
 
 const MÅNEDER = [
@@ -49,7 +52,7 @@ function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[
   }
   return (
     <tr className="pakker-tabel-total">
-      <td colSpan={4}>Total MRR</td>
+      <td colSpan={5}>Total MRR</td>
       <td className="pakker-td-tal pakker-beloeb">
         {harNoget ? `${Math.round(total).toLocaleString('da-DK')} kr` : '—'}
       </td>
@@ -58,7 +61,7 @@ function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[
   );
 }
 
-export function StorpakkeTabel({ bosteder, mondayIdMap, eksisterendePriser }: Props) {
+export function StorpakkeTabel({ bosteder, mondayIdMap, eksisterendePriser, sorMatchMap }: Props) {
   const standard = nuværendeMåned();
   const [valgtAar, setValgtAar]     = useState(standard.aar);
   const [valgtMaaned, setValgtMaaned] = useState(standard.maaned);
@@ -138,6 +141,7 @@ export function StorpakkeTabel({ bosteder, mondayIdMap, eksisterendePriser }: Pr
           <thead>
             <tr>
               <th>Bosted</th>
+              <th>SOR</th>
               <th>Startdato</th>
               <th className="pakker-th-tal">Mdr. aktiv</th>
               <th className="pakker-th-tal">Pris/md (kr)</th>
@@ -161,6 +165,12 @@ export function StorpakkeTabel({ bosteder, mondayIdMap, eksisterendePriser }: Pr
               return (
                 <tr key={b.navn}>
                   <td>{b.navn}</td>
+                  <td>
+                    <SorBadge
+                      match={sorMatchMap ? (sorMatchMap[b.navn] ?? null) : undefined}
+                      ikkeIndlæst={!sorMatchMap}
+                    />
+                  </td>
                   <td>{b.dato ?? '—'}</td>
                   <td className="pakker-td-tal">{mdr != null ? `${mdr} mdr.` : '—'}</td>
                   <td className="pakker-td-tal">

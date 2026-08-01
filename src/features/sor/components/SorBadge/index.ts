@@ -1,0 +1,1 @@
+export { SorBadge } from './SorBadge';

@@ -5,6 +5,7 @@ import { hentProduktStatistik } from '@/features/monday/services/MondayProdukter
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { PakkerPage } from '@/features/pakker/components/PakkerPage';
 import type { BeboerRegistrering, StorPrisRegistrering } from '@/features/pakker/services/PakkerService';
+import { hentSorCache, bygSorMatchMap } from '@/features/sor/services/SorService';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,7 +18,7 @@ const hentProduktStatistikCached = unstable_cache(
 export default async function PakkerRoute() {
   const supabase = getSupabaseServerClient();
 
-  const [data, registreringerRaw, storPriserRaw, kundeRaw] = await Promise.all([
+  const [data, registreringerRaw, storPriserRaw, kundeRaw, sorEnheder] = await Promise.all([
     hentProduktStatistikCached(),
     supabase
       .from('pakke_beboer_registreringer')
@@ -35,6 +36,7 @@ export default async function PakkerRoute() {
       .from('monday_kunder')
       .select('monday_id, navn')
       .then(({ data }) => data ?? []),
+    hentSorCache().catch(() => []),
   ]);
 
   const registreringer: BeboerRegistrering[] = registreringerRaw.map((r) => ({
@@ -63,12 +65,21 @@ export default async function PakkerRoute() {
     if (k.navn && k.monday_id) mondayIdMap[k.navn] = k.monday_id;
   }
 
+  // Byg SOR-matchmap fra alle bosteder på tværs af pakker
+  const alleBosteder = data.linjer.flatMap((l) =>
+    l.bosteder.map((b) => ({ navn: b.navn, cvr: null }))
+  );
+  const sorMatchMap = sorEnheder.length > 0
+    ? bygSorMatchMap(sorEnheder, alleBosteder)
+    : undefined;
+
   return (
     <PakkerPage
       data={data}
       mondayIdMap={mondayIdMap}
       registreringer={registreringer}
       storPriser={storPriser}
+      sorMatchMap={sorMatchMap}
     />
   );
 }

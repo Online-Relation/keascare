@@ -32,7 +32,7 @@ function mapItem(item: RåItem): MondayKundeItem {
     navn:             item.name,
     gruppe:           mapGruppe(item.group.title),
     gruppeNavn:       item.group.title,
-    cvr:              null,
+    cvr:              findKolonne(item, 'CVR'),
     adresse:          findKolonne(item, 'Forløb Adresse'),
     email:            findKolonne(item, 'Kontakt Mail'),
     website:          findKolonne(item, 'Forløb Website'),

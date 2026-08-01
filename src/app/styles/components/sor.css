@@ -1,0 +1,200 @@
+/* sor.css */
+
+.sor-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sor-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sor-page-titel {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.sor-page-undertitel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.sor-sync-boks {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sor-sync-dato {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
+.sor-sync-knap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: #0073ea;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.sor-sync-knap:hover:not(:disabled) { background: #0060c9; }
+.sor-sync-knap:disabled { opacity: 0.5; cursor: default; }
+
+.sor-sync-status {
+  font-size: 0.8rem;
+  color: #16a34a;
+}
+
+@keyframes sor-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+.sor-spin { animation: sor-spin 1s linear infinite; }
+
+.sor-tom-boks {
+  padding: 2rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* ── KPI-række ── */
+.sor-kpi-række {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sor-kpi {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-card, var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 1rem 1.5rem;
+  min-width: 160px;
+}
+
+.sor-kpi-tal {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.1;
+}
+
+.sor-kpi-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-top: 0.25rem;
+}
+
+/* ── Sektion ── */
+.sor-sektion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sor-sektion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.sor-sektion-titel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.sor-søge-felt {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--color-card, var(--color-surface));
+  color: var(--color-text-primary);
+  outline: none;
+  width: 260px;
+}
+
+.sor-søge-felt:focus { border-color: #0073ea; }
+
+/* ── Tabel ── */
+.sor-tabel-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.sor-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 640px;
+}
+
+.sor-tabel th {
+  text-align: left;
+  padding: 0.55rem 0.875rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sor-tabel td {
+  padding: 0.6rem 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+.sor-tabel tbody tr:last-child td { border-bottom: none; }
+.sor-tabel tbody tr:hover td { background: var(--color-surface-alt, rgba(0,0,0,0.02)); }
+
+.sor-td-navn { font-weight: 500; }
+.sor-td-mono { font-family: monospace; font-size: 0.82rem; color: var(--color-text-muted); }
+
+.sor-link-knap {
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-text-muted);
+  transition: color 0.15s;
+}
+.sor-link-knap:hover { color: #0073ea; }
+
+@media (max-width: 768px) {
+  .sor-page { padding: 1rem 0.75rem; }
+  .sor-søge-felt { width: 100%; }
+}

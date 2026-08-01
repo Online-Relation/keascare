@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import type { ProdukterResultat } from '@/features/monday/services/MondayProdukterService';
 import type { BeboerRegistrering, StorPrisRegistrering } from '@/features/pakker/services/PakkerService';
+import type { SorCacheEnhed } from '@/features/sor/services/SorService';
 import { BasispakkeTabel } from './sections/BasispakkeTabel/BasispakkeTabel';
 import { MellempakkeTabel } from './sections/MellempakkeTabel/MellempakkeTabel';
 import { StorpakkeTabel } from './sections/StorpakkeTabel/StorpakkeTabel';
@@ -14,6 +15,7 @@ type Props = {
   mondayIdMap: Record<string, string>;
   registreringer: BeboerRegistrering[];
   storPriser: StorPrisRegistrering[];
+  sorMatchMap?: Record<string, SorCacheEnhed | null>;
 };
 
 function SeedJuliKnap() {
@@ -60,7 +62,7 @@ function SeedJuliKnap() {
   );
 }
 
-export function PakkerPage({ data, mondayIdMap, registreringer, storPriser }: Props) {
+export function PakkerPage({ data, mondayIdMap, registreringer, storPriser, sorMatchMap }: Props) {
   const basispakke  = data.linjer.find((l) => l.produkt === 'Basispakke');
   const mellempakke = data.linjer.find((l) => l.produkt === 'FMK pakke');
   const storpakke   = data.linjer.find((l) => l.produkt === 'Stor pakke');
@@ -79,6 +81,7 @@ export function PakkerPage({ data, mondayIdMap, registreringer, storPriser }: Pr
           bosteder={storpakke.bosteder}
           mondayIdMap={mondayIdMap}
           eksisterendePriser={storPriser}
+          sorMatchMap={sorMatchMap}
         />
       )}
 
@@ -87,6 +90,7 @@ export function PakkerPage({ data, mondayIdMap, registreringer, storPriser }: Pr
           bosteder={mellempakke.bosteder}
           mondayIdMap={mondayIdMap}
           eksisterendeRegistreringer={registreringer}
+          sorMatchMap={sorMatchMap}
         />
       )}
 

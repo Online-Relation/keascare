@@ -8,6 +8,8 @@ import type { BostedOptagelse } from '@/features/monday/services/MondayProdukter
 import type { BeboerRegistrering } from '@/features/pakker/services/PakkerService';
 import { gemBeboerRegistrering } from '@/features/pakker/services/PakkerService';
 import { BostedHistorik } from './BostedHistorik';
+import { SorBadge } from '@/features/sor/components/SorBadge';
+import type { SorCacheEnhed } from '@/features/sor/services/SorService';
 
 const FAST_PRIS = 1895;
 const BEBOER_PRIS = 289;
@@ -44,6 +46,7 @@ type Props = {
   bosteder: BostedOptagelse[];
   mondayIdMap: Record<string, string>;
   eksisterendeRegistreringer: BeboerRegistrering[];
+  sorMatchMap?: Record<string, SorCacheEnhed | null>;
 };
 
 function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[]; værdiFeltet: (navn: string) => string }) {
@@ -55,14 +58,14 @@ function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[
   }
   return (
     <tr className="pakker-tabel-total">
-      <td colSpan={4}>Total MRR</td>
+      <td colSpan={5}>Total MRR</td>
       <td className="pakker-td-tal pakker-beloeb">{harNoget ? `${totalMrr.toLocaleString('da-DK')} kr` : '—'}</td>
       <td colSpan={2} />
     </tr>
   );
 }
 
-export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer }: Props) {
+export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer, sorMatchMap }: Props) {
   const standard = nuværendeMåned();
   const [valgtAar, setValgtAar]         = useState(standard.aar);
   const [valgtMaaned, setValgtMaaned]   = useState(standard.maaned);
@@ -177,6 +180,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
           <thead>
             <tr>
               <th>Bosted</th>
+              <th>SOR</th>
               <th>Startdato</th>
               <th className="pakker-th-tal">Mdr. aktiv</th>
               <th className="pakker-th-tal">Beboere</th>
@@ -218,6 +222,12 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                       <ChevronDown size={14} className={`pakker-chevron${historikÅben ? ' åben' : ''}`} />
                       {b.navn}
                     </button>
+                  </td>
+                  <td>
+                    <SorBadge
+                      match={sorMatchMap ? (sorMatchMap[b.navn] ?? null) : undefined}
+                      ikkeIndlæst={!sorMatchMap}
+                    />
                   </td>
                   <td>{b.dato ?? '—'}</td>
                   <td className="pakker-td-tal">{mdr != null ? `${mdr} mdr.` : '—'}</td>
@@ -287,7 +297,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                 </tr>
                 {historikÅben && (
                   <tr className="pakker-historik-rad">
-                    <td colSpan={7} className="pakker-historik-celle">
+                    <td colSpan={8} className="pakker-historik-celle">
                       <BostedHistorik
                         bostedNavn={b.navn}
                         registreringer={eksisterendeRegistreringer}

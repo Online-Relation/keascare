@@ -451,3 +451,32 @@
   .bosted-historik { padding: 1rem 0.75rem; }
   .bosted-historik-chips { gap: 0.25rem; }
 }
+
+/* ── SOR badge ── */
+.sor-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 5px;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+.sor-badge--registreret {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.sor-badge--ikke-registreret {
+  background: #fef9c3;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.sor-badge--ukendt {
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
