@@ -90,8 +90,20 @@ async function findSenesteFilUrl() {
   for (const mappeUrl of mapper) {
     try {
       const mappeHtml = await hentTekst(mappeUrl);
-      const filer = udtrækLinks(mappeHtml, mappeUrl)
-        .filter((u) => /\.(zip|csv|gz)$/i.test(u));
+      const alleLinks = udtrækLinks(mappeHtml, mappeUrl);
+      console.log(`Links i ${mappeUrl}:`, alleLinks.slice(0, 10));
+
+      const filer = alleLinks.filter((u) => /\.(zip|csv|gz)$/i.test(u));
+      if (filer.length === 0) {
+        // Søg ét niveau dybere
+        const underMapper = alleLinks.filter((u) => u.startsWith(mappeUrl) && u !== mappeUrl && u.endsWith('/'));
+        for (const underUrl of underMapper) {
+          const underHtml = await hentTekst(underUrl);
+          const underLinks = udtrækLinks(underHtml, underUrl);
+          console.log(`Links i ${underUrl}:`, underLinks.slice(0, 10));
+          filer.push(...underLinks.filter((u) => /\.(zip|csv|gz)$/i.test(u)));
+        }
+      }
       alleFiler.push(...filer);
     } catch (e) {
       console.log(`Sprang mappe over (${mappeUrl}): ${e.message}`);
