@@ -8,6 +8,9 @@
 const https = require('https');
 const http  = require('http');
 const zlib  = require('zlib');
+const fs    = require('fs');
+const path  = require('path');
+const { execSync } = require('child_process');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -159,17 +162,30 @@ async function hentSorData() {
   if (fileUrl.endsWith('.gz')) {
     tekst = zlib.gunzipSync(buf).toString('utf-8');
   } else if (fileUrl.endsWith('.zip')) {
-    // Prøv at læse ZIP som tekst (virker hvis det er en enkelt CSV)
-    // Hvis det fejler, kast en klar fejl
+    // Udpak ZIP med system-unzip og find den største CSV-fil
+    const tmpDir = `/tmp/sor-sync-${Date.now()}`;
+    const tmpZip = `${tmpDir}.zip`;
+    fs.mkdirSync(tmpDir, { recursive: true });
+    fs.writeFileSync(tmpZip, buf);
     try {
-      // Node 18 har ikke built-in ZIP — prøv at læse som Latin-1/UTF-8
-      tekst = buf.toString('latin1');
-      if (!tekst.includes(';') && !tekst.includes(',')) {
-        tekst = buf.toString('utf-8');
-      }
-    } catch {
-      throw new Error('ZIP-format kræver unzip — installer med: npm install adm-zip');
+      execSync(`unzip -o "${tmpZip}" -d "${tmpDir}"`, { stdio: 'pipe' });
+    } catch (e) {
+      throw new Error(`unzip fejlede: ${e.message}`);
     }
+    // Find den største CSV-fil i den udpakkede mappe
+    const csvFiler = execSync(`find "${tmpDir}" -name "*.csv" -o -name "*.CSV"`, { encoding: 'utf-8' })
+      .trim().split('\n').filter(Boolean);
+    console.log(`Udpakkede CSV-filer: ${csvFiler.join(', ')}`);
+    if (csvFiler.length === 0) throw new Error('Ingen CSV-filer fundet i ZIP');
+    // Brug den største fil
+    const størsteFil = csvFiler.sort((a, b) =>
+      fs.statSync(b).size - fs.statSync(a).size
+    )[0];
+    console.log(`Bruger: ${størsteFil} (${fs.statSync(størsteFil).size} bytes)`);
+    tekst = fs.readFileSync(størsteFil, 'latin1');
+    if (!tekst.includes(';') && !tekst.includes(',')) tekst = fs.readFileSync(størsteFil, 'utf-8');
+    // Ryd op
+    try { execSync(`rm -rf "${tmpDir}" "${tmpZip}"`); } catch {}
   } else {
     tekst = buf.toString('utf-8');
     if (!tekst.includes(';') && !tekst.includes(',')) {
