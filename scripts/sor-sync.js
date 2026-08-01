@@ -272,8 +272,12 @@ async function hentSorData() {
     const valgt = entries[0];
     console.log(`Stream-parser: ${valgt.name}`);
     const enheder = await parseZipEntryStream(buf, valgt);
-    console.log(`${enheder.length} aktive enheder efter mapping`);
-    return enheder;
+    // Deduplikér på sor_kode — behold seneste forekomst
+    const unikke = Object.values(
+      Object.fromEntries(enheder.map((e) => [e.sor_kode, e]))
+    );
+    console.log(`${unikke.length} unikke aktive enheder efter dedup (${enheder.length} total)`);
+    return unikke;
   } else {
     tekst = buf.toString('utf-8');
     if (!tekst.includes(';') && !tekst.includes(',')) {
