@@ -41,6 +41,32 @@ export async function hentBeboerRegistreringer(pakke?: string): Promise<BeboerRe
   }));
 }
 
+export type StorPrisRegistrering = {
+  id: string;
+  mondayItemId: string;
+  bostedNavn: string;
+  aar: number;
+  maaned: number;
+  maanedligPris: number;
+  opdateret: string | null;
+};
+
+export async function gemStorPris(
+  mondayItemId: string,
+  bostedNavn: string,
+  aar: number,
+  maaned: number,
+  maanedligPris: number,
+): Promise<void> {
+  const { error } = await supabase()
+    .from('pakke_stor_pris')
+    .upsert(
+      { monday_item_id: mondayItemId, bosted_navn: bostedNavn, aar, maaned, maanedlig_pris: maanedligPris, opdateret: new Date().toISOString() },
+      { onConflict: 'monday_item_id,aar,maaned' },
+    );
+  if (error) throw error;
+}
+
 export async function gemBeboerRegistrering(
   mondayItemId: string,
   bostedNavn: string,

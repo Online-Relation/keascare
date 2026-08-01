@@ -4,14 +4,16 @@
 
 import { useState } from 'react';
 import type { ProdukterResultat } from '@/features/monday/services/MondayProdukterService';
-import type { BeboerRegistrering } from '@/features/pakker/services/PakkerService';
+import type { BeboerRegistrering, StorPrisRegistrering } from '@/features/pakker/services/PakkerService';
 import { BasispakkeTabel } from './sections/BasispakkeTabel/BasispakkeTabel';
 import { MellempakkeTabel } from './sections/MellempakkeTabel/MellempakkeTabel';
+import { StorpakkeTabel } from './sections/StorpakkeTabel/StorpakkeTabel';
 
 type Props = {
   data: ProdukterResultat;
   mondayIdMap: Record<string, string>;
   registreringer: BeboerRegistrering[];
+  storPriser: StorPrisRegistrering[];
 };
 
 function SeedJuliKnap() {
@@ -58,9 +60,10 @@ function SeedJuliKnap() {
   );
 }
 
-export function PakkerPage({ data, mondayIdMap, registreringer }: Props) {
-  const basispakke = data.linjer.find((l) => l.produkt === 'Basispakke');
+export function PakkerPage({ data, mondayIdMap, registreringer, storPriser }: Props) {
+  const basispakke  = data.linjer.find((l) => l.produkt === 'Basispakke');
   const mellempakke = data.linjer.find((l) => l.produkt === 'FMK pakke');
+  const storpakke   = data.linjer.find((l) => l.produkt === 'Stor pakke');
 
   return (
     <div className="pakker-page">
@@ -71,8 +74,12 @@ export function PakkerPage({ data, mondayIdMap, registreringer }: Props) {
 
       <SeedJuliKnap />
 
-      {basispakke && basispakke.bosteder.length > 0 && (
-        <BasispakkeTabel bosteder={basispakke.bosteder} />
+      {storpakke && storpakke.bosteder.length > 0 && (
+        <StorpakkeTabel
+          bosteder={storpakke.bosteder}
+          mondayIdMap={mondayIdMap}
+          eksisterendePriser={storPriser}
+        />
       )}
 
       {mellempakke && mellempakke.bosteder.length > 0 && (
@@ -83,6 +90,9 @@ export function PakkerPage({ data, mondayIdMap, registreringer }: Props) {
         />
       )}
 
+      {basispakke && basispakke.bosteder.length > 0 && (
+        <BasispakkeTabel bosteder={basispakke.bosteder} />
+      )}
     </div>
   );
 }

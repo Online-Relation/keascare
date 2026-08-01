@@ -1,0 +1,1 @@
+export { StorpakkeTabel } from './StorpakkeTabel';

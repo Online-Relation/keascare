@@ -168,6 +168,10 @@
   border-color: #0073ea;
 }
 
+.pakker-pris-input {
+  width: 110px;
+}
+
 .pakker-antal-input.låst {
   background: var(--color-surface);
   color: var(--color-text-primary);

@@ -1,2 +1,2 @@
-export { hentBeboerRegistreringer, gemBeboerRegistrering } from './pakkerService';
-export type { BeboerRegistrering } from './pakkerService';
+export { hentBeboerRegistreringer, gemBeboerRegistrering, gemStorPris } from './pakkerService';
+export type { BeboerRegistrering, StorPrisRegistrering } from './pakkerService';
