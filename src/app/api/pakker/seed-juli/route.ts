@@ -21,6 +21,7 @@ const JULI_DATA: Record<string, number> = {
   'Rentas':            8,
   'Cara':              8,
   'Aktiv':            10,
+  'Udviklingsbasen':   0,
 };
 
 export async function POST() {
