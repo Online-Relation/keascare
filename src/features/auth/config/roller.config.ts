@@ -12,7 +12,7 @@ export const ROLLE_HIERARKI: Record<BrugerRolle, number> = {
 };
 
 export const ROLLE_LABELS: Record<BrugerRolle, string> = {
-  development:      'Development',
+  development:      'Udvikler',
   direktør:         'Direktør',
   bostedsansvarlig: 'Bostedsansvarlig',
   sygeplejerske:    'Sygeplejerske',
