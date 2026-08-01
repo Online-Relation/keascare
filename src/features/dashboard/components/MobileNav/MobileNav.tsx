@@ -294,6 +294,7 @@ export function MobileNav() {
             <NavLink href="/dashboard/scrapers" icon={RefreshCw} label="Scrapers" />
             <NavLink href="/dashboard/indstillinger" icon={Settings} label="Indstillinger" />
             <NavLink href="/dashboard/admin/brugere" icon={Users} label="Brugere" />
+            <NavLink href="/dashboard/monday-test" icon={Settings} label="Monday test" />
           </div>
         </div>
 
