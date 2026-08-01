@@ -57,21 +57,53 @@ async function hentTekst(url) {
   return buf.toString('utf-8');
 }
 
-// Find seneste SOR2-fil fra katalog-listing
+// Udtræk href-links fra HTML-katalog
+function udtrækLinks(html, baseUrl) {
+  return [...html.matchAll(/href="([^"#?]+)"/gi)]
+    .map((m) => m[1])
+    .filter((h) => h !== '/' && !h.startsWith('mailto'))
+    .map((h) => (h.startsWith('http') ? h : new URL(h, baseUrl).href));
+}
+
+// Find seneste SOR2-fil — gennemsøger evt. undermapper
 async function findSenesteFilUrl() {
   const html = await hentTekst(SOR_BASE);
-  // Match filnavne som SOR2_output_prod_YYYYMMDD.zip eller lignende
-  const matches = [...html.matchAll(/href="([^"]*(?:SOR|sor)[^"]*\.(?:zip|csv|gz))"/gi)];
-  if (matches.length === 0) {
-    console.log('Katalog-indhold (første 500 tegn):', html.slice(0, 500));
+
+  // Tjek om der er direkte filer
+  const direkteFiler = udtrækLinks(html, SOR_BASE)
+    .filter((u) => /\.(zip|csv|gz)$/i.test(u));
+
+  if (direkteFiler.length > 0) {
+    const seneste = direkteFiler.sort().pop();
+    console.log(`Direkte fil fundet: ${seneste}`);
+    return seneste;
+  }
+
+  // Ingen direkte filer — søg i undermapper (ét niveau)
+  const mapper = udtrækLinks(html, SOR_BASE)
+    .filter((u) => u.startsWith(SOR_BASE) && u !== SOR_BASE && !u.includes('.'));
+
+  console.log(`Ingen direkte filer — søger i ${mapper.length} undermappe(r):`, mapper);
+
+  const alleFiler = [];
+  for (const mappeUrl of mapper) {
+    try {
+      const mappeHtml = await hentTekst(mappeUrl);
+      const filer = udtrækLinks(mappeHtml, mappeUrl)
+        .filter((u) => /\.(zip|csv|gz)$/i.test(u));
+      alleFiler.push(...filer);
+    } catch (e) {
+      console.log(`Sprang mappe over (${mappeUrl}): ${e.message}`);
+    }
+  }
+
+  if (alleFiler.length === 0) {
     throw new Error('Ingen SOR-filer fundet i kataloget');
   }
-  // Sorter og tag den seneste (typisk højeste dato i filnavnet)
-  const filer = matches.map((m) => m[1]).sort();
-  const seneste = filer[filer.length - 1];
-  const url = seneste.startsWith('http') ? seneste : SOR_BASE + seneste;
-  console.log(`Fundet ${filer.length} filer, bruger: ${url}`);
-  return url;
+
+  const seneste = alleFiler.sort().pop();
+  console.log(`Fundet ${alleFiler.length} filer i undermapper, bruger: ${seneste}`);
+  return seneste;
 }
 
 // Parse enkel CSV — håndterer quoted felter
