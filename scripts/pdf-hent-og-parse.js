@@ -185,9 +185,13 @@ function httpsPatch(url, body) {
 // ── Hent rapporter uden pdf_url ────────────────────────────────────────────
 
 async function hentRapporterUdenPdf() {
+  // Hent rapporter der HAR pdf_url (Railway fandt linket) men mangler pdf_storage_url (aldrig downloadet)
   const url = `${SUPABASE_URL}/rest/v1/stps_rapporter` +
-    `?select=id,stps_tilbud_navn,rapport_url` +
-    `&pdf_url=is.null` +
+    `?select=id,stps_tilbud_navn,rapport_url,pdf_url` +
+    `&pdf_url=not.is.null` +
+    `&pdf_url=not.eq.not-found` +
+    `&pdf_storage_url=is.null` +
+    `&tilsyn_deltagere_stps=is.null` +
     `&limit=${BATCH}`;
 
   const { status, body } = await httpsGet(url);
@@ -351,7 +355,7 @@ async function main() {
   console.log(`[${new Date().toISOString()}] PDF hent-og-parse starter (batch=${BATCH})`);
 
   const rapporter = await hentRapporterUdenPdf();
-  console.log(`${rapporter.length} rapporter mangler pdf_url`);
+  console.log(`${rapporter.length} rapporter mangler storage-kopi og deltagerdata`);
 
   if (rapporter.length === 0) {
     console.log('Intet at gøre.');
@@ -361,38 +365,19 @@ async function main() {
   let ok = 0, ingenPdf = 0, fejl = 0;
 
   for (let i = 0; i < rapporter.length; i++) {
-    const { id, stps_tilbud_navn, rapport_url } = rapporter[i];
+    const { id, stps_tilbud_navn, pdf_url: pdfUrl } = rapporter[i];
     try {
-      // Spring syntetiske rapport-URLs over
-      if (rapport_url.startsWith('stps://')) {
-        await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_behandlet: true });
-        ingenPdf++;
-        continue;
-      }
-
-      // 1. Hent rapport-side og find PDF-link
-      const html = await hentTekst(rapport_url);
-      const pdfUrl = udtraekPdfUrl(html, rapport_url);
-
-      if (!pdfUrl) {
-        // Ingen PDF på denne side — marker behandlet så vi ikke forsøger igen
-        await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_behandlet: true });
-        console.log(`[${i+1}/${rapporter.length}] INGEN PDF: ${stps_tilbud_navn}`);
-        ingenPdf++;
-        continue;
-      }
-
-      // 2. Download PDF
+      // 1. Download PDF direkte fra pdf_url (allerede fundet af Railway's scraper)
       const buf = await hentBuffer(pdfUrl);
 
-      // 3. Upload til Supabase Storage
+      // 2. Upload til Supabase Storage
       const pdfStorageUrl = await uploadPdf(id, buf);
 
-      // 4. Parse PDF
+      // 3. Parse PDF
       const { text: tekst } = await pdfParse(buf);
       const { stps, bosted } = udtraekDeltagere(tekst);
 
-      // 5. Gem
+      // 4. Gem storage-url og deltagere (pdf_url er allerede sat)
       await gem(id, pdfUrl, pdfStorageUrl, stps, bosted);
       console.log(`[${i+1}/${rapporter.length}] OK: ${stps_tilbud_navn} — ${stps.length} STPS, ${bosted.length} bosted${pdfStorageUrl ? ' (gemt i storage)' : ''}`);
       ok++;
