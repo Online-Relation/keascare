@@ -1,5 +1,4 @@
 // src/features/sor/services/SorService/sorService.ts
-// Læser SOR-cache fra Supabase og laver match mod Monday-bosteder
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 
@@ -10,7 +9,19 @@ export type SorCacheEnhed = {
   adresse: string | null;
   postnummer: string | null;
   by: string | null;
+  enhedstypeId: string | null;
+  enhedstypeNavn: string | null;
 };
+
+// Enhedstype-id'er der sandsynligvis er botilbud/sociale tilbud
+// 550 = Botilbud, 551 = Midlertidigt botilbud, 560 = Dagtilbud, osv.
+// Vi filtrerer dem der klart IKKE er bosteder fra
+const UINTERESSANTE_TYPER = new Set([
+  '1', '2', '3', '4', '5',   // Sygehuse/regioner
+  '6', '7', '8', '9', '10',
+  '100', '101', '102',        // Praksissektoren
+  '200', '201',               // Apoteker
+]);
 
 function normaliserNavn(navn: string): string {
   return navn
@@ -24,7 +35,7 @@ export async function hentSorCache(): Promise<SorCacheEnhed[]> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('sor_bosteder_cache')
-    .select('sor_kode, navn, cvr, adresse, postnummer, by')
+    .select('sor_kode, navn, cvr, adresse, postnummer, by, enhedstype_id, enhedstype_navn')
     .eq('aktiv', true);
 
   if (error) throw error;
@@ -36,6 +47,8 @@ export async function hentSorCache(): Promise<SorCacheEnhed[]> {
     adresse: r.adresse,
     postnummer: r.postnummer,
     by: r.by,
+    enhedstypeId: r.enhedstype_id ?? null,
+    enhedstypeNavn: r.enhedstype_navn ?? null,
   }));
 }
 
@@ -50,7 +63,7 @@ export async function hentSorSidstSynkroniseret(): Promise<string | null> {
   return data?.synkroniseret ?? null;
 }
 
-// Bygger et map: cvr/navn → SOR-enhed, bruges til badge-visning
+// Bygger et map: bosted-navn → SOR-enhed, bruges til badge-visning på listesider
 export function bygSorMatchMap(
   sorEnheder: SorCacheEnhed[],
   bosteder: { navn: string; cvr?: string | null }[]
@@ -71,19 +84,14 @@ export function bygSorMatchMap(
     const normNavn = normaliserNavn(bosted.navn);
     const cvrRen = bosted.cvr?.replace(/\s/g, '') ?? null;
 
-    // Prioriter CVR-match
     if (cvrRen && cvrIndex.has(cvrRen)) {
       result[bosted.navn] = cvrIndex.get(cvrRen)!;
       continue;
     }
-
-    // Eksakt navn-match
     if (navnIndex.has(normNavn)) {
       result[bosted.navn] = navnIndex.get(normNavn)!;
       continue;
     }
-
-    // Fuzzy: SOR-navn indeholder bosted-navn eller omvendt
     let fuzzyMatch: SorCacheEnhed | null = null;
     for (const [sorNorm, enhed] of navnIndex) {
       if (sorNorm.includes(normNavn) || normNavn.includes(sorNorm)) {
@@ -97,23 +105,42 @@ export function bygSorMatchMap(
   return result;
 }
 
-// Returnerer SOR-enheder der IKKE matcher nogen af de kendte bosteder (potentielle nye leads)
+// Henter CVR-numre fra stps_rapporter (vores kendte bosteder)
+export async function hentKendteBostederCvr(): Promise<string[]> {
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase
+    .from('stps_rapporter')
+    .select('cvr')
+    .not('cvr', 'is', null);
+
+  return (data ?? [])
+    .map((r) => r.cvr?.replace(/[^0-9]/g, '') ?? '')
+    .filter((c) => c.length > 0);
+}
+
+// Returnerer SOR-enheder der IKKE er matchet i stps_rapporter (via CVR)
 export function hentUmatchedeSorEnheder(
   sorEnheder: SorCacheEnhed[],
-  mundayNavne: string[],
-  mundayCvr: (string | null)[]
+  kendteCvr: string[],
 ): SorCacheEnhed[] {
-  const kendte = new Set(mundayNavne.map(normaliserNavn));
-  const kendteCvr = new Set(mundayCvr.filter(Boolean).map((c) => c!.replace(/\s/g, '')));
+  const kendteCvrSet = new Set(kendteCvr);
 
   return sorEnheder.filter((e) => {
-    if (e.cvr && kendteCvr.has(e.cvr.replace(/\s/g, ''))) return false;
-    const norm = normaliserNavn(e.navn);
-    if (kendte.has(norm)) return false;
-    // Fuzzy: tjek om noget kendt navn ligner
-    for (const k of kendte) {
-      if (norm.includes(k) || k.includes(norm)) return false;
-    }
+    const cvrRen = e.cvr?.replace(/[^0-9]/g, '') ?? null;
+    if (cvrRen && kendteCvrSet.has(cvrRen)) return false;
     return true;
   });
+}
+
+// Returnerer alle unikke enhedstyper i datasættet (til filter-UI)
+export function udtrækEnhedstyper(sorEnheder: SorCacheEnhed[]): { id: string; navn: string }[] {
+  const map = new Map<string, string>();
+  for (const e of sorEnheder) {
+    if (e.enhedstypeId && e.enhedstypeNavn && !map.has(e.enhedstypeId)) {
+      map.set(e.enhedstypeId, e.enhedstypeNavn);
+    }
+  }
+  return Array.from(map.entries())
+    .map(([id, navn]) => ({ id, navn }))
+    .sort((a, b) => a.navn.localeCompare(b.navn, 'da'));
 }

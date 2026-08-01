@@ -1,31 +1,33 @@
 // src/app/dashboard/sor/page.tsx
 
 import { SorPage } from '@/features/sor/components/SorPage';
-import { hentSorCache, hentSorSidstSynkroniseret, hentUmatchedeSorEnheder } from '@/features/sor/services/SorService';
-import { hentAlleMondayKunder } from '@/features/monday/services/MondayKunderService';
-import { unstable_cache } from 'next/cache';
+import {
+  hentSorCache,
+  hentSorSidstSynkroniseret,
+  hentUmatchedeSorEnheder,
+  hentKendteBostederCvr,
+  udtrækEnhedstyper,
+} from '@/features/sor/services/SorService';
 
 export const dynamic = 'force-dynamic';
 
-const hentKunderCached = unstable_cache(hentAlleMondayKunder, ['monday-kunder-sor'], { revalidate: 300 });
-
 export default async function SorSide() {
-  const [sorEnheder, kunder, sidstSynk] = await Promise.all([
+  const [sorEnheder, kendteCvr, sidstSynk] = await Promise.all([
     hentSorCache().catch(() => []),
-    hentKunderCached().catch(() => []),
+    hentKendteBostederCvr().catch(() => []),
     hentSorSidstSynkroniseret().catch(() => null),
   ]);
 
-  const mondayNavne = kunder.map((k) => k.navn);
-  const mondayCvr = kunder.map((k) => k.cvr);
-
-  const nyeLeads = hentUmatchedeSorEnheder(sorEnheder, mondayNavne, mondayCvr);
+  const nyeLeads = hentUmatchedeSorEnheder(sorEnheder, kendteCvr);
+  const enhedstyper = udtrækEnhedstyper(sorEnheder);
 
   return (
     <SorPage
       nyeLeads={nyeLeads}
       antalIAlt={sorEnheder.length}
+      antalKendte={sorEnheder.length - nyeLeads.length}
       sidstSynkroniseret={sidstSynk}
+      enhedstyper={enhedstyper}
     />
   );
 }

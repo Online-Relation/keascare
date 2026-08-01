@@ -128,13 +128,66 @@
 }
 
 .sor-sektion-titel {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   font-size: 1rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin: 0;
 }
 
+.sor-td-type {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.sor-td-kode {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+.sor-filter-række {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sor-søge-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sor-søge-ikon {
+  position: absolute;
+  left: 0.6rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+
 .sor-søge-felt {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem 0.4rem 2rem;
+  font-size: 0.85rem;
+  background: var(--color-card, var(--color-surface));
+  color: var(--color-text-primary);
+  outline: none;
+  width: 240px;
+}
+
+.sor-søge-felt:focus { border-color: #0073ea; }
+
+.sor-type-filter-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--color-text-muted);
+}
+
+.sor-type-filter {
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 0.4rem 0.75rem;
@@ -142,10 +195,11 @@
   background: var(--color-card, var(--color-surface));
   color: var(--color-text-primary);
   outline: none;
-  width: 260px;
+  cursor: pointer;
+  max-width: 220px;
 }
 
-.sor-søge-felt:focus { border-color: #0073ea; }
+.sor-type-filter:focus { border-color: #0073ea; }
 
 /* ── Tabel ── */
 .sor-tabel-wrapper {
