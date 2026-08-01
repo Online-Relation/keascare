@@ -19,7 +19,8 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 
 // SOR2 CSV-filer fra Sundhedsdatastyrelsen — offentligt tilgængeligt over HTTP
 // Kilde: Vejledning i systemanvendelse af SOR-data (SDST, 2023)
-const SOR_BASE = 'https://sor-filer.sundhedsdata.dk/sor2_produktion/';
+// Struktur: /sor2_produktion/V1_00/data/
+const SOR_BASE = 'https://sor-filer.sundhedsdata.dk/sor2_produktion/V1_00/data/';
 
 // Hent råt indhold fra URL som Buffer
 function hentBuffer(url) {
@@ -65,51 +66,18 @@ function udtrækLinks(html, baseUrl) {
     .map((h) => (h.startsWith('http') ? h : new URL(h, baseUrl).href));
 }
 
-// Find seneste SOR2-fil — gennemsøger evt. undermapper
+// Find seneste SOR2-fil fra data-kataloget
 async function findSenesteFilUrl() {
   const html = await hentTekst(SOR_BASE);
+  const filer = udtrækLinks(html, SOR_BASE).filter((u) => /\.(zip|csv|gz)$/i.test(u));
 
-  // Tjek om der er direkte filer
-  const direkteFiler = udtrækLinks(html, SOR_BASE)
-    .filter((u) => /\.(zip|csv|gz)$/i.test(u));
-
-  if (direkteFiler.length > 0) {
-    const seneste = direkteFiler.sort().pop();
-    console.log(`Direkte fil fundet: ${seneste}`);
-    return seneste;
-  }
-
-  // Ingen direkte filer — søg i undermapper (ét niveau)
-  // Mapper er URL'er der slutter med / men ikke er selve roden
-  const mapper = udtrækLinks(html, SOR_BASE)
-    .filter((u) => u.startsWith(SOR_BASE) && u !== SOR_BASE && u.endsWith('/'));
-
-  console.log(`Ingen direkte filer — søger i ${mapper.length} undermappe(r):`, mapper);
-
-  const alleFiler = [];
-  for (const mappeUrl of mapper) {
-    try {
-      const mappeHtml = await hentTekst(mappeUrl);
-      // Skriv rå HTML til logfil så vi kan se indholdet
-      require('fs').writeFileSync('/volume1/scripts/sor-debug.log', `URL: ${mappeUrl}\n\n${mappeHtml}`);
-      console.log(`Debug-log skrevet til /volume1/scripts/sor-debug.log`);
-
-      const alleLinks = udtrækLinks(mappeHtml, mappeUrl);
-      console.log(`Links fundet (${alleLinks.length}):`, JSON.stringify(alleLinks.slice(0, 20)));
-
-      const filer = alleLinks.filter((u) => /\.(zip|csv|gz)$/i.test(u));
-      alleFiler.push(...filer);
-    } catch (e) {
-      console.log(`Sprang mappe over (${mappeUrl}): ${e.message}`);
-    }
-  }
-
-  if (alleFiler.length === 0) {
+  if (filer.length === 0) {
+    console.log('Katalog-indhold (første 800 tegn):', html.slice(0, 800));
     throw new Error('Ingen SOR-filer fundet i kataloget');
   }
 
-  const seneste = alleFiler.sort().pop();
-  console.log(`Fundet ${alleFiler.length} filer i undermapper, bruger: ${seneste}`);
+  const seneste = filer.sort().pop();
+  console.log(`Fundet ${filer.length} filer, bruger: ${seneste}`);
   return seneste;
 }
 
