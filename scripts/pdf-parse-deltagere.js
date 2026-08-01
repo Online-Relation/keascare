@@ -139,42 +139,47 @@ async function parsePdf(buf) {
   return resultat.text ?? '';
 }
 
-// Strengt navn-regex: Fornavn Efternavn — kun bogstaver og bindestreg, ikke for langt
-const NAVN_REGEX = /^[A-ZÆØÅ][a-zæøå]+(?:[-][A-Za-zæøå]+)?(?:\s[A-ZÆØÅ][a-zæøå]+(?:[-][A-Za-zæøå]+)?){1,3}$/;
+// Navn-regex: Fornavn [Mellemnavn] Efternavn — 2-4 ord, kun bogstaver og bindestreg
+const NAVN_REGEX = /^[A-ZÆØÅ][a-zæøå]{1,}(?:[-][A-Za-zæøå]+)?(?:\s[A-ZÆØÅ][a-zæøå]{1,}(?:[-][A-Za-zæøå]+)?){1,3}$/;
 
 function erNavn(s) {
-  if (!s || s.length < 5 || s.length > 50) return false;
-  if (s.split(/\s+/).length < 2) return false; // kræver mindst to ord
+  if (!s || s.length < 4 || s.length > 60) return false;
+  if (s.split(/\s+/).length < 2) return false;
   return NAVN_REGEX.test(s);
 }
 
 function parsDeltagereBlok(tekst, startIdx) {
   const efter = tekst.substring(startIdx);
 
-  // Tag kun de første 600 tegn efter overskriften — navnelisten er kort
-  const blok = efter.substring(0, 600);
+  // Tag de første 800 tegn efter overskriften
+  const blok = efter.substring(0, 800);
   const linjer = blok.split('\n').map((l) => l.trim());
 
   const deltagere = [];
-  let fandtNoget = false;
+  let tomLinjer = 0;
 
   for (const rawLinje of linjer) {
-    // Strip alt der ikke er et bogstav foran teksten
+    // Strip alt der ikke er et bogstav foran teksten (bullets, tal, mellemrum)
     const linje = rawLinje.replace(/^[^A-Za-zÆØÅæøå]+/, '').trim();
+
     if (!linje) {
-      // Stop ved tom linje hvis vi allerede har fundet navne
-      if (fandtNoget) break;
+      // Tillad op til 2 tomme linjer inden vi stopper — navnelister kan have blanke linjer
+      if (deltagere.length > 0) {
+        tomLinjer++;
+        if (tomLinjer >= 2) break;
+      }
       continue;
     }
+    tomLinjer = 0;
 
     // Stop ved næste sektion
-    if (/^(Tilsynet blev foretaget af|Ved tilsynet|Lovgrundlag|Baggrundsoplysninger|Samlet vurdering|Fund ved|Vi afslutter)/i.test(linje)) {
-      if (fandtNoget) break;
+    if (/^(Tilsynet blev foretaget af|Tilsynet er foretaget af|Tilsynet er udført af|Ved tilsynet|Lovgrundlag|Baggrundsoplysninger|Samlet vurdering|Fund ved|Vi afslutter|Rapporten er)/i.test(linje)) {
+      if (deltagere.length > 0) break;
       continue;
     }
 
-    // Stop hvis linjen er for lang (løbende tekst, ikke et navn)
-    if (linje.length > 60) continue;
+    // Spring lange linjer over (løbende tekst)
+    if (linje.length > 70) continue;
 
     // Format: "Fornavn Efternavn, titel"
     const kommaIdx = linje.indexOf(',');
@@ -183,7 +188,6 @@ function parsDeltagereBlok(tekst, startIdx) {
       const muligTitel = linje.substring(kommaIdx + 1).trim();
       if (erNavn(muligNavn)) {
         deltagere.push({ navn: muligNavn, titel: muligTitel || null });
-        fandtNoget = true;
         continue;
       }
     }
@@ -191,7 +195,6 @@ function parsDeltagereBlok(tekst, startIdx) {
     // Format: bart navn
     if (erNavn(linje)) {
       deltagere.push({ navn: linje, titel: null });
-      fandtNoget = true;
     }
   }
 
@@ -206,8 +209,9 @@ function sidsteMatch(tekst, regex) {
 }
 
 function udtraekDeltagere(tekst, debug = false) {
-  const stpsIdx   = sidsteMatch(tekst, /Tilsynet blev foretaget af/i);
-  const bostedIdx = sidsteMatch(tekst, /Ved tilsynet[\s\S]{0,20}deltog/i);
+  // Søg efter alle kendte varianter af sektionsoverskriften — brug den SIDSTE forekomst
+  const stpsIdx = sidsteMatch(tekst, /Tilsynet (?:blev|er) (?:foretaget|udført|gennemført) af/i);
+  const bostedIdx = sidsteMatch(tekst, /Ved tilsynet[\s\S]{0,30}deltog/i);
 
   if (debug) {
     console.log('--- RAÅ TEKST VED STPS-SEKTION ---');
