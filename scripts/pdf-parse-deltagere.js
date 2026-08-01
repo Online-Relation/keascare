@@ -198,9 +198,16 @@ function parsDeltagereBlok(tekst, startIdx) {
   return deltagere;
 }
 
-function udtraekDeltagere(tekst) {
+function udtraekDeltagere(tekst, debug = false) {
   const stpsIdx   = tekst.search(/Tilsynet blev foretaget af/i);
   const bostedIdx = tekst.search(/Ved tilsynet[\s\S]{0,20}deltog/i);
+
+  if (debug) {
+    console.log('--- RAÅ TEKST VED STPS-SEKTION ---');
+    if (stpsIdx !== -1) console.log(JSON.stringify(tekst.substring(stpsIdx, stpsIdx + 400)));
+    else console.log('IKKE FUNDET');
+  }
+
   return {
     stps:   stpsIdx   !== -1 ? parsDeltagereBlok(tekst, stpsIdx)   : [],
     bosted: bostedIdx !== -1 ? parsDeltagereBlok(tekst, bostedIdx) : [],
@@ -241,7 +248,8 @@ async function main() {
     try {
       const buf = await hentBuffer(pdf_url);
       const tekst = await parsePdf(buf);
-      const { stps, bosted } = udtraekDeltagere(tekst);
+      const debug = i === 0; // log rå tekst for første rapport
+      const { stps, bosted } = udtraekDeltagere(tekst, debug);
       await gemDeltagere(id, stps, bosted);
       console.log(`[${i+1}/${rapporter.length}] OK: ${stps_tilbud_navn} — ${stps.length} STPS, ${bosted.length} bosted`);
       ok++;
