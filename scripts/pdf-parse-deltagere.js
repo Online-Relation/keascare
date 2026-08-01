@@ -139,69 +139,59 @@ async function parsePdf(buf) {
   return resultat.text ?? '';
 }
 
-const NAVN_REGEX = /^[A-ZÆØÅ][A-Za-zæøå\-\.]+(?:\s+[A-Za-zæøå\-\.]+){1,5}$/;
+// Strengt navn-regex: Fornavn Efternavn — kun bogstaver og bindestreg, ikke for langt
+const NAVN_REGEX = /^[A-ZÆØÅ][a-zæøå]+(?:[-][A-Za-zæøå]+)?(?:\s[A-ZÆØÅ][a-zæøå]+(?:[-][A-Za-zæøå]+)?){1,3}$/;
 
-function erSandsynligtNavn(s) {
-  if (!s || s.length < 4) return false;
-  const ord = s.trim().split(/\s+/);
-  if (ord.length < 2) return false;
-  if (!NAVN_REGEX.test(s)) return false;
-  if (/^(Side|Dato|Tilsyn|Rapport|Sted|Leder|Bosted|Navn|Titel|Fund|Vurdering)$/i.test(s)) return false;
-  return true;
+function erNavn(s) {
+  if (!s || s.length < 5 || s.length > 50) return false;
+  if (s.split(/\s+/).length < 2) return false; // kræver mindst to ord
+  return NAVN_REGEX.test(s);
 }
-
-const TITEL_PRÆFIX_RE = /^(Områdeleder|Leder|Souschef|Forstander|Centerleder|Afdelingsleder|Teamleder|Daglig leder|Stedfortræder|Sygeplejerske|Oversygeplejerske|Pædagog|Social- og sundhedsassistent|SOSU|SSA|SSH|Ergoterapeut|Fysioterapeut|Psykolog|Læge)\s+(.+)$/i;
 
 function parsDeltagereBlok(tekst, startIdx) {
   const efter = tekst.substring(startIdx);
-  const slutIdx = efter.search(/\n(?:Tilsynet blev foretaget af|Ved tilsynet[\s\S]{0,10}deltog|Lovgrundlag|Baggrundsoplysninger|--\s*\d)/i);
-  const blok = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 1500);
 
-  const råLinjer = blok.split('\n').map((l) => l.trim()).filter(Boolean);
-  const linjer = [];
-  for (let i = 0; i < råLinjer.length; i++) {
-    const cur = råLinjer[i];
-    const næste = råLinjer[i + 1] ?? '';
-    if (/^[A-ZÆØÅ][a-zæøå\-]+$/.test(cur) && /^[A-ZÆØÅ][a-zæøå\-]+(,.*)?$/.test(næste)) {
-      linjer.push(`${cur} ${næste}`);
-      i++;
-    } else {
-      linjer.push(cur);
-    }
-  }
+  // Tag kun de første 600 tegn efter overskriften — navnelisten er kort
+  const blok = efter.substring(0, 600);
+  const linjer = blok.split('\n').map((l) => l.trim());
 
   const deltagere = [];
-  for (const rawLinje of linjer) {
-    const linje = rawLinje.replace(/^[\s•\-\*\–\—\·]+/, '').trim();
-    if (!linje || linje.length < 3) continue;
-    if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
-    if (/\d{2}[-\.]\d{2}[-\.]\d{4}/.test(linje)) continue;
-    if (linje.includes('://') || linje.includes('@')) continue;
+  let fandtNoget = false;
 
-    // "Fornavn Efternavn, titel"
+  for (const rawLinje of linjer) {
+    // Strip bullet-tegn
+    const linje = rawLinje.replace(/^[\s•\-\*\–\—\·]+/, '').trim();
+    if (!linje) {
+      // Stop ved tom linje hvis vi allerede har fundet navne
+      if (fandtNoget) break;
+      continue;
+    }
+
+    // Stop ved næste sektion
+    if (/^(Tilsynet blev foretaget af|Ved tilsynet|Lovgrundlag|Baggrundsoplysninger|Samlet vurdering|Fund ved|Vi afslutter)/i.test(linje)) {
+      if (fandtNoget) break;
+      continue;
+    }
+
+    // Stop hvis linjen er for lang (løbende tekst, ikke et navn)
+    if (linje.length > 60) continue;
+
+    // Format: "Fornavn Efternavn, titel"
     const kommaIdx = linje.indexOf(',');
     if (kommaIdx > 3) {
       const muligNavn = linje.substring(0, kommaIdx).trim();
       const muligTitel = linje.substring(kommaIdx + 1).trim();
-      if (erSandsynligtNavn(muligNavn)) {
+      if (erNavn(muligNavn)) {
         deltagere.push({ navn: muligNavn, titel: muligTitel || null });
+        fandtNoget = true;
         continue;
       }
     }
 
-    // "Titel Fornavn Efternavn"
-    const præfixMatch = linje.match(TITEL_PRÆFIX_RE);
-    if (præfixMatch) {
-      const muligNavn = præfixMatch[2].trim();
-      if (erSandsynligtNavn(muligNavn)) {
-        deltagere.push({ navn: muligNavn, titel: præfixMatch[1] });
-        continue;
-      }
-    }
-
-    // Bart navn
-    if (erSandsynligtNavn(linje)) {
+    // Format: bart navn
+    if (erNavn(linje)) {
       deltagere.push({ navn: linje, titel: null });
+      fandtNoget = true;
     }
   }
 
