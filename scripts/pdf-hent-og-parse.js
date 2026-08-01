@@ -95,7 +95,12 @@ function httpsGet(url) {
       {
         hostname: parsedUrl.hostname,
         path:     parsedUrl.pathname + parsedUrl.search,
-        headers:  { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` },
+        headers:  {
+          'apikey':        SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`,
+          'Accept':        'application/json',
+          'Content-Type':  'application/json',
+        },
         rejectUnauthorized: false,
       },
       (res) => {
@@ -182,7 +187,6 @@ async function hentRapporterUdenPdf() {
   const url = `${SUPABASE_URL}/rest/v1/stps_rapporter` +
     `?select=id,stps_tilbud_navn,rapport_url` +
     `&pdf_url=is.null` +
-    `&rapport_url=not.is.null` +
     `&order=rapport_dato.desc` +
     `&limit=${BATCH}`;
 
