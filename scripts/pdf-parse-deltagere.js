@@ -159,8 +159,8 @@ function parsDeltagereBlok(tekst, startIdx) {
   let fandtNoget = false;
 
   for (const rawLinje of linjer) {
-    // Strip bullet-tegn
-    const linje = rawLinje.replace(/^[\s•\-\*\–\—\·]+/, '').trim();
+    // Strip alt der ikke er et bogstav foran teksten
+    const linje = rawLinje.replace(/^[^A-Za-zÆØÅæøå]+/, '').trim();
     if (!linje) {
       // Stop ved tom linje hvis vi allerede har fundet navne
       if (fandtNoget) break;
