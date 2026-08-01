@@ -191,11 +191,19 @@ async function hentRapporterUdenPdf() {
 
 // ── Find PDF-link i HTML ───────────────────────────────────────────────────
 
-function udtraekPdfUrl(html, rapportUrl) {
+function dekodHtmlEntities(s) {
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+}
+
+function udtraekPdfUrl(html) {
   // Søg efter href der slutter på .pdf og indeholder gopublic eller cdn
   const matches = [...html.matchAll(/href="([^"]*\.pdf[^"]*)"/gi)];
   for (const m of matches) {
-    const href = m[1];
+    const href = dekodHtmlEntities(m[1]);
     if (href.includes('gopublic') || href.includes('cdn') || href.includes('stps')) {
       return href.startsWith('http') ? href : `https://gopublic.dk${href}`;
     }
@@ -203,7 +211,7 @@ function udtraekPdfUrl(html, rapportUrl) {
   // Bredere søgning: ethvert .pdf-link
   const bredMatch = html.match(/href="([^"]*\.pdf)"/i);
   if (bredMatch) {
-    const href = bredMatch[1];
+    const href = dekodHtmlEntities(bredMatch[1]);
     return href.startsWith('http') ? href : `https://gopublic.dk${href}`;
   }
   return null;
@@ -368,6 +376,10 @@ async function main() {
       ok++;
     } catch (e) {
       console.error(`[${i+1}/${rapporter.length}] FEJL: ${stps_tilbud_navn} — ${e.message}`);
+      // Marker som behandlet ved 404 så vi ikke forsøger igen
+      if (e.message.includes('HTTP 404') || e.message.includes('HTTP 400') || e.message.includes('manuel:')) {
+        await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_behandlet: true }).catch(() => {});
+      }
       fejl++;
     }
 
