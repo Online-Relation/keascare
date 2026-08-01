@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 // scripts/sor-sync.js
-// Kør fra Synology — henter SOR FHIR og upsert til Supabase
+// Henter SOR2 CSV-data fra Sundhedsdatastyrelsens offentlige filserver
+// og upsert til Supabase. Kør fra Synology (dansk IP).
 // Krav: node 18+
-// Cron eksempel: 0 3 * * 1 /volume1/@appstore/Node.js_v18/usr/local/bin/node /volume1/scripts/sor-sync.js
+// Cron: 0 3 * * 1 /volume1/@appstore/Node.js_v18/usr/local/bin/node /volume1/scripts/sor-sync.js
 
 const https = require('https');
 const http  = require('http');
+const zlib  = require('zlib');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -15,42 +17,170 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   process.exit(1);
 }
 
-const FHIR_BASE = 'https://sor-fhir.sundhedsdatastyrelsen.dk/fhir/Organization';
+// SOR2 CSV-filer fra Sundhedsdatastyrelsen — offentligt tilgængeligt over HTTP
+// Kilde: Vejledning i systemanvendelse af SOR-data (SDST, 2023)
+const SOR_BASE = 'https://sor-filer.sundhedsdata.dk/sor2_produktion/';
 
-const CVR_SYSTEMER = [
-  'urn:oid:1.2.208.176.1.2',
-  'https://www.cvr.dk/',
-  'urn:dk:cvr',
-  'http://cvr.dk',
-];
-
-// Simpel https GET der returnerer parsed JSON
-function httpsGet(url, headers = {}) {
+// Hent råt indhold fra URL som Buffer
+function hentBuffer(url) {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const mod = parsedUrl.protocol === 'https:' ? https : http;
     const req = mod.get(
-      { hostname: parsedUrl.hostname, path: parsedUrl.pathname + parsedUrl.search, headers, rejectUnauthorized: false },
+      {
+        hostname: parsedUrl.hostname,
+        path: parsedUrl.pathname + parsedUrl.search,
+        headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk' },
+        rejectUnauthorized: false,
+      },
       (res) => {
-        let data = '';
-        res.on('data', (chunk) => { data += chunk; });
-        res.on('end', () => {
-          if (res.statusCode >= 400) {
-            reject(new Error(`HTTP ${res.statusCode} fra ${url}`));
-          } else {
-            try { resolve(JSON.parse(data)); }
-            catch (e) { reject(new Error(`Ugyldig JSON fra ${url}: ${data.slice(0, 200)}`)); }
-          }
-        });
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          return hentBuffer(res.headers.location).then(resolve).catch(reject);
+        }
+        if (res.statusCode >= 400) {
+          return reject(new Error(`HTTP ${res.statusCode} fra ${url}`));
+        }
+        const chunks = [];
+        res.on('data', (c) => chunks.push(c));
+        res.on('end', () => resolve(Buffer.concat(chunks)));
+        res.on('error', reject);
       }
     );
     req.on('error', reject);
-    req.setTimeout(30000, () => { req.destroy(); reject(new Error(`Timeout: ${url}`)); });
+    req.setTimeout(60000, () => { req.destroy(); reject(new Error(`Timeout: ${url}`)); });
   });
 }
 
-// Simpel https POST
-function httpsPost(url, headers = {}, body = '') {
+// Hent tekst fra URL
+async function hentTekst(url) {
+  const buf = await hentBuffer(url);
+  return buf.toString('utf-8');
+}
+
+// Find seneste SOR2-fil fra katalog-listing
+async function findSenesteFilUrl() {
+  const html = await hentTekst(SOR_BASE);
+  // Match filnavne som SOR2_output_prod_YYYYMMDD.zip eller lignende
+  const matches = [...html.matchAll(/href="([^"]*(?:SOR|sor)[^"]*\.(?:zip|csv|gz))"/gi)];
+  if (matches.length === 0) {
+    console.log('Katalog-indhold (første 500 tegn):', html.slice(0, 500));
+    throw new Error('Ingen SOR-filer fundet i kataloget');
+  }
+  // Sorter og tag den seneste (typisk højeste dato i filnavnet)
+  const filer = matches.map((m) => m[1]).sort();
+  const seneste = filer[filer.length - 1];
+  const url = seneste.startsWith('http') ? seneste : SOR_BASE + seneste;
+  console.log(`Fundet ${filer.length} filer, bruger: ${url}`);
+  return url;
+}
+
+// Parse enkel CSV — håndterer quoted felter
+function parseCSV(tekst) {
+  const linjer = tekst.split(/\r?\n/).filter((l) => l.trim());
+  if (linjer.length === 0) return [];
+
+  function parseRække(linje) {
+    const felter = [];
+    let felt = '';
+    let i_quote = false;
+    for (let i = 0; i < linje.length; i++) {
+      const c = linje[i];
+      if (c === '"') {
+        if (i_quote && linje[i + 1] === '"') { felt += '"'; i++; }
+        else i_quote = !i_quote;
+      } else if (c === ';' && !i_quote) {
+        felter.push(felt); felt = '';
+      } else {
+        felt += c;
+      }
+    }
+    felter.push(felt);
+    return felter;
+  }
+
+  const headers = parseRække(linjer[0]).map((h) => h.trim().toLowerCase().replace(/\s+/g, '_'));
+  const rækker = [];
+  for (let i = 1; i < linjer.length; i++) {
+    const vals = parseRække(linjer[i]);
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = (vals[idx] ?? '').trim(); });
+    rækker.push(obj);
+  }
+  return rækker;
+}
+
+// Find felt-værdi med flere mulige kolonnenavne
+function felt(obj, ...kandidater) {
+  for (const k of kandidater) {
+    if (obj[k] !== undefined && obj[k] !== '') return obj[k];
+  }
+  return null;
+}
+
+// Map CSV-række til SOR-enhed
+function mapRække(r) {
+  const sorKode = felt(r, 'sor_kode', 'sorkode', 'sor-kode', 'enhedskode', 'sorid');
+  if (!sorKode) return null;
+
+  const aktiv = felt(r, 'aktiv', 'er_aktiv', 'active', 'status');
+  const erAktiv = !aktiv || aktiv === '1' || aktiv.toLowerCase() === 'true' || aktiv.toLowerCase() === 'ja';
+
+  return {
+    sor_kode: sorKode,
+    navn: felt(r, 'navn', 'enhedsnavn', 'name', 'organisationsnavn') ?? '',
+    cvr: felt(r, 'cvr', 'cvr_nummer', 'cvrnummer', 'cvr-nummer'),
+    adresse: felt(r, 'adresse', 'vejnavn', 'vejnavn_med_husnummer', 'adresselinje1'),
+    postnummer: felt(r, 'postnummer', 'post_nr', 'postnr'),
+    by: felt(r, 'postdistrikt', 'by', 'city', 'postby'),
+    aktiv: erAktiv,
+    synkroniseret: new Date().toISOString(),
+  };
+}
+
+async function hentSorData() {
+  let fileUrl;
+  try {
+    fileUrl = await findSenesteFilUrl();
+  } catch (e) {
+    throw new Error(`Kunne ikke finde SOR-fil i kataloget: ${e.message}`);
+  }
+
+  console.log(`Downloader: ${fileUrl}`);
+  const buf = await hentBuffer(fileUrl);
+
+  let tekst;
+  if (fileUrl.endsWith('.gz')) {
+    tekst = zlib.gunzipSync(buf).toString('utf-8');
+  } else if (fileUrl.endsWith('.zip')) {
+    // Prøv at læse ZIP som tekst (virker hvis det er en enkelt CSV)
+    // Hvis det fejler, kast en klar fejl
+    try {
+      // Node 18 har ikke built-in ZIP — prøv at læse som Latin-1/UTF-8
+      tekst = buf.toString('latin1');
+      if (!tekst.includes(';') && !tekst.includes(',')) {
+        tekst = buf.toString('utf-8');
+      }
+    } catch {
+      throw new Error('ZIP-format kræver unzip — installer med: npm install adm-zip');
+    }
+  } else {
+    tekst = buf.toString('utf-8');
+    if (!tekst.includes(';') && !tekst.includes(',')) {
+      tekst = buf.toString('latin1');
+    }
+  }
+
+  const rækker = parseCSV(tekst);
+  console.log(`Parsede ${rækker.length} rækker fra CSV`);
+  if (rækker.length > 0) console.log('Kolonner:', Object.keys(rækker[0]).join(', '));
+
+  const enheder = rækker.map(mapRække).filter(Boolean).filter((e) => e.aktiv);
+  console.log(`${enheder.length} aktive enheder efter mapping`);
+  return enheder;
+}
+
+// Https POST til Supabase
+function httpsPost(url, headers, body) {
   return new Promise((resolve, reject) => {
     const parsedUrl = new URL(url);
     const bodyBuf = Buffer.from(body);
@@ -65,14 +195,10 @@ function httpsPost(url, headers = {}, body = '') {
       },
       (res) => {
         let data = '';
-        res.on('data', (chunk) => { data += chunk; });
+        res.on('data', (c) => { data += c; });
         res.on('end', () => {
-          if (res.statusCode >= 400) {
-            reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 300)}`));
-          } else {
-            try { resolve(data ? JSON.parse(data) : null); }
-            catch { resolve(null); }
-          }
+          if (res.statusCode >= 400) reject(new Error(`HTTP ${res.statusCode}: ${data.slice(0, 300)}`));
+          else { try { resolve(data ? JSON.parse(data) : null); } catch { resolve(null); } }
         });
       }
     );
@@ -83,82 +209,29 @@ function httpsPost(url, headers = {}, body = '') {
   });
 }
 
-function findCvr(identifiers = []) {
-  for (const sys of CVR_SYSTEMER) {
-    const m = identifiers.find((id) => id.system === sys);
-    if (m?.value) return m.value;
-  }
-  const fallback = identifiers.find((id) => /^\d{8}$/.test(id.value ?? ''));
-  return fallback?.value ?? null;
-}
-
-function findSorKode(identifiers = [], fallbackId) {
-  const m = identifiers.find((id) => id.system === 'urn:oid:1.2.208.176.1.1');
-  return m?.value ?? fallbackId ?? '';
-}
-
-function mapOrg(org) {
-  const ids = org.identifier ?? [];
-  const adr = org.address?.[0];
-  return {
-    sor_kode: findSorKode(ids, org.id),
-    navn: org.name ?? '',
-    cvr: findCvr(ids),
-    adresse: adr?.line?.[0] ?? null,
-    postnummer: adr?.postalCode ?? null,
-    by: adr?.city ?? null,
-    aktiv: org.active !== false,
-    synkroniseret: new Date().toISOString(),
-  };
-}
-
-async function hentAlleSorEnheder() {
-  const enheder = [];
-  let url = `${FHIR_BASE}?_count=500&active=true&_format=json`;
-  let side = 0;
-  const hdrs = { 'User-Agent': 'KeasCare/1.0', Accept: 'application/fhir+json' };
-
-  while (url && side < 60) {
-    console.log(`Henter side ${side + 1}...`);
-    const bundle = await httpsGet(url, hdrs);
-    const orgs = (bundle.entry ?? [])
-      .map((e) => e.resource)
-      .filter((r) => r?.resourceType === 'Organization')
-      .map(mapOrg)
-      .filter((e) => e.sor_kode);
-    enheder.push(...orgs);
-    const næste = bundle.link?.find((l) => l.relation === 'next');
-    url = næste?.url ?? null;
-    side++;
-  }
-  return enheder;
-}
-
-async function upsertTilSupabase(rækker) {
+async function upsertTilSupabase(enheder) {
   const BATCH = 500;
-  let total = 0;
   const hdrs = {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_KEY,
     'Authorization': `Bearer ${SUPABASE_KEY}`,
     'Prefer': 'resolution=merge-duplicates',
   };
-  for (let i = 0; i < rækker.length; i += BATCH) {
-    const batch = rækker.slice(i, i + BATCH);
+  for (let i = 0; i < enheder.length; i += BATCH) {
+    const batch = enheder.slice(i, i + BATCH);
     await httpsPost(`${SUPABASE_URL}/rest/v1/sor_bosteder_cache`, hdrs, JSON.stringify(batch));
-    total += batch.length;
-    console.log(`Upsert ${total}/${rækker.length}`);
+    console.log(`Upsert ${Math.min(i + BATCH, enheder.length)}/${enheder.length}`);
   }
 }
 
-async function kørRpc(funktion) {
+async function kørRpc(fn) {
   const hdrs = {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_KEY,
     'Authorization': `Bearer ${SUPABASE_KEY}`,
   };
   try {
-    const data = await httpsPost(`${SUPABASE_URL}/rest/v1/rpc/${funktion}`, hdrs, '{}');
+    const data = await httpsPost(`${SUPABASE_URL}/rest/v1/rpc/${fn}`, hdrs, '{}');
     return { opdaterede: data };
   } catch (e) {
     return { fejl: e.message };
@@ -167,14 +240,15 @@ async function kørRpc(funktion) {
 
 async function main() {
   console.log(`[${new Date().toISOString()}] SOR sync starter`);
-  const enheder = await hentAlleSorEnheder();
-  console.log(`Hentet ${enheder.length} SOR-enheder`);
+  const enheder = await hentSorData();
+  if (enheder.length === 0) { console.error('Ingen enheder hentet — stop.'); process.exit(1); }
   await upsertTilSupabase(enheder);
-  console.log('Cache opdateret');
+  console.log('Cache opdateret i Supabase');
   const stps = await kørRpc('match_sor_paa_stps');
   const tp   = await kørRpc('match_sor_paa_tp');
-  console.log(`CVR-match: stps=${JSON.stringify(stps)}, tp=${JSON.stringify(tp)}`);
-  console.log(`[${new Date().toISOString()}] SOR sync færdig`);
+  console.log(`CVR-match stps: ${JSON.stringify(stps)}`);
+  console.log(`CVR-match tp:   ${JSON.stringify(tp)}`);
+  console.log(`[${new Date().toISOString()}] SOR sync færdig — ${enheder.length} enheder`);
 }
 
 main().catch((err) => {
