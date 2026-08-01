@@ -11,6 +11,16 @@ import { gemBeboerRegistrering } from '@/features/pakker/services/PakkerService'
 const FAST_PRIS = 1895;
 const BEBOER_PRIS = 289;
 
+function måanederAktiv(startdato: string | null, tilAar: number, tilMaaned: number): number | null {
+  if (!startdato) return null;
+  const start = new Date(startdato);
+  if (isNaN(start.getTime())) return null;
+  const startAar = start.getFullYear();
+  const startMaaned = start.getMonth() + 1;
+  const måneder = (tilAar - startAar) * 12 + (tilMaaned - startMaaned) + 1;
+  return måneder > 0 ? måneder : null;
+}
+
 type Props = {
   bosteder: BostedOptagelse[];
   mondayIdMap: Record<string, string>;
@@ -126,6 +136,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
             <tr>
               <th>Bosted</th>
               <th>Startdato</th>
+              <th className="pakker-th-tal">Mdr. aktiv</th>
               <th className="pakker-th-tal">Beboere</th>
               <th className="pakker-th-tal">Beløb</th>
               <th>Sidst opdateret</th>
@@ -141,11 +152,13 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               const eks = eksisterendeReg(b.navn);
               const sidstOpdateret = gemt[k] ?? eks?.opdateret ?? null;
               const netopGemt = !!gemt[k];
+              const mdr = måanederAktiv(b.dato, valgtAar, valgtMaaned);
 
               return (
                 <tr key={b.navn}>
                   <td>{b.navn}</td>
                   <td>{b.dato ?? '—'}</td>
+                  <td className="pakker-td-tal">{mdr != null ? `${mdr} mdr.` : '—'}</td>
                   <td className="pakker-td-tal">
                     <input
                       type="number"
@@ -174,9 +187,8 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                       className={`pakker-gem-knap${netopGemt ? ' gemt' : ''}`}
                       onClick={() => gem(b)}
                       disabled={gemmer[k] || raw === ''}
-                      title="Gem"
                     >
-                      {netopGemt ? '✓' : gemmer[k] ? '…' : <Save size={13} />}
+                      {netopGemt ? '✓ Gemt' : gemmer[k] ? '…' : <><Save size={13} /> Gem</>}
                     </button>
                   </td>
                 </tr>

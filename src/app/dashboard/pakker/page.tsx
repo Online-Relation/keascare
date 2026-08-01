@@ -1,5 +1,6 @@
 // src/app/dashboard/pakker/page.tsx
 
+import { unstable_cache } from 'next/cache';
 import { hentProduktStatistik } from '@/features/monday/services/MondayProdukterService';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { PakkerPage } from '@/features/pakker/components/PakkerPage';
@@ -7,11 +8,18 @@ import type { BeboerRegistrering } from '@/features/pakker/services/PakkerServic
 
 export const dynamic = 'force-dynamic';
 
+// Monday data caches i 5 minutter — Supabase-data hentes frisk ved hvert besøg
+const hentProduktStatistikCached = unstable_cache(
+  hentProduktStatistik,
+  ['produkt-statistik'],
+  { revalidate: 300 },
+);
+
 export default async function PakkerRoute() {
   const supabase = getSupabaseServerClient();
 
   const [data, registreringerRaw, kundeRaw] = await Promise.all([
-    hentProduktStatistik(),
+    hentProduktStatistikCached(),
     supabase
       .from('pakke_beboer_registreringer')
       .select('*')

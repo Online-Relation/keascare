@@ -1,9 +1,9 @@
 /* pakker.css */
 
 .pakker-page {
-  max-width: 860px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -177,23 +177,24 @@
 
 /* ── Gem-knap ── */
 .pakker-gem-knap {
-  display: flex;
+  display: inline-flex;
   align-items: center;
+  gap: 0.35rem;
   justify-content: center;
-  background: #4f46e5;
+  background: #0073ea;
   color: #fff;
   border: none;
   border-radius: 7px;
-  padding: 0.35rem 0.6rem;
+  padding: 0.4rem 0.9rem;
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  min-width: 36px;
-  height: 32px;
+  white-space: nowrap;
+  height: 34px;
   transition: background 0.15s;
 }
 
-.pakker-gem-knap:hover:not(:disabled) { background: #4338ca; }
+.pakker-gem-knap:hover:not(:disabled) { background: #0060c9; }
 .pakker-gem-knap:disabled { opacity: 0.5; cursor: default; }
 .pakker-gem-knap.gemt { background: #16a34a; }
 
