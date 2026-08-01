@@ -126,17 +126,16 @@ async function hentRapporterUdenDeltagere() {
 
 // ── PDF-parsing ─────────────────────────────────────────────────────────────
 
-let PDFParse;
+let pdfParse;
 try {
-  PDFParse = require('pdf-parse').PDFParse;
+  pdfParse = require('pdf-parse');
 } catch {
-  console.error('pdf-parse ikke installeret. Kør: npm install pdf-parse');
+  console.error('pdf-parse ikke installeret. Kør: npm install pdf-parse@1.1.1');
   process.exit(1);
 }
 
 async function parsePdf(buf) {
-  const parser = new PDFParse({ data: buf });
-  const resultat = await parser.getText();
+  const resultat = await pdfParse(buf);
   return resultat.text ?? '';
 }
 
