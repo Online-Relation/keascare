@@ -16,7 +16,7 @@ export async function POST() {
   }
 
   if (enheder.length === 0) {
-    return NextResponse.json({ ok: false, fejl: 'SOR returnerede 0 enheder — tjek API-format' });
+    return NextResponse.json({ ok: false, fejl: 'SOR returnerede 0 enheder — tjek API-format og endpoint-URL' });
   }
 
   // 1. Upsert til cache
