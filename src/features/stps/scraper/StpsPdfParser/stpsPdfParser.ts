@@ -43,10 +43,11 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
     if (!res.ok) return tom;
     const buf = Buffer.from(await res.arrayBuffer());
 
-    // pdf-parse: ESM-versionen eksporterer direkte, ikke via .default
-    const pdfMod = await import('pdf-parse');
+    // pdf-parse er CJS — brug createRequire for at undgå ESM-importproblemer
+    const { createRequire } = await import('module');
+    const require = createRequire(import.meta.url);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParse: (buf: Buffer) => Promise<{ text: string }> = (pdfMod as any).default ?? pdfMod;
+    const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string }>;
     const resultat = await pdfParse(buf);
     const tekst: string = resultat.text ?? '';
 
