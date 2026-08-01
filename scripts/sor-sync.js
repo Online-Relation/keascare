@@ -152,21 +152,27 @@ function felt(obj, ...kandidater) {
   return null;
 }
 
-// Map CSV-række til SOR-enhed
+// Map CSV-række til SOR-enhed (kolonner fra SOREntity.csv)
 function mapRække(r) {
-  const sorKode = felt(r, 'sor_kode', 'sorkode', 'sor-kode', 'enhedskode', 'sorid');
+  // sorid kan have BOM-præfiks på første kolonne
+  const sorKode = felt(r, 'sorid', '﻿sorid', 'ï»¿sorid');
   if (!sorKode) return null;
 
-  const aktiv = felt(r, 'aktiv', 'er_aktiv', 'active', 'status');
-  const erAktiv = !aktiv || aktiv === '1' || aktiv.toLowerCase() === 'true' || aktiv.toLowerCase() === 'ja';
+  // Aktiv = ingen todate sat
+  const todate = felt(r, 'todate');
+  const erAktiv = !todate || todate.trim() === '';
+
+  const vejnavn  = felt(r, 'postaladdressstreetname') ?? '';
+  const husnr    = felt(r, 'postaladdressstreetbuildingid') ?? '';
+  const adresse  = husnr ? `${vejnavn} ${husnr}`.trim() : vejnavn;
 
   return {
     sor_kode: sorKode,
-    navn: felt(r, 'navn', 'enhedsnavn', 'name', 'organisationsnavn') ?? '',
-    cvr: felt(r, 'cvr', 'cvr_nummer', 'cvrnummer', 'cvr-nummer'),
-    adresse: felt(r, 'adresse', 'vejnavn', 'vejnavn_med_husnummer', 'adresselinje1'),
-    postnummer: felt(r, 'postnummer', 'post_nr', 'postnr'),
-    by: felt(r, 'postdistrikt', 'by', 'city', 'postby'),
+    navn: felt(r, 'entityname') ?? '',
+    cvr: felt(r, 'institutionownercvrnumberid'),
+    adresse: adresse || null,
+    postnummer: felt(r, 'postaladdresspostcodeid'),
+    by: felt(r, 'postaladdressdistrictname'),
     aktiv: erAktiv,
     synkroniseret: new Date().toISOString(),
   };
