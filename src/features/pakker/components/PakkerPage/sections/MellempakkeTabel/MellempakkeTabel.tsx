@@ -48,7 +48,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
 
   function eksisterendeReg(navn: string): BeboerRegistrering | undefined {
     return eksisterendeRegistreringer.find(
-      (r) => r.bostedNavn === navn && r.aar === valgtAar && r.maaned === valgtMaaned,
+      (r) => r.bostedNavn === navn && r.aar === valgtAar && r.maaned === valgtMaaned && r.pakke === 'FMK pakke',
     );
   }
 
@@ -75,7 +75,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
     setGemmer((g) => ({ ...g, [k]: true }));
     setFejl((f) => ({ ...f, [k]: '' }));
     try {
-      await gemBeboerRegistrering(mondayId, b.navn, 'Mellempakke', valgtAar, valgtMaaned, antal);
+      await gemBeboerRegistrering(mondayId, b.navn, 'FMK pakke', valgtAar, valgtMaaned, antal);
       const nu = new Date().toISOString();
       setGemt((g) => ({ ...g, [k]: nu }));
       setTimeout(() => setGemt((g) => ({ ...g, [k]: null })), 3000);
@@ -91,7 +91,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
   return (
     <div className="pakker-sektion">
       <div className="pakker-sektion-header">
-        <span className="pakker-pakke-badge" style={{ background: '#579bfc' }}>Mellempakke</span>
+        <span className="pakker-pakke-badge" style={{ background: '#66ccff', color: '#1a1a2e' }}>FMK pakke</span>
         <span className="pakker-sektion-meta">
           {bosteder.length} kunder · {FAST_PRIS.toLocaleString('da-DK')} kr + {BEBOER_PRIS} kr × antal beboere
         </span>

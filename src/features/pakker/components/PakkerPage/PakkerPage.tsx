@@ -15,7 +15,7 @@ type Props = {
 
 export function PakkerPage({ data, mondayIdMap, registreringer }: Props) {
   const basispakke = data.linjer.find((l) => l.produkt === 'Basispakke');
-  const mellempakke = data.linjer.find((l) => l.produkt === 'Mellempakke');
+  const mellempakke = data.linjer.find((l) => l.produkt === 'FMK pakke');
 
   return (
     <div className="pakker-page">
@@ -36,15 +36,6 @@ export function PakkerPage({ data, mondayIdMap, registreringer }: Props) {
         />
       )}
 
-      {/* Midlertidig debug — fjernes når navne er bekræftet */}
-      <details style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
-        <summary>Produktnavne fra Monday (debug)</summary>
-        <ul>
-          {data.linjer.map((l) => (
-            <li key={l.produkt}><strong>{l.produkt}</strong> — {l.antal} kunder</li>
-          ))}
-        </ul>
-      </details>
     </div>
   );
 }
