@@ -23,6 +23,9 @@ export function DataKvalitetBadge({ dataKvalitet, vis = 'kompakt' }: Props) {
   if (vis === 'fuld') {
     return (
       <div className="dkb-fuld">
+        <span style={{ fontSize: '0.68rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--color-text-muted)', marginRight: '0.35rem' }}>
+          Datamatch
+        </span>
         <div className={`dkb-score ${klasse}`}>
           {score}/{max}
         </div>
