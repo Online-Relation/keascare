@@ -172,9 +172,8 @@ function mapRække(r) {
   };
 }
 
-// Minimal ZIP-parser i ren Node.js — ingen eksterne afhængigheder
-// Returnerer Buffer for den største CSV-fil (undgår Node string-grænse på ~500MB)
-function udpakZipTilBuffer(zipBuf) {
+// Find ZIP-entry metadata uden at udpakke data
+function findZipEntries(zipBuf) {
   const entries = [];
   let offset = 0;
   while (offset < zipBuf.length - 4) {
@@ -187,23 +186,61 @@ function udpakZipTilBuffer(zipBuf) {
     const extraLen    = zipBuf.readUInt16LE(offset + 28);
     const name        = zipBuf.slice(offset + 30, offset + 30 + nameLen).toString('utf-8');
     const dataStart   = offset + 30 + nameLen + extraLen;
-    const compData    = zipBuf.slice(dataStart, dataStart + compSize);
-
     if (name.match(/\.csv$/i) && compSize > 0) {
-      entries.push({ name, uncompSize, compData, compression });
+      entries.push({ name, uncompSize, compression, dataStart, compSize });
     }
     offset = dataStart + compSize;
   }
+  return entries;
+}
 
-  if (entries.length === 0) throw new Error('Ingen CSV-filer fundet i ZIP');
-  entries.sort((a, b) => b.uncompSize - a.uncompSize);
-  console.log(`ZIP CSV-filer: ${entries.map((e) => `${e.name} (${e.uncompSize} bytes)`).join(', ')}`);
+// Stream-parse ZIP-entry linje for linje — holder aldrig hele filen i RAM
+function parseZipEntryStream(zipBuf, entry) {
+  return new Promise((resolve, reject) => {
+    const { Readable } = require('stream');
 
-  const valgt = entries[0];
-  console.log(`Udpakker: ${valgt.name}`);
-  if (valgt.compression === 0) return valgt.compData;
-  if (valgt.compression === 8) return zlib.inflateRawSync(valgt.compData);
-  throw new Error(`Ukendt ZIP-komprimering: ${valgt.compression}`);
+    const compData = zipBuf.slice(entry.dataStart, entry.dataStart + entry.compSize);
+    const source = Readable.from([compData]);
+    const inflater = entry.compression === 8 ? zlib.createInflateRaw() : null;
+    const stream = inflater ? source.pipe(inflater) : source;
+
+    let headers = null;
+    let rest = '';
+    const enheder = [];
+
+    stream.on('data', (chunk) => {
+      const tekst = rest + chunk.toString('latin1');
+      const linjer = tekst.split('\n');
+      rest = linjer.pop(); // gem ufærdig linje
+
+      for (const linje of linjer) {
+        const l = linje.endsWith('\r') ? linje.slice(0, -1) : linje;
+        if (!l) continue;
+        if (!headers) {
+          headers = parseRække(l).map((h) => h.trim().toLowerCase().replace(/\s+/g, '_'));
+        } else {
+          const vals = parseRække(l);
+          const obj = {};
+          headers.forEach((h, idx) => { obj[h] = (vals[idx] ?? '').trim(); });
+          const enhed = mapRække(obj);
+          if (enhed && enhed.aktiv) enheder.push(enhed);
+        }
+      }
+    });
+
+    stream.on('end', () => {
+      if (rest.trim() && headers) {
+        const vals = parseRække(rest);
+        const obj = {};
+        headers.forEach((h, idx) => { obj[h] = (vals[idx] ?? '').trim(); });
+        const enhed = mapRække(obj);
+        if (enhed && enhed.aktiv) enheder.push(enhed);
+      }
+      resolve(enheder);
+    });
+
+    stream.on('error', reject);
+  });
 }
 
 async function hentSorData() {
@@ -221,11 +258,13 @@ async function hentSorData() {
   if (fileUrl.endsWith('.gz')) {
     tekst = zlib.gunzipSync(buf).toString('utf-8');
   } else if (fileUrl.endsWith('.zip')) {
-    const csvBuf = udpakZipTilBuffer(buf);
-    const rækker = parseCSVBuffer(csvBuf);
-    console.log(`Parsede ${rækker.length} rækker fra CSV`);
-    if (rækker.length > 0) console.log('Kolonner:', Object.keys(rækker[0]).join(', '));
-    const enheder = rækker.map(mapRække).filter(Boolean).filter((e) => e.aktiv);
+    const entries = findZipEntries(buf);
+    if (entries.length === 0) throw new Error('Ingen CSV-filer fundet i ZIP');
+    entries.sort((a, b) => b.uncompSize - a.uncompSize);
+    console.log(`ZIP CSV-filer: ${entries.map((e) => `${e.name} (${e.uncompSize} bytes)`).join(', ')}`);
+    const valgt = entries[0];
+    console.log(`Stream-parser: ${valgt.name}`);
+    const enheder = await parseZipEntryStream(buf, valgt);
     console.log(`${enheder.length} aktive enheder efter mapping`);
     return enheder;
   } else {
