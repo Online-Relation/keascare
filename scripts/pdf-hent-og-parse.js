@@ -59,7 +59,13 @@ function hentTekst(url, ekstraHeaders = {}) {
 
 function hentBuffer(url) {
   return new Promise((resolve, reject) => {
-    const parsedUrl = new URL(url);
+    // Sikr at URL er korrekt encoded (håndterer danske bogstaver i filnavne)
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(url);
+    } catch {
+      return reject(new Error(`Ugyldig URL: ${url}`));
+    }
     const mod = parsedUrl.protocol === 'https:' ? https : http;
     const req = mod.get(
       {
@@ -179,9 +185,11 @@ function httpsPatch(url, body) {
 // ── Hent rapporter uden pdf_url ────────────────────────────────────────────
 
 async function hentRapporterUdenPdf() {
+  // pdf_behandlet=neq.true ekskluderer både false og null, så 404-rapporter ikke gentages
   const url = `${SUPABASE_URL}/rest/v1/stps_rapporter` +
     `?select=id,stps_tilbud_navn,rapport_url` +
     `&pdf_url=is.null` +
+    `&pdf_behandlet=neq.true` +
     `&limit=${BATCH}`;
 
   const { status, body } = await httpsGet(url);
@@ -191,19 +199,36 @@ async function hentRapporterUdenPdf() {
 
 // ── Find PDF-link i HTML ───────────────────────────────────────────────────
 
-function dekodHtmlEntities(s) {
-  return s
+function dekodOgEncodeUrl(raw) {
+  // 1. Dekod HTML-entities (&amp; → &, &#xE5; → å osv.)
+  let s = raw
     .replace(/&amp;/g, '&')
     .replace(/&#x([0-9A-Fa-f]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
     .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(parseInt(dec, 10)))
     .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"');
+
+  // 2. Percent-encod non-ASCII og mellemrum i stien (bevar :// og allerede-encoded %)
+  try {
+    const u = new URL(s);
+    // encodeURIComponent encoder for meget — brug encodeURI på kun stien
+    u.pathname = u.pathname.split('/').map((seg) => {
+      try { decodeURIComponent(seg); return seg; } catch { return ''; }
+    }).join('/');
+    // Rebuild: encode hvert segment der ikke allerede er encoded
+    const encodetSti = s.split('?')[0].replace(/^https?:\/\/[^/]+/, '').split('/').map((seg) =>
+      encodeURIComponent(decodeURIComponent(seg.replace(/\+/g, ' ')))
+    ).join('/');
+    return `${u.protocol}//${u.host}${encodetSti}`;
+  } catch {
+    return s;
+  }
 }
 
 function udtraekPdfUrl(html) {
   // Søg efter href der slutter på .pdf og indeholder gopublic eller cdn
   const matches = [...html.matchAll(/href="([^"]*\.pdf[^"]*)"/gi)];
   for (const m of matches) {
-    const href = dekodHtmlEntities(m[1]);
+    const href = dekodOgEncodeUrl(m[1]);
     if (href.includes('gopublic') || href.includes('cdn') || href.includes('stps')) {
       return href.startsWith('http') ? href : `https://gopublic.dk${href}`;
     }
@@ -211,8 +236,7 @@ function udtraekPdfUrl(html) {
   // Bredere søgning: ethvert .pdf-link
   const bredMatch = html.match(/href="([^"]*\.pdf)"/i);
   if (bredMatch) {
-    const href = dekodHtmlEntities(bredMatch[1]);
-    return href.startsWith('http') ? href : `https://gopublic.dk${href}`;
+    return dekodOgEncodeUrl(bredMatch[1]);
   }
   return null;
 }
