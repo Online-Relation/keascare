@@ -13,7 +13,7 @@ const BEBOER_PRIS = 289;
 
 type Props = {
   bosteder: BostedOptagelse[];
-  mondayIdMap: Record<string, string>; // bostedNavn → mondayItemId
+  mondayIdMap: Record<string, string>;
   eksisterendeRegistreringer: BeboerRegistrering[];
 };
 
@@ -27,29 +27,36 @@ function nuværendeMåned() {
   return { aar: nu.getFullYear(), maaned: nu.getMonth() + 1 };
 }
 
+function formaterDato(iso: string | null): string {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('da-DK', {
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+  });
+}
+
 export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer }: Props) {
   const standard = nuværendeMåned();
-  const [valgtAar, setValgtAar]     = useState(standard.aar);
+  const [valgtAar, setValgtAar]       = useState(standard.aar);
   const [valgtMaaned, setValgtMaaned] = useState(standard.maaned);
-  const [inputs, setInputs]         = useState<Record<string, string>>({});
-  const [gemmer, setGemmer]         = useState<Record<string, boolean>>({});
-  const [gemt, setGemt]             = useState<Record<string, boolean>>({});
-  const [fejl, setFejl]             = useState<Record<string, string>>({});
+  const [inputs, setInputs]           = useState<Record<string, string>>({});
+  const [gemmer, setGemmer]           = useState<Record<string, boolean>>({});
+  const [gemt, setGemt]               = useState<Record<string, string | null>>({});
+  const [fejl, setFejl]               = useState<Record<string, string>>({});
 
   const nøgle = (navn: string) => `${navn}__${valgtAar}__${valgtMaaned}`;
 
-  function eksisterendeAntal(navn: string): number | null {
-    const reg = eksisterendeRegistreringer.find(
+  function eksisterendeReg(navn: string): BeboerRegistrering | undefined {
+    return eksisterendeRegistreringer.find(
       (r) => r.bostedNavn === navn && r.aar === valgtAar && r.maaned === valgtMaaned,
     );
-    return reg?.antalBeboere ?? null;
   }
 
   function værdiFeltet(navn: string): string {
     const k = nøgle(navn);
     if (k in inputs) return inputs[k];
-    const eks = eksisterendeAntal(navn);
-    return eks != null ? String(eks) : '';
+    const eks = eksisterendeReg(navn);
+    return eks != null ? String(eks.antalBeboere) : '';
   }
 
   async function gem(b: BostedOptagelse) {
@@ -69,8 +76,9 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
     setFejl((f) => ({ ...f, [k]: '' }));
     try {
       await gemBeboerRegistrering(mondayId, b.navn, 'Mellempakke', valgtAar, valgtMaaned, antal);
-      setGemt((g) => ({ ...g, [k]: true }));
-      setTimeout(() => setGemt((g) => ({ ...g, [k]: false })), 2000);
+      const nu = new Date().toISOString();
+      setGemt((g) => ({ ...g, [k]: nu }));
+      setTimeout(() => setGemt((g) => ({ ...g, [k]: null })), 3000);
     } catch {
       setFejl((f) => ({ ...f, [k]: 'Fejl ved gem' }));
     } finally {
@@ -84,17 +92,19 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
     <div className="pakker-sektion">
       <div className="pakker-sektion-header">
         <span className="pakker-pakke-badge" style={{ background: '#579bfc' }}>Mellempakke</span>
-        <span className="pakker-sektion-meta">{bosteder.length} kunder · {FAST_PRIS.toLocaleString('da-DK')} kr + {BEBOER_PRIS} kr × antal beboere</span>
+        <span className="pakker-sektion-meta">
+          {bosteder.length} kunder · {FAST_PRIS.toLocaleString('da-DK')} kr + {BEBOER_PRIS} kr × antal beboere
+        </span>
       </div>
 
       {/* Periode-vælger */}
       <div className="pakker-periode-vaelger">
-        <label className="pakker-periode-label">Periode</label>
+        <label className="pakker-periode-label">Registrer for</label>
         <div className="pakker-periode-inputs">
           <select
             className="pakker-select"
             value={valgtMaaned}
-            onChange={(e) => { setValgtMaaned(Number(e.target.value)); setInputs({}); setGemt({}); }}
+            onChange={(e) => { setValgtMaaned(Number(e.target.value)); setInputs({}); }}
           >
             {MÅNEDER.map((m, i) => (
               <option key={i} value={i + 1}>{m}</option>
@@ -103,7 +113,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
           <select
             className="pakker-select"
             value={valgtAar}
-            onChange={(e) => { setValgtAar(Number(e.target.value)); setInputs({}); setGemt({}); }}
+            onChange={(e) => { setValgtAar(Number(e.target.value)); setInputs({}); }}
           >
             {aar.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
@@ -116,8 +126,9 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
             <tr>
               <th>Bosted</th>
               <th>Startdato</th>
-              <th className="pakker-th-tal">Antal beboere</th>
+              <th className="pakker-th-tal">Beboere</th>
               <th className="pakker-th-tal">Beløb</th>
+              <th>Sidst opdateret</th>
               <th></th>
             </tr>
           </thead>
@@ -127,6 +138,10 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               const raw = værdiFeltet(b.navn);
               const antal = parseInt(raw, 10);
               const beløb = !isNaN(antal) ? FAST_PRIS + BEBOER_PRIS * antal : null;
+              const eks = eksisterendeReg(b.navn);
+              const sidstOpdateret = gemt[k] ?? eks?.opdateret ?? null;
+              const netopGemt = !!gemt[k];
+
               return (
                 <tr key={b.navn}>
                   <td>{b.navn}</td>
@@ -148,14 +163,20 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                   <td className="pakker-td-tal pakker-beloeb">
                     {beløb != null ? `${beløb.toLocaleString('da-DK')} kr` : '—'}
                   </td>
+                  <td className="pakker-opdateret">
+                    {netopGemt
+                      ? <span style={{ color: '#16a34a', fontWeight: 600 }}>Gemt nu ✓</span>
+                      : <span>{formaterDato(sidstOpdateret)}</span>
+                    }
+                  </td>
                   <td>
                     <button
-                      className={`pakker-gem-knap${gemt[k] ? ' gemt' : ''}`}
+                      className={`pakker-gem-knap${netopGemt ? ' gemt' : ''}`}
                       onClick={() => gem(b)}
                       disabled={gemmer[k] || raw === ''}
                       title="Gem"
                     >
-                      {gemt[k] ? '✓' : gemmer[k] ? '…' : <Save size={13} />}
+                      {netopGemt ? '✓' : gemmer[k] ? '…' : <Save size={13} />}
                     </button>
                   </td>
                 </tr>

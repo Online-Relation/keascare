@@ -197,6 +197,14 @@
 .pakker-gem-knap:disabled { opacity: 0.5; cursor: default; }
 .pakker-gem-knap.gemt { background: #16a34a; }
 
+.pakker-opdateret {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+
 @media (max-width: 600px) {
-  .pakker-page { padding: 1rem 0.75rem; }
+  .pakker-page { padding: 1rem 0.75rem; gap: 1.5rem; }
+  .pakker-tabel-wrapper { -webkit-overflow-scrolling: touch; }
+  .pakker-tabel { min-width: 560px; }
 }

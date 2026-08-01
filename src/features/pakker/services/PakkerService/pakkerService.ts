@@ -10,6 +10,7 @@ export type BeboerRegistrering = {
   aar: number;
   maaned: number;
   antalBeboere: number;
+  opdateret: string | null;
 };
 
 function supabase() {
@@ -36,6 +37,7 @@ export async function hentBeboerRegistreringer(pakke?: string): Promise<BeboerRe
     aar: r.aar,
     maaned: r.maaned,
     antalBeboere: r.antal_beboere,
+    opdateret: r.opdateret ?? null,
   }));
 }
 
@@ -47,10 +49,19 @@ export async function gemBeboerRegistrering(
   maaned: number,
   antalBeboere: number,
 ): Promise<void> {
+  const nu = new Date().toISOString();
   const { error } = await supabase()
     .from('pakke_beboer_registreringer')
     .upsert(
-      { monday_item_id: mondayItemId, bosted_navn: bostedNavn, pakke, aar, maaned, antal_beboere: antalBeboere },
+      {
+        monday_item_id: mondayItemId,
+        bosted_navn: bostedNavn,
+        pakke,
+        aar,
+        maaned,
+        antal_beboere: antalBeboere,
+        opdateret: nu,
+      },
       { onConflict: 'monday_item_id,aar,maaned' },
     );
   if (error) throw error;

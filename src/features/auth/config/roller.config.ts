@@ -32,6 +32,7 @@ export const ROLLE_ADGANG: Record<BrugerRolle, string[] | '*'> = {
     '/dashboard/alle-rapporter',
     '/dashboard/kunder',
     '/dashboard/produkter',
+    '/dashboard/pakker',
     '/dashboard/markedsforing',
     '/dashboard/regelovervagning',
     '/dashboard/monitor',
