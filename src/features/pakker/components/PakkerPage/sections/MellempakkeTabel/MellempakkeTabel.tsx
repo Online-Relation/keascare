@@ -45,6 +45,33 @@ function formaterDato(iso: string | null): string {
   });
 }
 
+function TotalMrrRække({
+  bosteder,
+  værdiFeltet,
+}: {
+  bosteder: BostedOptagelse[];
+  værdiFeltet: (navn: string) => string;
+}) {
+  let totalMrr = 0;
+  let harNoget = false;
+  for (const b of bosteder) {
+    const antal = parseInt(værdiFeltet(b.navn), 10);
+    if (!isNaN(antal)) {
+      totalMrr += FAST_PRIS + BEBOER_PRIS * antal;
+      harNoget = true;
+    }
+  }
+  return (
+    <tr className="pakker-tabel-total">
+      <td colSpan={4}>Total MRR</td>
+      <td className="pakker-td-tal pakker-beloeb">
+        {harNoget ? `${totalMrr.toLocaleString('da-DK')} kr` : '—'}
+      </td>
+      <td colSpan={2} />
+    </tr>
+  );
+}
+
 export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer }: Props) {
   const standard = nuværendeMåned();
   const [valgtAar, setValgtAar]       = useState(standard.aar);
@@ -195,6 +222,9 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               );
             })}
           </tbody>
+          <tfoot>
+            <TotalMrrRække bosteder={bosteder} værdiFeltet={værdiFeltet} />
+          </tfoot>
         </table>
       </div>
     </div>
