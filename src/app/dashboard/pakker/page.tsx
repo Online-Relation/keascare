@@ -32,6 +32,7 @@ export default async function PakkerRoute() {
     aar: r.aar,
     maaned: r.maaned,
     antalBeboere: r.antal_beboere,
+    opdateret: r.opdateret ?? null,
   }));
 
   const mondayIdMap: Record<string, string> = {};
