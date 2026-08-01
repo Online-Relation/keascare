@@ -183,7 +183,6 @@ async function hentRapporterUdenPdf() {
     `?select=id,stps_tilbud_navn,rapport_url` +
     `&pdf_url=is.null` +
     `&rapport_url=not.is.null` +
-    `&rapport_url=not.ilike.stps://genereret/%` +
     `&order=rapport_dato.desc` +
     `&limit=${BATCH}`;
 
@@ -336,6 +335,13 @@ async function main() {
   for (let i = 0; i < rapporter.length; i++) {
     const { id, stps_tilbud_navn, rapport_url } = rapporter[i];
     try {
+      // Spring syntetiske rapport-URLs over
+      if (rapport_url.startsWith('stps://')) {
+        await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_behandlet: true });
+        ingenPdf++;
+        continue;
+      }
+
       // 1. Hent rapport-side og find PDF-link
       const html = await hentTekst(rapport_url);
       const pdfUrl = udtraekPdfUrl(html, rapport_url);
