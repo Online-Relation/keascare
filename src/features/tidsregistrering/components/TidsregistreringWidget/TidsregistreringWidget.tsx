@@ -2,14 +2,14 @@
 
 // src/features/tidsregistrering/components/TidsregistreringWidget/TidsregistreringWidget.tsx
 
-import { useState, useEffect, useCallback } from 'react';
-import { Play, Square, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Play, Square, Clock, X } from 'lucide-react';
 import { hentKategorier, startTimer, stopTimer } from '@/features/tidsregistrering/services/TidsregistreringService';
 import type { TidsregistreringKategori } from '@/features/tidsregistrering/types/tidsregistrering.types';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 
-const LS_ID  = 'tr_aktiv_id';
-const LS_KAT = 'tr_aktiv_kategori';
+const LS_ID    = 'tr_aktiv_id';
+const LS_KAT   = 'tr_aktiv_kategori';
 const LS_START = 'tr_aktiv_start';
 
 function formatTid(sek: number): string {
@@ -22,14 +22,16 @@ function formatTid(sek: number): string {
 
 export function TidsregistreringWidget() {
   const { rolle, loading } = useBrugerRolle();
-  const [kategorier, setKategorier]     = useState<TidsregistreringKategori[]>([]);
-  const [valgtId, setValgtId]           = useState<string>('');
-  const [kører, setKører]               = useState(false);
+  const [kategorier, setKategorier]             = useState<TidsregistreringKategori[]>([]);
+  const [valgtId, setValgtId]                   = useState<string>('');
+  const [kører, setKører]                       = useState(false);
   const [aktivRegistreringId, setAktivRegistreringId] = useState<string | null>(null);
-  const [sek, setSek]                   = useState(0);
-  const [gemmer, setGemmer]             = useState(false);
+  const [sek, setSek]                           = useState(0);
+  const [gemmer, setGemmer]                     = useState(false);
+  const [visStopModal, setVisStopModal]         = useState(false);
+  const [note, setNote]                         = useState('');
+  const noteRef                                 = useRef<HTMLTextAreaElement>(null);
 
-  // Gendan aktiv timer fra localStorage
   useEffect(() => {
     const id    = localStorage.getItem(LS_ID);
     const kat   = localStorage.getItem(LS_KAT);
@@ -56,6 +58,10 @@ export function TidsregistreringWidget() {
     return () => clearInterval(interval);
   }, [kører]);
 
+  useEffect(() => {
+    if (visStopModal) setTimeout(() => noteRef.current?.focus(), 100);
+  }, [visStopModal]);
+
   const handleStart = useCallback(async () => {
     if (!valgtId) return;
     const id = await startTimer(valgtId);
@@ -67,10 +73,15 @@ export function TidsregistreringWidget() {
     setKører(true);
   }, [valgtId]);
 
-  const handleStop = useCallback(async () => {
+  function åbnStopModal() {
+    setNote('');
+    setVisStopModal(true);
+  }
+
+  const handleGem = useCallback(async () => {
     if (!aktivRegistreringId) return;
     setGemmer(true);
-    await stopTimer(aktivRegistreringId);
+    await stopTimer(aktivRegistreringId, note.trim() || undefined);
     localStorage.removeItem(LS_ID);
     localStorage.removeItem(LS_KAT);
     localStorage.removeItem(LS_START);
@@ -78,52 +89,94 @@ export function TidsregistreringWidget() {
     setKører(false);
     setSek(0);
     setGemmer(false);
-  }, [aktivRegistreringId]);
+    setVisStopModal(false);
+    setNote('');
+  }, [aktivRegistreringId, note]);
+
+  function lukModal() {
+    setVisStopModal(false);
+    setNote('');
+  }
 
   if (loading) return null;
   if (rolle !== 'bostedsansvarlig' && rolle !== 'development') return null;
   if (kategorier.length === 0) return null;
 
+  const kategoriNavn = kategorier.find((k) => k.id === valgtId)?.navn ?? '';
+
   return (
-    <div className="tr-widget">
-      <Clock size={14} className="tr-widget-ikon" />
-      {kører ? (
-        <>
-          <span className="tr-widget-tid">{formatTid(sek)}</span>
-          <span className="tr-widget-kategori">
-            {kategorier.find((k) => k.id === valgtId)?.navn ?? ''}
-          </span>
-          <button
-            className="tr-widget-stop"
-            onClick={handleStop}
-            disabled={gemmer}
-            aria-label="Stop timer"
-          >
-            <Square size={12} />
-            {gemmer ? 'Gemmer…' : 'Stop'}
+    <>
+      <div className={`tr-widget${kører ? ' tr-widget--kører' : ''}`}>
+        <div className="tr-widget-venstre">
+          <Clock size={15} className="tr-widget-ikon" />
+          {kører ? (
+            <div className="tr-widget-info">
+              <span className="tr-widget-tid">{formatTid(sek)}</span>
+              <span className="tr-widget-kategori-navn">{kategoriNavn}</span>
+            </div>
+          ) : (
+            <select
+              className="tr-widget-select"
+              value={valgtId}
+              onChange={(e) => setValgtId(e.target.value)}
+            >
+              {kategorier.map((k) => (
+                <option key={k.id} value={k.id}>{k.navn}</option>
+              ))}
+            </select>
+          )}
+        </div>
+
+        {kører ? (
+          <button className="tr-widget-stop-knap" onClick={åbnStopModal} aria-label="Stop timer">
+            <Square size={14} />
+            Stop
           </button>
-        </>
-      ) : (
-        <>
-          <select
-            className="tr-widget-select"
-            value={valgtId}
-            onChange={(e) => setValgtId(e.target.value)}
-          >
-            {kategorier.map((k) => (
-              <option key={k.id} value={k.id}>{k.navn}</option>
-            ))}
-          </select>
-          <button
-            className="tr-widget-start"
-            onClick={handleStart}
-            aria-label="Start timer"
-          >
-            <Play size={12} />
+        ) : (
+          <button className="tr-widget-start-knap" onClick={handleStart} aria-label="Start timer">
+            <Play size={14} />
             Start
           </button>
-        </>
+        )}
+      </div>
+
+      {/* Stop-modal */}
+      {visStopModal && (
+        <div className="tr-modal-overlay" onClick={lukModal}>
+          <div className="tr-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="tr-modal-header">
+              <div>
+                <h2 className="tr-modal-titel">Stop registrering</h2>
+                <p className="tr-modal-subtitle">{kategoriNavn} · {formatTid(sek)}</p>
+              </div>
+              <button className="tr-modal-luk" onClick={lukModal} aria-label="Luk">
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="tr-modal-body">
+              <label className="tr-modal-label">Kommentar <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(valgfri)</span></label>
+              <textarea
+                ref={noteRef}
+                className="tr-modal-textarea"
+                placeholder="Hvad lavede du? Fx: Møde med bostedet om ny medarbejder…"
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            <div className="tr-modal-footer">
+              <button className="tr-modal-gem" onClick={handleGem} disabled={gemmer}>
+                {gemmer ? 'Gemmer…' : 'Gem registrering'}
+              </button>
+              <button className="tr-modal-afbryd" onClick={lukModal}>
+                Luk uden at gemme
+              </button>
+            </div>
+          </div>
+        </div>
       )}
-    </div>
+    </>
   );
 }

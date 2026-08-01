@@ -72,7 +72,7 @@ export async function startTimer(kategoriId: string): Promise<string> {
   return data.id;
 }
 
-export async function stopTimer(id: string): Promise<void> {
+export async function stopTimer(id: string, note?: string): Promise<void> {
   const slutTid = new Date().toISOString();
   const { data, error } = await supabase()
     .from('tidsregistreringer')
@@ -86,7 +86,7 @@ export async function stopTimer(id: string): Promise<void> {
 
   const { error: updateFejl } = await supabase()
     .from('tidsregistreringer')
-    .update({ slut_tid: slutTid, varighed_minutter: varighedMinutter })
+    .update({ slut_tid: slutTid, varighed_minutter: varighedMinutter, note: note ?? null })
     .eq('id', id);
   if (updateFejl) throw updateFejl;
 }
