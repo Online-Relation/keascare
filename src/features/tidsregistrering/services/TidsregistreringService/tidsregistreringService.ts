@@ -175,6 +175,22 @@ export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[
   }));
 }
 
+export async function sletKategori(id: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
+export async function sletUnderpunkt(id: string): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .delete()
+    .eq('id', id);
+  if (error) throw error;
+}
+
 export async function opdaterNote(id: string, note: string): Promise<void> {
   const { error } = await supabase()
     .from('tidsregistreringer')

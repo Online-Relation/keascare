@@ -3,10 +3,10 @@
 // src/features/tidsregistrering/components/TidsregistreringPage/sections/KategoriAdmin/KategoriAdmin.tsx
 
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Check, X, EyeOff, Eye, ChevronDown } from 'lucide-react';
+import { Plus, Pencil, Check, X, EyeOff, Eye, ChevronDown, Trash2 } from 'lucide-react';
 import {
-  hentAlleKategorier, opretKategori, opdaterKategori, skiftKategoriAktiv,
-  hentAlleUnderpunkterForKategorier, opretUnderpunkt, opdaterUnderpunkt, skiftUnderpunktAktiv,
+  hentAlleKategorier, opretKategori, opdaterKategori, skiftKategoriAktiv, sletKategori,
+  hentAlleUnderpunkterForKategorier, opretUnderpunkt, opdaterUnderpunkt, skiftUnderpunktAktiv, sletUnderpunkt,
 } from '@/features/tidsregistrering/services/TidsregistreringService';
 import type { TidsregistreringKategori, TidsregistreringUnderpunkt } from '@/features/tidsregistrering/types/tidsregistrering.types';
 
@@ -20,6 +20,8 @@ export function KategoriAdmin() {
   const [redigerUp, setRedigerUp]             = useState<string | null>(null);
   const [redigerUpNavn, setRedigerUpNavn]     = useState('');
   const [nytUpNavn, setNytUpNavn]             = useState<Record<string, string>>({});
+  const [bekræftSletKat, setBekræftSletKat]   = useState<string | null>(null);
+  const [bekræftSletUp, setBekræftSletUp]     = useState<string | null>(null);
 
   async function load() {
     const kats = await hentAlleKategorier().catch(() => [] as TidsregistreringKategori[]);
@@ -72,82 +74,147 @@ export function KategoriAdmin() {
     setÅbneKat((prev) => new Set([...prev, katId]));
   }
 
-  return (
-    <div className="tr-kategori-admin">
-      <h3 className="tr-section-titel">Kategorier & Underpunkter</h3>
+  async function håndterSletKat(id: string) {
+    if (bekræftSletKat !== id) { setBekræftSletKat(id); return; }
+    await sletKategori(id);
+    setBekræftSletKat(null);
+    await load();
+  }
 
-      <div className="tr-kategori-liste">
+  async function håndterSletUp(id: string) {
+    if (bekræftSletUp !== id) { setBekræftSletUp(id); return; }
+    await sletUnderpunkt(id);
+    setBekræftSletUp(null);
+    await load();
+  }
+
+  const aktive = kategorier.filter((k) => k.aktiv);
+  const inaktive = kategorier.filter((k) => !k.aktiv);
+
+  return (
+    <div className="tr-kat-admin">
+      <div className="tr-kat-stats">
+        <div className="tr-kat-stat">
+          <span className="tr-kat-stat-tal">{aktive.length}</span>
+          <span className="tr-kat-stat-label">Aktive kategorier</span>
+        </div>
+        <div className="tr-kat-stat">
+          <span className="tr-kat-stat-tal">{underpunkter.filter((u) => u.aktiv).length}</span>
+          <span className="tr-kat-stat-label">Aktive underpunkter</span>
+        </div>
+        <div className="tr-kat-stat">
+          <span className="tr-kat-stat-tal">{inaktive.length}</span>
+          <span className="tr-kat-stat-label">Skjulte kategorier</span>
+        </div>
+      </div>
+
+      <div className="tr-kat-liste">
         {kategorier.map((k) => {
           const ups = underpunkterForKat(k.id);
           const åben = åbneKat.has(k.id);
+          const sletterKat = bekræftSletKat === k.id;
+
           return (
-            <div key={k.id} className={`tr-kategori-gruppe${k.aktiv ? '' : ' inaktiv'}`}>
-              <div className="tr-kategori-rad">
-                <button className="tr-kategori-toggle" onClick={() => toggleÅben(k.id)} aria-expanded={åben}>
-                  <ChevronDown size={14} className={`tr-chevron${åben ? ' åben' : ''}`} />
+            <div key={k.id} className={`tr-kat-kort${k.aktiv ? '' : ' inaktiv'}`}>
+              <div className="tr-kat-hoved">
+                <button className="tr-kat-toggle" onClick={() => toggleÅben(k.id)} aria-expanded={åben}>
+                  <ChevronDown size={15} className={`tr-chevron${åben ? ' åben' : ''}`} />
                 </button>
 
                 {redigerKat === k.id ? (
-                  <>
+                  <div className="tr-inline-edit">
                     <input
-                      className="tr-note-input"
+                      className="tr-inline-input"
                       value={redigerKatNavn}
                       onChange={(e) => setRedigerKatNavn(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && gemKategori(k.id)}
                       autoFocus
                     />
-                    <button onClick={() => gemKategori(k.id)} className="tr-ikon-btn"><Check size={14} /></button>
+                    <button onClick={() => gemKategori(k.id)} className="tr-ikon-btn tr-gem"><Check size={14} /></button>
                     <button onClick={() => setRedigerKat(null)} className="tr-ikon-btn"><X size={14} /></button>
-                  </>
+                  </div>
                 ) : (
                   <>
-                    <span className="tr-kategori-navn">{k.navn}</span>
-                    <span className="tr-up-tæller">{ups.filter((u) => u.aktiv).length} underpunkter</span>
-                    <button onClick={() => { setRedigerKat(k.id); setRedigerKatNavn(k.navn); }} className="tr-ikon-btn"><Pencil size={14} /></button>
-                    <button onClick={() => skiftKategoriAktiv(k.id, !k.aktiv).then(load)} className="tr-ikon-btn" title={k.aktiv ? 'Deaktiver' : 'Aktiver'}>
-                      {k.aktiv ? <EyeOff size={14} /> : <Eye size={14} />}
-                    </button>
+                    <span className="tr-kat-navn">{k.navn}</span>
+                    <span className="tr-kat-tæller">{ups.filter((u) => u.aktiv).length} underpunkter</span>
                   </>
+                )}
+
+                {redigerKat !== k.id && (
+                  <div className="tr-kat-handlinger">
+                    {sletterKat ? (
+                      <>
+                        <span className="tr-slet-confirm-tekst">Slet?</span>
+                        <button onClick={() => håndterSletKat(k.id)} className="tr-ikon-btn tr-slet-ja"><Check size={14} /></button>
+                        <button onClick={() => setBekræftSletKat(null)} className="tr-ikon-btn"><X size={14} /></button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => { setRedigerKat(k.id); setRedigerKatNavn(k.navn); }} className="tr-ikon-btn" title="Rediger"><Pencil size={14} /></button>
+                        <button onClick={() => skiftKategoriAktiv(k.id, !k.aktiv).then(load)} className="tr-ikon-btn" title={k.aktiv ? 'Skjul' : 'Aktiver'}>
+                          {k.aktiv ? <EyeOff size={14} /> : <Eye size={14} />}
+                        </button>
+                        <button onClick={() => håndterSletKat(k.id)} className="tr-ikon-btn tr-slet" title="Slet"><Trash2 size={14} /></button>
+                      </>
+                    )}
+                  </div>
                 )}
               </div>
 
               {åben && (
-                <div className="tr-underpunkter">
-                  {ups.map((u) => (
-                    <div key={u.id} className={`tr-underpunkt-rad${u.aktiv ? '' : ' inaktiv'}`}>
-                      {redigerUp === u.id ? (
-                        <>
-                          <input
-                            className="tr-note-input"
-                            value={redigerUpNavn}
-                            onChange={(e) => setRedigerUpNavn(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && gemUnderpunkt(u.id)}
-                            autoFocus
-                          />
-                          <button onClick={() => gemUnderpunkt(u.id)} className="tr-ikon-btn"><Check size={14} /></button>
-                          <button onClick={() => setRedigerUp(null)} className="tr-ikon-btn"><X size={14} /></button>
-                        </>
-                      ) : (
-                        <>
-                          <span className="tr-underpunkt-navn">{u.navn}</span>
-                          <button onClick={() => { setRedigerUp(u.id); setRedigerUpNavn(u.navn); }} className="tr-ikon-btn"><Pencil size={14} /></button>
-                          <button onClick={() => skiftUnderpunktAktiv(u.id, !u.aktiv).then(load)} className="tr-ikon-btn" title={u.aktiv ? 'Deaktiver' : 'Aktiver'}>
-                            {u.aktiv ? <EyeOff size={14} /> : <Eye size={14} />}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  ))}
+                <div className="tr-kat-underpunkter">
+                  {ups.map((u) => {
+                    const sletterUp = bekræftSletUp === u.id;
+                    return (
+                      <div key={u.id} className={`tr-up-rad${u.aktiv ? '' : ' inaktiv'}`}>
+                        <span className="tr-up-dot" />
+                        {redigerUp === u.id ? (
+                          <div className="tr-inline-edit">
+                            <input
+                              className="tr-inline-input"
+                              value={redigerUpNavn}
+                              onChange={(e) => setRedigerUpNavn(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && gemUnderpunkt(u.id)}
+                              autoFocus
+                            />
+                            <button onClick={() => gemUnderpunkt(u.id)} className="tr-ikon-btn tr-gem"><Check size={13} /></button>
+                            <button onClick={() => setRedigerUp(null)} className="tr-ikon-btn"><X size={13} /></button>
+                          </div>
+                        ) : (
+                          <>
+                            <span className="tr-up-navn">{u.navn}</span>
+                            <div className="tr-up-handlinger">
+                              {sletterUp ? (
+                                <>
+                                  <span className="tr-slet-confirm-tekst">Slet?</span>
+                                  <button onClick={() => håndterSletUp(u.id)} className="tr-ikon-btn tr-slet-ja"><Check size={13} /></button>
+                                  <button onClick={() => setBekræftSletUp(null)} className="tr-ikon-btn"><X size={13} /></button>
+                                </>
+                              ) : (
+                                <>
+                                  <button onClick={() => { setRedigerUp(u.id); setRedigerUpNavn(u.navn); }} className="tr-ikon-btn" title="Rediger"><Pencil size={13} /></button>
+                                  <button onClick={() => skiftUnderpunktAktiv(u.id, !u.aktiv).then(load)} className="tr-ikon-btn" title={u.aktiv ? 'Skjul' : 'Aktiver'}>
+                                    {u.aktiv ? <EyeOff size={13} /> : <Eye size={13} />}
+                                  </button>
+                                  <button onClick={() => håndterSletUp(u.id)} className="tr-ikon-btn tr-slet" title="Slet"><Trash2 size={13} /></button>
+                                </>
+                              )}
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
 
-                  <div className="tr-ny-underpunkt">
+                  <div className="tr-ny-up-rad">
                     <input
-                      className="tr-note-input"
-                      placeholder="Nyt underpunkt…"
+                      className="tr-inline-input"
+                      placeholder="Tilføj underpunkt…"
                       value={nytUpNavn[k.id] ?? ''}
                       onChange={(e) => setNytUpNavn((prev) => ({ ...prev, [k.id]: e.target.value }))}
                       onKeyDown={(e) => e.key === 'Enter' && opretNytUnderpunkt(k.id)}
                     />
-                    <button onClick={() => opretNytUnderpunkt(k.id)} className="tr-ikon-btn" disabled={!nytUpNavn[k.id]?.trim()}>
+                    <button onClick={() => opretNytUnderpunkt(k.id)} className="tr-ikon-btn tr-gem" disabled={!nytUpNavn[k.id]?.trim()}>
                       <Plus size={14} />
                     </button>
                   </div>
@@ -158,15 +225,15 @@ export function KategoriAdmin() {
         })}
       </div>
 
-      <div className="tr-ny-kategori">
+      <div className="tr-ny-kat-rad">
         <input
-          className="tr-note-input"
+          className="tr-inline-input"
           placeholder="Ny kategori…"
           value={nytKatNavn}
           onChange={(e) => setNytKatNavn(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && opretNyKategori()}
         />
-        <button onClick={opretNyKategori} className="btn btn-primary btn-sm" disabled={!nytKatNavn.trim()}>
+        <button onClick={opretNyKategori} className="tr-opret-knap" disabled={!nytKatNavn.trim()}>
           <Plus size={14} /> Opret
         </button>
       </div>

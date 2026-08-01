@@ -4,4 +4,5 @@ export {
   opdaterNote, sletRegistrering,
   hentUnderpunkter, hentAlleUnderpunkterForKategorier,
   opretUnderpunkt, opdaterUnderpunkt, skiftUnderpunktAktiv,
+  sletKategori, sletUnderpunkt,
 } from './tidsregistreringService';
