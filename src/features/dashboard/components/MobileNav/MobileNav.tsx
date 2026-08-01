@@ -227,6 +227,7 @@ export function MobileNav() {
             <NavLink href="/dashboard/kunder" icon={Building2} label="Kunder" />
             <NavLink href="/dashboard/produkter" icon={Package} label="Produkter" />
             <NavLink href="/dashboard/tidsregistrering" icon={Timer} label="Tidsregistrering" />
+            <NavLink href="/dashboard/pakker" icon={Package} label="Pakker" />
           </div>
 
           {/* Markedsføring — collapsible */}

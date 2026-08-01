@@ -1,0 +1,202 @@
+/* pakker.css */
+
+.pakker-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.pakker-page-header {}
+
+.pakker-page-titel {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0 0 0.25rem;
+}
+
+.pakker-page-undertitel {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+/* ── Sektion ── */
+.pakker-sektion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.pakker-sektion-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pakker-pakke-badge {
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.25rem 0.75rem;
+  border-radius: 7px;
+  letter-spacing: 0.01em;
+}
+
+.pakker-sektion-meta {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}
+
+/* ── Periode-vælger ── */
+.pakker-periode-vaelger {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.pakker-periode-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.pakker-periode-inputs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pakker-select {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  background: var(--color-card, var(--color-surface));
+  color: var(--color-text-primary);
+  cursor: pointer;
+  outline: none;
+}
+
+.pakker-select:focus {
+  border-color: #4f46e5;
+}
+
+/* ── Tabel ── */
+.pakker-tabel-wrapper {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--color-border);
+}
+
+.pakker-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  min-width: 480px;
+}
+
+.pakker-tabel th {
+  text-align: left;
+  padding: 0.55rem 0.875rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.pakker-th-tal {
+  text-align: right !important;
+}
+
+.pakker-tabel td {
+  padding: 0.6rem 0.875rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  vertical-align: middle;
+}
+
+.pakker-tabel tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.pakker-tabel tbody tr:hover td {
+  background: var(--color-surface-alt, rgba(0,0,0,0.02));
+}
+
+.pakker-td-tal {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.pakker-beloeb {
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.pakker-tabel-total td {
+  font-weight: 700;
+  background: var(--color-surface);
+  border-top: 2px solid var(--color-border);
+  border-bottom: none;
+  padding: 0.65rem 0.875rem;
+}
+
+/* ── Antal-input ── */
+.pakker-antal-input {
+  width: 72px;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.875rem;
+  text-align: right;
+  background: var(--color-card, var(--color-surface));
+  color: var(--color-text-primary);
+  outline: none;
+  font-variant-numeric: tabular-nums;
+}
+
+.pakker-antal-input:focus {
+  border-color: #4f46e5;
+}
+
+.pakker-fejl {
+  display: block;
+  font-size: 0.7rem;
+  color: #ef4444;
+  margin-top: 0.15rem;
+}
+
+/* ── Gem-knap ── */
+.pakker-gem-knap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #4f46e5;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 36px;
+  height: 32px;
+  transition: background 0.15s;
+}
+
+.pakker-gem-knap:hover:not(:disabled) { background: #4338ca; }
+.pakker-gem-knap:disabled { opacity: 0.5; cursor: default; }
+.pakker-gem-knap.gemt { background: #16a34a; }
+
+@media (max-width: 600px) {
+  .pakker-page { padding: 1rem 0.75rem; }
+}

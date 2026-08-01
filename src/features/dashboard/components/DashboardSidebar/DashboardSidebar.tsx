@@ -39,6 +39,7 @@ const gruppeCrm: NavItem[] = [
   { label: 'Kunder',             href: '/dashboard/kunder',            icon: Building2 },
   { label: 'Produkter',          href: '/dashboard/produkter',         icon: Package },
   { label: 'Tidsregistrering',   href: '/dashboard/tidsregistrering',  icon: Timer },
+  { label: 'Pakker',             href: '/dashboard/pakker',            icon: Package },
 ];
 
 const gruppeMarkedsforing = [
