@@ -1,16 +1,6 @@
 // src/lib/api/SorClient/sorClient.ts
-// Klient til NSI SOR REST API v2 (ingen autentificering krævet)
-// Dokumentation: https://services.nsi.dk/api/SOR
-
-// NSI SOR REST API v2 — offentligt tilgængelig uden auth
-// Dokumentation: https://services.nsi.dk/swagger/index.html?urls.primaryName=SOR
-const SOR_BASE = 'https://services.nsi.dk/api/SOR/v2/sorentiteter';
-
-// Fallback-URL'er forsøges i rækkefølge hvis primær URL fejler
-const SOR_FALLBACKS = [
-  'https://services.nsi.dk/api/sor/v2/sorentiteter',
-  'https://services.nsi.dk/api/SOR/v1/sorentiteter',
-];
+// Bruger Sundhedsdatastyrelsens FHIR SOR endpoint (offentligt, ingen auth)
+// FHIR docs: https://sor-fhir.sundhedsdatastyrelsen.dk/fhir/
 
 export type SorEnhed = {
   sorKode: string;
@@ -22,82 +12,103 @@ export type SorEnhed = {
   aktiv: boolean;
 };
 
-type RåSorEnhed = {
-  SorKode?: string | number;
-  Navn?: string;
-  CvrNummerIdentifikator?: string | number;
-  Adresse?: {
-    Vejnavn?: string;
-    Husnummer?: string;
-    Postnummer?: string;
-    Postdistrikt?: string;
-  };
-  Aktiv?: boolean;
-  EntityType?: string;
+// FHIR response types
+type FhirIdentifier = { system?: string; value?: string };
+type FhirAddress = { line?: string[]; postalCode?: string; city?: string };
+type FhirOrg = {
+  resourceType: string;
+  id?: string;
+  identifier?: FhirIdentifier[];
+  name?: string;
+  active?: boolean;
+  address?: FhirAddress[];
+};
+type FhirEntry = { resource?: FhirOrg };
+type FhirBundle = {
+  resourceType: string;
+  total?: number;
+  link?: { relation: string; url: string }[];
+  entry?: FhirEntry[];
 };
 
-type SorResponse = {
-  Total?: number;
-  SorEnheder?: RåSorEnhed[];
+const FHIR_BASE = 'https://sor-fhir.sundhedsdatastyrelsen.dk/fhir/Organization';
+const FHIR_SIDE_STØRRELSE = 500;
+
+const HEADERS = {
+  'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk',
+  Accept: 'application/fhir+json',
 };
 
-function mapSorEnhed(r: RåSorEnhed): SorEnhed {
-  const adresseObj = r.Adresse ?? {};
-  const vejnavn = adresseObj.Vejnavn ?? '';
-  const husnr = adresseObj.Husnummer ?? '';
-  const adresse = vejnavn ? `${vejnavn} ${husnr}`.trim() : null;
-  const cvr = r.CvrNummerIdentifikator ? String(r.CvrNummerIdentifikator) : null;
+// CVR identifier systems brugt i dansk FHIR
+const CVR_SYSTEMER = [
+  'urn:oid:1.2.208.176.1.2',
+  'https://www.cvr.dk/',
+  'urn:dk:cvr',
+  'http://cvr.dk',
+];
+
+function findCvr(identifiers: FhirIdentifier[] = []): string | null {
+  for (const sys of CVR_SYSTEMER) {
+    const match = identifiers.find((id) => id.system === sys);
+    if (match?.value) return match.value;
+  }
+  // Fallback: 8-cifret identifier der ligner CVR
+  const fallback = identifiers.find((id) => /^\d{8}$/.test(id.value ?? ''));
+  return fallback?.value ?? null;
+}
+
+function findSorKode(identifiers: FhirIdentifier[], fallbackId?: string): string {
+  const sorSystem = 'urn:oid:1.2.208.176.1.1';
+  const match = identifiers.find((id) => id.system === sorSystem);
+  return match?.value ?? fallbackId ?? '';
+}
+
+function mapFhirOrg(org: FhirOrg): SorEnhed {
+  const identifiers = org.identifier ?? [];
+  const adresseObj = org.address?.[0];
+  const linje = adresseObj?.line?.[0] ?? null;
 
   return {
-    sorKode: String(r.SorKode ?? ''),
-    navn: r.Navn ?? '',
-    cvr,
-    adresse,
-    postnummer: adresseObj.Postnummer ? String(adresseObj.Postnummer) : null,
-    by: adresseObj.Postdistrikt ?? null,
-    aktiv: r.Aktiv !== false,
+    sorKode: findSorKode(identifiers, org.id),
+    navn: org.name ?? '',
+    cvr: findCvr(identifiers),
+    adresse: linje,
+    postnummer: adresseObj?.postalCode ?? null,
+    by: adresseObj?.city ?? null,
+    aktiv: org.active !== false,
   };
 }
 
-async function hentSide(sidenummer: number, sideantal = 500, baseUrl = SOR_BASE): Promise<{ enheder: SorEnhed[]; total: number }> {
-  const url = `${baseUrl}?Sidenummer=${sidenummer}&Sideantal=${sideantal}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk', Accept: 'application/json' },
-    cache: 'no-store',
-  });
+async function hentFhirSide(url: string): Promise<{ enheder: SorEnhed[]; næsteUrl: string | null }> {
+  const res = await fetch(url, { headers: HEADERS, cache: 'no-store' });
+  if (!res.ok) throw new Error(`SOR FHIR HTTP ${res.status}: ${res.statusText} [URL: ${url}]`);
 
-  if (!res.ok) throw new Error(`SOR API HTTP ${res.status}: ${res.statusText} [URL: ${url}]`);
-
-  const json: SorResponse = await res.json();
-  const enheder = (json.SorEnheder ?? []).map(mapSorEnhed);
-  return { enheder, total: json.Total ?? 0 };
-}
-
-async function findArbejdendeBase(): Promise<string> {
-  const kandidater = [SOR_BASE, ...SOR_FALLBACKS];
-  for (const base of kandidater) {
-    try {
-      const testUrl = `${base}?Sidenummer=1&Sideantal=1`;
-      const res = await fetch(testUrl, {
-        headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk', Accept: 'application/json' },
-        cache: 'no-store',
-      });
-      if (res.ok) return base;
-    } catch { /* prøv næste */ }
+  const bundle: FhirBundle = await res.json();
+  if (bundle.resourceType !== 'Bundle') {
+    throw new Error(`Uventet svar fra SOR FHIR — resourceType: ${bundle.resourceType}`);
   }
-  throw new Error(`SOR API ikke tilgængeligt. Prøvede: ${kandidater.join(', ')}`);
+
+  const enheder = (bundle.entry ?? [])
+    .map((e) => e.resource)
+    .filter((r): r is FhirOrg => r?.resourceType === 'Organization')
+    .map(mapFhirOrg);
+
+  const næsteLink = bundle.link?.find((l) => l.relation === 'next');
+  return { enheder, næsteUrl: næsteLink?.url ?? null };
 }
 
-// Henter alle SOR-enheder med paginering — finder automatisk fungerende base-URL
-export async function hentAlleSorEnheder(maxSider = 20): Promise<SorEnhed[]> {
-  const base = await findArbejdendeBase();
-  const første = await hentSide(1, 500, base);
-  const alleEnheder: SorEnhed[] = [...første.enheder];
-  const antalSider = Math.min(Math.ceil(første.total / 500), maxSider);
+// Henter alle aktive SOR-organisationer med FHIR-paginering
+export async function hentAlleSorEnheder(maxSider = 50): Promise<SorEnhed[]> {
+  const startUrl = `${FHIR_BASE}?_count=${FHIR_SIDE_STØRRELSE}&active=true&_format=json`;
+  const alleEnheder: SorEnhed[] = [];
+  let næsteUrl: string | null = startUrl;
+  let side = 0;
 
-  for (let side = 2; side <= antalSider; side++) {
-    const { enheder } = await hentSide(side, 500, base);
+  while (næsteUrl && side < maxSider) {
+    const { enheder, næsteUrl: nyUrl } = await hentFhirSide(næsteUrl);
     alleEnheder.push(...enheder);
+    næsteUrl = nyUrl;
+    side++;
   }
 
   return alleEnheder.filter((e) => e.aktiv);
@@ -105,13 +116,11 @@ export async function hentAlleSorEnheder(maxSider = 20): Promise<SorEnhed[]> {
 
 // Opslag på enkelt CVR-nummer
 export async function hentSorVedCvr(cvr: string): Promise<SorEnhed | null> {
-  const url = `${SOR_BASE}?CvrNummer=${cvr}`;
-  const res = await fetch(url, {
-    headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk', Accept: 'application/json' },
-    cache: 'no-store',
-  });
-  if (!res.ok) return null;
-  const json: SorResponse = await res.json();
-  const enhed = json.SorEnheder?.[0];
-  return enhed ? mapSorEnhed(enhed) : null;
+  const url = `${FHIR_BASE}?identifier=${encodeURIComponent(cvr)}&_format=json`;
+  try {
+    const { enheder } = await hentFhirSide(url);
+    return enheder[0] ?? null;
+  } catch {
+    return null;
+  }
 }
