@@ -5,7 +5,13 @@ import { NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { hentAlleSorEnheder } from '@/lib/api/SorClient';
 
-export async function POST() {
+export async function POST(req: Request) {
+  const token = req.headers.get('x-sync-token');
+  const forventet = process.env.SYNC_SECRET_TOKEN;
+  if (!forventet || token !== forventet) {
+    return NextResponse.json({ ok: false, fejl: 'Uautoriseret' }, { status: 401 });
+  }
+
   const supabase = getSupabaseServerClient();
 
   let enheder;

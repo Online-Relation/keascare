@@ -7,6 +7,8 @@
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const APP_URL = process.env.APP_URL; // valgfrit: kald Next.js-ruten i stedet for Supabase direkte
+const SYNC_TOKEN = process.env.SYNC_SECRET_TOKEN;
 
 if (!SUPABASE_URL || !SUPABASE_KEY) {
   console.error('Mangler SUPABASE_URL og/eller SUPABASE_SERVICE_KEY');
