@@ -88,12 +88,15 @@ export function BostedOrganisationKort({ bosted }: Props) {
         </div>
         <div className="bosted-detail-kort-body">
           <FeltRække label="CVR-nummer" value={bosted.cvr} />
-          {bosted.sorKode && (
-            <div className="bosted-detail-field">
-              <span className="bosted-detail-field-label">Sundhedsvæsenets Organisationsregister</span>
-              <span className="bosted-sor-badge">{bosted.sorKode.replace(/^="?|"?$/g, '')}</span>
-            </div>
-          )}
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">Sundhedsvæsenets Organisationsregister</span>
+            {bosted.sorKode
+              ? <span className="bosted-sor-badge">{bosted.sorKode.replace(/^="?|"?$/g, '')}</span>
+              : bosted.cvr
+                ? <span className="bosted-sor-badge bosted-sor-badge--mangler">Ikke registreret</span>
+                : <span className="bosted-detail-placeholder">Ukendt — mangler CVR</span>
+            }
+          </div>
           {bosted.cvrAntalAfdelinger != null && bosted.cvrAntalAfdelinger > 1 && (
             <FeltRække
               label="Afdelinger på CVR"
