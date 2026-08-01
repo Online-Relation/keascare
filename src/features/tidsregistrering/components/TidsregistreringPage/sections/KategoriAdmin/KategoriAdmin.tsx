@@ -22,8 +22,9 @@ export function KategoriAdmin() {
   const [nytUpNavn, setNytUpNavn]             = useState<Record<string, string>>({});
 
   async function load() {
-    const [kats, ups] = await Promise.all([hentAlleKategorier(), hentAlleUnderpunkterForKategorier()]);
+    const kats = await hentAlleKategorier().catch(() => [] as TidsregistreringKategori[]);
     setKategorier(kats);
+    const ups = await hentAlleUnderpunkterForKategorier().catch(() => [] as TidsregistreringUnderpunkt[]);
     setUnderpunkter(ups);
   }
 
