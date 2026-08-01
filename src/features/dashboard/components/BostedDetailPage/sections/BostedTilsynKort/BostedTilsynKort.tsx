@@ -82,6 +82,22 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
       </div>
 
       <div className="bosted-detail-kort-body">
+        {bosted.fundNiveau !== 'ukendt' && (
+          <div style={{ marginBottom: '0.5rem' }}>
+            <span className={`badge ${
+              bosted.fundNiveau === 'kritisk' ? 'badge-kritisk' :
+              bosted.fundNiveau === 'stoerre' ? 'badge-stoerre' :
+              bosted.fundNiveau === 'mindre'  ? 'badge-mindre' :
+              'badge-ingen'
+            }`}>
+              <span className="badge-dot" />
+              {bosted.fundNiveau === 'kritisk' ? 'Kritiske fund' :
+               bosted.fundNiveau === 'stoerre' ? 'Større fund' :
+               bosted.fundNiveau === 'mindre'  ? 'Mindre fund' :
+               'Ingen fund'}
+            </span>
+          </div>
+        )}
         {besoegDato && (
           <div className="bosted-detail-field">
             <span className="bosted-detail-field-label">Tilsynsbesøg</span>

@@ -111,6 +111,7 @@ export function BostedOrganisationKort({ bosted }: Props) {
           )}
           {!adresse && <FeltRække label="Adresse" value={null} />}
           <FeltRække label="Kommune" value={kommune} />
+          {bosted.region && <FeltRække label="Region" value={bosted.region} />}
           <FeltRække label="Pladser" value={pladserVærdi} placeholder={pladserPlaceholder} />
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}

@@ -3,8 +3,8 @@
 'use client';
 
 import { useState } from 'react';
-import { MapPin, Globe, ClipboardList, Star, Crown } from 'lucide-react';
-import type { BostedDetail, StpsFundNiveau } from '@/features/dashboard/types/dashboard.types';
+import { MapPin, Star, Crown } from 'lucide-react';
+import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
 import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
 import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
@@ -12,22 +12,6 @@ import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetB
 type BostedHeaderProps = {
   bosted: BostedDetail;
   pakker?: KundePakke[];
-};
-
-const fundLabels: Record<StpsFundNiveau, string> = {
-  kritisk: 'Kritiske fund',
-  stoerre: 'Større fund',
-  mindre:  'Mindre fund',
-  ingen:   'Ingen fund',
-  ukendt:  'Ukendt',
-};
-
-const fundBadgeKlasse: Record<StpsFundNiveau, string> = {
-  kritisk: 'badge-kritisk',
-  stoerre: 'badge-stoerre',
-  mindre:  'badge-mindre',
-  ingen:   'badge-ingen',
-  ukendt:  'badge-ukendt',
 };
 
 async function toggleGigantApi(id: string, næsteVærdi: boolean) {
@@ -43,123 +27,63 @@ export function BostedHeader({ bosted, pakker = [] }: BostedHeaderProps) {
   const erStjernet = erFavorit(bosted.id);
   const [erGigant, setErGigant] = useState(bosted.erGigant);
 
-  const dato = bosted.rapportDato
-    ? new Date(bosted.rapportDato).toLocaleDateString('da-DK', {
-        day: 'numeric', month: 'long', year: 'numeric',
-      })
-    : null;
-
   return (
     <div>
       <div className="bosted-detail-header">
         <div className="bosted-detail-header-top">
           <div style={{ flex: 1, minWidth: 0 }}>
             <h1 className="bosted-detail-navn">{bosted.navn}</h1>
-            <div className="bosted-detail-meta">
-              {bosted.kommune && (
+            {bosted.kommune && (
+              <div className="bosted-detail-meta">
                 <span className="bosted-detail-meta-item">
                   <MapPin size={13} />
                   {bosted.kommune}
                 </span>
-              )}
-              {bosted.kommune && bosted.region && (
-                <span className="bosted-detail-meta-sep">·</span>
-              )}
-              {bosted.region && (
-                <span className="bosted-detail-meta-item">
-                  <Globe size={13} />
-                  {bosted.region}
-                </span>
-              )}
-              {bosted.tilsynsform && (
-                <>
-                  <span className="bosted-detail-meta-sep">·</span>
-                  <span className="bosted-detail-meta-item">
-                    <ClipboardList size={13} />
-                    {bosted.tilsynsform}
-                  </span>
-                </>
-              )}
-              {dato && (
-                <>
-                  <span className="bosted-detail-meta-sep">·</span>
-                  <span className="bosted-detail-meta-item">{dato}</span>
-                </>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          <button
-            className={`gigant-knap${erGigant ? ' aktiv' : ''}`}
-            onClick={() => {
-              const ny = !erGigant;
-              setErGigant(ny);
-              toggleGigantApi(bosted.id, ny);
-            }}
-            aria-label={erGigant ? 'Fjern gigant-markering' : 'Markér som gigant'}
-            title={erGigant ? 'Gigant — klik for at fjerne' : 'Markér som gigant'}
-            style={{ flexShrink: 0 }}
-          >
-            <Crown size={18} fill={erGigant ? 'currentColor' : 'none'} />
-          </button>
+          {/* Gigant og favorit side om side */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+            <button
+              className={`gigant-knap${erGigant ? ' aktiv' : ''}`}
+              onClick={() => {
+                const ny = !erGigant;
+                setErGigant(ny);
+                toggleGigantApi(bosted.id, ny);
+              }}
+              aria-label={erGigant ? 'Fjern gigant-markering' : 'Markér som gigant'}
+              title={erGigant ? 'Gigant — klik for at fjerne' : 'Markér som gigant'}
+            >
+              <Crown size={18} fill={erGigant ? 'currentColor' : 'none'} />
+            </button>
 
-          <button
-            className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
-            onClick={() => toggleFavorit({
-              id: bosted.id,
-              navn: bosted.navn,
-              kommune: bosted.kommune ?? null,
-              fundNiveau: bosted.fundNiveau,
-              rapportDato: bosted.rapportDato,
-            })}
-            aria-label={erStjernet ? 'Fjern fra fulgte' : 'Tilføj til fulgte'}
-            title={erStjernet ? 'Følger dette bosted' : 'Følg dette bosted'}
-            style={{ flexShrink: 0 }}
-          >
-            <Star size={18} fill={erStjernet ? 'currentColor' : 'none'} />
-          </button>
+            <button
+              className={`favorit-stjerne-knap${erStjernet ? ' aktiv' : ''}`}
+              onClick={() => toggleFavorit({
+                id: bosted.id,
+                navn: bosted.navn,
+                kommune: bosted.kommune ?? null,
+                fundNiveau: bosted.fundNiveau,
+                rapportDato: bosted.rapportDato,
+              })}
+              aria-label={erStjernet ? 'Fjern fra fulgte' : 'Tilføj til fulgte'}
+              title={erStjernet ? 'Følger dette bosted' : 'Følg dette bosted'}
+            >
+              <Star size={18} fill={erStjernet ? 'currentColor' : 'none'} />
+            </button>
+          </div>
         </div>
 
-        <div className="bosted-detail-header-badges">
+        {/* Badge-række: kun gigant + datakvalitet */}
+        <div className="bosted-detail-header-badges" style={{ flexWrap: 'nowrap', overflowX: 'auto' }}>
           {erGigant && (
             <span className="badge badge-gigant">
               <Crown size={11} fill="currentColor" style={{ marginRight: '0.25rem', flexShrink: 0 }} />
               Gigant
             </span>
           )}
-          <span className={`badge ${fundBadgeKlasse[bosted.fundNiveau]}`}>
-            <span className="badge-dot" />
-            {fundLabels[bosted.fundNiveau]}
-          </span>
-          {bosted.mondayKunde === 'kunde' && (
-            <span className="badge badge-kunde" title={`Monday: ${bosted.mondayGruppe ?? ''}`}>
-              <span className="badge-dot" />
-              Kunde i Monday
-            </span>
-          )}
           <DataKvalitetBadge dataKvalitet={bosted.dataKvalitet} vis="fuld" />
-          {pakker.map((p, i) => (
-            <span
-              key={i}
-              style={{
-                background: p.farve,
-                color: p.tekstFarve,
-                padding: '0.2rem 0.6rem',
-                borderRadius: '6px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {p.navn}
-              {p.startdato && (
-                <span style={{ opacity: 0.75, fontWeight: 400 }}>· {p.startdato}</span>
-              )}
-            </span>
-          ))}
         </div>
       </div>
     </div>

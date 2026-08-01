@@ -18,6 +18,7 @@ import { BostedKort } from './sections/BostedKort';
 import { TidligereRapporter } from './sections/TidligereRapporter';
 import { BostedRegnskabKort } from './sections/BostedRegnskabKort';
 import { BostedDeltagereKort } from './sections/BostedDeltagereKort';
+import { KundeKort } from './sections/KundeKort';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
@@ -34,6 +35,8 @@ export function BostedDetailPage({ bosted, pakker = [] }: BostedDetailPageProps)
       </Suspense>
 
       <BostedHeader bosted={bosted} pakker={pakker} />
+
+      <KundeKort bosted={bosted} pakker={pakker} />
 
       <div className="bosted-detail-grid">
         <BostedTilsynKort bosted={bosted} />

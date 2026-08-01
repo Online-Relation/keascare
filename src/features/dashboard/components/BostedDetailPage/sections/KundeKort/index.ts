@@ -1,0 +1,1 @@
+export { KundeKort } from './KundeKort';
