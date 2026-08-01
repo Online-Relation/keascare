@@ -41,11 +41,11 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
       },
     });
     if (!res.ok) return tom;
-    const data = new Uint8Array(await res.arrayBuffer());
+    const buf = Buffer.from(await res.arrayBuffer());
 
-    const { PDFParse } = await import('pdf-parse');
-    const parser = new PDFParse({ data });
-    const resultat = await parser.getText();
+    // pdf-parse eksporterer en default-funktion, ikke en klasse
+    const pdfParse = (await import('pdf-parse')).default;
+    const resultat = await pdfParse(buf);
     const tekst: string = resultat.text ?? '';
 
     const { stps, bosted } = udtraekDeltagere(tekst);
@@ -262,16 +262,16 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
 
   for (const rawLinje of linjer) {
     // Strip bullet-tegn og lignende foran teksten
-    const linje = rawLinje.replace(/^[•\-\*\–\—\·\d\.]\s*/, '').trim();
-    if (!linje) continue;
+    const linje = rawLinje.replace(/^[\s•\-\*\–\—\·]+/, '').trim();
+    if (!linje || linje.length < 3) continue;
 
     // Spring overskrifter og metadata over
     if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
     if (/\d{2}[-\.]\d{2}[-\.]\d{4}/.test(linje)) continue; // datoer
     if (linje.includes('://') || linje.includes('@')) continue; // URLs, emails
-    if (/^[A-Z]{2,}\s*\d/.test(linje)) continue; // sagsnumre som "STPS 2024-123"
+    if (/^[A-Z]{2,}\s*\d/.test(linje)) continue; // sagsnumre som "STPS-2024-123"
 
-    // Format: "Fornavn Efternavn, titel"
+    // Format 1: "Fornavn Efternavn, titel" — STPS-inspektørernes format
     const kommaIdx = linje.indexOf(',');
     if (kommaIdx !== -1 && kommaIdx > 3) {
       const muligNavn = linje.substring(0, kommaIdx).trim();
@@ -282,13 +282,27 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
       }
     }
 
-    // Navn uden titel
+    // Format 2: "Titel Fornavn Efternavn" — bostedets format, f.eks. "Områdeleder Lais Wardag"
+    // Kendte titel-præfikser der sidder foran et navn
+    const titelPræfixMatch = linje.match(
+      /^(Områdeleder|Leder|Souschef|Forstander|Centerleder|Afdelingsleder|Teamleder|Daglig leder|Stedfortræder|Sygeplejerske|Oversygeplejerske|Pædagog|Social- og sundhedsassistent|SOSU|SSA|SSH|Ergoterapeut|Fysioterapeut|Psykolog|Læge)\s+(.+)$/i
+    );
+    if (titelPræfixMatch) {
+      const titel = titelPræfixMatch[1];
+      const muligNavn = titelPræfixMatch[2].trim();
+      if (erSandsynligtNavn(muligNavn)) {
+        deltagere.push({ navn: muligNavn, titel });
+        continue;
+      }
+    }
+
+    // Format 3: Bart navn uden titel
     if (erSandsynligtNavn(linje)) {
       deltagere.push({ navn: linje, titel: null });
       continue;
     }
 
-    // "En sygeplejerske" o.l.
+    // Format 4: "En sygeplejerske" o.l. — anonym deltager
     if (TITEL_REGEX.test(linje)) {
       deltagere.push({ navn: linje, titel: null });
     }

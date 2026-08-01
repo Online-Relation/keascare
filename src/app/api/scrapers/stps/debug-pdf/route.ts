@@ -28,7 +28,30 @@ export async function GET(req: NextRequest) {
     });
   }
 
+  // &rå=1 viser rå PDF-tekst rundt om deltager-sektionen (til fejlsøgning)
+  const visRå = req.nextUrl.searchParams.get('rå') === '1';
+
   try {
+    if (visRå) {
+      const res = await fetch(pdfUrl, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+      });
+      if (!res.ok) return NextResponse.json({ error: `HTTP ${res.status}` }, { status: 502 });
+      const buf = Buffer.from(await res.arrayBuffer());
+      const pdfParse = (await import('pdf-parse')).default;
+      const result = await pdfParse(buf);
+      const tekst: string = result.text ?? '';
+      // Find deltager-sektionen og vis 800 tegn rundt om den
+      const stpsIdx = tekst.search(/Tilsynet blev foretaget af/i);
+      const bostedIdx = tekst.search(/Ved tilsynet[\s\S]{0,30}deltog/i);
+      return NextResponse.json({
+        pdfUrl,
+        stpsSektion: stpsIdx !== -1 ? tekst.substring(Math.max(0, stpsIdx - 50), stpsIdx + 500) : 'Ikke fundet',
+        bostedSektion: bostedIdx !== -1 ? tekst.substring(Math.max(0, bostedIdx - 50), bostedIdx + 500) : 'Ikke fundet',
+        tekstLængde: tekst.length,
+      });
+    }
+
     const detaljer = await parsePdfFraUrl(pdfUrl);
     return NextResponse.json({
       pdfUrl,
