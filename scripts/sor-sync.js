@@ -81,33 +81,61 @@ async function findSenesteFilUrl() {
   return seneste;
 }
 
-// Parse enkel CSV — håndterer quoted felter
+// Parse CSV-linje — håndterer quoted felter
+function parseRække(linje) {
+  const felter = [];
+  let felt = '';
+  let i_quote = false;
+  for (let i = 0; i < linje.length; i++) {
+    const c = linje[i];
+    if (c === '"') {
+      if (i_quote && linje[i + 1] === '"') { felt += '"'; i++; }
+      else i_quote = !i_quote;
+    } else if ((c === ';' || c === ',') && !i_quote) {
+      felter.push(felt); felt = '';
+    } else {
+      felt += c;
+    }
+  }
+  felter.push(felt);
+  return felter;
+}
+
+// Parse CSV fra Buffer linje for linje — undgår Node.js string-størrelsesgrænse
+function parseCSVBuffer(buf) {
+  const rækker = [];
+  let headers = null;
+  let lineStart = 0;
+
+  for (let i = 0; i <= buf.length; i++) {
+    const byte = buf[i];
+    if (byte === 0x0a || i === buf.length) {
+      const end = (i > 0 && buf[i - 1] === 0x0d) ? i - 1 : i;
+      if (end > lineStart) {
+        const linje = buf.latin1Slice(lineStart, end);
+        if (!headers) {
+          headers = parseRække(linje).map((h) => h.trim().toLowerCase().replace(/\s+/g, '_'));
+        } else {
+          const vals = parseRække(linje);
+          const obj = {};
+          headers.forEach((h, idx) => { obj[h] = (vals[idx] ?? '').trim(); });
+          rækker.push(obj);
+        }
+      }
+      lineStart = i + 1;
+    }
+  }
+  return rækker;
+}
+
+// Behold string-version til GZ/plain tekstfiler
 function parseCSV(tekst) {
   const linjer = tekst.split(/\r?\n/).filter((l) => l.trim());
   if (linjer.length === 0) return [];
-
-  function parseRække(linje) {
-    const felter = [];
-    let felt = '';
-    let i_quote = false;
-    for (let i = 0; i < linje.length; i++) {
-      const c = linje[i];
-      if (c === '"') {
-        if (i_quote && linje[i + 1] === '"') { felt += '"'; i++; }
-        else i_quote = !i_quote;
-      } else if (c === ';' && !i_quote) {
-        felter.push(felt); felt = '';
-      } else {
-        felt += c;
-      }
-    }
-    felter.push(felt);
-    return felter;
-  }
-
   const headers = parseRække(linjer[0]).map((h) => h.trim().toLowerCase().replace(/\s+/g, '_'));
   const rækker = [];
   for (let i = 1; i < linjer.length; i++) {
+    if (!linjer[i].trim()) continue;
     const vals = parseRække(linjer[i]);
     const obj = {};
     headers.forEach((h, idx) => { obj[h] = (vals[idx] ?? '').trim(); });
@@ -145,43 +173,37 @@ function mapRække(r) {
 }
 
 // Minimal ZIP-parser i ren Node.js — ingen eksterne afhængigheder
-// Læser alle filer i ZIP og returnerer indholdet af den største CSV-fil
-function udpakZipTilCsv(buf) {
+// Returnerer Buffer for den største CSV-fil (undgår Node string-grænse på ~500MB)
+function udpakZipTilBuffer(zipBuf) {
   const entries = [];
   let offset = 0;
-  while (offset < buf.length - 4) {
-    const sig = buf.readUInt32LE(offset);
+  while (offset < zipBuf.length - 4) {
+    const sig = zipBuf.readUInt32LE(offset);
     if (sig !== 0x04034b50) { offset++; continue; }
-    const compression  = buf.readUInt16LE(offset + 8);
-    const compSize     = buf.readUInt32LE(offset + 18);
-    const uncompSize   = buf.readUInt32LE(offset + 22);
-    const nameLen      = buf.readUInt16LE(offset + 26);
-    const extraLen     = buf.readUInt16LE(offset + 28);
-    const name         = buf.slice(offset + 30, offset + 30 + nameLen).toString('utf-8');
-    const dataStart    = offset + 30 + nameLen + extraLen;
-    const compData     = buf.slice(dataStart, dataStart + compSize);
+    const compression = zipBuf.readUInt16LE(offset + 8);
+    const compSize    = zipBuf.readUInt32LE(offset + 18);
+    const uncompSize  = zipBuf.readUInt32LE(offset + 22);
+    const nameLen     = zipBuf.readUInt16LE(offset + 26);
+    const extraLen    = zipBuf.readUInt16LE(offset + 28);
+    const name        = zipBuf.slice(offset + 30, offset + 30 + nameLen).toString('utf-8');
+    const dataStart   = offset + 30 + nameLen + extraLen;
+    const compData    = zipBuf.slice(dataStart, dataStart + compSize);
 
     if (name.match(/\.csv$/i) && compSize > 0) {
-      let data;
-      if (compression === 0) {
-        data = compData;
-      } else if (compression === 8) {
-        data = zlib.inflateRawSync(compData);
-      }
-      if (data) entries.push({ name, size: uncompSize, data });
+      entries.push({ name, uncompSize, compData, compression });
     }
     offset = dataStart + compSize;
   }
 
   if (entries.length === 0) throw new Error('Ingen CSV-filer fundet i ZIP');
-  console.log(`ZIP indeholder CSV-filer: ${entries.map((e) => `${e.name} (${e.size} bytes)`).join(', ')}`);
+  entries.sort((a, b) => b.uncompSize - a.uncompSize);
+  console.log(`ZIP CSV-filer: ${entries.map((e) => `${e.name} (${e.uncompSize} bytes)`).join(', ')}`);
 
-  // Brug den største
-  entries.sort((a, b) => b.size - a.size);
   const valgt = entries[0];
-  console.log(`Bruger: ${valgt.name}`);
-  const tekst = valgt.data.toString('latin1');
-  return tekst.includes(';') || tekst.includes(',') ? tekst : valgt.data.toString('utf-8');
+  console.log(`Udpakker: ${valgt.name}`);
+  if (valgt.compression === 0) return valgt.compData;
+  if (valgt.compression === 8) return zlib.inflateRawSync(valgt.compData);
+  throw new Error(`Ukendt ZIP-komprimering: ${valgt.compression}`);
 }
 
 async function hentSorData() {
@@ -199,7 +221,13 @@ async function hentSorData() {
   if (fileUrl.endsWith('.gz')) {
     tekst = zlib.gunzipSync(buf).toString('utf-8');
   } else if (fileUrl.endsWith('.zip')) {
-    tekst = udpakZipTilCsv(buf);
+    const csvBuf = udpakZipTilBuffer(buf);
+    const rækker = parseCSVBuffer(csvBuf);
+    console.log(`Parsede ${rækker.length} rækker fra CSV`);
+    if (rækker.length > 0) console.log('Kolonner:', Object.keys(rækker[0]).join(', '));
+    const enheder = rækker.map(mapRække).filter(Boolean).filter((e) => e.aktiv);
+    console.log(`${enheder.length} aktive enheder efter mapping`);
+    return enheder;
   } else {
     tekst = buf.toString('utf-8');
     if (!tekst.includes(';') && !tekst.includes(',')) {
