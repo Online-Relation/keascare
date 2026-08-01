@@ -43,8 +43,10 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
     if (!res.ok) return tom;
     const buf = Buffer.from(await res.arrayBuffer());
 
-    // pdf-parse eksporterer en default-funktion, ikke en klasse
-    const pdfParse = (await import('pdf-parse')).default;
+    // pdf-parse: ESM-versionen eksporterer direkte, ikke via .default
+    const pdfMod = await import('pdf-parse');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParse: (buf: Buffer) => Promise<{ text: string }> = (pdfMod as any).default ?? pdfMod;
     const resultat = await pdfParse(buf);
     const tekst: string = resultat.text ?? '';
 

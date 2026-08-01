@@ -38,7 +38,9 @@ export async function GET(req: NextRequest) {
       });
       if (!res.ok) return NextResponse.json({ error: `HTTP ${res.status}` }, { status: 502 });
       const buf = Buffer.from(await res.arrayBuffer());
-      const pdfParse = (await import('pdf-parse')).default;
+      const pdfMod = await import('pdf-parse');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdfParse: (buf: Buffer) => Promise<{ text: string }> = (pdfMod as any).default ?? pdfMod;
       const result = await pdfParse(buf);
       const tekst: string = result.text ?? '';
       // Find deltager-sektionen og vis 800 tegn rundt om den
