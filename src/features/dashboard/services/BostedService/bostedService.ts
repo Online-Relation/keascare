@@ -58,6 +58,7 @@ type DbRapport = {
   regnskab_balance: number | null;
   regnskab_opdateret: string | null;
   er_gigant: boolean | null;
+  sor_kode: string | null;
 };
 
 function beregnDataKvalitet(r: DbRapport): DataKvalitet {
