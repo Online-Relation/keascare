@@ -11,30 +11,24 @@ import { gemBeboerRegistrering } from '@/features/pakker/services/PakkerService'
 const FAST_PRIS = 1895;
 const BEBOER_PRIS = 289;
 
-function måanederAktiv(startdato: string | null, tilAar: number, tilMaaned: number): number | null {
-  if (!startdato) return null;
-  const start = new Date(startdato);
-  if (isNaN(start.getTime())) return null;
-  const startAar = start.getFullYear();
-  const startMaaned = start.getMonth() + 1;
-  const måneder = (tilAar - startAar) * 12 + (tilMaaned - startMaaned) + 1;
-  return måneder > 0 ? måneder : null;
-}
-
-type Props = {
-  bosteder: BostedOptagelse[];
-  mondayIdMap: Record<string, string>;
-  eksisterendeRegistreringer: BeboerRegistrering[];
-};
-
 const MÅNEDER = [
   'Januar','Februar','Marts','April','Maj','Juni',
   'Juli','August','September','Oktober','November','December',
 ];
 
-function nuværendeMåned() {
+type Periode = { aar: number; maaned: number };
+
+function nuværendeMåned(): Periode {
   const nu = new Date();
   return { aar: nu.getFullYear(), maaned: nu.getMonth() + 1 };
+}
+
+function måanederAktiv(startdato: string | null, tilAar: number, tilMaaned: number): number | null {
+  if (!startdato) return null;
+  const start = new Date(startdato);
+  if (isNaN(start.getTime())) return null;
+  const måneder = (tilAar - start.getFullYear()) * 12 + (tilMaaned - (start.getMonth() + 1)) + 1;
+  return måneder > 0 ? måneder : null;
 }
 
 function formaterDato(iso: string | null): string {
@@ -45,28 +39,23 @@ function formaterDato(iso: string | null): string {
   });
 }
 
-function TotalMrrRække({
-  bosteder,
-  værdiFeltet,
-}: {
+type Props = {
   bosteder: BostedOptagelse[];
-  værdiFeltet: (navn: string) => string;
-}) {
+  mondayIdMap: Record<string, string>;
+  eksisterendeRegistreringer: BeboerRegistrering[];
+};
+
+function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[]; værdiFeltet: (navn: string) => string }) {
   let totalMrr = 0;
   let harNoget = false;
   for (const b of bosteder) {
     const antal = parseInt(værdiFeltet(b.navn), 10);
-    if (!isNaN(antal)) {
-      totalMrr += FAST_PRIS + BEBOER_PRIS * antal;
-      harNoget = true;
-    }
+    if (!isNaN(antal)) { totalMrr += FAST_PRIS + BEBOER_PRIS * antal; harNoget = true; }
   }
   return (
     <tr className="pakker-tabel-total">
       <td colSpan={4}>Total MRR</td>
-      <td className="pakker-td-tal pakker-beloeb">
-        {harNoget ? `${totalMrr.toLocaleString('da-DK')} kr` : '—'}
-      </td>
+      <td className="pakker-td-tal pakker-beloeb">{harNoget ? `${totalMrr.toLocaleString('da-DK')} kr` : '—'}</td>
       <td colSpan={2} />
     </tr>
   );
@@ -74,13 +63,15 @@ function TotalMrrRække({
 
 export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer }: Props) {
   const standard = nuværendeMåned();
-  const [valgtAar, setValgtAar]       = useState(standard.aar);
-  const [valgtMaaned, setValgtMaaned] = useState(standard.maaned);
-  const [inputs, setInputs]           = useState<Record<string, string>>({});
-  const [gemmer, setGemmer]           = useState<Record<string, boolean>>({});
-  const [gemt, setGemt]               = useState<Record<string, string | null>>({});
-  const [fejl, setFejl]               = useState<Record<string, string>>({});
-  const [redigerer, setRedigerer]     = useState<Record<string, boolean>>({});
+  const [valgtAar, setValgtAar]         = useState(standard.aar);
+  const [valgtMaaned, setValgtMaaned]   = useState(standard.maaned);
+  const [inputs, setInputs]             = useState<Record<string, string>>({});
+  const [gemmer, setGemmer]             = useState<Record<string, boolean>>({});
+  const [gemt, setGemt]                 = useState<Record<string, string | null>>({});
+  const [fejl, setFejl]                 = useState<Record<string, string>>({});
+  const [redigerer, setRedigerer]       = useState<Record<string, boolean>>({});
+  // Per-række periode når man redigerer (kan afvige fra global periode)
+  const [redigerPeriode, setRedigerPeriode] = useState<Record<string, Periode>>({});
 
   const nøgle = (navn: string) => `${navn}__${valgtAar}__${valgtMaaned}`;
 
@@ -97,6 +88,13 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
     return eks != null ? String(eks.antalBeboere) : '';
   }
 
+  function startRediger(navn: string) {
+    const k = nøgle(navn);
+    setRedigerer((r) => ({ ...r, [k]: true }));
+    // Initialiser per-række periode til den globale periode
+    setRedigerPeriode((p) => ({ ...p, [k]: { aar: valgtAar, maaned: valgtMaaned } }));
+  }
+
   async function gem(b: BostedOptagelse) {
     const k = nøgle(b.navn);
     const raw = værdiFeltet(b.navn).trim();
@@ -110,13 +108,15 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
       setFejl((f) => ({ ...f, [k]: 'Mangler Monday ID' }));
       return;
     }
+    // Brug per-række periode hvis sat (rediger-tilstand), ellers global
+    const periode = redigerPeriode[k] ?? { aar: valgtAar, maaned: valgtMaaned };
     setGemmer((g) => ({ ...g, [k]: true }));
     setFejl((f) => ({ ...f, [k]: '' }));
     try {
-      await gemBeboerRegistrering(mondayId, b.navn, 'FMK pakke', valgtAar, valgtMaaned, antal);
-      const nu = new Date().toISOString();
-      setGemt((g) => ({ ...g, [k]: nu }));
+      await gemBeboerRegistrering(mondayId, b.navn, 'FMK pakke', periode.aar, periode.maaned, antal);
+      setGemt((g) => ({ ...g, [k]: new Date().toISOString() }));
       setRedigerer((r) => ({ ...r, [k]: false }));
+      setRedigerPeriode((p) => { const next = { ...p }; delete next[k]; return next; });
       setTimeout(() => setGemt((g) => ({ ...g, [k]: null })), 3000);
     } catch {
       setFejl((f) => ({ ...f, [k]: 'Fejl ved gem' }));
@@ -136,24 +136,13 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
         </span>
       </div>
 
-      {/* Periode-vælger */}
       <div className="pakker-periode-vaelger">
-        <label className="pakker-periode-label">Registrer for</label>
+        <label className="pakker-periode-label">Vis periode</label>
         <div className="pakker-periode-inputs">
-          <select
-            className="pakker-select"
-            value={valgtMaaned}
-            onChange={(e) => { setValgtMaaned(Number(e.target.value)); setInputs({}); }}
-          >
-            {MÅNEDER.map((m, i) => (
-              <option key={i} value={i + 1}>{m}</option>
-            ))}
+          <select className="pakker-select" value={valgtMaaned} onChange={(e) => { setValgtMaaned(Number(e.target.value)); setInputs({}); }}>
+            {MÅNEDER.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
           </select>
-          <select
-            className="pakker-select"
-            value={valgtAar}
-            onChange={(e) => { setValgtAar(Number(e.target.value)); setInputs({}); }}
-          >
+          <select className="pakker-select" value={valgtAar} onChange={(e) => { setValgtAar(Number(e.target.value)); setInputs({}); }}>
             {aar.map((a) => <option key={a} value={a}>{a}</option>)}
           </select>
         </div>
@@ -184,6 +173,8 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
               const mdr = måanederAktiv(b.dato, valgtAar, valgtMaaned);
               const harGemtVærdi = eks != null || netopGemt;
               const erLåst = harGemtVærdi && !redigerer[k];
+              const rowPeriode = redigerPeriode[k] ?? { aar: valgtAar, maaned: valgtMaaned };
+              const rowAar = [rowPeriode.aar - 1, rowPeriode.aar, rowPeriode.aar + 1];
 
               return (
                 <tr key={b.navn}>
@@ -217,14 +208,30 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                   </td>
                   <td>
                     <div className="pakker-knap-gruppe">
-                      {erLåst && (
-                        <button
-                          className="pakker-rediger-knap"
-                          onClick={() => setRedigerer((r) => ({ ...r, [k]: true }))}
-                          title="Rediger"
-                        >
+                      {erLåst ? (
+                        <button className="pakker-rediger-knap" onClick={() => startRediger(b.navn)}>
                           <Pencil size={13} /> Rediger
                         </button>
+                      ) : (
+                        /* Inline periode-vælger i rediger-tilstand */
+                        redigerer[k] && (
+                          <div className="pakker-row-periode">
+                            <select
+                              className="pakker-select pakker-select-sm"
+                              value={rowPeriode.maaned}
+                              onChange={(e) => setRedigerPeriode((p) => ({ ...p, [k]: { ...rowPeriode, maaned: Number(e.target.value) } }))}
+                            >
+                              {MÅNEDER.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+                            </select>
+                            <select
+                              className="pakker-select pakker-select-sm"
+                              value={rowPeriode.aar}
+                              onChange={(e) => setRedigerPeriode((p) => ({ ...p, [k]: { ...rowPeriode, aar: Number(e.target.value) } }))}
+                            >
+                              {rowAar.map((a) => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                          </div>
+                        )
                       )}
                       <button
                         className={`pakker-gem-knap${netopGemt ? ' gemt' : ''}`}

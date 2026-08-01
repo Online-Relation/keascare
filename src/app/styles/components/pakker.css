@@ -238,6 +238,18 @@
   color: #0073ea;
 }
 
+.pakker-select-sm {
+  padding: 0.25rem 0.4rem;
+  font-size: 0.78rem;
+  height: 28px;
+}
+
+.pakker-row-periode {
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+}
+
 .pakker-opdateret {
   font-size: 0.75rem;
   color: var(--color-text-muted);
