@@ -198,9 +198,16 @@ function parsDeltagereBlok(tekst, startIdx) {
   return deltagere;
 }
 
+function sidsteMatch(tekst, regex) {
+  let sidst = -1, m;
+  const re = new RegExp(regex.source, regex.flags.includes('g') ? regex.flags : regex.flags + 'g');
+  while ((m = re.exec(tekst)) !== null) sidst = m.index;
+  return sidst;
+}
+
 function udtraekDeltagere(tekst, debug = false) {
-  const stpsIdx   = tekst.search(/Tilsynet blev foretaget af/i);
-  const bostedIdx = tekst.search(/Ved tilsynet[\s\S]{0,20}deltog/i);
+  const stpsIdx   = sidsteMatch(tekst, /Tilsynet blev foretaget af/i);
+  const bostedIdx = sidsteMatch(tekst, /Ved tilsynet[\s\S]{0,20}deltog/i);
 
   if (debug) {
     console.log('--- RAÅ TEKST VED STPS-SEKTION ---');
