@@ -173,6 +173,8 @@ function mapRække(r) {
     adresse: adresse || null,
     postnummer: felt(r, 'postaladdresspostcodeid'),
     by: felt(r, 'postaladdressdistrictname'),
+    enhedstype_id: felt(r, 'entitytypeid'),
+    enhedstype_navn: felt(r, 'entitytypename'),
     aktiv: erAktiv,
     synkroniseret: new Date().toISOString(),
   };
