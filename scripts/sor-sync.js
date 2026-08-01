@@ -90,20 +90,14 @@ async function findSenesteFilUrl() {
   for (const mappeUrl of mapper) {
     try {
       const mappeHtml = await hentTekst(mappeUrl);
+      // Skriv rå HTML til logfil så vi kan se indholdet
+      require('fs').writeFileSync('/volume1/scripts/sor-debug.log', `URL: ${mappeUrl}\n\n${mappeHtml}`);
+      console.log(`Debug-log skrevet til /volume1/scripts/sor-debug.log`);
+
       const alleLinks = udtrækLinks(mappeHtml, mappeUrl);
-      console.log(`Links i ${mappeUrl}:`, alleLinks.slice(0, 10));
+      console.log(`Links fundet (${alleLinks.length}):`, JSON.stringify(alleLinks.slice(0, 20)));
 
       const filer = alleLinks.filter((u) => /\.(zip|csv|gz)$/i.test(u));
-      if (filer.length === 0) {
-        // Søg ét niveau dybere
-        const underMapper = alleLinks.filter((u) => u.startsWith(mappeUrl) && u !== mappeUrl && u.endsWith('/'));
-        for (const underUrl of underMapper) {
-          const underHtml = await hentTekst(underUrl);
-          const underLinks = udtrækLinks(underHtml, underUrl);
-          console.log(`Links i ${underUrl}:`, underLinks.slice(0, 10));
-          filer.push(...underLinks.filter((u) => /\.(zip|csv|gz)$/i.test(u)));
-        }
-      }
       alleFiler.push(...filer);
     } catch (e) {
       console.log(`Sprang mappe over (${mappeUrl}): ${e.message}`);
