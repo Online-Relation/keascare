@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ExternalLink } from 'lucide-react';
+import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
 
 type Props = {
   mondayId: string;
@@ -11,6 +12,7 @@ type Props = {
   oprettetDato: string | null;
   status: string | null;
   adresse: string | null;
+  pakker: KundePakke[];
 };
 
 type CvrOpslag = { navn: string; adresse: string | null };
@@ -19,7 +21,7 @@ type Fase = 'input' | 'bekræft' | 'henter' | 'færdig';
 
 const MONDAY_BOARD_URL = 'https://onlinerelation.monday.com/boards';
 
-export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, oprettetDato, status, adresse }: Props) {
+export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, oprettetDato, status, adresse, pakker }: Props) {
   const [cvr, setCvr] = useState('');
   const [fase, setFase] = useState<Fase>('input');
   const [cvrOpslag, setCvrOpslag] = useState<CvrOpslag | null>(null);
@@ -114,6 +116,31 @@ export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig,
           </a>
         </div>
         <span className="badge badge-info">{gruppeNavn}</span>
+        {pakker.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.6rem' }}>
+            {pakker.map((p, i) => (
+              <span
+                key={i}
+                style={{
+                  background: p.farve,
+                  color: p.tekstFarve,
+                  padding: '0.25rem 0.65rem',
+                  borderRadius: '6px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  letterSpacing: '0.01em',
+                }}
+              >
+                {p.navn}
+                {p.startdato && (
+                  <span style={{ opacity: 0.75, fontWeight: 400, marginLeft: '0.35rem' }}>
+                    fra {p.startdato}
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Monday-info */}

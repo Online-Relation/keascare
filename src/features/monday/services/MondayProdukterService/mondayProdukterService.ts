@@ -98,6 +98,61 @@ function udtraekDato(subitem: RåSubitem): string | null {
   return datoKol?.text?.trim() || null;
 }
 
+export type KundePakke = {
+  navn: string;
+  startdato: string | null;
+  farve: string;
+  tekstFarve: string;
+};
+
+export const PRODUKT_FARVER: Record<string, { baggrund: string; tekst: string }> = {
+  'Stor pakke':              { baggrund: '#0073ea', tekst: '#fff' },
+  'FMK pakke':               { baggrund: '#66ccff', tekst: '#1a1a2e' },
+  'Basispakke':              { baggrund: '#00ca72', tekst: '#fff' },
+  'Mellempakke':             { baggrund: '#579bfc', tekst: '#fff' },
+  'Medicinkursus':           { baggrund: '#7bcf7b', tekst: '#fff' },
+  'Dokumentationskursus':    { baggrund: '#a25ddc', tekst: '#fff' },
+  'Minitilsyn':              { baggrund: '#ff7575', tekst: '#fff' },
+  'Instrukser':              { baggrund: '#13bfb2', tekst: '#fff' },
+  'Brand- og førstehjælpskursus': { baggrund: '#fdab3d', tekst: '#fff' },
+};
+
+function produkt_farve(produkt: string): { baggrund: string; tekst: string } {
+  return PRODUKT_FARVER[produkt] ?? { baggrund: '#c4c4c4', tekst: '#333' };
+}
+
+export async function hentKundePakker(mondayItemId: string): Promise<KundePakke[]> {
+  type SubKol = { text: string | null; column: { title: string } };
+  type SubItem = { name: string; column_values: SubKol[] };
+  type Res = { items: Array<{ subitems: SubItem[] }> };
+
+  const data = await mondayQuery<Res>(`
+    query {
+      items(ids: ["${mondayItemId}"]) {
+        subitems {
+          name
+          column_values { text column { title } }
+        }
+      }
+    }
+  `);
+
+  const subitems = data.items[0]?.subitems ?? [];
+  return subitems.map((sub) => {
+    const produkt = sub.column_values.find(
+      (cv) => cv.column.title.toLowerCase() === 'produkt',
+    )?.text?.trim() ?? sub.name;
+
+    const dato = sub.column_values.find((cv) => {
+      const t = cv.column.title.toLowerCase();
+      return t.includes('dato') || t.includes('start');
+    })?.text?.trim() ?? null;
+
+    const { baggrund, tekst } = produkt_farve(produkt);
+    return { navn: produkt, startdato: dato, farve: baggrund, tekstFarve: tekst };
+  });
+}
+
 export async function hentProduktStatistik(): Promise<ProdukterResultat> {
   const boardId = process.env.MONDAY_BOARD_ID;
   if (!boardId) throw new Error('MONDAY_BOARD_ID mangler');

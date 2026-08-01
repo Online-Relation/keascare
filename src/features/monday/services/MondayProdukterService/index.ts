@@ -1,2 +1,2 @@
-export { hentProduktStatistik } from './mondayProdukterService';
-export type { ProduktLinje, ProdukterResultat } from './mondayProdukterService';
+export { hentProduktStatistik, hentKundePakker } from './mondayProdukterService';
+export type { ProduktLinje, ProdukterResultat, KundePakke } from './mondayProdukterService';

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { KundeDetailPage } from '@/features/monday/components/KundeDetailPage';
+import { hentKundePakker } from '@/features/monday/services/MondayProdukterService';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,6 +19,8 @@ export default async function KundeDetailRoute({ params }: PageProps) {
 
   if (!data) notFound();
 
+  const pakker = await hentKundePakker(data.monday_id).catch(() => []);
+
   return (
     <KundeDetailPage
       mondayId={data.monday_id}
@@ -27,6 +30,7 @@ export default async function KundeDetailRoute({ params }: PageProps) {
       oprettetDato={data.oprettet_dato}
       status={data.status}
       adresse={data.adresse || null}
+      pakker={pakker}
     />
   );
 }
