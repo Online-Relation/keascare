@@ -2,7 +2,7 @@
 
 // src/features/stps/components/InspektoerSide/InspektoerAvatar/InspektoerAvatar.tsx
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type Props = { navn: string; slug: string; size?: number };
 
@@ -21,22 +21,29 @@ function farveFraSlug(slug: string): string {
   return FARVER[Math.abs(hash) % FARVER.length];
 }
 
-const EXTS = ['jpg', 'png', 'webp'];
-
 export function InspektoerAvatar({ navn, slug, size = 40 }: Props) {
-  const [ekstIdx, setEktIdx] = useState(0);
+  const [url, setUrl] = useState<string | null | 'indlæser'>('indlæser');
   const farve = farveFraSlug(slug);
   const font  = Math.round(size * 0.35);
 
-  if (ekstIdx < EXTS.length) {
+  useEffect(() => {
+    let aktiv = true;
+    fetch(`/api/inspektoerer/billede?slug=${encodeURIComponent(slug)}`)
+      .then((r) => r.json())
+      .then((d) => { if (aktiv) setUrl(d.url ?? null); })
+      .catch(() => { if (aktiv) setUrl(null); });
+    return () => { aktiv = false; };
+  }, [slug]);
+
+  if (url && url !== 'indlæser') {
     return (
       <img
-        src={`/images/inspektoerer/${slug}.${EXTS[ekstIdx]}`}
+        src={url}
         alt={navn}
         width={size}
         height={size}
         style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-        onError={() => setEktIdx((i) => i + 1)}
+        onError={() => setUrl(null)}
       />
     );
   }
@@ -45,12 +52,13 @@ export function InspektoerAvatar({ navn, slug, size = 40 }: Props) {
     <div
       style={{
         width: size, height: size, borderRadius: '50%',
-        background: farve, color: '#fff',
+        background: url === 'indlæser' ? 'var(--color-border)' : farve,
+        color: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: font, fontWeight: 700, flexShrink: 0,
       }}
     >
-      {initialer(navn)}
+      {url !== 'indlæser' && initialer(navn)}
     </div>
   );
 }

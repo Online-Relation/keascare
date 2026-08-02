@@ -1,8 +1,9 @@
 // src/app/api/inspektoerer/upload-billede/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
+import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+
+const BUCKET = 'inspektoer-billeder';
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,17 +27,32 @@ export async function POST(req: NextRequest) {
     const bytes  = await billede.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const filnavn = `${slug}.${gyldigExt}`;
-    const sti = join(process.cwd(), 'public', 'images', 'inspektoerer', filnavn);
 
-    await writeFile(sti, buffer);
+    const supabase = getSupabaseServerClient();
+
     // Slet gamle versioner med andre extensions
     const andreExt = ['jpg', 'png', 'webp'].filter((e) => e !== gyldigExt);
     for (const e of andreExt) {
-      const { unlink } = await import('fs/promises');
-      await unlink(join(process.cwd(), 'public', 'images', 'inspektoerer', `${slug}.${e}`)).catch(() => {});
+      await supabase.storage.from(BUCKET).remove([`${slug}.${e}`]);
     }
 
-    return NextResponse.json({ ok: true, sti: `/images/inspektoerer/${filnavn}` });
+    // Upload til Supabase Storage
+    const { error: uploadFejl } = await supabase.storage
+      .from(BUCKET)
+      .upload(filnavn, buffer, { contentType: billede.type, upsert: true });
+
+    if (uploadFejl) {
+      console.error('[upload-billede] storage fejl:', uploadFejl);
+      return NextResponse.json({ fejl: 'Upload fejlede: ' + uploadFejl.message }, { status: 500 });
+    }
+
+    const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filnavn);
+    const publicUrl = urlData.publicUrl;
+
+    // Gem URL i DB så avatar-komponenten kan slå den op
+    await supabase.from('inspektoer_billeder').upsert({ slug, billede_url: publicUrl });
+
+    return NextResponse.json({ ok: true, sti: publicUrl });
   } catch (e) {
     console.error('[upload-billede]', e);
     return NextResponse.json({ fejl: 'Intern fejl' }, { status: 500 });
