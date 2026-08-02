@@ -1,0 +1,1 @@
+export { UgentligKategoriGennemsnit } from './UgentligKategoriGennemsnit';

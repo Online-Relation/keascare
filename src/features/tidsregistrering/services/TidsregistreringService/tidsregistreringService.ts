@@ -151,6 +151,49 @@ export async function stopTimer(id: string, note?: string, underpunktId?: string
   if (updateFejl) throw updateFejl;
 }
 
+export async function hentAktivitetsKalenderData(dage = 182): Promise<{ dato: string; minutter: number }[]> {
+  const fra = new Date();
+  fra.setDate(fra.getDate() - dage);
+  const { data, error } = await supabase()
+    .from('tidsregistreringer')
+    .select('start_tid, varighed_minutter')
+    .not('slut_tid', 'is', null)
+    .gte('start_tid', fra.toISOString())
+    .order('start_tid');
+  if (error) throw error;
+  const dagMap = new Map<string, number>();
+  for (const r of data ?? []) {
+    const dato = r.start_tid.slice(0, 10);
+    dagMap.set(dato, (dagMap.get(dato) ?? 0) + (r.varighed_minutter ?? 0));
+  }
+  return [...dagMap.entries()].map(([dato, minutter]) => ({ dato, minutter }));
+}
+
+export async function hentUgentligKategoriData(uger = 8): Promise<Tidsregistrering[]> {
+  const fra = new Date();
+  fra.setDate(fra.getDate() - uger * 7);
+  const { data, error } = await supabase()
+    .from('tidsregistreringer')
+    .select('id, bruger_id, kategori_id, tidsregistrering_kategorier(navn), underpunkt_id, underpunkt_navn, start_tid, slut_tid, varighed_minutter, note, oprettet')
+    .not('slut_tid', 'is', null)
+    .gte('start_tid', fra.toISOString())
+    .order('start_tid');
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    brugerId: r.bruger_id,
+    kategoriId: r.kategori_id,
+    kategoriNavn: (r.tidsregistrering_kategorier as unknown as { navn: string } | null)?.navn ?? '—',
+    underpunktId: r.underpunkt_id ?? null,
+    underpunktNavn: r.underpunkt_navn ?? null,
+    startTid: r.start_tid,
+    slutTid: r.slut_tid,
+    varighedMinutter: r.varighed_minutter,
+    note: r.note,
+    oprettet: r.oprettet,
+  }));
+}
+
 export async function hentRegistreringerIPeriode(fra: Date, til: Date): Promise<Tidsregistrering[]> {
   const { data, error } = await supabase()
     .from('tidsregistreringer')

@@ -4,7 +4,10 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
-import { hentRegistreringerIPeriode, sletRegistrering } from '@/features/tidsregistrering/services/TidsregistreringService';
+import {
+  hentRegistreringerIPeriode, sletRegistrering,
+  hentAktivitetsKalenderData, hentUgentligKategoriData,
+} from '@/features/tidsregistrering/services/TidsregistreringService';
 import {
   getPeriodeDatoer, beregnFordeling, beregnDagligData, beregnTopOpgaver, beregnArbejdsdage,
 } from '@/features/tidsregistrering/utils/DashboardUtils';
@@ -15,6 +18,9 @@ import { TimeFordelingChart } from './TimeFordelingChart';
 import { TimeUdviklingChart } from './TimeUdviklingChart';
 import { TopOpgaverListe } from './TopOpgaverListe';
 import { SenesteRegistreringer } from './SenesteRegistreringer';
+import { TimeAktivitetsKalender } from './TimeAktivitetsKalender';
+import { KapacitetOverview } from './KapacitetOverview';
+import { UgentligKategoriGennemsnit } from './UgentligKategoriGennemsnit';
 
 type Props = { onSeAlle: () => void };
 
@@ -25,11 +31,12 @@ const TOM_DATA: DashboardData = {
 };
 
 export function TimeDashboard({ onSeAlle }: Props) {
-  const [periode, setPeriode] = useState<Periode>('denne-uge');
-  const [data, setData]       = useState<DashboardData>(TOM_DATA);
-  const [indlæser, setIndlæser] = useState(true);
-  const [fejl, setFejl]       = useState<string | null>(null);
-  const [registreringer, setRegistreringer] = useState<Tidsregistrering[]>([]);
+  const [periode, setPeriode]     = useState<Periode>('denne-uge');
+  const [data, setData]           = useState<DashboardData>(TOM_DATA);
+  const [indlæser, setIndlæser]   = useState(true);
+  const [fejl, setFejl]           = useState<string | null>(null);
+  const [kalData, setKalData]     = useState<{ dato: string; minutter: number }[]>([]);
+  const [ugeData, setUgeData]     = useState<Tidsregistrering[]>([]);
 
   const load = useCallback(async (p: Periode) => {
     setIndlæser(true);
@@ -40,20 +47,17 @@ export function TimeDashboard({ onSeAlle }: Props) {
         hentRegistreringerIPeriode(fra, til),
         hentRegistreringerIPeriode(forrigeFra, forrigeTil),
       ]);
-      setRegistreringer(aktuelle);
-      const totalMinutter = aktuelle.reduce((s, r) => s + (r.varighedMinutter ?? 0), 0);
-      const forrigeTotal  = forrige.reduce((s, r) => s + (r.varighedMinutter ?? 0), 0);
+      const totalMinutter    = aktuelle.reduce((s, r) => s + (r.varighedMinutter ?? 0), 0);
+      const forrigeTotal     = forrige.reduce((s, r) => s + (r.varighedMinutter ?? 0), 0);
       const antalArbejdsdage = beregnArbejdsdage(fra, til);
       setData({
-        totalMinutter,
-        antalRegistreringer: aktuelle.length,
-        antalArbejdsdage,
+        totalMinutter, antalRegistreringer: aktuelle.length, antalArbejdsdage,
         gennemsnitPrDagMin: antalArbejdsdage > 0 ? Math.round(totalMinutter / antalArbejdsdage) : 0,
         forrigeTotal,
-        fordeling:   beregnFordeling(aktuelle),
-        dagligData:  beregnDagligData(aktuelle, fra, til, p),
-        topOpgaver:  beregnTopOpgaver(aktuelle, 5),
-        seneste:     aktuelle,
+        fordeling:  beregnFordeling(aktuelle),
+        dagligData: beregnDagligData(aktuelle, fra, til, p),
+        topOpgaver: beregnTopOpgaver(aktuelle, 5),
+        seneste:    aktuelle,
       });
     } catch {
       setFejl('Kunne ikke hente data. Prøv igen.');
@@ -62,17 +66,22 @@ export function TimeDashboard({ onSeAlle }: Props) {
     }
   }, []);
 
+  // Hent heatmap og ugentlige data én gang ved mount
+  useEffect(() => {
+    Promise.all([hentAktivitetsKalenderData(182), hentUgentligKategoriData(8)])
+      .then(([kal, uge]) => { setKalData(kal); setUgeData(uge); })
+      .catch(() => {});
+  }, []);
+
   useEffect(() => { load(periode); }, [periode, load]);
 
   async function håndterSlet(id: string) {
     await sletRegistrering(id);
-    setRegistreringer((prev) => prev.filter((r) => r.id !== id));
     setData((prev) => {
       const næste = prev.seneste.filter((r) => r.id !== id);
       const totalMinutter = næste.reduce((s, r) => s + (r.varighedMinutter ?? 0), 0);
       return {
-        ...prev,
-        totalMinutter,
+        ...prev, totalMinutter,
         antalRegistreringer: næste.length,
         gennemsnitPrDagMin: prev.antalArbejdsdage > 0 ? Math.round(totalMinutter / prev.antalArbejdsdage) : 0,
         fordeling:  beregnFordeling(næste),
@@ -114,14 +123,19 @@ export function TimeDashboard({ onSeAlle }: Props) {
             <TimeUdviklingChart dagligData={data.dagligData} />
           </div>
 
-          <div className="tr-dash-grid-2">
+          <TimeAktivitetsKalender data={kalData} />
+
+          <div className="tr-dash-grid-3">
             <TopOpgaverListe topOpgaver={data.topOpgaver} />
-            <SenesteRegistreringer
-              registreringer={data.seneste}
-              onSlet={håndterSlet}
-              onSeAlle={onSeAlle}
-            />
+            <UgentligKategoriGennemsnit registreringer={ugeData} antalUger={8} />
+            <KapacitetOverview totalMinutter={data.totalMinutter} antalArbejdsdage={data.antalArbejdsdage} periode={periode} />
           </div>
+
+          <SenesteRegistreringer
+            registreringer={data.seneste}
+            onSlet={håndterSlet}
+            onSeAlle={onSeAlle}
+          />
         </>
       )}
     </div>
