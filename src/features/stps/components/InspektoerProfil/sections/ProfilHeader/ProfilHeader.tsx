@@ -2,8 +2,7 @@
 
 // src/features/stps/components/InspektoerProfil/sections/ProfilHeader/ProfilHeader.tsx
 
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { InspektoerAvatar } from '../../InspektoerAvatar';
 import type { InspektoerFuldStat } from '@/features/stps/types/inspektoer.types';
 
@@ -15,8 +14,6 @@ function formatDato(iso: string | null): string {
 }
 
 export function ProfilHeader({ inspektoer: ins }: Props) {
-  const router = useRouter();
-
   async function uploadBillede(e: React.ChangeEvent<HTMLInputElement>) {
     const fil = e.target.files?.[0];
     if (!fil) return;
@@ -30,12 +27,7 @@ export function ProfilHeader({ inspektoer: ins }: Props) {
   }
 
   return (
-    <div className="profil-header">
-      <button className="profil-tilbage" onClick={() => router.push('/dashboard/rapporter/inspektoerer')}>
-        <ArrowLeft size={15} /> Alle inspektører
-      </button>
-
-      <div className="profil-header-kort">
+    <div className="profil-header-kort">
         <div className="profil-avatar-wrap">
           <InspektoerAvatar navn={ins.navn} slug={ins.slug} size={72} />
           <label className="profil-upload-knap" title="Upload profilbillede">
@@ -54,7 +46,6 @@ export function ProfilHeader({ inspektoer: ins }: Props) {
             <span className="profil-meta-punkt">Seneste tilsyn {formatDato(ins.senesteDato)}</span>
           </div>
         </div>
-      </div>
     </div>
   );
 }
