@@ -24,8 +24,9 @@ export function ProfilHeader({ inspektoer: ins }: Props) {
     fd.append('slug', ins.slug);
     fd.append('billede', fil);
     const res = await fetch('/api/inspektoerer/upload-billede', { method: 'POST', body: fd });
+    const json = await res.json().catch(() => ({}));
     if (res.ok) window.location.reload();
-    else alert('Upload fejlede. Prøv igen.');
+    else alert('Upload fejlede: ' + (json.fejl ?? res.statusText));
   }
 
   return (
