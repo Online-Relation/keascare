@@ -191,13 +191,15 @@ async function hentRapporterUdenPdf() {
     `?select=id,stps_tilbud_navn,rapport_url,pdf_url` +
     `&pdf_storage_url=is.null` +
     `&tilsyn_deltagere_stps=is.null` +
-    `&pdf_url=not.eq.not-found` +
     `&rapport_url=not.is.null` +
     `&limit=${BATCH}`;
 
   const { status, body } = await httpsGet(url);
   if (status >= 400) throw new Error(`Supabase fejl ${status}: ${JSON.stringify(body)}`);
-  return (body ?? []).filter((r) => !r.rapport_url?.startsWith('stps://'));
+  return (body ?? []).filter((r) =>
+    r.pdf_url !== 'not-found' &&
+    !r.rapport_url?.startsWith('stps://')
+  );
 }
 
 // ── Find PDF-link i HTML ───────────────────────────────────────────────────
