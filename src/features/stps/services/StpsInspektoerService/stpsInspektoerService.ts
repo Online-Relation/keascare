@@ -49,6 +49,8 @@ const BOSTED_SUFFIKSER = [
   'forsorgshjem', 'forsorgs',
   'socialpsykia',
   'enhed', 'enheden',
+  'bakken',
+  'pensionat', 'pensionatet',
 ];
 
 // Hele ord der afslører et bosted/institution
@@ -167,7 +169,8 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
 
   const resultat: InspektoerFuldStat[] = [];
   for (const [nøgle, v] of map.entries()) {
-    const navn = nøgle.replace(/\b\w/g, (c) => c.toUpperCase());
+    // Split på mellemrum for at undgå at \b\w kapitaliserer forkert efter æøå
+    const navn = nøgle.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     const bosteder = [...new Set(v.rapporter.map((r) => r.bostedNavn))];
 
     const kommunerSet = new Set<string>();
