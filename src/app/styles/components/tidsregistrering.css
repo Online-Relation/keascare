@@ -1287,3 +1287,73 @@
   min-width: 40px;
   text-align: right;
 }
+
+/* ── Fokusfordeling ── */
+.tr-dash-fokus-tabel {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.tr-dash-fokus-tabel th {
+  text-align: left;
+  color: var(--color-text-muted);
+  font-weight: 500;
+  padding: 0 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.75rem;
+}
+
+.tr-dash-fokus-tabel td {
+  padding: 0.5rem 0.5rem;
+  color: var(--color-text-primary);
+  vertical-align: middle;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.tr-dash-fokus-tabel tr:last-child td { border-bottom: none; }
+
+.tr-dash-fokus-farve {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+  vertical-align: middle;
+}
+
+.tr-dash-fokus-pct { font-weight: 600; font-variant-numeric: tabular-nums; }
+.tr-dash-fokus-pct.muted { font-weight: 400; color: var(--color-text-muted); }
+.tr-dash-fokus-ændring { font-weight: 500; font-variant-numeric: tabular-nums; color: var(--color-text-muted); }
+
+/* ── Afvigelser ── */
+.tr-dash-afvigelser-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.tr-dash-afvigelse-rad {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem;
+  background: var(--color-surface, var(--color-bg));
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+}
+
+.tr-dash-afv-ikon { color: #d97706; flex-shrink: 0; margin-top: 2px; }
+
+.tr-dash-afv-info { flex: 1; min-width: 0; }
+.tr-dash-afv-navn { font-weight: 600; font-size: 0.875rem; color: var(--color-text-primary); }
+.tr-dash-afv-tal  { font-size: 0.75rem; color: var(--color-text-muted); margin-top: 2px; }
+
+.tr-dash-afv-pct {
+  font-weight: 700;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.tr-dash-afv-pct.over  { color: #d97706; }
+.tr-dash-afv-pct.under { color: #4f46e5; }

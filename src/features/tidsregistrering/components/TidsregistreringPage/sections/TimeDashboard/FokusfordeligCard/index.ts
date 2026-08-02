@@ -1,0 +1,1 @@
+export { FokusfordelingCard } from './FokusfordelingCard';

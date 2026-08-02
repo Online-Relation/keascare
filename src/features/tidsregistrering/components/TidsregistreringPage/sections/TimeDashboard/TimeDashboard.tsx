@@ -21,6 +21,8 @@ import { SenesteRegistreringer } from './SenesteRegistreringer';
 import { TimeAktivitetsKalender } from './TimeAktivitetsKalender';
 import { KapacitetOverview } from './KapacitetOverview';
 import { UgentligKategoriGennemsnit } from './UgentligKategoriGennemsnit';
+import { FokusfordelingCard } from './FokusfordeligCard';
+import { AfvigelserCard } from './AfvigelserCard';
 
 type Props = { onSeAlle: () => void };
 
@@ -35,8 +37,9 @@ export function TimeDashboard({ onSeAlle }: Props) {
   const [data, setData]           = useState<DashboardData>(TOM_DATA);
   const [indlæser, setIndlæser]   = useState(true);
   const [fejl, setFejl]           = useState<string | null>(null);
-  const [kalData, setKalData]     = useState<{ dato: string; minutter: number }[]>([]);
-  const [ugeData, setUgeData]     = useState<Tidsregistrering[]>([]);
+  const [kalData, setKalData]         = useState<{ dato: string; minutter: number }[]>([]);
+  const [ugeData, setUgeData]         = useState<Tidsregistrering[]>([]);
+  const [forrigeRegs, setForrigeRegs] = useState<Tidsregistrering[]>([]);
 
   const load = useCallback(async (p: Periode) => {
     setIndlæser(true);
@@ -59,6 +62,7 @@ export function TimeDashboard({ onSeAlle }: Props) {
         topOpgaver: beregnTopOpgaver(aktuelle, 5),
         seneste:    aktuelle,
       });
+      setForrigeRegs(forrige);
     } catch {
       setFejl('Kunne ikke hente data. Prøv igen.');
     } finally {
@@ -129,6 +133,11 @@ export function TimeDashboard({ onSeAlle }: Props) {
             <TopOpgaverListe topOpgaver={data.topOpgaver} />
             <UgentligKategoriGennemsnit registreringer={ugeData} antalUger={8} />
             <KapacitetOverview totalMinutter={data.totalMinutter} antalArbejdsdage={data.antalArbejdsdage} periode={periode} />
+          </div>
+
+          <div className="tr-dash-grid-2">
+            <FokusfordelingCard aktuelle={data.seneste} forrige={forrigeRegs} />
+            <AfvigelserCard aktuelle={data.seneste} historiske={ugeData} />
           </div>
 
           <SenesteRegistreringer
