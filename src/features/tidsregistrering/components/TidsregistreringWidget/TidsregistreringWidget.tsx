@@ -166,14 +166,14 @@ export function TidsregistreringWidget() {
 
       {/* Stop-modal */}
       {visStopModal && (
-        <div className="tr-modal-overlay" onClick={lukModal}>
+        <div className="tr-modal-overlay" onClick={lukUdenAtGemme}>
           <div className="tr-modal" onClick={(e) => e.stopPropagation()}>
             <div className="tr-modal-header">
               <div>
                 <h2 className="tr-modal-titel">Stop registrering</h2>
                 <p className="tr-modal-subtitle">{kategoriNavn} · {formatTid(sek)}</p>
               </div>
-              <button className="tr-modal-luk" onClick={lukModal} aria-label="Luk">
+              <button className="tr-modal-luk" onClick={lukUdenAtGemme} aria-label="Luk">
                 <X size={18} />
               </button>
             </div>

@@ -1,4 +1,4 @@
-export {
+export { hentRegistreringerIPeriode,
   hentKategorier, hentAlleKategorier, opretKategori, opdaterKategori,
   skiftKategoriAktiv, startTimer, stopTimer, hentRegistreringer,
   opdaterNote, sletRegistrering,

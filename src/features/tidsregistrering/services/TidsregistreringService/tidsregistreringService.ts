@@ -151,6 +151,30 @@ export async function stopTimer(id: string, note?: string, underpunktId?: string
   if (updateFejl) throw updateFejl;
 }
 
+export async function hentRegistreringerIPeriode(fra: Date, til: Date): Promise<Tidsregistrering[]> {
+  const { data, error } = await supabase()
+    .from('tidsregistreringer')
+    .select('id, bruger_id, kategori_id, tidsregistrering_kategorier(navn), underpunkt_id, underpunkt_navn, start_tid, slut_tid, varighed_minutter, note, oprettet')
+    .not('slut_tid', 'is', null)
+    .gte('start_tid', fra.toISOString())
+    .lte('start_tid', til.toISOString())
+    .order('start_tid', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    brugerId: r.bruger_id,
+    kategoriId: r.kategori_id,
+    kategoriNavn: (r.tidsregistrering_kategorier as unknown as { navn: string } | null)?.navn ?? '—',
+    underpunktId: r.underpunkt_id ?? null,
+    underpunktNavn: r.underpunkt_navn ?? null,
+    startTid: r.start_tid,
+    slutTid: r.slut_tid,
+    varighedMinutter: r.varighed_minutter,
+    note: r.note,
+    oprettet: r.oprettet,
+  }));
+}
+
 export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[]> {
   const { data, error } = await supabase()
     .from('tidsregistreringer')

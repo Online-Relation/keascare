@@ -1,0 +1,1 @@
+export { SenesteRegistreringer } from './SenesteRegistreringer';

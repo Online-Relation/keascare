@@ -1,0 +1,1 @@
+export { TimeFordelingChart } from './TimeFordelingChart';
