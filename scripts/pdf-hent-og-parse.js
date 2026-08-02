@@ -185,18 +185,19 @@ function httpsPatch(url, body) {
 // ── Hent rapporter uden pdf_url ────────────────────────────────────────────
 
 async function hentRapporterUdenPdf() {
-  // Hent rapporter der HAR pdf_url (Railway fandt linket) men mangler pdf_storage_url (aldrig downloadet)
+  // Hent rapporter der mangler pdf_storage_url og inspektørdata
+  // Det dækker både dem uden pdf_url (906 stk.) og dem med pdf_url men ingen storage
   const url = `${SUPABASE_URL}/rest/v1/stps_rapporter` +
     `?select=id,stps_tilbud_navn,rapport_url,pdf_url` +
-    `&pdf_url=not.is.null` +
-    `&pdf_url=not.eq.not-found` +
     `&pdf_storage_url=is.null` +
     `&tilsyn_deltagere_stps=is.null` +
+    `&pdf_url=not.eq.not-found` +
+    `&rapport_url=not.is.null` +
     `&limit=${BATCH}`;
 
   const { status, body } = await httpsGet(url);
   if (status >= 400) throw new Error(`Supabase fejl ${status}: ${JSON.stringify(body)}`);
-  return body ?? [];
+  return (body ?? []).filter((r) => !r.rapport_url?.startsWith('stps://'));
 }
 
 // ── Find PDF-link i HTML ───────────────────────────────────────────────────
@@ -365,19 +366,33 @@ async function main() {
   let ok = 0, ingenPdf = 0, fejl = 0;
 
   for (let i = 0; i < rapporter.length; i++) {
-    const { id, stps_tilbud_navn, pdf_url: pdfUrl } = rapporter[i];
+    const { id, stps_tilbud_navn, rapport_url, pdf_url: eksisterendePdfUrl } = rapporter[i];
     try {
-      // 1. Download PDF direkte fra pdf_url (allerede fundet af Railway's scraper)
+      let pdfUrl = eksisterendePdfUrl ?? null;
+
+      // 1. Hvis vi ikke har pdf_url: hent rapport-siden og find PDF-linket
+      if (!pdfUrl) {
+        const html = await hentTekst(rapport_url);
+        pdfUrl = udtraekPdfUrl(html);
+        if (!pdfUrl) {
+          await httpsPatch(`${SUPABASE_URL}/rest/v1/stps_rapporter?id=eq.${id}`, { pdf_url: 'not-found', pdf_behandlet: true }).catch(() => {});
+          console.log(`[${i+1}/${rapporter.length}] INGEN PDF: ${stps_tilbud_navn}`);
+          ingenPdf++;
+          continue;
+        }
+      }
+
+      // 2. Download PDF fra gopublic.dk (virker fra dansk IP)
       const buf = await hentBuffer(pdfUrl);
 
-      // 2. Upload til Supabase Storage
+      // 3. Upload til Supabase Storage
       const pdfStorageUrl = await uploadPdf(id, buf);
 
-      // 3. Parse PDF
+      // 4. Parse PDF
       const { text: tekst } = await pdfParse(buf);
       const { stps, bosted } = udtraekDeltagere(tekst);
 
-      // 4. Gem storage-url og deltagere (pdf_url er allerede sat)
+      // 5. Gem alt
       await gem(id, pdfUrl, pdfStorageUrl, stps, bosted);
       console.log(`[${i+1}/${rapporter.length}] OK: ${stps_tilbud_navn} — ${stps.length} STPS, ${bosted.length} bosted${pdfStorageUrl ? ' (gemt i storage)' : ''}`);
       ok++;
