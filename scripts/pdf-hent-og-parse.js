@@ -187,19 +187,18 @@ function httpsPatch(url, body) {
 async function hentRapporterUdenPdf() {
   // Hent rapporter der mangler pdf_storage_url og inspektørdata
   // Det dækker både dem uden pdf_url (906 stk.) og dem med pdf_url men ingen storage
+  // stps%3A%2F%2F%25 = URL-encoded "stps://%" (PostgREST SQL LIKE wildcard)
   const url = `${SUPABASE_URL}/rest/v1/stps_rapporter` +
     `?select=id,stps_tilbud_navn,rapport_url,pdf_url` +
     `&pdf_storage_url=is.null` +
     `&tilsyn_deltagere_stps=is.null` +
     `&rapport_url=not.is.null` +
+    `&rapport_url=not.like.stps%3A%2F%2F%25` +
     `&limit=${BATCH}`;
 
   const { status, body } = await httpsGet(url);
   if (status >= 400) throw new Error(`Supabase fejl ${status}: ${JSON.stringify(body)}`);
-  return (body ?? []).filter((r) =>
-    r.pdf_url !== 'not-found' &&
-    !r.rapport_url?.startsWith('stps://')
-  );
+  return (body ?? []).filter((r) => r.pdf_url !== 'not-found');
 }
 
 // ── Find PDF-link i HTML ───────────────────────────────────────────────────
