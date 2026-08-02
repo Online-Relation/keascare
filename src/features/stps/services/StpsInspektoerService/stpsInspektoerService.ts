@@ -27,7 +27,7 @@ type DbRapport = {
   tilsyn_deltagere_stps: TilsynDeltager[] | null;
 };
 
-// Suffikser der — som del af et sammensat ord — afslører et bosted
+// Suffikser/præfikser der — som del af et sammensat ord — afslører et bosted
 const BOSTED_SUFFIKSER = [
   'hjemmet', 'hjemme', 'hjem',
   'center', 'centret', 'centeret',
@@ -39,6 +39,7 @@ const BOSTED_SUFFIKSER = [
   'hjemsted',
   'bofællesskab', 'bofælles',
   'boform', 'bolig', 'bosted', 'botilbud',
+  'boenhed', 'boenheden',
   'institution', 'institutionen',
   'behandling', 'behandlings',
   'ungdoms', 'børne',
@@ -47,6 +48,7 @@ const BOSTED_SUFFIKSER = [
   'bostøtte',
   'forsorgshjem', 'forsorgs',
   'socialpsykia',
+  'enhed', 'enheden',
 ];
 
 // Hele ord der afslører et bosted/institution
@@ -58,12 +60,14 @@ const BOSTED_HELE_ORD = new Set([
   'selvejende', 'inst',
   'døgn',
   'sporet', 'villa',
-  'lector', 'solutio',
+  'lector', 'solutio', 'care',
   'nord-bo', 'nordbo',
   'verden',
   'vej', 'gade', 'alle', 'boulevard', 'stræde', 'plads',
   'omsorg',
   'hus',
+  'have', 'haven',
+  'bakken',
 ]);
 
 function erPersonNavn(navn: string): boolean {
