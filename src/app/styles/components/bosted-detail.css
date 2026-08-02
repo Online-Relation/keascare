@@ -141,36 +141,24 @@
   .bosted-sor-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: var(--text-xs);
+    gap: 0.35rem;
+    font-size: var(--text-sm);
     font-weight: 600;
-    color: #2563eb;
-    background: #eff6ff;
-    border: 1px solid #bfdbfe;
-    border-radius: 5px;
-    padding: 0.15rem 0.5rem;
-    font-family: monospace;
-    letter-spacing: 0.02em;
+    color: #fff;
+    background: #16a34a;
+    border: none;
+    border-radius: 999px;
+    padding: 0.3rem 0.85rem;
+    font-family: inherit;
+    letter-spacing: 0;
   }
 
   .bosted-sor-badge--mangler {
-    font-family: inherit;
-    color: #b45309;
-    background: #fffbeb;
-    border-color: #fcd34d;
+    background: #dc2626;
   }
 
-  @media (prefers-color-scheme: dark) {
-    .bosted-sor-badge {
-      color: #93c5fd;
-      background: #1e3a5f22;
-      border-color: #1d4ed855;
-    }
-    .bosted-sor-badge--mangler {
-      color: #fbbf24;
-      background: #451a0322;
-      border-color: #92400e55;
-    }
+  .bosted-sor-badge--ukendt {
+    background: #2563eb;
   }
 
   .bosted-kontakt-link {

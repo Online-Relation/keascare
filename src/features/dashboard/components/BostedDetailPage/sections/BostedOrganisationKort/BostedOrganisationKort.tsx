@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, Phone, Mail, User, Globe, MapPin, TrendingUp, RefreshCw, Shield } from 'lucide-react';
+import { Building2, Phone, Mail, User, Globe, MapPin, TrendingUp, RefreshCw, Shield, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import { ScraperInfo } from '../ScraperInfo/ScraperInfo';
 
@@ -91,10 +91,10 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <div className="bosted-detail-field">
             <span className="bosted-detail-field-label">Sundhedsvæsenets Organisationsregister</span>
             {bosted.sorKode
-              ? <span className="bosted-sor-badge">Registreret</span>
+              ? <span className="bosted-sor-badge"><CheckCircle2 size={14} /> Registreret</span>
               : bosted.cvr
-                ? <span className="bosted-sor-badge bosted-sor-badge--mangler">Ikke registreret</span>
-                : <span className="bosted-detail-placeholder">Ukendt</span>
+                ? <span className="bosted-sor-badge bosted-sor-badge--mangler"><XCircle size={14} /> Ikke registreret</span>
+                : <span className="bosted-sor-badge bosted-sor-badge--ukendt"><HelpCircle size={14} /> Ukendt</span>
             }
           </div>
           {bosted.cvrAntalAfdelinger != null && bosted.cvrAntalAfdelinger > 1 && (
