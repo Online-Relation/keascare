@@ -6,12 +6,12 @@ import { useState, useEffect, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import {
   hentRegistreringerIPeriode, sletRegistrering,
-  hentAktivitetsKalenderData, hentUgentligKategoriData,
+  hentAktivitetsKalenderData, hentUgentligKategoriData, hentAlleKategorier,
 } from '@/features/tidsregistrering/services/TidsregistreringService';
 import {
   getPeriodeDatoer, beregnFordeling, beregnDagligData, beregnTopOpgaver, beregnArbejdsdage,
 } from '@/features/tidsregistrering/utils/DashboardUtils';
-import type { Periode, DashboardData, Tidsregistrering } from '@/features/tidsregistrering/types/tidsregistrering.types';
+import type { Periode, DashboardData, Tidsregistrering, TidsregistreringKategori } from '@/features/tidsregistrering/types/tidsregistrering.types';
 import { TimePeriodeVælger } from './TimePeriodeVælger';
 import { TimeMetricGrid } from './TimeMetricGrid';
 import { TimeFordelingChart } from './TimeFordelingChart';
@@ -23,6 +23,9 @@ import { KapacitetOverview } from './KapacitetOverview';
 import { UgentligKategoriGennemsnit } from './UgentligKategoriGennemsnit';
 import { FokusfordelingCard } from './FokusfordeligCard';
 import { AfvigelserCard } from './AfvigelserCard';
+import { InternEksternCard } from './InternEksternCard';
+import { FakturerbarCard } from './FakturerbarCard';
+import { MaalKort } from './MaalKort';
 
 type Props = { onSeAlle: () => void };
 
@@ -40,6 +43,7 @@ export function TimeDashboard({ onSeAlle }: Props) {
   const [kalData, setKalData]         = useState<{ dato: string; minutter: number }[]>([]);
   const [ugeData, setUgeData]         = useState<Tidsregistrering[]>([]);
   const [forrigeRegs, setForrigeRegs] = useState<Tidsregistrering[]>([]);
+  const [kategorier, setKategorier]   = useState<TidsregistreringKategori[]>([]);
 
   const load = useCallback(async (p: Periode) => {
     setIndlæser(true);
@@ -70,10 +74,10 @@ export function TimeDashboard({ onSeAlle }: Props) {
     }
   }, []);
 
-  // Hent heatmap og ugentlige data én gang ved mount
+  // Hent heatmap, ugentlige data og kategorier én gang ved mount
   useEffect(() => {
-    Promise.all([hentAktivitetsKalenderData(182), hentUgentligKategoriData(8)])
-      .then(([kal, uge]) => { setKalData(kal); setUgeData(uge); })
+    Promise.all([hentAktivitetsKalenderData(182), hentUgentligKategoriData(8), hentAlleKategorier()])
+      .then(([kal, uge, kats]) => { setKalData(kal); setUgeData(uge); setKategorier(kats); })
       .catch(() => {});
   }, []);
 
@@ -138,6 +142,12 @@ export function TimeDashboard({ onSeAlle }: Props) {
           <div className="tr-dash-grid-2">
             <FokusfordelingCard aktuelle={data.seneste} forrige={forrigeRegs} />
             <AfvigelserCard aktuelle={data.seneste} historiske={ugeData} />
+          </div>
+
+          <div className="tr-dash-grid-3">
+            <InternEksternCard registreringer={data.seneste} kategorier={kategorier} />
+            <FakturerbarCard registreringer={data.seneste} kategorier={kategorier} />
+            <MaalKort registreringer={data.seneste} kategorier={kategorier} />
           </div>
 
           <SenesteRegistreringer

@@ -25,15 +25,34 @@ export async function hentKategorier(): Promise<TidsregistreringKategori[]> {
 export async function hentAlleKategorier(): Promise<TidsregistreringKategori[]> {
   const { data, error } = await supabase()
     .from('tidsregistrering_kategorier')
-    .select('id, navn, aktiv, oprettet')
+    .select('id, navn, aktiv, oprettet, er_ekstern, er_fakturerbar, timepris, maal_max_pct, maal_min_pct')
     .order('oprettet');
   if (error) throw error;
   return (data ?? []).map((r) => ({
-    id: r.id,
-    navn: r.navn,
-    aktiv: r.aktiv,
-    oprettet: r.oprettet,
+    id: r.id, navn: r.navn, aktiv: r.aktiv, oprettet: r.oprettet,
+    erEkstern: r.er_ekstern ?? false,
+    erFakturerbar: r.er_fakturerbar ?? false,
+    timepris: r.timepris ?? null,
+    maalMaxPct: r.maal_max_pct ?? null,
+    maalMinPct: r.maal_min_pct ?? null,
   }));
+}
+
+export async function opdaterKategoriDetaljer(
+  id: string,
+  felter: { erEkstern?: boolean; erFakturerbar?: boolean; timepris?: number | null; maalMaxPct?: number | null; maalMinPct?: number | null }
+): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistrering_kategorier')
+    .update({
+      er_ekstern:     felter.erEkstern,
+      er_fakturerbar: felter.erFakturerbar,
+      timepris:       felter.timepris,
+      maal_max_pct:   felter.maalMaxPct,
+      maal_min_pct:   felter.maalMinPct,
+    })
+    .eq('id', id);
+  if (error) throw error;
 }
 
 export async function opretKategori(navn: string): Promise<void> {

@@ -1,0 +1,1 @@
+export { InternEksternCard } from './InternEksternCard';

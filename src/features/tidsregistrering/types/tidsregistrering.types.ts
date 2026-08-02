@@ -41,6 +41,11 @@ export type TidsregistreringKategori = {
   navn: string;
   aktiv: boolean;
   oprettet: string;
+  erEkstern?: boolean;
+  erFakturerbar?: boolean;
+  timepris?: number | null;
+  maalMaxPct?: number | null;
+  maalMinPct?: number | null;
 };
 
 export type TidsregistreringUnderpunkt = {

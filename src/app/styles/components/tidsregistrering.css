@@ -1357,3 +1357,57 @@
 }
 .tr-dash-afv-pct.over  { color: #d97706; }
 .tr-dash-afv-pct.under { color: #4f46e5; }
+
+/* ── KategoriDetaljer (settings panel in KategoriAdmin) ── */
+.tr-kat-detaljer { padding: 0.75rem 1rem; background: var(--color-surface, var(--color-bg)); border-top: 1px solid var(--color-border); }
+.tr-kat-detaljer-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem; }
+.tr-kat-detaljer-felt { display: flex; flex-direction: column; gap: 0.25rem; }
+.tr-kat-detaljer-felt label { font-size: 0.75rem; color: var(--color-text-muted); font-weight: 500; }
+.tr-kat-detaljer-felt input[type="number"] { width: 100%; padding: 0.375rem 0.5rem; border: 1px solid var(--color-border); border-radius: 6px; background: var(--color-card); color: var(--color-text-primary); font-size: 0.875rem; }
+.tr-kat-detaljer-check { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.875rem; color: var(--color-text-primary); }
+.tr-kat-detaljer-check input { width: 16px; height: 16px; cursor: pointer; }
+.tr-kat-detaljer-handlinger { display: flex; gap: 0.5rem; justify-content: flex-end; }
+.tr-kat-gem-knap { padding: 0.375rem 0.875rem; background: var(--color-primary); color: #fff; border: none; border-radius: 6px; font-size: 0.8125rem; font-weight: 600; cursor: pointer; }
+.tr-kat-gem-knap:hover { opacity: 0.9; }
+.tr-kat-annuller-knap { padding: 0.375rem 0.875rem; background: transparent; color: var(--color-text-muted); border: 1px solid var(--color-border); border-radius: 6px; font-size: 0.8125rem; cursor: pointer; }
+
+/* ── InternEksternCard ── */
+.tr-ie-indhold { display: flex; flex-direction: column; gap: 1rem; }
+.tr-ie-bar-wrapper { display: flex; gap: 0; border-radius: 8px; overflow: hidden; height: 28px; }
+.tr-ie-bar-intern { background: #4f46e5; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #fff; transition: width 0.3s; }
+.tr-ie-bar-ekstern { background: #0891b2; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; color: #fff; transition: width 0.3s; }
+.tr-ie-legende { display: flex; gap: 1.25rem; }
+.tr-ie-legende-punkt { display: flex; align-items: center; gap: 0.375rem; font-size: 0.8125rem; color: var(--color-text-primary); }
+.tr-ie-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.tr-ie-dot.intern  { background: #4f46e5; }
+.tr-ie-dot.ekstern { background: #0891b2; }
+.tr-ie-tid { font-weight: 600; }
+.tr-ie-ingen { font-size: 0.875rem; color: var(--color-text-muted); }
+
+/* ── FakturerbarCard ── */
+.tr-fak-indhold { display: flex; flex-direction: column; gap: 0.75rem; }
+.tr-fak-hoved { display: flex; align-items: baseline; gap: 1rem; }
+.tr-fak-tid { font-size: 1.5rem; font-weight: 700; color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
+.tr-fak-kr { display: flex; align-items: center; gap: 0.25rem; font-size: 0.9375rem; font-weight: 600; color: #059669; }
+.tr-fak-andel { display: flex; flex-direction: column; gap: 0.375rem; font-size: 0.8125rem; color: var(--color-text-muted); }
+
+/* ── MaalKort ── */
+.tr-maal-liste { display: flex; flex-direction: column; gap: 0.625rem; }
+.tr-maal-rad { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; border-radius: 8px; border: 1px solid var(--color-border); background: var(--color-surface, var(--color-bg)); }
+.tr-maal-rad.tr-maal-ok    { border-color: #bbf7d0; background: #f0fdf4; }
+.tr-maal-rad.tr-maal-over  { border-color: #fed7aa; background: #fff7ed; }
+.tr-maal-rad.tr-maal-under { border-color: #e0e7ff; background: #eef2ff; }
+@media (prefers-color-scheme: dark) {
+  .tr-maal-rad.tr-maal-ok    { border-color: #166534; background: #052e16; }
+  .tr-maal-rad.tr-maal-over  { border-color: #92400e; background: #1c1007; }
+  .tr-maal-rad.tr-maal-under { border-color: #3730a3; background: #0d0b2e; }
+}
+.tr-maal-ikon { flex-shrink: 0; }
+.tr-maal-ikon .ok   { color: #16a34a; }
+.tr-maal-ikon .fejl { color: #dc2626; }
+.tr-maal-info { flex: 1; min-width: 0; }
+.tr-maal-navn { font-weight: 600; font-size: 0.875rem; color: var(--color-text-primary); display: block; }
+.tr-maal-sub  { font-size: 0.75rem; color: var(--color-text-muted); }
+.tr-maal-pct  { text-align: right; }
+.tr-maal-faktisk { display: block; font-size: 1rem; font-weight: 700; color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
+.tr-maal-status-tekst { font-size: 0.6875rem; color: var(--color-text-muted); }

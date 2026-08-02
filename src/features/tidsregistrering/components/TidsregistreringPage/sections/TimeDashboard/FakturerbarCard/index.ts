@@ -1,0 +1,1 @@
+export { FakturerbarCard } from './FakturerbarCard';

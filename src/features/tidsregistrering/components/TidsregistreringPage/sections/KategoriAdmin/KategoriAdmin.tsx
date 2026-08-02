@@ -3,12 +3,82 @@
 // src/features/tidsregistrering/components/TidsregistreringPage/sections/KategoriAdmin/KategoriAdmin.tsx
 
 import { useState, useEffect } from 'react';
-import { Plus, Pencil, Check, X, EyeOff, Eye, ChevronDown, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Check, X, EyeOff, Eye, ChevronDown, Trash2, Settings2 } from 'lucide-react';
 import {
   hentAlleKategorier, opretKategori, opdaterKategori, skiftKategoriAktiv, sletKategori,
   hentAlleUnderpunkterForKategorier, opretUnderpunkt, opdaterUnderpunkt, skiftUnderpunktAktiv, sletUnderpunkt,
+  opdaterKategoriDetaljer,
 } from '@/features/tidsregistrering/services/TidsregistreringService';
 import type { TidsregistreringKategori, TidsregistreringUnderpunkt } from '@/features/tidsregistrering/types/tidsregistrering.types';
+
+type KategoriDetaljerProps = {
+  kategori: TidsregistreringKategori;
+  åben: boolean;
+  onToggle: () => void;
+  onGem: (felter: { erEkstern: boolean; erFakturerbar: boolean; timepris: number | null; maalMaxPct: number | null; maalMinPct: number | null }) => Promise<void>;
+};
+
+function KategoriDetaljer({ kategori: k, åben, onToggle, onGem }: KategoriDetaljerProps) {
+  const [erEkstern, setErEkstern]       = useState(k.erEkstern ?? false);
+  const [erFakturerbar, setErFakturerbar] = useState(k.erFakturerbar ?? false);
+  const [timepris, setTimepris]         = useState(String(k.timepris ?? ''));
+  const [maxPct, setMaxPct]             = useState(String(k.maalMaxPct ?? ''));
+  const [minPct, setMinPct]             = useState(String(k.maalMinPct ?? ''));
+  const [gemmer, setGemmer]             = useState(false);
+
+  async function gem() {
+    setGemmer(true);
+    await onGem({
+      erEkstern, erFakturerbar,
+      timepris: timepris ? Number(timepris) : null,
+      maalMaxPct: maxPct ? Number(maxPct) : null,
+      maalMinPct: minPct ? Number(minPct) : null,
+    });
+    setGemmer(false);
+  }
+
+  return (
+    <div className="tr-kat-detaljer">
+      <button className="tr-kat-detaljer-toggle" onClick={onToggle}>
+        <Settings2 size={12} />
+        {åben ? 'Skjul indstillinger' : 'Indstillinger'}
+      </button>
+      {åben && (
+        <div className="tr-kat-detaljer-panel">
+          <div className="tr-kat-detaljer-row">
+            <label className="tr-kat-toggle-label">
+              <input type="checkbox" checked={erEkstern} onChange={(e) => setErEkstern(e.target.checked)} />
+              Eksternt arbejde
+            </label>
+            <label className="tr-kat-toggle-label">
+              <input type="checkbox" checked={erFakturerbar} onChange={(e) => setErFakturerbar(e.target.checked)} />
+              Fakturerbar
+            </label>
+          </div>
+          {erFakturerbar && (
+            <div className="tr-kat-detaljer-felt">
+              <label>Timepris (kr.)</label>
+              <input className="tr-inline-input" type="number" placeholder="fx 950" value={timepris} onChange={(e) => setTimepris(e.target.value)} style={{ width: '100px' }} />
+            </div>
+          )}
+          <div className="tr-kat-detaljer-row">
+            <div className="tr-kat-detaljer-felt">
+              <label>Mål min. %</label>
+              <input className="tr-inline-input" type="number" min={0} max={100} placeholder="—" value={minPct} onChange={(e) => setMinPct(e.target.value)} style={{ width: '70px' }} />
+            </div>
+            <div className="tr-kat-detaljer-felt">
+              <label>Mål maks. %</label>
+              <input className="tr-inline-input" type="number" min={0} max={100} placeholder="—" value={maxPct} onChange={(e) => setMaxPct(e.target.value)} style={{ width: '70px' }} />
+            </div>
+          </div>
+          <button onClick={gem} className="tr-ikon-btn tr-gem" disabled={gemmer} style={{ alignSelf: 'flex-start' }}>
+            <Check size={13} /> {gemmer ? 'Gemmer…' : 'Gem'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function KategoriAdmin() {
   const [kategorier, setKategorier]           = useState<TidsregistreringKategori[]>([]);
@@ -23,6 +93,7 @@ export function KategoriAdmin() {
   const [bekræftSletKat, setBekræftSletKat]   = useState<string | null>(null);
   const [bekræftSletUp, setBekræftSletUp]     = useState<string | null>(null);
   const [sletFejl, setSletFejl]               = useState<string | null>(null);
+  const [detaljerKat, setDetaljerKat]         = useState<string | null>(null);
 
   async function load() {
     const kats = await hentAlleKategorier().catch(() => [] as TidsregistreringKategori[]);
@@ -236,6 +307,14 @@ export function KategoriAdmin() {
                       <Plus size={14} />
                     </button>
                   </div>
+
+                  {/* Kategoriindstillinger */}
+                  <KategoriDetaljer
+                    kategori={k}
+                    åben={detaljerKat === k.id}
+                    onToggle={() => setDetaljerKat((p) => (p === k.id ? null : k.id))}
+                    onGem={async (felter) => { await opdaterKategoriDetaljer(k.id, felter); await load(); }}
+                  />
                 </div>
               )}
             </div>
