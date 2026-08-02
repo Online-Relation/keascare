@@ -18,6 +18,7 @@ type DbRapport = {
   stps_tilbud_navn: string;
   rapport_dato: string | null;
   rapport_url: string;
+  pdf_storage_url: string | null;
   fund_niveau: string | null;
   temaer: string[] | null;
   kommune: string | null;
@@ -59,7 +60,7 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, temaer, kommune, region, tilsynsform, tilsyn_deltagere_stps')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, pdf_storage_url, fund_niveau, temaer, kommune, region, tilsynsform, tilsyn_deltagere_stps')
     .not('tilsyn_deltagere_stps', 'is', null);
 
   if (error || !data) return [];
@@ -84,7 +85,8 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
       temaer: r.temaer ?? [],
       kommune: r.kommune,
       region: r.region,
-      rapportUrl: r.rapport_url,
+      rapportUrl: r.pdf_storage_url ?? r.rapport_url,
+      pdfStorageUrl: r.pdf_storage_url,
       tilsynsform: r.tilsynsform,
     };
 

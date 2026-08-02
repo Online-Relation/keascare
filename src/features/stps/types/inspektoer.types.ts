@@ -11,6 +11,7 @@ export type InspektoerRapport = {
   kommune: string | null;
   region: string | null;
   rapportUrl: string;
+  pdfStorageUrl: string | null;
   tilsynsform: string | null;
 };
 
