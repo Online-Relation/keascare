@@ -101,6 +101,7 @@ export function TidsregistreringWidget() {
     setNote('');
     setUnderpunkter([]);
     setValgtUnderpunktId('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [aktivRegistreringId, note]);
 
   async function lukUdenAtGemme() {
@@ -118,6 +119,7 @@ export function TidsregistreringWidget() {
     setNote('');
     setUnderpunkter([]);
     setValgtUnderpunktId('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   if (loading) return null;
