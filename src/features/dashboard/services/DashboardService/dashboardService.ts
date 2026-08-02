@@ -291,6 +291,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, pladser, tp_adresse, tp_website, tp_pladser, tp_driftsform, monday_item_id, monday_gruppe, sor_kode')
+    .not('rapport_dato', 'is', null)
     .order('rapport_dato', { ascending: false })
     .limit(5000);
 
