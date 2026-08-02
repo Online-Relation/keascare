@@ -26,6 +26,27 @@ type DbRapport = {
   tilsyn_deltagere_stps: TilsynDeltager[] | null;
 };
 
+const BOSTED_PRÆFIKSER = [
+  'bosted', 'botilbud', 'opholdsstedet', 'opholdsted', 'fonden', 'foreningen',
+  'center', 'centret', 'institution', 'huset', 'stedet', 'tilbuddet',
+  'bo-', 'bo ', 'kollegiet', 'herberg', 'bofællesskab', 'bofællesskabet',
+  'socialpsykiatrisk', 'socialpsykiatri',
+];
+
+function erPersonNavn(navn: string): boolean {
+  const n = navn.toLowerCase().trim();
+  // Afvis hvis det starter med et kendt bostedspræfiks
+  if (BOSTED_PRÆFIKSER.some((p) => n.startsWith(p))) return false;
+  // Afvis hvis det indeholder typiske bostedsord midt i
+  if (/\b(bosted|botilbud|opholdssted|kollegiet|huset|centret|fonden|foreningen)\b/.test(n)) return false;
+  // Kræv mindst to ord (fornavn + efternavn)
+  const ord = navn.trim().split(/\s+/);
+  if (ord.length < 2) return false;
+  // Kræv at første ord ligner et fornavn (kun bogstaver, inkl. æøå)
+  if (!/^[A-Za-zÆØÅæøå-]+$/.test(ord[0])) return false;
+  return true;
+}
+
 export function navnTilSlug(navn: string): string {
   return navn
     .toLowerCase()
@@ -68,6 +89,7 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
     };
 
     for (const d of r.tilsyn_deltagere_stps) {
+      if (!erPersonNavn(d.navn)) continue;
       const nøgle = d.navn.toLowerCase().trim();
       const eks = map.get(nøgle);
       const dato = r.rapport_dato;
