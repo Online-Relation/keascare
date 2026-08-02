@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Square, Clock, X } from 'lucide-react';
-import { hentKategorier, hentUnderpunkter, startTimer, stopTimer } from '@/features/tidsregistrering/services/TidsregistreringService';
+import { hentKategorier, hentUnderpunkter, startTimer, stopTimer, sletRegistrering } from '@/features/tidsregistrering/services/TidsregistreringService';
 import type { TidsregistreringKategori, TidsregistreringUnderpunkt } from '@/features/tidsregistrering/types/tidsregistrering.types';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 
@@ -103,9 +103,21 @@ export function TidsregistreringWidget() {
     setValgtUnderpunktId('');
   }, [aktivRegistreringId, note]);
 
-  function lukModal() {
+  async function lukUdenAtGemme() {
+    // Slet den igangværende registrering og stop timeren
+    if (aktivRegistreringId) {
+      await sletRegistrering(aktivRegistreringId).catch(() => {});
+    }
+    localStorage.removeItem(LS_ID);
+    localStorage.removeItem(LS_KAT);
+    localStorage.removeItem(LS_START);
+    setAktivRegistreringId(null);
+    setKører(false);
+    setSek(0);
     setVisStopModal(false);
     setNote('');
+    setUnderpunkter([]);
+    setValgtUnderpunktId('');
   }
 
   if (loading) return null;
@@ -195,7 +207,7 @@ export function TidsregistreringWidget() {
               <button className="tr-modal-gem" onClick={handleGem} disabled={gemmer}>
                 {gemmer ? 'Gemmer…' : 'Gem registrering'}
               </button>
-              <button className="tr-modal-afbryd" onClick={lukModal}>
+              <button className="tr-modal-afbryd" onClick={lukUdenAtGemme}>
                 Luk uden at gemme
               </button>
             </div>
