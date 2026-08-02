@@ -27,51 +27,48 @@ type DbRapport = {
   tilsyn_deltagere_stps: TilsynDeltager[] | null;
 };
 
-// Ord der — uanset position — afslører et bosted/institution
-const BOSTED_ORD = new Set([
-  'bosted', 'botilbud', 'boltilbudet', 'boform', 'boformen', 'boligerne', 'boligcenter',
-  'bofællesskab', 'bofællesskabet', 'bofælles',
-  'opholdssted', 'opholdsstedet', 'opholdsted',
-  'forsorgshjemmet', 'forsorgshjemme', 'forsorgshjem',
-  'hjemmet', 'hjemsted',
-  'institution', 'institutionen', 'inst',
-  'center', 'centret', 'centeret', 'autismecenter', 'behandlingscenter',
+// Suffikser der — som del af et sammensat ord — afslører et bosted
+const BOSTED_SUFFIKSER = [
+  'hjemmet', 'hjemme', 'hjem',
+  'center', 'centret', 'centeret',
   'kollegiet', 'kollegium',
-  'herberg', 'herberget',
-  'socialpsykiatrisk', 'socialpsykiatri',
-  'fonden', 'foreningen',
+  'tilbuddet', 'tilbuddene', 'tilbud',
+  'stedet', 'sted',
   'huset', 'husene', 'huserne',
-  'stedet', 'tilbuddet', 'tilbud',
-  'behandlingsstedet', 'behandlingssted', 'behandlingshjem',
+  'gården', 'gaard', 'gård',
+  'hjemsted',
+  'bofællesskab', 'bofælles',
+  'boform', 'bolig', 'bosted', 'botilbud',
+  'institution', 'institutionen',
+  'behandling', 'behandlings',
+  'ungdoms', 'børne',
+  'omsorg', 'omsorgs',
+  'skolehjem',
+  'bostøtte',
+  'forsorgshjem', 'forsorgs',
+  'socialpsykia',
+];
+
+// Hele ord der afslører et bosted/institution
+const BOSTED_HELE_ORD = new Set([
+  'opholdssted', 'opholdsstedet', 'opholdsted',
+  'herberg', 'herberget',
+  'fonden', 'foreningen',
   'kvarter', 'kvarteret',
-  'skolehjem', 'skolehjemmet',
-  'ungdomscenter', 'ungdomshjemmet', 'ungdomscen',
-  'trivselshuset',
-  'progressionshuset',
-  'kollektivet', 'familiekollektivet',
-  'selvejende',
-  'døgn', 'døgntilbud', 'døgninstitution',
-  'bostøtte', 'bostøtten',
-  'sporet',
-  'have', 'haven',
-  'villa',
-  'lector', 'solutio', 'care',
-  'nordbo', 'nord-bo',
+  'selvejende', 'inst',
+  'døgn',
+  'sporet', 'villa',
+  'lector', 'solutio',
+  'nord-bo', 'nordbo',
   'verden',
+  'vej', 'gade', 'alle', 'boulevard', 'stræde', 'plads',
+  'omsorg',
+  'hus',
 ]);
 
 function erPersonNavn(navn: string): boolean {
   const n = navn.toLowerCase().trim();
-
-  // Afvis hvis et af ordene i navnet matcher et bostedsord
   const ord = navn.trim().split(/\s+/);
-  for (const o of ord) {
-    const ol = o.toLowerCase().replace(/[^a-zæøå]/g, '');
-    if (BOSTED_ORD.has(ol)) return false;
-  }
-
-  // Afvis hvis hele strengen indeholder bostedsord (inkl. sammensatte)
-  if (/\b(bosted|botilbud|bofællesskab|opholdssted|forsorgshjemmet?|behandlingssted|skolehjem|bostøtte|ungdomscen|selvejende|kollektivet|døgntilbud|boltilbud)\b/.test(n)) return false;
 
   // Kræv mindst to ord (fornavn + efternavn)
   if (ord.length < 2) return false;
@@ -83,11 +80,24 @@ function erPersonNavn(navn: string): boolean {
   // Afvis navne med mere end 4 ord (institutionsnavne er typisk lange)
   if (ord.length > 4) return false;
 
-  // Afvis hvis et ord har usædvanlig indre kapitalisering (fx "BofæLlesskab")
-  // Tillad kun: Ord der starter med stort + resten småt, ELLER alt småt, ELLER alt stort (initialer)
+  // Afvis hvis et ord har usædvanlig indre kapitalisering (fx "BofæLlesskab", "RøDland")
   for (const o of ord) {
     if (o.length > 2 && /[A-ZÆØÅ]/.test(o.slice(1))) return false;
   }
+
+  // Tjek hvert ord for bosted-indikatorer
+  for (const o of ord) {
+    const ol = o.toLowerCase().replace(/[^a-zæøå]/g, '');
+
+    // Eksakt match på hele ord
+    if (BOSTED_HELE_ORD.has(ol)) return false;
+
+    // Indeholder et bosted-suffiks/præfiks (sammensatte ord)
+    if (BOSTED_SUFFIKSER.some((s) => ol.includes(s))) return false;
+  }
+
+  // Tjek hele den sammensatte streng (fanger fx "særlige boliger")
+  if (/\b(bolig|bofæl|botilbud|bosted|behandling|omsorg|selvejende|ungdoms|forsorg|socialpsykia)\b/.test(n)) return false;
 
   return true;
 }
