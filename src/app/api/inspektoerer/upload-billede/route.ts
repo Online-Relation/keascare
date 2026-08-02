@@ -47,12 +47,8 @@ export async function POST(req: NextRequest) {
     }
 
     const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(filnavn);
-    const publicUrl = urlData.publicUrl;
 
-    // Gem URL i DB så avatar-komponenten kan slå den op
-    await supabase.from('inspektoer_billeder').upsert({ slug, billede_url: publicUrl });
-
-    return NextResponse.json({ ok: true, sti: publicUrl });
+    return NextResponse.json({ ok: true, sti: urlData.publicUrl });
   } catch (e) {
     console.error('[upload-billede]', e);
     return NextResponse.json({ fejl: 'Intern fejl' }, { status: 500 });

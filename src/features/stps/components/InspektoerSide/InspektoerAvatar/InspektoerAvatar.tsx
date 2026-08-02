@@ -2,7 +2,7 @@
 
 // src/features/stps/components/InspektoerSide/InspektoerAvatar/InspektoerAvatar.tsx
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 type Props = { navn: string; slug: string; size?: number };
 
@@ -21,29 +21,28 @@ function farveFraSlug(slug: string): string {
   return FARVER[Math.abs(hash) % FARVER.length];
 }
 
+const EXTS = ['jpg', 'png', 'webp'];
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
+const BUCKET = 'inspektoer-billeder';
+
+function billedeUrl(slug: string, ext: string): string {
+  return `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${slug}.${ext}`;
+}
+
 export function InspektoerAvatar({ navn, slug, size = 40 }: Props) {
-  const [url, setUrl] = useState<string | null | 'indlæser'>('indlæser');
+  const [ekstIdx, setEktIdx] = useState(0);
   const farve = farveFraSlug(slug);
   const font  = Math.round(size * 0.35);
 
-  useEffect(() => {
-    let aktiv = true;
-    fetch(`/api/inspektoerer/billede?slug=${encodeURIComponent(slug)}`)
-      .then((r) => r.json())
-      .then((d) => { if (aktiv) setUrl(d.url ?? null); })
-      .catch(() => { if (aktiv) setUrl(null); });
-    return () => { aktiv = false; };
-  }, [slug]);
-
-  if (url && url !== 'indlæser') {
+  if (ekstIdx < EXTS.length) {
     return (
       <img
-        src={url}
+        src={billedeUrl(slug, EXTS[ekstIdx])}
         alt={navn}
         width={size}
         height={size}
         style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-        onError={() => setUrl(null)}
+        onError={() => setEktIdx((i) => i + 1)}
       />
     );
   }
@@ -52,13 +51,12 @@ export function InspektoerAvatar({ navn, slug, size = 40 }: Props) {
     <div
       style={{
         width: size, height: size, borderRadius: '50%',
-        background: url === 'indlæser' ? 'var(--color-border)' : farve,
-        color: '#fff',
+        background: farve, color: '#fff',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: font, fontWeight: 700, flexShrink: 0,
       }}
     >
-      {url !== 'indlæser' && initialer(navn)}
+      {initialer(navn)}
     </div>
   );
 }
