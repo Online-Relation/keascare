@@ -671,3 +671,19 @@
     padding: 0.5rem 1rem;
   }
 }
+
+.tr-slet-fejl {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.875rem;
+  background: #fee2e2;
+  color: #b91c1c;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  margin-bottom: 0.75rem;
+}
+.tr-slet-fejl .tr-ikon-btn { margin-left: auto; color: #b91c1c; }
+@media (prefers-color-scheme: dark) {
+  .tr-slet-fejl { background: #450a0a; color: #fca5a5; }
+}

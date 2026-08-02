@@ -176,6 +176,13 @@ export async function hentRegistreringer(limit = 100): Promise<Tidsregistrering[
 }
 
 export async function sletKategori(id: string): Promise<void> {
+  // Slet underpunkter først for at undgå foreign key constraint
+  const { error: upFejl } = await supabase()
+    .from('tidsregistrering_underpunkter')
+    .delete()
+    .eq('kategori_id', id);
+  if (upFejl) throw upFejl;
+
   const { error } = await supabase()
     .from('tidsregistrering_kategorier')
     .delete()

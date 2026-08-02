@@ -22,6 +22,7 @@ export function KategoriAdmin() {
   const [nytUpNavn, setNytUpNavn]             = useState<Record<string, string>>({});
   const [bekræftSletKat, setBekræftSletKat]   = useState<string | null>(null);
   const [bekræftSletUp, setBekræftSletUp]     = useState<string | null>(null);
+  const [sletFejl, setSletFejl]               = useState<string | null>(null);
 
   async function load() {
     const kats = await hentAlleKategorier().catch(() => [] as TidsregistreringKategori[]);
@@ -75,17 +76,27 @@ export function KategoriAdmin() {
   }
 
   async function håndterSletKat(id: string) {
-    if (bekræftSletKat !== id) { setBekræftSletKat(id); return; }
-    await sletKategori(id);
-    setBekræftSletKat(null);
-    await load();
+    if (bekræftSletKat !== id) { setBekræftSletKat(id); setSletFejl(null); return; }
+    try {
+      await sletKategori(id);
+      setBekræftSletKat(null);
+      await load();
+    } catch (e) {
+      setSletFejl('Kategorien kan ikke slettes — der er sandsynligvis registreringer knyttet til den.');
+      setBekræftSletKat(null);
+    }
   }
 
   async function håndterSletUp(id: string) {
-    if (bekræftSletUp !== id) { setBekræftSletUp(id); return; }
-    await sletUnderpunkt(id);
-    setBekræftSletUp(null);
-    await load();
+    if (bekræftSletUp !== id) { setBekræftSletUp(id); setSletFejl(null); return; }
+    try {
+      await sletUnderpunkt(id);
+      setBekræftSletUp(null);
+      await load();
+    } catch (e) {
+      setSletFejl('Underpunktet kan ikke slettes — der er sandsynligvis registreringer knyttet til det.');
+      setBekræftSletUp(null);
+    }
   }
 
   const aktive = kategorier.filter((k) => k.aktiv);
@@ -107,6 +118,13 @@ export function KategoriAdmin() {
           <span className="tr-kat-stat-label">Skjulte kategorier</span>
         </div>
       </div>
+
+      {sletFejl && (
+        <div className="tr-slet-fejl" role="alert">
+          {sletFejl}
+          <button onClick={() => setSletFejl(null)} className="tr-ikon-btn"><X size={14} /></button>
+        </div>
+      )}
 
       <div className="tr-kat-liste">
         {kategorier.map((k) => {
