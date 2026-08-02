@@ -2,7 +2,7 @@ export { hentAktivitetsKalenderData, hentUgentligKategoriData, hentRegistreringe
   opdaterKategoriDetaljer,
   hentKategorier, hentAlleKategorier, opretKategori, opdaterKategori,
   skiftKategoriAktiv, startTimer, stopTimer, hentRegistreringer,
-  opdaterNote, sletRegistrering,
+  opdaterNote, sletRegistrering, opdaterRegistrering,
   hentUnderpunkter, hentAlleUnderpunkterForKategorier,
   opretUnderpunkt, opdaterUnderpunkt, skiftUnderpunktAktiv,
   sletKategori, sletUnderpunkt,

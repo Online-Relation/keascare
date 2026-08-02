@@ -1411,3 +1411,45 @@
 .tr-maal-pct  { text-align: right; }
 .tr-maal-faktisk { display: block; font-size: 1rem; font-weight: 700; color: var(--color-text-primary); font-variant-numeric: tabular-nums; }
 .tr-maal-status-tekst { font-size: 0.6875rem; color: var(--color-text-muted); }
+
+/* ── RedigerRegistreringModal ── */
+.tr-rediger-modal { max-width: 480px; width: 100%; }
+
+.tr-rediger-form { display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem; }
+
+.tr-rediger-felt { display: flex; flex-direction: column; gap: 0.375rem; }
+.tr-rediger-felt label { font-size: 0.8125rem; font-weight: 600; color: var(--color-text-muted); }
+.tr-rediger-felt input,
+.tr-rediger-felt select,
+.tr-rediger-felt textarea {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-text-primary);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  width: 100%;
+}
+.tr-rediger-felt textarea { resize: vertical; }
+.tr-rediger-felt input:focus,
+.tr-rediger-felt select:focus,
+.tr-rediger-felt textarea:focus { outline: 2px solid var(--color-primary); outline-offset: 1px; }
+
+.tr-rediger-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+
+.tr-rediger-handlinger { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 0.25rem; }
+.tr-gem-knap {
+  padding: 0.5rem 1.25rem; background: var(--color-primary); color: #fff;
+  border: none; border-radius: 8px; font-size: 0.9375rem; font-weight: 600; cursor: pointer;
+}
+.tr-gem-knap:hover:not(:disabled) { opacity: 0.9; }
+.tr-gem-knap:disabled { opacity: 0.55; cursor: not-allowed; }
+.tr-annuller-knap {
+  padding: 0.5rem 1.25rem; background: transparent; color: var(--color-text-muted);
+  border: 1px solid var(--color-border); border-radius: 8px; font-size: 0.9375rem; cursor: pointer;
+}
+.tr-annuller-knap:hover:not(:disabled) { background: var(--color-surface, var(--color-bg)); }
+
+/* tabel handlinger-celle */
+.tr-tabel-handlinger { display: flex; gap: 0.25rem; justify-content: flex-end; }

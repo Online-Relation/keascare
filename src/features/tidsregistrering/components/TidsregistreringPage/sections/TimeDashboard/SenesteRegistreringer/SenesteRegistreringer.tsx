@@ -2,13 +2,16 @@
 
 // src/features/tidsregistrering/components/TidsregistreringPage/sections/TimeDashboard/SenesteRegistreringer/SenesteRegistreringer.tsx
 
-import { Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import { Trash2, Pencil } from 'lucide-react';
 import { formatMinKort } from '@/features/tidsregistrering/utils/DashboardUtils';
+import { RedigerRegistreringModal } from '../../RedigerRegistreringModal';
 import type { Tidsregistrering } from '@/features/tidsregistrering/types/tidsregistrering.types';
 
 type Props = {
   registreringer: Tidsregistrering[];
   onSlet: (id: string) => void;
+  onOpdater: (opdateret: Tidsregistrering) => void;
   onSeAlle: () => void;
 };
 
@@ -25,7 +28,8 @@ function formatDato(iso: string): string {
   return d.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
 }
 
-export function SenesteRegistreringer({ registreringer, onSlet, onSeAlle }: Props) {
+export function SenesteRegistreringer({ registreringer, onSlet, onOpdater, onSeAlle }: Props) {
+  const [redigerer, setRedigerer] = useState<Tidsregistrering | null>(null);
   const seneste = [...registreringer].reverse().slice(0, 5);
 
   return (
@@ -57,6 +61,13 @@ export function SenesteRegistreringer({ registreringer, onSlet, onSeAlle }: Prop
                 {formatMinKort(r.varighedMinutter ?? 0)}
               </div>
               <button
+                className="tr-ikon-btn"
+                onClick={() => setRedigerer(r)}
+                aria-label="Rediger"
+              >
+                <Pencil size={13} />
+              </button>
+              <button
                 className="tr-ikon-btn tr-slet"
                 onClick={() => { if (confirm('Slet denne registrering?')) onSlet(r.id); }}
                 aria-label="Slet"
@@ -66,6 +77,14 @@ export function SenesteRegistreringer({ registreringer, onSlet, onSeAlle }: Prop
             </div>
           ))}
         </div>
+      )}
+
+      {redigerer && (
+        <RedigerRegistreringModal
+          registrering={redigerer}
+          onGem={(opdateret: Tidsregistrering) => { onOpdater(opdateret); setRedigerer(null); }}
+          onLuk={() => setRedigerer(null)}
+        />
       )}
     </div>
   );

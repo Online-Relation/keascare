@@ -99,6 +99,20 @@ export function TimeDashboard({ onSeAlle }: Props) {
     });
   }
 
+  function håndterOpdater(opdateret: import('@/features/tidsregistrering/types/tidsregistrering.types').Tidsregistrering) {
+    setData((prev) => {
+      const næste = prev.seneste.map((r) => r.id === opdateret.id ? opdateret : r);
+      const totalMinutter = næste.reduce((s, r) => s + (r.varighedMinutter ?? 0), 0);
+      return {
+        ...prev, totalMinutter,
+        gennemsnitPrDagMin: prev.antalArbejdsdage > 0 ? Math.round(totalMinutter / prev.antalArbejdsdage) : 0,
+        fordeling:  beregnFordeling(næste),
+        topOpgaver: beregnTopOpgaver(næste, 5),
+        seneste:    næste,
+      };
+    });
+  }
+
   const { label } = getPeriodeDatoer(periode);
 
   return (
@@ -153,6 +167,7 @@ export function TimeDashboard({ onSeAlle }: Props) {
           <SenesteRegistreringer
             registreringer={data.seneste}
             onSlet={håndterSlet}
+            onOpdater={håndterOpdater}
             onSeAlle={onSeAlle}
           />
         </>

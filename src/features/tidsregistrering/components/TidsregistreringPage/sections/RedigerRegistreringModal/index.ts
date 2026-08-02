@@ -1,0 +1,1 @@
+export { RedigerRegistreringModal } from './RedigerRegistreringModal';

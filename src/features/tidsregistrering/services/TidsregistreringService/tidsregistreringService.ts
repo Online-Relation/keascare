@@ -304,3 +304,30 @@ export async function sletRegistrering(id: string): Promise<void> {
     .eq('id', id);
   if (error) throw error;
 }
+
+export async function opdaterRegistrering(
+  id: string,
+  felter: {
+    kategoriId: string;
+    underpunktId: string | null;
+    underpunktNavn: string | null;
+    startTid: string;
+    slutTid: string;
+    varighedMinutter: number;
+    note: string | null;
+  }
+): Promise<void> {
+  const { error } = await supabase()
+    .from('tidsregistreringer')
+    .update({
+      kategori_id:       felter.kategoriId,
+      underpunkt_id:     felter.underpunktId,
+      underpunkt_navn:   felter.underpunktNavn,
+      start_tid:         felter.startTid,
+      slut_tid:          felter.slutTid,
+      varighed_minutter: felter.varighedMinutter,
+      note:              felter.note,
+    })
+    .eq('id', id);
+  if (error) throw error;
+}
