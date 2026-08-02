@@ -21,20 +21,22 @@ function farveFraSlug(slug: string): string {
   return FARVER[Math.abs(hash) % FARVER.length];
 }
 
+const EXTS = ['jpg', 'png', 'webp'];
+
 export function InspektoerAvatar({ navn, slug, size = 40 }: Props) {
-  const [fejl, setFejl] = useState(false);
+  const [ekstIdx, setEktIdx] = useState(0);
   const farve = farveFraSlug(slug);
   const font  = Math.round(size * 0.35);
 
-  if (!fejl) {
+  if (ekstIdx < EXTS.length) {
     return (
       <img
-        src={`/images/inspektoerer/${slug}.jpg`}
+        src={`/images/inspektoerer/${slug}.${EXTS[ekstIdx]}`}
         alt={navn}
         width={size}
         height={size}
         style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-        onError={() => setFejl(true)}
+        onError={() => setEktIdx((i) => i + 1)}
       />
     );
   }
