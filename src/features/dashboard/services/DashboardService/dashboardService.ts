@@ -436,6 +436,12 @@ async function hentDatakilderStatus(
       note: 'distribution.virk.dk · ansatte og virksomhedsdata',
     },
     {
+      navn: 'SOR Register',
+      status: 'aktiv',
+      sidstOpdateret: null,
+      note: 'Sundhedsvæsenets Organisationsregister · åbent REST API',
+    },
+    {
       navn: 'MailChimp',
       status: 'ikke_implementeret',
       sidstOpdateret: null,
