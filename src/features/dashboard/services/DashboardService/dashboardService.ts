@@ -309,7 +309,10 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
-  const rapporter = (data ?? []) as DbRapport[];
+  const rapporter = (data ?? []).filter((r: DbRapport) =>
+    // Filtrer tomme skaller uden nogen brugbar data fra (fx Sydgården med null overalt)
+    r.fund_niveau || r.kommune || r.tilsynsform
+  ) as DbRapport[];
   // Kunder i Monday er allerede i CRM — vis dem ikke i tabellen (kun leads og ubearbejdede)
   const bosteder = rapporter.map(mapTilBosted).filter((b) => b.mondayKunde !== 'kunde');
 
