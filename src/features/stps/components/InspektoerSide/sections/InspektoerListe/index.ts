@@ -1,0 +1,1 @@
+export { InspektoerListe } from './InspektoerListe';

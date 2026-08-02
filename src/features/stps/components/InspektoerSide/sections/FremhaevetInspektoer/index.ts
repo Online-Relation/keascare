@@ -1,0 +1,1 @@
+export { FremhaevetInspektoer } from './FremhaevetInspektoer';

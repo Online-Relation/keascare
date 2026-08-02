@@ -1,0 +1,1 @@
+export { ProfilKpiGrid } from './ProfilKpiGrid';

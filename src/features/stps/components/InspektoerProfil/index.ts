@@ -1,0 +1,1 @@
+export { InspektoerProfil } from './InspektoerProfil';

@@ -1,0 +1,1 @@
+export { ProfilKommunerListe } from './ProfilKommunerListe';

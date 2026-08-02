@@ -1,0 +1,1 @@
+export { ProfilFundListe } from './ProfilFundListe';

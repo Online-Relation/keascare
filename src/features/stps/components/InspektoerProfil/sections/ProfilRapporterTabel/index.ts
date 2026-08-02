@@ -1,0 +1,1 @@
+export { ProfilRapporterTabel } from './ProfilRapporterTabel';

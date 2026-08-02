@@ -1,0 +1,1 @@
+export { InspektoerSoegFilter } from './InspektoerSoegFilter';
