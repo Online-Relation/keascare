@@ -145,6 +145,28 @@ const SCRAPERS: Scraper[] = [
     body: {},
   },
   {
+    id: 'los-liste',
+    titel: 'LOS — Hent medlemsliste',
+    beskrivelse: 'Henter alle §43, §107 og §108-medlemmer fra Landsorganisationen for sociale tilbud (los.dk) og gemmer dem i databasen.',
+    endpoint: '/api/scrapers/los',
+    body: { trin: 'liste' },
+  },
+  {
+    id: 'los-detaljer',
+    titel: 'LOS — Hent detaljer',
+    beskrivelse: 'Henter CVR, kontakt, adresse og accordion-data (ydelser, pladser, priser, ledelse) for hvert LOS-medlem der mangler detaljer.',
+    endpoint: '/api/scrapers/los',
+    body: { trin: 'detaljer', max: 100 },
+    loop: true,
+  },
+  {
+    id: 'los-match',
+    titel: 'LOS — Match mod bosteder',
+    beskrivelse: 'Matcher LOS-medlemmer mod STPS-bosteder via CVR-nummer og sætter LOS-medl-badge på matchede bosteder.',
+    endpoint: '/api/scrapers/los',
+    body: { trin: 'match' },
+  },
+  {
     id: 'retsinformation',
     titel: 'Regelovervågning — Retsinformation',
     beskrivelse: 'Henter nye love, bekendtgørelser og vejledninger fra Retsinformation der er relevante for botilbud. Kræver lokal kørsel — data.retsinformation.dk er blokeret fra Railway.',
@@ -163,6 +185,7 @@ const SCRAPERS: Scraper[] = [
 
 type CvrStatus = { manglerCvr: number; manglerData: number; total: number };
 type TpStatus = { total: number; mangler: number; matchet: number };
+type LosStatus = { total: number; manglerDetaljer: number; matchet: number };
 
 export function ScrapersPage() {
   const [statusser, setStatusser] = useState<Record<string, ScraperStatus>>({});
@@ -171,6 +194,7 @@ export function ScrapersPage() {
   const [logs, setLogs] = useState<Record<string, ScraperLog>>({});
   const [cvrStatus, setCvrStatus] = useState<CvrStatus | null>(null);
   const [tpStatus, setTpStatus] = useState<TpStatus | null>(null);
+  const [losStatus, setLosStatus] = useState<LosStatus | null>(null);
 
   function hentCvrStatus() {
     fetch('/api/scrapers/cvr/status')
@@ -186,9 +210,17 @@ export function ScrapersPage() {
       .catch(() => {});
   }
 
+  function hentLosStatus() {
+    fetch('/api/scrapers/los/status')
+      .then((r) => r.json())
+      .then((d) => setLosStatus(d))
+      .catch(() => {});
+  }
+
   useEffect(() => {
     hentCvrStatus();
     hentTpStatus();
+    hentLosStatus();
     fetch('/api/scrapers/logs')
       .then((r) => r.json())
       .then((data: ScraperLog[]) => {
@@ -254,6 +286,7 @@ export function ScrapersPage() {
 
       if (scraper.id === 'cvr-berig' || scraper.id === 'cvr-ansatte') hentCvrStatus();
       if (scraper.id === 'tp-liste' || scraper.id === 'tp-detaljer' || scraper.id === 'tp-match') hentTpStatus();
+      if (scraper.id === 'los-liste' || scraper.id === 'los-detaljer' || scraper.id === 'los-match') hentLosStatus();
 
       // Opdater log efter vellykket kørsel
       fetch('/api/scrapers/logs')
@@ -323,6 +356,33 @@ export function ScrapersPage() {
               </span>
             ) : (
               <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet ✓</span>
+            );
+          }
+          if (scraper.id === 'los-liste' && losStatus !== null) {
+            badge = losStatus.total > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">
+                {losStatus.total} LOS-medlemmer i databasen ✓
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen LOS-medlemmer hentet endnu</span>
+            );
+          }
+          if (scraper.id === 'los-detaljer' && losStatus !== null) {
+            badge = losStatus.manglerDetaljer > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">
+                {losStatus.manglerDetaljer} mangler detaljer
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet ✓</span>
+            );
+          }
+          if (scraper.id === 'los-match' && losStatus !== null) {
+            badge = losStatus.matchet > 0 ? (
+              <span className="scraper-status-tæller scraper-status-tæller--ok">
+                {losStatus.matchet} bosteder matchet ✓
+              </span>
+            ) : (
+              <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen matches endnu</span>
             );
           }
           if (scraper.id === 'tp-match' && tpStatus !== null) {
