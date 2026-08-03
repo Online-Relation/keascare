@@ -4,8 +4,11 @@
 
 import { useState } from 'react';
 import { ClipboardList, ExternalLink, FileText, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import { beregnLeadVarme } from '@/features/rapporter/utils/LeadVarme';
+import { InspektoerAvatar } from '@/features/stps/components/InspektoerSide/InspektoerAvatar';
+import { navnTilSlug } from '@/features/stps/services/StpsInspektoerService';
 
 function HentStpsDetaljerKnap({ bostedId }: { bostedId: string }) {
   const [status, setStatus] = useState<'idle' | 'henter' | 'ok' | 'fejl'>('idle');
@@ -229,6 +232,26 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
                   {d.navn}{d.titel ? <span style={{ color: 'var(--color-text-muted)', fontWeight: 'normal' }}>, {d.titel}</span> : null}
                 </span>
               ))}
+            </div>
+          </div>
+        )}
+
+        {bosted.tilsynDeltagereStps && bosted.tilsynDeltagereStps.filter(d => d.titel && !d.titel.toLowerCase().includes('ikke angivet')).length > 0 && (
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">STPS-inspektører</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.25rem' }}>
+              {bosted.tilsynDeltagereStps.filter(d => d.titel && !d.titel.toLowerCase().includes('ikke angivet')).map((d, i) => {
+                const slug = navnTilSlug(d.navn);
+                return (
+                  <Link key={i} href={`/dashboard/rapporter/inspektoerer/${slug}`} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                    <InspektoerAvatar navn={d.navn} slug={slug} size={28} />
+                    <div>
+                      <div style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--color-text-primary)' }}>{d.navn}</div>
+                      <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{d.titel}</div>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

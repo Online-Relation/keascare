@@ -213,25 +213,6 @@ export function BostedOrganisationKort({ bosted }: Props) {
         </div>
       )}
 
-      {/* Tilsyn — Synology TP-detaljer kl. 03:00 — vises altid */}
-      <div className="bosted-detail-kort">
-        <div className="bosted-detail-kort-header">
-          <Shield size={15} />
-          <span className="bosted-detail-kort-titel">Tilsyn</span>
-        </div>
-        <div className="bosted-detail-kort-body">
-          {bosted.tpTilsynsmyndighed ? (
-            <FeltRække label="Tilsynsførende" value={bosted.tpTilsynsmyndighed} />
-          ) : (
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-              Ingen tilsynsdata fundet endnu på Tilbudsportalen
-            </p>
-          )}
-          {!bosted.tpTilsynsmyndighed && (
-            <ScraperInfo kørselKl={3} scraperDato={bosted.scraperDato} label="Synology TP-detaljer" />
-          )}
-        </div>
-      </div>
     </>
   );
 }

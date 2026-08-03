@@ -18,7 +18,6 @@ import { KontaktHistorik } from './sections/KontaktHistorik';
 import { BostedKort } from './sections/BostedKort';
 import { TidligereRapporter } from './sections/TidligereRapporter';
 import { BostedRegnskabKort } from './sections/BostedRegnskabKort';
-import { BostedDeltagereKort } from './sections/BostedDeltagereKort';
 import { KundeKort } from './sections/KundeKort';
 import { BostedVarsletTilsynBoks } from './sections/BostedVarsletTilsynBoks';
 
@@ -60,7 +59,6 @@ export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarsl
       )}
 
       <BostedRegnskabKort bosted={bosted} />
-      <BostedDeltagereKort bosted={bosted} />
 
       {(bosted.tpAdresse ?? bosted.adresse) && (
         <div style={{ marginTop: '1.25rem' }}>
