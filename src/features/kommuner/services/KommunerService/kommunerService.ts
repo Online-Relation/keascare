@@ -3,7 +3,8 @@
 import { hentDstKommuneData } from '@/lib/api/DstClient';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
-import type { KommuneOversigt, KommuneDetail, KommuneBosted } from '@/features/kommuner/types/kommuner.types';
+import { hentAlleInspektoerer } from '@/features/stps/services/StpsInspektoerService';
+import type { KommuneOversigt, KommuneDetail, KommuneBosted, KommuneInspektoer, KommuneFundFordeling } from '@/features/kommuner/types/kommuner.types';
 
 type DbKommuneCount = {
   kommune: string;
@@ -38,13 +39,40 @@ export async function hentKommunerOversigt(fra?: string, til?: string): Promise<
 }
 
 export async function hentKommuneDetail(kommuneNavn: string, fra?: string, til?: string): Promise<KommuneDetail | null> {
-  const [dstData, bosteder] = await Promise.all([
+  const [dstData, bosteder, alleInspektoerer] = await Promise.all([
     hentDstKommuneData(),
     hentBostedForKommune(kommuneNavn, fra, til),
+    hentAlleInspektoerer(),
   ]);
 
   const dstNavn = kommuneNavn.replace(/\s+[Kk]ommune$/, '').trim();
   const dst = dstData.find((d) => d.kommune === dstNavn || d.kommune === kommuneNavn);
+
+  // Inspectors who have done tilsyn in this kommune
+  const inspektoerer: KommuneInspektoer[] = alleInspektoerer
+    .map((ins) => {
+      const antalIKommune = ins.rapporter.filter(
+        (r) => r.kommune === kommuneNavn || r.kommune === dstNavn
+      ).length;
+      return { navn: ins.navn, slug: ins.slug, titel: ins.titel, antalIKommune };
+    })
+    .filter((i) => i.antalIKommune > 0)
+    .sort((a, b) => b.antalIKommune - a.antalIKommune);
+
+  // Fund fordeling
+  const fundTæller = new Map<string, number>();
+  for (const b of bosteder) {
+    const niv = b.fundNiveau ?? 'ukendt';
+    fundTæller.set(niv, (fundTæller.get(niv) ?? 0) + 1);
+  }
+  const fundRækkefølge = ['kritisk', 'større', 'mindre', 'ingen', 'ukendt'];
+  const fundFordeling: KommuneFundFordeling[] = fundRækkefølge
+    .filter((n) => fundTæller.has(n))
+    .map((n) => ({ niveau: n, antal: fundTæller.get(n)! }));
+
+  const antalKritiske = fundTæller.get('kritisk') ?? 0;
+  const datoer = bosteder.map((b) => b.rapportDato).filter(Boolean) as string[];
+  const senesteDato = datoer.length ? datoer.sort().at(-1)! : null;
 
   return {
     navn: kommuneNavn,
@@ -52,6 +80,10 @@ export async function hentKommuneDetail(kommuneNavn: string, fra?: string, til?:
     p108: dst?.p108 ?? 0,
     totalBorgere: dst?.total ?? 0,
     bosteder,
+    inspektoerer,
+    fundFordeling,
+    antalKritiske,
+    senesteDato,
   };
 }
 

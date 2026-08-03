@@ -4,9 +4,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search } from 'lucide-react';
+import { Search, MapPin } from 'lucide-react';
 import type { BostedSøgeresultat } from '@/app/api/search/bosteder/route';
 import type { InspektoerSøgeresultat } from '@/app/api/search/inspektoerer/route';
+import type { KommuneSøgeresultat } from '@/app/api/search/kommuner/route';
 
 const FUND_KLASSE: Record<string, string> = {
   kritisk: 'badge-kritisk',
@@ -25,13 +26,13 @@ const FUND_LABEL: Record<string, string> = {
 type Søgeresultater = {
   bosteder: BostedSøgeresultat[];
   inspektoerer: InspektoerSøgeresultat[];
+  kommuner: KommuneSøgeresultat[];
 };
 
 export function GlobalSearch() {
   const [query, setQuery] = useState('');
-  const [resultater, setResultater] = useState<Søgeresultater>({ bosteder: [], inspektoerer: [] });
+  const [resultater, setResultater] = useState<Søgeresultater>({ bosteder: [], inspektoerer: [], kommuner: [] });
   const [fokus, setFokus] = useState(false);
-  const [aktivType, setAktivType] = useState<'bosted' | 'inspektoer'>('bosted');
   const [aktivIndex, setAktivIndex] = useState(-1);
   const [indlæser, setIndlæser] = useState(false);
 
@@ -41,21 +42,24 @@ export function GlobalSearch() {
   const router = useRouter();
 
   const alleResultater = [
+    ...resultater.kommuner.map((r) => ({ type: 'kommune' as const, ...r })),
     ...resultater.bosteder.map((r) => ({ type: 'bosted' as const, ...r })),
     ...resultater.inspektoerer.map((r) => ({ type: 'inspektoer' as const, ...r })),
   ];
-  const åben = fokus && (query.length >= 2 || alleResultater.length > 0);
+  const harResultater = alleResultater.length > 0;
+  const åben = fokus && (query.length >= 2 || harResultater);
 
   const søg = useCallback(async (q: string) => {
-    if (q.length < 2) { setResultater({ bosteder: [], inspektoerer: [] }); return; }
+    if (q.length < 2) { setResultater({ bosteder: [], inspektoerer: [], kommuner: [] }); return; }
     setIndlæser(true);
     try {
-      const [bRes, iRes] = await Promise.all([
+      const [bRes, iRes, kRes] = await Promise.all([
         fetch(`/api/search/bosteder?q=${encodeURIComponent(q)}`),
         fetch(`/api/search/inspektoerer?q=${encodeURIComponent(q)}`),
+        fetch(`/api/search/kommuner?q=${encodeURIComponent(q)}`),
       ]);
-      const [bosteder, inspektoerer] = await Promise.all([bRes.json(), iRes.json()]);
-      setResultater({ bosteder, inspektoerer });
+      const [bosteder, inspektoerer, kommuner] = await Promise.all([bRes.json(), iRes.json(), kRes.json()]);
+      setResultater({ bosteder, inspektoerer, kommuner });
       setAktivIndex(-1);
     } finally {
       setIndlæser(false);
@@ -89,19 +93,13 @@ export function GlobalSearch() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  function vælgBosted(r: BostedSøgeresultat) {
-    router.push(`/dashboard/bosteder/${r.id}`);
-    luk();
-  }
-
-  function vælgInspektoer(r: InspektoerSøgeresultat) {
-    router.push(`/dashboard/rapporter/inspektoerer/${r.slug}`);
-    luk();
-  }
+  function vælgBosted(r: BostedSøgeresultat) { router.push(`/dashboard/bosteder/${r.id}`); luk(); }
+  function vælgInspektoer(r: InspektoerSøgeresultat) { router.push(`/dashboard/rapporter/inspektoerer/${r.slug}`); luk(); }
+  function vælgKommune(r: KommuneSøgeresultat) { router.push(`/dashboard/kommuner/${r.slug}`); luk(); }
 
   function luk() {
     setQuery('');
-    setResultater({ bosteder: [], inspektoerer: [] });
+    setResultater({ bosteder: [], inspektoerer: [], kommuner: [] });
     setFokus(false);
     inputRef.current?.blur();
   }
@@ -118,14 +116,18 @@ export function GlobalSearch() {
       e.preventDefault();
       const valgt = alleResultater[aktivIndex];
       if (valgt.type === 'bosted') vælgBosted(valgt as BostedSøgeresultat);
-      else vælgInspektoer(valgt as InspektoerSøgeresultat);
+      else if (valgt.type === 'inspektoer') vælgInspektoer(valgt as InspektoerSøgeresultat);
+      else vælgKommune(valgt as KommuneSøgeresultat);
     } else if (e.key === 'Escape') {
       setFokus(false);
       inputRef.current?.blur();
     }
   }
 
-  const harResultater = resultater.bosteder.length > 0 || resultater.inspektoerer.length > 0;
+  // Index offsets for keyboard nav
+  const kommuneOffset = 0;
+  const bostedOffset = resultater.kommuner.length;
+  const inspektoerOffset = bostedOffset + resultater.bosteder.length;
 
   return (
     <div className={`gs-wrap${fokus ? ' gs-fokus' : ''}`} ref={containerRef}>
@@ -135,7 +137,7 @@ export function GlobalSearch() {
           ref={inputRef}
           className="gs-input"
           type="text"
-          placeholder="Søg efter bosted eller inspektør..."
+          placeholder="Søg efter bosted, inspektør eller kommune..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => setFokus(true)}
@@ -145,7 +147,7 @@ export function GlobalSearch() {
         />
         {!fokus && <kbd className="gs-genvej"><span>⌘</span>K</kbd>}
         {fokus && query && (
-          <button className="gs-ryd" onMouseDown={(e) => { e.preventDefault(); setQuery(''); setResultater({ bosteder: [], inspektoerer: [] }); }} aria-label="Ryd">✕</button>
+          <button className="gs-ryd" onMouseDown={(e) => { e.preventDefault(); setQuery(''); setResultater({ bosteder: [], inspektoerer: [], kommuner: [] }); }} aria-label="Ryd">✕</button>
         )}
       </div>
 
@@ -160,34 +162,66 @@ export function GlobalSearch() {
             </div>
           ) : (
             <>
+              {resultater.kommuner.length > 0 && (
+                <>
+                  <div className="gs-label">Kommuner</div>
+                  <ul className="gs-liste" role="listbox">
+                    {resultater.kommuner.map((r, i) => {
+                      const idx = kommuneOffset + i;
+                      return (
+                        <li
+                          key={r.slug}
+                          className={`gs-item${idx === aktivIndex ? ' gs-aktiv' : ''}`}
+                          role="option"
+                          aria-selected={idx === aktivIndex}
+                          onMouseDown={() => vælgKommune(r)}
+                          onMouseEnter={() => setAktivIndex(idx)}
+                        >
+                          <span className="gs-item-ikon"><MapPin size={14} /></span>
+                          <span className="gs-item-tekst">
+                            <span className="gs-item-navn">{r.navn.replace(/\s+[Kk]ommune$/, '')} Kommune</span>
+                          </span>
+                          <span className="badge badge-ukendt" style={{ fontStyle: 'normal', textTransform: 'none', letterSpacing: 0 }}>
+                            Kommune
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+
               {resultater.bosteder.length > 0 && (
                 <>
                   <div className="gs-label">Bosteder</div>
                   <ul className="gs-liste" role="listbox">
-                    {resultater.bosteder.map((r, i) => (
-                      <li
-                        key={r.id}
-                        className={`gs-item${i === aktivIndex ? ' gs-aktiv' : ''}`}
-                        role="option"
-                        aria-selected={i === aktivIndex}
-                        onMouseDown={() => vælgBosted(r)}
-                        onMouseEnter={() => setAktivIndex(i)}
-                      >
-                        <span className="gs-item-ikon">🏠</span>
-                        <span className="gs-item-tekst">
-                          <span className="gs-item-navn">{r.navn}</span>
-                          <span className="gs-item-meta">
-                            {r.kommune && <span>{r.kommune}</span>}
-                            {r.region && <span>{r.region}</span>}
+                    {resultater.bosteder.map((r, i) => {
+                      const idx = bostedOffset + i;
+                      return (
+                        <li
+                          key={r.id}
+                          className={`gs-item${idx === aktivIndex ? ' gs-aktiv' : ''}`}
+                          role="option"
+                          aria-selected={idx === aktivIndex}
+                          onMouseDown={() => vælgBosted(r)}
+                          onMouseEnter={() => setAktivIndex(idx)}
+                        >
+                          <span className="gs-item-ikon">🏠</span>
+                          <span className="gs-item-tekst">
+                            <span className="gs-item-navn">{r.navn}</span>
+                            <span className="gs-item-meta">
+                              {r.kommune && <span>{r.kommune}</span>}
+                              {r.region && <span>{r.region}</span>}
+                            </span>
                           </span>
-                        </span>
-                        {r.fundNiveau && (
-                          <span className={`badge ${FUND_KLASSE[r.fundNiveau] ?? 'badge-ukendt'}`}>
-                            {FUND_LABEL[r.fundNiveau] ?? r.fundNiveau}
-                          </span>
-                        )}
-                      </li>
-                    ))}
+                          {r.fundNiveau && (
+                            <span className={`badge ${FUND_KLASSE[r.fundNiveau] ?? 'badge-ukendt'}`}>
+                              {FUND_LABEL[r.fundNiveau] ?? r.fundNiveau}
+                            </span>
+                          )}
+                        </li>
+                      );
+                    })}
                   </ul>
                 </>
               )}
@@ -197,7 +231,7 @@ export function GlobalSearch() {
                   <div className="gs-label">Inspektører</div>
                   <ul className="gs-liste" role="listbox">
                     {resultater.inspektoerer.map((r, i) => {
-                      const idx = resultater.bosteder.length + i;
+                      const idx = inspektoerOffset + i;
                       return (
                         <li
                           key={r.slug}

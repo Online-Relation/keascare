@@ -18,10 +18,26 @@ export type KommuneBosted = {
   temaer: string[];
 };
 
+export type KommuneInspektoer = {
+  navn: string;
+  slug: string;
+  titel: string | null;
+  antalIKommune: number;
+};
+
+export type KommuneFundFordeling = {
+  niveau: string;
+  antal: number;
+};
+
 export type KommuneDetail = {
   navn: string;
   p107: number;
   p108: number;
   totalBorgere: number;
   bosteder: KommuneBosted[];
+  inspektoerer: KommuneInspektoer[];
+  fundFordeling: KommuneFundFordeling[];
+  antalKritiske: number;
+  senesteDato: string | null;
 };

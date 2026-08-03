@@ -205,6 +205,151 @@
     font-size: var(--text-sm);
   }
 
+  /* Stat ikon */
+  .kommune-stat-ikon {
+    color: var(--color-text-muted);
+    margin-bottom: 0.25rem;
+  }
+
+  .kommune-stat-kort-advarsel {
+    border-color: #dc2626;
+  }
+
+  .kommune-stat-kort-advarsel .kommune-stat-tal {
+    color: #dc2626;
+  }
+
+  .kommune-stat-tal-sm {
+    font-size: var(--text-lg);
+  }
+
+  /* Detail grid — fund + inspektører side om side */
+  .kommune-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .kommune-sektion-kort {
+    background: var(--color-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+  }
+
+  .kommune-sektion-titel {
+    font-size: var(--text-base);
+    font-weight: var(--fw-semibold);
+    color: var(--color-text-primary);
+    margin: 0 0 1rem;
+  }
+
+  .kommune-sektion-overskrift {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .kommune-sektion-overskrift .kommune-sektion-titel {
+    margin: 0;
+  }
+
+  .kommune-sektion-antal {
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+  }
+
+  /* Fund fordeling */
+  .kommune-fund-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  .kommune-fund-række {
+    display: grid;
+    grid-template-columns: 9rem 1fr 2rem;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .kommune-fund-label {
+    font-size: var(--text-sm);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  .kommune-fund-bar-wrap {
+    height: 0.5rem;
+    background: var(--color-border);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .kommune-fund-bar {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+  }
+
+  .kommune-fund-antal {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+    text-align: right;
+  }
+
+  /* Inspektør liste */
+  .kommune-insp-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .kommune-insp-række {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0.5rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    transition: background 0.1s;
+  }
+
+  .kommune-insp-række:hover {
+    background: var(--color-hover);
+  }
+
+  .kommune-insp-tekst {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .kommune-insp-navn {
+    font-size: var(--text-sm);
+    font-weight: var(--fw-medium);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .kommune-insp-titel {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+  }
+
+  .kommune-insp-antal {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
   @media (max-width: 768px) {
     .kommuner-header {
       flex-direction: column;
@@ -221,6 +366,10 @@
 
     .kommune-detail-stats {
       grid-template-columns: repeat(2, 1fr);
+    }
+
+    .kommune-detail-grid {
+      grid-template-columns: 1fr;
     }
   }
 
