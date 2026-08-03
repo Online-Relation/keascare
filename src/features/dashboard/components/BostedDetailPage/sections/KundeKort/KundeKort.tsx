@@ -1,8 +1,11 @@
 // src/features/dashboard/components/BostedDetailPage/sections/KundeKort/KundeKort.tsx
 
+'use client';
+
 import { Building2 } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
+import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 
 type Props = {
   bosted: BostedDetail;
@@ -10,7 +13,9 @@ type Props = {
 };
 
 export function KundeKort({ bosted, pakker }: Props) {
+  const { rolle } = useBrugerRolle();
   if (bosted.mondayKunde !== 'kunde') return null;
+  if (rolle === 'sygeplejerske') return null;
 
   return (
     <div className="bosted-detail-kort">
