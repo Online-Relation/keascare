@@ -56,6 +56,14 @@ export const SCRAPER_GRUPPER: { label: string; scrapers: ScraperDef[] }[] = [
     ],
   },
   {
+    label: 'LOS',
+    scrapers: [
+      { id: 'los-liste',    label: 'LOS Liste',    kørselKl: 'søndag 04:00', intervalTimer: 24 * 7 },
+      { id: 'los-detaljer', label: 'LOS Detaljer', kørselKl: 'daglig',       intervalTimer: 24 },
+      { id: 'los-match',    label: 'LOS Matcher',  kørselKl: 'daglig',       intervalTimer: 24 },
+    ],
+  },
+  {
     label: 'Afslutning',
     scrapers: [
       { id: 'monday-sync', label: 'Monday Sync', kørselKl: '04:00', intervalTimer: 24 },
