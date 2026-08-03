@@ -22,6 +22,7 @@ type TpTilbud = {
   tilsynsmyndighed: string | null;
   pladser_pr_paragraf: string | null;
   driftsform: string | null;
+  aktuel_godkendelsesstatus: string | null;
 };
 
 type StpsRapport = {
@@ -32,7 +33,7 @@ type StpsRapport = {
   tp_kommune: string | null;
 };
 
-type TpData = Omit<TpTilbud, 'navn'> & { cvr: string | null; virksomhedsPladserTotalt: number | null };
+type TpData = Omit<TpTilbud, 'navn'> & { cvr: string | null; virksomhedsPladserTotalt: number | null; aktuel_godkendelsesstatus: string | null };
 
 const STOPORD = new Set([
   'og', 'for', 'til', 'i', 'af', 'med', 'på', 'den', 'det', 'de',
@@ -127,7 +128,7 @@ function findBedsteMatch(
           telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
           leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
           tilsynsmyndighed: t.tilsynsmyndighed, pladser_pr_paragraf: t.pladser_pr_paragraf,
-          driftsform: t.driftsform,
+          driftsform: t.driftsform, aktuel_godkendelsesstatus: t.aktuel_godkendelsesstatus,
         },
         score,
       };
@@ -143,7 +144,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
 
   const { data: tilbud, error: tilbudFejl } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('id, cvr, navn, tilbudstype, pladser, pladser_totalt, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform');
+    .select('id, cvr, navn, tilbudstype, pladser, pladser_totalt, p_nummer, kommune, kontaktperson, telefon, email, tilbuddets_adresse, leder, website, virksomheds_navn, tilsynsmyndighed, pladser_pr_paragraf, driftsform, aktuel_godkendelsesstatus');
 
   if (tilbudFejl) throw new Error(`Tilbudsportalen fejl: ${tilbudFejl.message}`);
 
@@ -172,7 +173,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
       telefon: t.telefon, email: t.email, tilbuddets_adresse: t.tilbuddets_adresse,
       leder: t.leder, website: t.website, virksomheds_navn: t.virksomheds_navn,
       tilsynsmyndighed: t.tilsynsmyndighed, pladser_pr_paragraf: t.pladser_pr_paragraf,
-      driftsform: t.driftsform,
+      driftsform: t.driftsform, aktuel_godkendelsesstatus: t.aktuel_godkendelsesstatus,
     };
     if (t.cvr) cvrMap.set(t.cvr.trim(), data);
     if (t.navn) navnMap.set(normaliserNavn(t.navn), { data, kommune: t.kommune });
@@ -226,6 +227,7 @@ export async function matchTilbudsportalenTilStps(): Promise<TilbudsportalenMatc
         tp_tilsynsmyndighed: m.tilsynsmyndighed,
         tp_pladser_pr_paragraf: m.pladser_pr_paragraf,
         tp_driftsform: m.driftsform,
+        tp_godkendelsesstatus: m.aktuel_godkendelsesstatus ?? null,
       })
       .eq('id', rapport.id);
 

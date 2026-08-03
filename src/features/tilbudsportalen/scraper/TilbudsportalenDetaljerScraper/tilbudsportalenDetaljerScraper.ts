@@ -163,6 +163,24 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
   // Tilsynsførende myndighed
   const tilsynsmyndighed: string | null = findLabelVærdi($, 'Tilsynsførende myndighed');
 
+  // Godkendelsesstatus — vises typisk som badge/label øverst på siden
+  let aktuelGodkendelsesstatus: string | null = null;
+  const statusKandidater = [
+    'Godkendt', 'Ikke godkendt', 'Varslet lukning', 'Varslet afslag',
+    'Ophørt', 'Under behandling', 'Betinget godkendt',
+  ];
+  for (const kandidat of statusKandidater) {
+    if (bodyTekst.includes(kandidat)) {
+      aktuelGodkendelsesstatus = kandidat;
+      break;
+    }
+  }
+  // Forsøg også label-baseret parsing
+  if (!aktuelGodkendelsesstatus) {
+    const labelVærdi = findLabelVærdi($, 'Godkendelsesstatus') ?? findLabelVærdi($, 'Status');
+    if (labelVærdi && labelVærdi.length < 60) aktuelGodkendelsesstatus = labelVærdi;
+  }
+
   // Pladser pr. paragraf — kun §107 og §108; §43 ignoreres
   const pladsePoster: string[] = [];
   $('#pladser').find('div.lh-1').each((_, el) => {
@@ -180,6 +198,7 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
     tilbudsid, afdelingsid, cvr, tilbudstype, pladser, pNummer, kommune,
     kontaktperson, telefon, email, driftsform,
     tilbuddetsAdresse, leder, website, virksomhedsNavn, tilsynsmyndighed, pladsePrParagraf, pladseTotalt,
+    aktuelGodkendelsesstatus,
   };
 }
 
@@ -206,7 +225,7 @@ export async function scraperTilbudsportalenDetaljer(batch = 30): Promise<Detalj
       fejl++;
       fejlBeskeder.push(`${navn}: ${err instanceof Error ? err.message : String(err)}`);
       // Marker som behandlet selv ved fejl
-      await gemDetaljer({ tilbudsid, afdelingsid, cvr: null, tilbudstype: null, pladser: null, pladseTotalt: null, pNummer: null, kommune: null, kontaktperson: null, telefon: null, email: null, driftsform: null, tilbuddetsAdresse: null, leder: null, website: null, virksomhedsNavn: null, tilsynsmyndighed: null, pladsePrParagraf: null });
+      await gemDetaljer({ tilbudsid, afdelingsid, cvr: null, tilbudstype: null, pladser: null, pladseTotalt: null, pNummer: null, kommune: null, kontaktperson: null, telefon: null, email: null, driftsform: null, tilbuddetsAdresse: null, leder: null, website: null, virksomhedsNavn: null, tilsynsmyndighed: null, pladsePrParagraf: null, aktuelGodkendelsesstatus: null });
     }
 
     if (i < rækker.length - 1) await venteMs(TP_DELAY_MS);

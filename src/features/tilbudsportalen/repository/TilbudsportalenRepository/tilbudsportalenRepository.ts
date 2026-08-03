@@ -59,6 +59,7 @@ export async function gemDetaljer(detalje: TilbudsportalenDetalje): Promise<void
       virksomheds_navn: detalje.virksomhedsNavn,
       tilsynsmyndighed: detalje.tilsynsmyndighed,
       pladser_pr_paragraf: detalje.pladsePrParagraf,
+      aktuel_godkendelsesstatus: detalje.aktuelGodkendelsesstatus,
       detaljer_hentet: true,
     })
     .eq('tilbudsid', detalje.tilbudsid)

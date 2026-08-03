@@ -45,6 +45,7 @@ type DbRapport = {
   tp_virksomheds_navn: string | null;
   tp_tilsynsmyndighed: string | null;
   tp_pladser_pr_paragraf: string | null;
+  tp_godkendelsesstatus: string | null;
   fund_items: FundItem[] | null;
   salgs_anbefalinger: unknown | null;
   monday_item_id: string | null;
@@ -116,6 +117,7 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     tpVirksomhedsNavn: r.tp_virksomheds_navn,
     tpTilsynsmyndighed: r.tp_tilsynsmyndighed,
     tpPladsePrParagraf: r.tp_pladser_pr_paragraf,
+    tpGodkendelsesstatus: r.tp_godkendelsesstatus ?? null,
     dataKvalitet: beregnDataKvalitet(r),
     fundItems: (r.fund_items as FundItem[] | null) ?? null,
     salgsAnbefalinger: (r.salgs_anbefalinger as SalgsAnbefalinger | null) ?? null,
@@ -141,7 +143,7 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
   const supabase = getSupabaseServerClient();
   const { data, error } = await supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, pdf_storage_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret, sor_kode')
+    .select('id, stps_tilbud_navn, rapport_titel, rapport_dato, rapport_url, pdf_url, pdf_storage_url, stps_konklusion, fund_niveau, fokus_omraader, kommune, region, tilsynsform, temaer, scraper_dato, pdf_vurdering, pdf_fund, adresse, pladser, cvr, cvr_ansatte, cvr_branche, cvr_virksomhedstype, cvr_stiftet, cvr_opdateret, pdf_behandlet, tp_tilbudstype, tp_pladser, tp_p_nummer, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_adresse, tp_leder, tp_website, tp_virksomheds_navn, tp_tilsynsmyndighed, tp_pladser_pr_paragraf, tp_godkendelsesstatus, fund_items, salgs_anbefalinger, monday_item_id, monday_gruppe, besoeg_dato, regnskab_aar, regnskab_nettoomsaetning, regnskab_bruttofortjeneste, regnskab_aarsresultat, regnskab_egenkapital, regnskab_balance, regnskab_opdateret, sor_kode')
     .eq('id', id)
     .single();
 

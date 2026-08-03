@@ -26,6 +26,7 @@ export type TilbudsportalenDetalje = {
   virksomhedsNavn: string | null;
   tilsynsmyndighed: string | null;
   pladsePrParagraf: string | null;
+  aktuelGodkendelsesstatus: string | null;
 };
 
 export type TilbudsportalenMatchResultat = {

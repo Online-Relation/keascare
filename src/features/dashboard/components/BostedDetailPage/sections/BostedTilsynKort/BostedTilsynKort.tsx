@@ -83,7 +83,7 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
 
       <div className="bosted-detail-kort-body">
         {bosted.fundNiveau !== 'ukendt' && (
-          <div style={{ marginBottom: '0.5rem' }}>
+          <div style={{ marginBottom: '0.5rem', display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
             <span className={`badge ${
               bosted.fundNiveau === 'kritisk' ? 'badge-kritisk' :
               bosted.fundNiveau === 'stoerre' ? 'badge-stoerre' :
@@ -96,6 +96,16 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
                bosted.fundNiveau === 'mindre'  ? 'Mindre fund' :
                'Ingen fund'}
             </span>
+            {bosted.tpGodkendelsesstatus && bosted.tpGodkendelsesstatus !== 'Godkendt' && (
+              <span className={`badge ${
+                bosted.tpGodkendelsesstatus.includes('lukning') || bosted.tpGodkendelsesstatus === 'Ikke godkendt' ? 'badge-kritisk' :
+                bosted.tpGodkendelsesstatus.includes('Varslet') || bosted.tpGodkendelsesstatus === 'Betinget godkendt' ? 'badge-stoerre' :
+                'badge-ukendt'
+              }`}>
+                <span className="badge-dot" />
+                {bosted.tpGodkendelsesstatus}
+              </span>
+            )}
           </div>
         )}
         {besoegDato && (
@@ -156,6 +166,28 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           <span className="bosted-detail-field-label">Tilsynsform</span>
           <span className="bosted-detail-field-value">{bosted.tilsynsform ?? '—'}</span>
         </div>
+
+        {bosted.tpTilsynsmyndighed && (
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">Socialtilsyn</span>
+            <span className="bosted-detail-field-value">{bosted.tpTilsynsmyndighed}</span>
+          </div>
+        )}
+
+        {bosted.tpGodkendelsesstatus && (
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">Godkendelsesstatus</span>
+            <span className="bosted-detail-field-value" style={
+              bosted.tpGodkendelsesstatus.includes('lukning') || bosted.tpGodkendelsesstatus === 'Ikke godkendt'
+                ? { color: '#dc2626', fontWeight: 'var(--fw-semibold)' }
+                : bosted.tpGodkendelsesstatus.includes('Varslet') || bosted.tpGodkendelsesstatus === 'Betinget godkendt'
+                  ? { color: '#f97316', fontWeight: 'var(--fw-semibold)' }
+                  : undefined
+            }>
+              {bosted.tpGodkendelsesstatus}
+            </span>
+          </div>
+        )}
 
         {bosted.stpsKonklusion && (
           <div className="bosted-detail-field">

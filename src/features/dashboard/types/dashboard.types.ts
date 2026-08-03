@@ -119,6 +119,7 @@ export type BostedDetail = {
   tpVirksomhedsNavn: string | null;
   tpTilsynsmyndighed: string | null;
   tpPladsePrParagraf: string | null;
+  tpGodkendelsesstatus: string | null;
   dataKvalitet: DataKvalitet;
   fundItems: FundItem[] | null;
   salgsAnbefalinger: SalgsAnbefalinger | null;
