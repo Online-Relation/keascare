@@ -5,20 +5,23 @@ import { load } from 'cheerio';
 import type { LosListeItem } from '@/features/los/types/los.types';
 
 const LOS_BASE = 'https://www.los.dk';
-const LOS_FIND_URL = `${LOS_BASE}/find-tilbud/`;
-const DELAY_MS = 600;
+const FACETWP_AJAX = `${LOS_BASE}/wp-admin/admin-ajax.php`;
+const DELAY_MS = 800;
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'Accept': 'application/json, text/plain, */*',
   'Accept-Language': 'da-DK,da;q=0.9,en;q=0.7',
+  'Content-Type': 'application/x-www-form-urlencoded',
+  'Referer': `${LOS_BASE}/find-tilbud/`,
 };
 
-const PARAGRAPH_LABELS: Record<string, string> = {
-  '1': '§43',
-  '2': '§107',
-  '7': '§108',
-};
+// FacetWP-filterværdier for hvert paragraftype
+const TILBUDSTYPER: { fwpVærdi: string; label: string }[] = [
+  { fwpVærdi: '7', label: '§108' },
+  { fwpVærdi: '2', label: '§107' },
+  { fwpVærdi: '1', label: '§43'  },
+];
 
 function venteMs(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -28,10 +31,8 @@ function parseMedlemLinks(html: string, tilbudstype: string): LosListeItem[] {
   const $ = load(html);
   const items: LosListeItem[] = [];
 
-  // LOS member cards are links or divs with href pointing to /find-tilbud/<slug>/
   $('a[href*="/find-tilbud/"]').each((_, el) => {
     const href = $(el).attr('href') ?? '';
-    // Exclude the list page itself and filter pages
     if (!href.match(/\/find-tilbud\/[^?#]+\/$/)) return;
 
     const url = href.startsWith('http') ? href : `${LOS_BASE}${href}`;
@@ -39,10 +40,7 @@ function parseMedlemLinks(html: string, tilbudstype: string): LosListeItem[] {
     if (!slug || slug.includes('?')) return;
 
     const navn = $(el).text().trim() || $(el).find('h2, h3, .title').first().text().trim();
-    if (!navn) return;
-
-    // Deduplicate by slug
-    if (items.some((i) => i.los_id === slug)) return;
+    if (!navn || items.some((i) => i.los_id === slug)) return;
 
     items.push({ los_id: slug, navn, url, tilbudstyper: [tilbudstype] });
   });
@@ -50,42 +48,67 @@ function parseMedlemLinks(html: string, tilbudstype: string): LosListeItem[] {
   return items;
 }
 
-async function scraperEnType(fwpValue: string, tilbudstype: string, client: ReturnType<typeof axios.create>): Promise<{ items: LosListeItem[]; fejl: string[] }> {
+type FacetWpResponse = {
+  template?: string;
+  settings?: { pager?: { total_pages?: number; per_page?: number; page?: number } };
+};
+
+async function scraperEnType(
+  fwpVærdi: string,
+  tilbudstype: string,
+  client: ReturnType<typeof axios.create>,
+): Promise<{ items: LosListeItem[]; fejl: string[] }> {
   const items: LosListeItem[] = [];
   const fejl: string[] = [];
-  let side = 1;
-  let fortsæt = true;
 
-  while (fortsæt) {
-    const url = side === 1
-      ? `${LOS_FIND_URL}?fwp_member_offers=${fwpValue}`
-      : `${LOS_FIND_URL}?fwp_member_offers=${fwpValue}&fwp_paged=${side}`;
+  // Byg FacetWP AJAX payload
+  function byggPayload(side: number) {
+    const data = JSON.stringify({
+      facets: { member_offers: [fwpVærdi] },
+      frozen_facets: {},
+      http_params: {
+        get: { fwp_member_offers: fwpVærdi },
+        uri: 'find-tilbud',
+        url_vars: { fwp_member_offers: fwpVærdi },
+      },
+      template: 'wp_query',
+      extras: { sort: 'default', pagination: { per_page: 10, page: side } },
+      soft_refresh: 1,
+      is_bfcache: 0,
+      first_load: 0,
+      paged: side,
+    });
+    return `action=facetwp_refresh&data=${encodeURIComponent(data)}`;
+  }
 
+  // Hent første side for at finde totalt antal sider
+  let totalSider = 1;
+  try {
+    const res = await client.post<FacetWpResponse>(FACETWP_AJAX, byggPayload(1), { responseType: 'json' });
+    const json = res.data;
+    totalSider = json.settings?.pager?.total_pages ?? 1;
+    const html = json.template ?? '';
+    const sidensItems = parseMedlemLinks(html, tilbudstype);
+    for (const item of sidensItems) {
+      if (!items.some((i) => i.los_id === item.los_id)) items.push(item);
+    }
+  } catch (err) {
+    fejl.push(`${tilbudstype} side 1: ${err instanceof Error ? err.message : String(err)}`);
+    return { items, fejl };
+  }
+
+  // Hent resterende sider
+  for (let side = 2; side <= totalSider; side++) {
+    await venteMs(DELAY_MS);
     try {
-      const res = await client.get<string>(url, { responseType: 'text' });
-      const sidensItems = parseMedlemLinks(res.data, tilbudstype);
-
-      if (sidensItems.length === 0) {
-        fortsæt = false;
-      } else {
-        // Merge — add items not already found
-        for (const item of sidensItems) {
-          if (!items.some((i) => i.los_id === item.los_id)) {
-            items.push(item);
-          }
-        }
-        // Check if there's a next page link
-        const $ = load(res.data);
-        const harNæste = $('a.fwp-page-link').last().text().trim() !== '' && $('a[data-page]').length > 0;
-        if (!harNæste || side >= 20) fortsæt = false;
-        else {
-          side++;
-          await venteMs(DELAY_MS);
-        }
+      const res = await client.post<FacetWpResponse>(FACETWP_AJAX, byggPayload(side), { responseType: 'json' });
+      const html = res.data.template ?? '';
+      const sidensItems = parseMedlemLinks(html, tilbudstype);
+      for (const item of sidensItems) {
+        if (!items.some((i) => i.los_id === item.los_id)) items.push(item);
       }
     } catch (err) {
       fejl.push(`${tilbudstype} side ${side}: ${err instanceof Error ? err.message : String(err)}`);
-      fortsæt = false;
     }
   }
 
@@ -97,8 +120,8 @@ export async function scraperLosListe(): Promise<{ items: LosListeItem[]; fejl: 
   const alleItems: LosListeItem[] = [];
   const alleFejl: string[] = [];
 
-  for (const [fwpValue, label] of Object.entries(PARAGRAPH_LABELS)) {
-    const { items, fejl } = await scraperEnType(fwpValue, label, client);
+  for (const { fwpVærdi, label } of TILBUDSTYPER) {
+    const { items, fejl } = await scraperEnType(fwpVærdi, label, client);
     alleFejl.push(...fejl);
 
     for (const item of items) {
