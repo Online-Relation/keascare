@@ -3,7 +3,7 @@
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { TilsynDeltager } from '@/features/stps/scraper/StpsPdfParser';
 import type { StpsFundNiveau } from '@/features/stps/types/stps.types';
-import type { InspektoerFuldStat, InspektoerRapport } from '@/features/stps/types/inspektoer.types';
+import type { InspektoerFuldStat, InspektoerKollega, InspektoerRapport } from '@/features/stps/types/inspektoer.types';
 
 // Kept for backwards-compat with old component
 export type InspektoerStat = {
@@ -132,9 +132,12 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
     rapporter: InspektoerRapport[];
     foersteDato: string | null;
     senesteDato: string | null;
+    rapportIds: Set<string>;
   };
 
   const map = new Map<string, AktumelData>();
+  // rapport-id → liste af inspektør-nøgler på det tilsyn
+  const rapportDeltagere = new Map<string, string[]>();
 
   for (const r of data as DbRapport[]) {
     if (!r.tilsyn_deltagere_stps) continue;
@@ -152,19 +155,37 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
       tilsynsform: r.tilsynsform,
     };
 
+    const deltagendeNøgler: string[] = [];
     for (const d of r.tilsyn_deltagere_stps) {
       if (!erPersonNavn(d.navn)) continue;
       const nøgle = d.navn.toLowerCase().trim();
+      deltagendeNøgler.push(nøgle);
       const eks = map.get(nøgle);
       const dato = r.rapport_dato;
       if (!eks) {
-        map.set(nøgle, { titel: d.titel, rapporter: [rapport], foersteDato: dato, senesteDato: dato });
+        map.set(nøgle, { titel: d.titel, rapporter: [rapport], foersteDato: dato, senesteDato: dato, rapportIds: new Set([r.id]) });
       } else {
         eks.rapporter.push(rapport);
+        eks.rapportIds.add(r.id);
         if (dato) {
           if (!eks.foersteDato || dato < eks.foersteDato) eks.foersteDato = dato;
           if (!eks.senesteDato || dato > eks.senesteDato) eks.senesteDato = dato;
         }
+      }
+    }
+    if (deltagendeNøgler.length > 1) rapportDeltagere.set(r.id, deltagendeNøgler);
+  }
+
+  // Byg kollega-tæller: for hvert rapport med >1 deltager, kryds alle deltagere
+  const kollegaTæller = new Map<string, Map<string, number>>();
+  for (const deltagere of rapportDeltagere.values()) {
+    for (let i = 0; i < deltagere.length; i++) {
+      for (let j = 0; j < deltagere.length; j++) {
+        if (i === j) continue;
+        const a = deltagere[i], b = deltagere[j];
+        if (!kollegaTæller.has(a)) kollegaTæller.set(a, new Map());
+        const m = kollegaTæller.get(a)!;
+        m.set(b, (m.get(b) ?? 0) + 1);
       }
     }
   }
@@ -195,6 +216,19 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
       .slice(0, 5)
       .map(([tema, antal]) => ({ tema, antal }));
 
+    const kolleger: InspektoerKollega[] = [...(kollegaTæller.get(nøgle) ?? new Map()).entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([kollegaNøgle, antalSammen]) => {
+        const kollegaNavn = kollegaNøgle.split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        return {
+          navn: kollegaNavn,
+          slug: navnTilSlug(kollegaNavn),
+          titel: map.get(kollegaNøgle)?.titel ?? null,
+          antalSammen,
+        };
+      });
+
     resultat.push({
       navn,
       slug: navnTilSlug(navn),
@@ -208,6 +242,7 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
       senesteDato: v.senesteDato,
       foersteDato: v.foersteDato,
       rapporter: v.rapporter.sort((a, b) => (b.dato ?? '').localeCompare(a.dato ?? '')),
+      kolleger,
     });
   }
 

@@ -1,0 +1,1 @@
+export { ProfilKolleger } from './ProfilKolleger';

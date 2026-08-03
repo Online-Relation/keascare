@@ -7,6 +7,7 @@ import { ProfilKpiGrid } from './sections/ProfilKpiGrid';
 import { ProfilKommunerListe } from './sections/ProfilKommunerListe';
 import { ProfilFundListe } from './sections/ProfilFundListe';
 import { ProfilRapporterTabel } from './sections/ProfilRapporterTabel';
+import { ProfilKolleger } from './sections/ProfilKolleger';
 import type { InspektoerFuldStat } from '@/features/stps/types/inspektoer.types';
 
 type Props = { inspektoer: InspektoerFuldStat };
@@ -21,6 +22,8 @@ export function InspektoerProfil({ inspektoer }: Props) {
         <ProfilFundListe inspektoer={inspektoer} />
         <ProfilKommunerListe inspektoer={inspektoer} />
       </div>
+
+      <ProfilKolleger inspektoer={inspektoer} />
 
       <ProfilRapporterTabel inspektoer={inspektoer} />
 

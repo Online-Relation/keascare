@@ -15,6 +15,13 @@ export type InspektoerRapport = {
   tilsynsform: string | null;
 };
 
+export type InspektoerKollega = {
+  navn: string;
+  slug: string;
+  titel: string | null;
+  antalSammen: number;
+};
+
 export type InspektoerFuldStat = {
   navn: string;
   slug: string;
@@ -28,6 +35,7 @@ export type InspektoerFuldStat = {
   senesteDato: string | null;
   foersteDato: string | null;
   rapporter: InspektoerRapport[];
+  kolleger: InspektoerKollega[];
 };
 
 export type InspektoerPeriode = 'alle' | '30' | '90' | 'aar' | 'sidsteaar';
