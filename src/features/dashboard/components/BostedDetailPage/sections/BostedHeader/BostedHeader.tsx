@@ -48,15 +48,6 @@ export function BostedHeader({ bosted, pakker = [], varslingId = null, onVarslin
 
           {/* Varslet tilsyn, gigant og favorit side om side */}
           <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignItems: 'center' }}>
-            <VarsletTilsynKnap
-              bostedId={bosted.id}
-              bostedNavn={bosted.navn}
-              kommune={bosted.kommune ?? null}
-              senesteRapportDato={bosted.rapportDato ?? null}
-              varslingId={varslingId}
-              onToggle={onVarslingToggle}
-            />
-
             <button
               className={`gigant-knap${erGigant ? ' aktiv' : ''}`}
               onClick={() => {
@@ -84,6 +75,15 @@ export function BostedHeader({ bosted, pakker = [], varslingId = null, onVarslin
             >
               <Star size={18} fill={erStjernet ? 'currentColor' : 'none'} />
             </button>
+
+            <VarsletTilsynKnap
+              bostedId={bosted.id}
+              bostedNavn={bosted.navn}
+              kommune={bosted.kommune ?? null}
+              senesteRapportDato={bosted.rapportDato ?? null}
+              varslingId={varslingId}
+              onToggle={onVarslingToggle}
+            />
           </div>
         </div>
 
