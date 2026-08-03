@@ -94,7 +94,7 @@ export function InspektoerSide({ inspektoerer: råData }: Props) {
         <p className="insp-undertekst">Få overblik over hvilke inspektører der fører tilsyn, hvor bredt de arbejder, og se profiler på den enkelte person.</p>
       </div>
 
-      <InspektoerSoegFilter søg={søg} periode={periode} sorter={sortKey} onSøg={setSøg} onPeriode={setPeriode} onSorter={setSortKey} />
+      <InspektoerSoegFilter periode={periode} sorter={sortKey} onPeriode={setPeriode} onSorter={setSortKey} />
 
       <InspektoerKpiGrid inspektoerer={behandlet} />
 

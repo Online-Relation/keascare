@@ -32,19 +32,9 @@ const SORTER: { value: InspektoerSortKey; label: string }[] = [
   { value: 'navn',     label: 'Alfabetisk' },
 ];
 
-export function InspektoerSoegFilter({ søg, periode, sorter, onSøg, onPeriode, onSorter }: Props) {
+export function InspektoerSoegFilter({ periode, sorter, onPeriode, onSorter }: Omit<Props, 'søg' | 'onSøg'>) {
   return (
     <div className="insp-filter-bar">
-      <div className="insp-soeg-wrap">
-        <Search size={15} className="insp-soeg-ikon" />
-        <input
-          className="insp-soeg-input"
-          type="search"
-          placeholder="Søg efter inspektør, stilling eller kommune…"
-          value={søg}
-          onChange={(e) => onSøg(e.target.value)}
-        />
-      </div>
       <select className="insp-filter-select" value={periode} onChange={(e) => onPeriode(e.target.value as InspektoerPeriode)}>
         {PERIODER.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
       </select>
