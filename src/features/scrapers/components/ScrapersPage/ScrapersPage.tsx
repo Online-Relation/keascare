@@ -147,14 +147,14 @@ const SCRAPERS: Scraper[] = [
   {
     id: 'los-liste',
     titel: 'LOS — Hent medlemsliste',
-    beskrivelse: 'Henter alle §43, §107 og §108-medlemmer fra Landsorganisationen for sociale tilbud (los.dk) og gemmer dem i databasen.',
+    beskrivelse: 'Henter alle §43, §107 og §108-medlemmer fra Landsorganisationen for sociale tilbud (los.dk). Kører direkte fra Railway — los.dk har ingen Cloudflare-spærring.',
     endpoint: '/api/scrapers/los',
     body: { trin: 'liste' },
   },
   {
     id: 'los-detaljer',
     titel: 'LOS — Hent detaljer',
-    beskrivelse: 'Henter CVR, kontakt, adresse og accordion-data (ydelser, pladser, priser, ledelse) for hvert LOS-medlem der mangler detaljer.',
+    beskrivelse: 'Henter CVR, kontakt, adresse og accordion-data (ydelser, pladser, priser, ledelse) for hvert LOS-medlem der mangler detaljer. Kører direkte fra Railway.',
     endpoint: '/api/scrapers/los',
     body: { trin: 'detaljer', max: 100 },
     loop: true,
