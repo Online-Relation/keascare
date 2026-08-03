@@ -72,7 +72,7 @@ const BOSTED_HELE_ORD = new Set([
   'bakken',
 ]);
 
-function erPersonNavn(navn: string): boolean {
+export function erPersonNavn(navn: string): boolean {
   const n = navn.toLowerCase().trim();
   const ord = navn.trim().split(/\s+/);
 

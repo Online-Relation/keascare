@@ -1,53 +1,78 @@
 // src/features/varsletTilsyn/services/VarsletTilsynService/sandsynlighedService.ts
 
-import { hentAlleInspektoerer } from '@/features/stps/services/StpsInspektoerService';
+import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { erPersonNavn, navnTilSlug } from '@/features/stps/services/StpsInspektoerService';
 import type { SandsynligInspektoer } from '@/features/varsletTilsyn/types/varsletTilsyn.types';
+import type { TilsynDeltager } from '@/features/stps/scraper/StpsPdfParser';
+
+type DbRapport = {
+  id: string;
+  kommune: string | null;
+  region: string | null;
+  temaer: string[] | null;
+  tilsyn_deltagere_stps: TilsynDeltager[] | null;
+};
 
 export async function beregnSandsynligeInspektoerer(kommune: string | null): Promise<SandsynligInspektoer[]> {
   if (!kommune) return [];
 
-  const alleInspektoerer = await hentAlleInspektoerer();
+  const supabase = getSupabaseServerClient();
   const kortNavn = kommune.replace(/\s+[Kk]ommune$/, '').trim();
 
-  const kandidater = alleInspektoerer
-    .map((ins) => {
-      const antalIKommune = ins.rapporter.filter(
-        (r) => r.kommune === kommune || r.kommune === kortNavn
-      ).length;
-      if (antalIKommune === 0) return null;
+  // Hent alle rapporter i kommunen med deltagerdata
+  const { data } = await supabase
+    .from('stps_rapporter')
+    .select('id, kommune, region, temaer, tilsyn_deltagere_stps')
+    .not('tilsyn_deltagere_stps', 'is', null)
+    .or(`kommune.eq.${kommune},kommune.eq.${kortNavn}`);
 
-      // Typiske samarbejdspartnere
-      const typiskMed = ins.kolleger
-        .filter((k) => k.antalSammen >= 5)
-        .slice(0, 2)
-        .map((k) => k.navn.split(' ')[0]);
+  const rapporter = (data ?? []) as DbRapport[];
 
-      // Top fokusområder (temaer) fra rapporter i kommunen
-      const temaMap = new Map<string, number>();
-      for (const r of ins.rapporter) {
-        if (r.kommune !== kommune && r.kommune !== kortNavn) continue;
-        for (const t of r.temaer) {
-          temaMap.set(t, (temaMap.get(t) ?? 0) + 1);
+  if (rapporter.length === 0) return [];
+
+  // Tæl deltagere og temaer
+  const deltagerMap = new Map<string, {
+    titel: string | null;
+    antal: number;
+    temaer: Map<string, number>;
+  }>();
+
+  for (const r of rapporter) {
+    if (!r.tilsyn_deltagere_stps) continue;
+    for (const d of r.tilsyn_deltagere_stps) {
+      if (!erPersonNavn(d.navn)) continue;
+      const nøgle = d.navn.toLowerCase().trim();
+      const eks = deltagerMap.get(nøgle);
+      if (!eks) {
+        const temaMap = new Map<string, number>();
+        for (const t of r.temaer ?? []) temaMap.set(t, 1);
+        deltagerMap.set(nøgle, { titel: d.titel ?? null, antal: 1, temaer: temaMap });
+      } else {
+        eks.antal++;
+        for (const t of r.temaer ?? []) {
+          eks.temaer.set(t, (eks.temaer.get(t) ?? 0) + 1);
         }
       }
-      const typiskeFokus = [...temaMap.entries()]
+    }
+  }
+
+  return [...deltagerMap.entries()]
+    .sort((a, b) => b[1].antal - a[1].antal)
+    .slice(0, 6)
+    .map(([nøgle, v]) => {
+      const navn = nøgle.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      const typiskeFokus = [...v.temaer.entries()]
         .sort((a, b) => b[1] - a[1])
         .slice(0, 4)
         .map(([tema]) => tema);
-
       return {
-        navn: ins.navn,
-        slug: ins.slug,
-        titel: ins.titel,
-        antalIKommune,
-        score: antalIKommune,
-        typiskMed,
+        navn,
+        slug: navnTilSlug(navn),
+        titel: v.titel,
+        antalIKommune: v.antal,
+        score: v.antal,
+        typiskMed: [],
         typiskeFokus,
       };
-    })
-    .filter((x): x is SandsynligInspektoer => x !== null)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 6);
-
-  return kandidater;
+    });
 }
