@@ -93,10 +93,12 @@ function parseDetalje(html: string, item: LosListeItem): LosMedlem {
   let website: string | null = null;
 
   $('a[href^="tel:"]').first().each((_, el) => {
-    telefon = $(el).text().trim() || $(el).attr('href')?.replace('tel:', '') ?? null;
+    const t = $(el).text().trim();
+    telefon = t || ($(el).attr('href')?.replace('tel:', '') ?? null);
   });
   $('a[href^="mailto:"]').first().each((_, el) => {
-    email = $(el).text().trim() || $(el).attr('href')?.replace('mailto:', '') ?? null;
+    const t = $(el).text().trim();
+    email = t || ($(el).attr('href')?.replace('mailto:', '') ?? null);
   });
   $('a[href^="http"]').each((_, el) => {
     const href = $(el).attr('href') ?? '';
