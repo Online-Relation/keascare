@@ -190,16 +190,6 @@ export function MobileNav() {
 
       {søgningÅben && (resultater.kommuner.length > 0 || resultater.bosteder.length > 0 || resultater.inspektoerer.length > 0) && (
         <div className="mobil-søg-resultater">
-          {resultater.kommuner.length > 0 && (
-            <>
-              <p className="mobil-søg-sektion">Kommuner</p>
-              {resultater.kommuner.map((r) => (
-                <button key={r.slug} className="mobil-søg-resultat" onClick={() => vælgKommune(r.slug)}>
-                  <span className="mobil-søg-navn">📍 {r.navn.replace(/\s+[Kk]ommune$/, '')} Kommune</span>
-                </button>
-              ))}
-            </>
-          )}
           {resultater.bosteder.length > 0 && (
             <>
               <p className="mobil-søg-sektion">Bosteder</p>
@@ -218,6 +208,16 @@ export function MobileNav() {
                 <button key={r.slug} className="mobil-søg-resultat" onClick={() => vælgInspektoer(r.slug)}>
                   <span className="mobil-søg-navn">{r.navn}</span>
                   {r.titel && <span className="mobil-søg-kommune">{r.titel}</span>}
+                </button>
+              ))}
+            </>
+          )}
+          {resultater.kommuner.length > 0 && (
+            <>
+              <p className="mobil-søg-sektion">Kommuner</p>
+              {resultater.kommuner.map((r) => (
+                <button key={r.slug} className="mobil-søg-resultat" onClick={() => vælgKommune(r.slug)}>
+                  <span className="mobil-søg-navn">📍 {r.navn.replace(/\s+[Kk]ommune$/, '')} Kommune</span>
                 </button>
               ))}
             </>

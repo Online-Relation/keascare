@@ -42,9 +42,9 @@ export function GlobalSearch() {
   const router = useRouter();
 
   const alleResultater = [
-    ...resultater.kommuner.map((r) => ({ type: 'kommune' as const, ...r })),
     ...resultater.bosteder.map((r) => ({ type: 'bosted' as const, ...r })),
     ...resultater.inspektoerer.map((r) => ({ type: 'inspektoer' as const, ...r })),
+    ...resultater.kommuner.map((r) => ({ type: 'kommune' as const, ...r })),
   ];
   const harResultater = alleResultater.length > 0;
   const åben = fokus && (query.length >= 2 || harResultater);
@@ -125,9 +125,9 @@ export function GlobalSearch() {
   }
 
   // Index offsets for keyboard nav
-  const kommuneOffset = 0;
-  const bostedOffset = resultater.kommuner.length;
-  const inspektoerOffset = bostedOffset + resultater.bosteder.length;
+  const bostedOffset = 0;
+  const inspektoerOffset = resultater.bosteder.length;
+  const kommuneOffset = inspektoerOffset + resultater.inspektoerer.length;
 
   return (
     <div className={`gs-wrap${fokus ? ' gs-fokus' : ''}`} ref={containerRef}>
@@ -162,35 +162,6 @@ export function GlobalSearch() {
             </div>
           ) : (
             <>
-              {resultater.kommuner.length > 0 && (
-                <>
-                  <div className="gs-label">Kommuner</div>
-                  <ul className="gs-liste" role="listbox">
-                    {resultater.kommuner.map((r, i) => {
-                      const idx = kommuneOffset + i;
-                      return (
-                        <li
-                          key={r.slug}
-                          className={`gs-item${idx === aktivIndex ? ' gs-aktiv' : ''}`}
-                          role="option"
-                          aria-selected={idx === aktivIndex}
-                          onMouseDown={() => vælgKommune(r)}
-                          onMouseEnter={() => setAktivIndex(idx)}
-                        >
-                          <span className="gs-item-ikon"><MapPin size={14} /></span>
-                          <span className="gs-item-tekst">
-                            <span className="gs-item-navn">{r.navn.replace(/\s+[Kk]ommune$/, '')} Kommune</span>
-                          </span>
-                          <span className="badge badge-ukendt" style={{ fontStyle: 'normal', textTransform: 'none', letterSpacing: 0 }}>
-                            Kommune
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </>
-              )}
-
               {resultater.bosteder.length > 0 && (
                 <>
                   <div className="gs-label">Bosteder</div>
@@ -253,6 +224,35 @@ export function GlobalSearch() {
                               {r.titel}
                             </span>
                           )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </>
+              )}
+
+              {resultater.kommuner.length > 0 && (
+                <>
+                  <div className="gs-label">Kommuner</div>
+                  <ul className="gs-liste" role="listbox">
+                    {resultater.kommuner.map((r, i) => {
+                      const idx = kommuneOffset + i;
+                      return (
+                        <li
+                          key={r.slug}
+                          className={`gs-item${idx === aktivIndex ? ' gs-aktiv' : ''}`}
+                          role="option"
+                          aria-selected={idx === aktivIndex}
+                          onMouseDown={() => vælgKommune(r)}
+                          onMouseEnter={() => setAktivIndex(idx)}
+                        >
+                          <span className="gs-item-ikon"><MapPin size={14} /></span>
+                          <span className="gs-item-tekst">
+                            <span className="gs-item-navn">{r.navn.replace(/\s+[Kk]ommune$/, '')} Kommune</span>
+                          </span>
+                          <span className="badge badge-ukendt" style={{ fontStyle: 'normal', textTransform: 'none', letterSpacing: 0 }}>
+                            Kommune
+                          </span>
                         </li>
                       );
                     })}
