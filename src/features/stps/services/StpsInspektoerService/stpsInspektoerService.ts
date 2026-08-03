@@ -35,7 +35,7 @@ const BOSTED_SUFFIKSER = [
   'tilbuddet', 'tilbuddene', 'tilbud',
   'stedet', 'sted',
   'huset', 'husene', 'huserne',
-  'gården', 'gaard', 'gård',
+  'gården',
   'hjemsted',
   'bofællesskab', 'bofælles',
   'boform', 'bolig', 'bosted', 'botilbud',
@@ -65,7 +65,7 @@ const BOSTED_HELE_ORD = new Set([
   'lector', 'solutio', 'care',
   'nord-bo', 'nordbo',
   'verden',
-  'vej', 'gade', 'alle', 'boulevard', 'stræde', 'plads',
+  'vej', 'alle', 'boulevard', 'stræde', 'plads',
   'omsorg',
   'hus',
   'have', 'haven',
@@ -87,8 +87,10 @@ function erPersonNavn(navn: string): boolean {
   if (ord.length > 4) return false;
 
   // Afvis hvis et ord har usædvanlig indre kapitalisering (fx "BofæLlesskab", "RøDland")
+  // Tillad kapital efter bindestreg i sammensatte fornavne (Ann-Christina, Mary-Ann)
   for (const o of ord) {
-    if (o.length > 2 && /[A-ZÆØÅ]/.test(o.slice(1))) return false;
+    const udenBindestreg = o.replace(/-[A-ZÆØÅa-zæøå]/g, '');
+    if (udenBindestreg.length > 2 && /[A-ZÆØÅ]/.test(udenBindestreg.slice(1))) return false;
   }
 
   // Tjek hvert ord for bosted-indikatorer
