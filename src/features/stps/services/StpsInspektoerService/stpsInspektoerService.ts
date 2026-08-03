@@ -217,6 +217,7 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
       .map(([tema, antal]) => ({ tema, antal }));
 
     const kolleger: InspektoerKollega[] = [...(kollegaTæller.get(nøgle) ?? new Map()).entries()]
+      .filter(([, antal]) => antal >= 3)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 8)
       .map(([kollegaNøgle, antalSammen]) => {
