@@ -1,0 +1,1 @@
+export { scraperLosDetaljer } from './losDetaljerScraper';

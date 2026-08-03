@@ -97,6 +97,15 @@ export function BostedOrganisationKort({ bosted }: Props) {
                 : <span className="bosted-sor-badge bosted-sor-badge--ukendt"><HelpCircle size={14} /> Ukendt</span>
             }
           </div>
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">LOS-medlem</span>
+            {bosted.losMedlem === true
+              ? <span className="bosted-sor-badge"><CheckCircle2 size={14} /> Medlem af LOS</span>
+              : bosted.losMedlem === false
+                ? <span className="bosted-sor-badge bosted-sor-badge--mangler"><XCircle size={14} /> Ikke LOS-medlem</span>
+                : <span className="bosted-sor-badge bosted-sor-badge--ukendt"><HelpCircle size={14} /> Ikke tjekket</span>
+            }
+          </div>
           {bosted.cvrAntalAfdelinger != null && bosted.cvrAntalAfdelinger > 1 && (
             <FeltRække
               label="Afdelinger på CVR"

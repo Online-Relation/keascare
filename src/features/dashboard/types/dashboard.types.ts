@@ -137,6 +137,7 @@ export type BostedDetail = {
   regnskabBalance: number | null;
   regnskabOpdateret: string | null;
   sorKode: string | null;
+  losMedlem: boolean | null;
 };
 
 export type SalgsFunnelTrin = {
