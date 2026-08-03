@@ -40,6 +40,7 @@ export async function beregnSandsynligeInspektoerer(kommune: string | null): Pro
   for (const r of rapporter) {
     if (!r.tilsyn_deltagere_stps) continue;
     for (const d of r.tilsyn_deltagere_stps) {
+      if (!d.titel || d.titel.toLowerCase().includes('ikke angivet')) continue;
       if (!erPersonNavn(d.navn)) continue;
       const nøgle = d.navn.toLowerCase().trim();
       const eks = deltagerMap.get(nøgle);

@@ -157,6 +157,7 @@ export async function hentAlleInspektoerer(): Promise<InspektoerFuldStat[]> {
 
     const deltagendeNøgler: string[] = [];
     for (const d of r.tilsyn_deltagere_stps) {
+      if (!d.titel || d.titel.toLowerCase().includes('ikke angivet')) continue;
       if (!erPersonNavn(d.navn)) continue;
       const nøgle = d.navn.toLowerCase().trim();
       deltagendeNøgler.push(nøgle);
