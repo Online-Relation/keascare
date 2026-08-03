@@ -10,6 +10,10 @@
 //   5. CVR berig        — slå P-numre op i CVR og hent CVR-nummer
 //   6. CVR ansatte      — opdater ansatte/branche for kendte CVR-numre
 //   7. CVR signaler     — søg efter nye bosted-registreringer (kræver CVR_USER+CVR_PASS)
+//   8. Regelovervågning — nye love og STPS-nyheder
+//   9. Geocoder         — koordinater til kortvisning
+//  10. LOS detaljer     — hent detaljer for nye LOS-medlemmer der mangler data
+//  11. LOS match        — match LOS-medlemmer mod bosteder via CVR
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
@@ -83,6 +87,12 @@ export async function POST(request: NextRequest) {
 
   // 9. Geocoder — koordinater til kortvisning (batch 100)
   await kør('geocoder', () => kald('/api/scrapers/geocoder', { batch: 100 }, secret), resultater);
+
+  // 10. LOS — hent detaljer for nye medlemmer (batch 50)
+  await kør('los-detaljer', () => kald('/api/scrapers/los', { trin: 'detaljer', max: 50 }, secret), resultater);
+
+  // 11. LOS — match mod bosteder via CVR
+  await kør('los-match', () => kald('/api/scrapers/los', { trin: 'match' }, secret), resultater);
 
   return NextResponse.json({ ok: true, kørt: new Date().toISOString(), ...resultater });
 }
