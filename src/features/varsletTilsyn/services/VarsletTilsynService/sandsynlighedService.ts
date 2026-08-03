@@ -22,6 +22,19 @@ export async function beregnSandsynligeInspektoerer(kommune: string | null): Pro
         .slice(0, 2)
         .map((k) => k.navn.split(' ')[0]);
 
+      // Top fokusområder (temaer) fra rapporter i kommunen
+      const temaMap = new Map<string, number>();
+      for (const r of ins.rapporter) {
+        if (r.kommune !== kommune && r.kommune !== kortNavn) continue;
+        for (const t of r.temaer) {
+          temaMap.set(t, (temaMap.get(t) ?? 0) + 1);
+        }
+      }
+      const typiskeFokus = [...temaMap.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([tema]) => tema);
+
       return {
         navn: ins.navn,
         slug: ins.slug,
@@ -29,6 +42,7 @@ export async function beregnSandsynligeInspektoerer(kommune: string | null): Pro
         antalIKommune,
         score: antalIKommune,
         typiskMed,
+        typiskeFokus,
       };
     })
     .filter((x): x is SandsynligInspektoer => x !== null)

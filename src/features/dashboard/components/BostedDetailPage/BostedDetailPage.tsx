@@ -5,6 +5,7 @@
 import { useState, Suspense } from 'react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
+import type { SandsynligInspektoer } from '@/features/varsletTilsyn/types/varsletTilsyn.types';
 import { NyOprettetBanner } from './sections/NyOprettetBanner';
 import { BostedHeader } from './sections/BostedHeader';
 import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
@@ -19,15 +20,19 @@ import { TidligereRapporter } from './sections/TidligereRapporter';
 import { BostedRegnskabKort } from './sections/BostedRegnskabKort';
 import { BostedDeltagereKort } from './sections/BostedDeltagereKort';
 import { KundeKort } from './sections/KundeKort';
+import { BostedVarsletTilsynBoks } from './sections/BostedVarsletTilsynBoks';
 
 type BostedDetailPageProps = {
   bosted: BostedDetail;
   pakker?: KundePakke[];
   varslingId?: string | null;
+  varslingNoter?: string | null;
+  sandsynligeInspektoerer?: SandsynligInspektoer[];
 };
 
-export function BostedDetailPage({ bosted, pakker = [], varslingId = null }: BostedDetailPageProps) {
+export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarslingId = null, varslingNoter = null, sandsynligeInspektoerer = [] }: BostedDetailPageProps) {
   const [historikOpdater, setHistorikOpdater] = useState(0);
+  const [varslingId, setVarslingId] = useState<string | null>(initialVarslingId);
 
   return (
     <div className="bosted-detail-layout">
@@ -35,7 +40,7 @@ export function BostedDetailPage({ bosted, pakker = [], varslingId = null }: Bos
         <NyOprettetBanner />
       </Suspense>
 
-      <BostedHeader bosted={bosted} pakker={pakker} varslingId={varslingId} />
+      <BostedHeader bosted={bosted} pakker={pakker} varslingId={varslingId} onVarslingToggle={setVarslingId} />
 
       <KundeKort bosted={bosted} pakker={pakker} />
 
@@ -43,6 +48,16 @@ export function BostedDetailPage({ bosted, pakker = [], varslingId = null }: Bos
         <BostedTilsynKort bosted={bosted} />
         <BostedOrganisationKort bosted={bosted} />
       </div>
+
+      {varslingId && (
+        <BostedVarsletTilsynBoks
+          varslingId={varslingId}
+          bostedNavn={bosted.navn}
+          kommune={bosted.kommune ?? null}
+          sandsynligeInspektoerer={sandsynligeInspektoerer}
+          initialNoter={varslingNoter}
+        />
+      )}
 
       <BostedRegnskabKort bosted={bosted} />
       <BostedDeltagereKort bosted={bosted} />

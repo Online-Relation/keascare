@@ -14,6 +14,7 @@ type BostedHeaderProps = {
   bosted: BostedDetail;
   pakker?: KundePakke[];
   varslingId?: string | null;
+  onVarslingToggle?: (nytId: string | null) => void;
 };
 
 async function toggleGigantApi(id: string, næsteVærdi: boolean) {
@@ -24,7 +25,7 @@ async function toggleGigantApi(id: string, næsteVærdi: boolean) {
   });
 }
 
-export function BostedHeader({ bosted, pakker = [], varslingId = null }: BostedHeaderProps) {
+export function BostedHeader({ bosted, pakker = [], varslingId = null, onVarslingToggle }: BostedHeaderProps) {
   const { erFavorit, toggleFavorit } = useFavoritter();
   const erStjernet = erFavorit(bosted.id);
   const [erGigant, setErGigant] = useState(bosted.erGigant);
@@ -53,6 +54,7 @@ export function BostedHeader({ bosted, pakker = [], varslingId = null }: BostedH
               kommune={bosted.kommune ?? null}
               senesteRapportDato={bosted.rapportDato ?? null}
               varslingId={varslingId}
+              onToggle={onVarslingToggle}
             />
 
             <button

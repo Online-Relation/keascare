@@ -11,10 +11,10 @@ type Props = {
   kommune: string | null;
   senesteRapportDato: string | null;
   varslingId: string | null;
+  onToggle?: (nytVarslingId: string | null) => void;
 };
 
-export function VarsletTilsynKnap({ bostedId, bostedNavn, kommune, senesteRapportDato, varslingId: initialVarslingId }: Props) {
-  const [varslingId, setVarslingId] = useState<string | null>(initialVarslingId);
+export function VarsletTilsynKnap({ bostedId, bostedNavn, kommune, senesteRapportDato, varslingId, onToggle }: Props) {
   const [loading, setLoading] = useState(false);
 
   async function toggle() {
@@ -22,7 +22,7 @@ export function VarsletTilsynKnap({ bostedId, bostedNavn, kommune, senesteRappor
     try {
       if (varslingId) {
         await fetch(`/api/varslet-tilsyn/${varslingId}`, { method: 'DELETE' });
-        setVarslingId(null);
+        onToggle?.(null);
       } else {
         const res = await fetch('/api/varslet-tilsyn', {
           method: 'POST',
@@ -30,7 +30,7 @@ export function VarsletTilsynKnap({ bostedId, bostedNavn, kommune, senesteRappor
           body: JSON.stringify({ bostedId, bostedNavn, kommune, senesteRapportDato }),
         });
         const data = await res.json() as { id: string };
-        setVarslingId(data.id);
+        onToggle?.(data.id);
       }
     } finally {
       setLoading(false);

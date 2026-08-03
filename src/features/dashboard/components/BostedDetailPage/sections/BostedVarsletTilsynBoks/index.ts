@@ -1,0 +1,1 @@
+export { BostedVarsletTilsynBoks } from './BostedVarsletTilsynBoks';

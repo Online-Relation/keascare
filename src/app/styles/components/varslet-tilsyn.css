@@ -62,3 +62,25 @@
   .varslet-detalje-header { flex-wrap: wrap; }
   .varslet-fjern-knap { margin-left: 0; }
 }
+
+/* Bosted-boks */
+.varslet-boks { border-color: #fcd34d !important; }
+.varslet-boks-header { display: flex; align-items: center; gap: 0.5rem; }
+.varslet-boks-ikon { color: #f97316; flex-shrink: 0; }
+.varslet-boks-fuld-link { margin-left: auto; display: flex; align-items: center; gap: 0.3rem; font-size: var(--text-xs); color: var(--color-text-muted); text-decoration: none; }
+.varslet-boks-fuld-link:hover { color: var(--color-primary); }
+.varslet-boks-body { display: flex; flex-direction: column; gap: 1rem; }
+.varslet-boks-sektion { display: flex; flex-direction: column; gap: 0.5rem; }
+.varslet-boks-sektion-titel { display: flex; align-items: center; gap: 0.35rem; font-size: var(--text-xs); font-weight: var(--fw-semibold); color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.04em; margin: 0; }
+.varslet-boks-tom { font-size: var(--text-sm); color: var(--color-text-muted); }
+.varslet-boks-insp-liste { display: flex; flex-direction: column; gap: 0.375rem; }
+.varslet-boks-insp-række { display: flex; align-items: center; gap: 0.625rem; padding: 0.5rem 0.625rem; border-radius: 8px; background: var(--color-bg); border: 1px solid var(--color-border); text-decoration: none; transition: border-color 0.15s; }
+.varslet-boks-insp-række:hover { border-color: var(--color-primary); }
+.varslet-boks-insp-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.varslet-boks-insp-navn { font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--color-text-primary); }
+.varslet-boks-insp-titel { font-size: var(--text-xs); color: var(--color-text-muted); }
+.varslet-boks-insp-antal { font-size: var(--text-xs); font-weight: var(--fw-semibold); color: var(--color-text-muted); }
+.varslet-boks-fokus-liste { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.varslet-boks-fokus-tag { font-size: var(--text-xs); padding: 0.2rem 0.6rem; background: var(--color-bg); border: 1px solid var(--color-border); border-radius: 99px; color: var(--color-text-secondary); }
+.varslet-noter-felt-kompakt { margin-bottom: 0.375rem; }
+.varslet-boks-gem { align-self: flex-start; }

@@ -7,6 +7,7 @@ export type SandsynligInspektoer = {
   antalIKommune: number;
   score: number;
   typiskMed: string[];
+  typiskeFokus: string[];
 };
 
 export type VarsletTilsyn = {
