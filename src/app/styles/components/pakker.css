@@ -457,53 +457,13 @@
   .bosted-historik-chips { gap: 0.25rem; }
 }
 
-/* ── Mobilvenlig tabel: skjul sekundære kolonner ── */
+/* ── Mobil: tabellen scroller vandret, ingen kolonneskjul ── */
 @media (max-width: 640px) {
-  /* Fjern min-width så tabellen ikke overflower */
-  .pakker-tabel { min-width: 0; width: 100%; }
+  .pakker-tabel { min-width: 560px; }
 
-  /* Storpakke: Bosted=1, SOR=2, Startdato=3, Mdr.aktiv=4, Pris=5, Beløb=6, Sidst opdateret=7, Gem=8 */
-  /* FMK pakke: samme kolonne-rækkefølge, Beboere i stedet for Pris */
-  /* Basispakke: tjekkes separat */
-
-  /* Skjul i Stor/FMK-pakke (8 kolonner): SOR(2), Startdato(3), Mdr.aktiv(4), Sidst opdateret(7) */
-  .pakker-tabel-wrapper--stor .pakker-tabel th:nth-child(2),
-  .pakker-tabel-wrapper--stor .pakker-tabel td:nth-child(2),
-  .pakker-tabel-wrapper--stor .pakker-tabel th:nth-child(3),
-  .pakker-tabel-wrapper--stor .pakker-tabel td:nth-child(3),
-  .pakker-tabel-wrapper--stor .pakker-tabel th:nth-child(4),
-  .pakker-tabel-wrapper--stor .pakker-tabel td:nth-child(4),
-  .pakker-tabel-wrapper--stor .pakker-tabel th:nth-child(7),
-  .pakker-tabel-wrapper--stor .pakker-tabel td:nth-child(7) {
-    display: none;
-  }
-
-  /* Bosted-kolonne: bredde begrænset så den ikke overflower */
-  .pakker-tabel-wrapper--stor .pakker-tabel td:nth-child(1),
-  .pakker-tabel-wrapper--stor .pakker-tabel th:nth-child(1) {
-    max-width: 130px;
-    word-break: break-word;
-    white-space: normal;
-  }
-
-  /* Input: lidt smallere på mobil */
-  .pakker-antal-input { width: 60px; }
-  .pakker-pris-input  { width: 80px; }
-
-  /* Gem-knap: kompakt */
   .pakker-gem-knap {
-    padding: 0.35rem 0.6rem;
-    font-size: 0.78rem;
-  }
-
-  .pakker-rediger-knap {
-    padding: 0.35rem 0.5rem;
-    font-size: 0.75rem;
-  }
-
-  /* Total-række: juster colspan-tekst */
-  .pakker-tabel-total td:first-child {
-    font-size: 0.82rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.8rem;
   }
 }
 

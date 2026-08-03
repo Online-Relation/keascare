@@ -175,7 +175,7 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
         </div>
       </div>
 
-      <div className="pakker-tabel-wrapper pakker-tabel-wrapper--stor">
+      <div className="pakker-tabel-wrapper">
         <table className="pakker-tabel">
           <thead>
             <tr>
