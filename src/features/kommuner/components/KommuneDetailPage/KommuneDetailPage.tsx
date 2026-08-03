@@ -30,6 +30,7 @@ type Props = { detail: KommuneDetail };
 export function KommuneDetailPage({ detail }: Props) {
   const kortNavn = detail.navn.replace(/\s+[Kk]ommune$/, '');
   const totalBosteder = detail.bosteder.length;
+  const totalTp = detail.tpBosteder.length;
   const maxFund = Math.max(...detail.fundFordeling.map((f) => f.antal), 1);
 
   return (
@@ -42,11 +43,11 @@ export function KommuneDetailPage({ detail }: Props) {
         </div>
 
         <div className="kommune-detail-stats">
-          <div className="kommune-stat-kort">
+          <div className="kommune-stat-kort kommune-stat-kort-total">
             <Building2 size={16} className="kommune-stat-ikon" />
-            <span className="kommune-stat-tal">{totalBosteder}</span>
-            <span className="kommune-stat-label">Bosteder</span>
-            <span className="kommune-stat-sub">Med STPS-rapport</span>
+            <span className="kommune-stat-tal">{totalTp > 0 ? totalTp : totalBosteder}</span>
+            <span className="kommune-stat-label">Bosteder i kommunen</span>
+            <span className="kommune-stat-sub">{totalTp > 0 ? `${totalBosteder} med STPS-rapport` : 'Med STPS-rapport'}</span>
           </div>
           <div className={`kommune-stat-kort${detail.antalKritiske > 0 ? ' kommune-stat-kort-advarsel' : ''}`}>
             <AlertTriangle size={16} className="kommune-stat-ikon" />
@@ -127,7 +128,7 @@ export function KommuneDetailPage({ detail }: Props) {
       </div>
 
       {totalBosteder === 0 ? (
-        <div className="kommuner-ingen-bosteder">Ingen bosteder fundet i databasen for {detail.navn}.</div>
+        <div className="kommuner-ingen-bosteder">Ingen bosteder med STPS-rapport fundet for {detail.navn}.</div>
       ) : (
         <div className="dashboard-table-wrapper">
           <table className="data-table">
@@ -178,6 +179,37 @@ export function KommuneDetailPage({ detail }: Props) {
             </tbody>
           </table>
         </div>
+      )}
+
+      {detail.tpBosteder.length > 0 && (
+        <>
+          <div className="kommune-sektion-overskrift" style={{ marginTop: '1.5rem' }}>
+            <h2 className="kommune-sektion-titel">Alle bosteder i {kortNavn} Kommune</h2>
+            <span className="kommune-sektion-antal">{totalTp} bosteder fra Tilbudsportalen</span>
+          </div>
+          <div className="dashboard-table-wrapper">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Navn</th>
+                  <th>Tilbudstype</th>
+                  <th>Pladser</th>
+                  <th>Driftsform</th>
+                </tr>
+              </thead>
+              <tbody>
+                {detail.tpBosteder.map((b) => (
+                  <tr key={b.id}>
+                    <td className="fw-medium">{b.navn}</td>
+                    <td className="table-cell-muted">{b.tilbudstype ?? '—'}</td>
+                    <td className="table-cell-muted">{b.pladser ?? '—'}</td>
+                    <td className="table-cell-muted">{b.driftsform ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
     </div>
   );

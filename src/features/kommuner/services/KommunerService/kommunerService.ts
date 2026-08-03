@@ -4,7 +4,7 @@ import { hentDstKommuneData } from '@/lib/api/DstClient';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
 import { hentAlleInspektoerer } from '@/features/stps/services/StpsInspektoerService';
-import type { KommuneOversigt, KommuneDetail, KommuneBosted, KommuneInspektoer, KommuneFundFordeling } from '@/features/kommuner/types/kommuner.types';
+import type { KommuneOversigt, KommuneDetail, KommuneBosted, KommuneInspektoer, KommuneFundFordeling, TpKommuneBosted } from '@/features/kommuner/types/kommuner.types';
 
 type DbKommuneCount = {
   kommune: string;
@@ -39,13 +39,16 @@ export async function hentKommunerOversigt(fra?: string, til?: string): Promise<
 }
 
 export async function hentKommuneDetail(kommuneNavn: string, fra?: string, til?: string): Promise<KommuneDetail | null> {
-  const [dstData, bosteder, alleInspektoerer] = await Promise.all([
+  const kortNavn = kommuneNavn.replace(/\s+[Kk]ommune$/, '').trim();
+
+  const [dstData, bosteder, alleInspektoerer, tpBosteder] = await Promise.all([
     hentDstKommuneData(),
     hentBostedForKommune(kommuneNavn, fra, til),
     hentAlleInspektoerer(),
+    hentTpBostedForKommune(kortNavn),
   ]);
 
-  const dstNavn = kommuneNavn.replace(/\s+[Kk]ommune$/, '').trim();
+  const dstNavn = kortNavn;
   const dst = dstData.find((d) => d.kommune === dstNavn || d.kommune === kommuneNavn);
 
   // Inspectors who have done tilsyn in this kommune
@@ -80,11 +83,34 @@ export async function hentKommuneDetail(kommuneNavn: string, fra?: string, til?:
     p108: dst?.p108 ?? 0,
     totalBorgere: dst?.total ?? 0,
     bosteder,
+    tpBosteder,
     inspektoerer,
     fundFordeling,
     antalKritiske,
     senesteDato,
   };
+}
+
+async function hentTpBostedForKommune(kortKommuneNavn: string): Promise<TpKommuneBosted[]> {
+  const supabase = getSupabaseServerClient();
+  const { data } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .select('id, navn, tilbudstype, pladser, driftsform, cvr')
+    .or(`kommune.ilike.%${kortKommuneNavn}%`)
+    .not('navn', 'is', null)
+    .order('navn', { ascending: true });
+
+  if (!data) return [];
+
+  type DbTp = { id: string; navn: string; tilbudstype: string | null; pladser: number | null; driftsform: string | null; cvr: string | null };
+  return (data as DbTp[]).map((r) => ({
+    id: r.id,
+    navn: r.navn,
+    tilbudstype: r.tilbudstype,
+    pladser: r.pladser,
+    driftsform: r.driftsform,
+    cvr: r.cvr,
+  }));
 }
 
 async function hentBostedAntalPrKommune(fra?: string, til?: string): Promise<DbKommuneCount[]> {
