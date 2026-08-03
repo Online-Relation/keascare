@@ -23,9 +23,10 @@ import { KundeKort } from './sections/KundeKort';
 type BostedDetailPageProps = {
   bosted: BostedDetail;
   pakker?: KundePakke[];
+  varslingId?: string | null;
 };
 
-export function BostedDetailPage({ bosted, pakker = [] }: BostedDetailPageProps) {
+export function BostedDetailPage({ bosted, pakker = [], varslingId = null }: BostedDetailPageProps) {
   const [historikOpdater, setHistorikOpdater] = useState(0);
 
   return (
@@ -34,7 +35,7 @@ export function BostedDetailPage({ bosted, pakker = [] }: BostedDetailPageProps)
         <NyOprettetBanner />
       </Suspense>
 
-      <BostedHeader bosted={bosted} pakker={pakker} />
+      <BostedHeader bosted={bosted} pakker={pakker} varslingId={varslingId} />
 
       <KundeKort bosted={bosted} pakker={pakker} />
 

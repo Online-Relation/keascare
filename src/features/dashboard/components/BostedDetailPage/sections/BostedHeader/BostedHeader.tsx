@@ -8,10 +8,12 @@ import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
 import { useFavoritter } from '@/features/favoritter/hooks/useFavoritter';
 import { DataKvalitetBadge } from '@/features/dashboard/components/DataKvalitetBadge';
+import { VarsletTilsynKnap } from '@/features/varsletTilsyn/components/VarsletTilsynKnap';
 
 type BostedHeaderProps = {
   bosted: BostedDetail;
   pakker?: KundePakke[];
+  varslingId?: string | null;
 };
 
 async function toggleGigantApi(id: string, næsteVærdi: boolean) {
@@ -22,7 +24,7 @@ async function toggleGigantApi(id: string, næsteVærdi: boolean) {
   });
 }
 
-export function BostedHeader({ bosted, pakker = [] }: BostedHeaderProps) {
+export function BostedHeader({ bosted, pakker = [], varslingId = null }: BostedHeaderProps) {
   const { erFavorit, toggleFavorit } = useFavoritter();
   const erStjernet = erFavorit(bosted.id);
   const [erGigant, setErGigant] = useState(bosted.erGigant);
@@ -43,8 +45,16 @@ export function BostedHeader({ bosted, pakker = [] }: BostedHeaderProps) {
             )}
           </div>
 
-          {/* Gigant og favorit side om side */}
-          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0 }}>
+          {/* Varslet tilsyn, gigant og favorit side om side */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexShrink: 0, alignItems: 'center' }}>
+            <VarsletTilsynKnap
+              bostedId={bosted.id}
+              bostedNavn={bosted.navn}
+              kommune={bosted.kommune ?? null}
+              senesteRapportDato={bosted.rapportDato ?? null}
+              varslingId={varslingId}
+            />
+
             <button
               className={`gigant-knap${erGigant ? ' aktiv' : ''}`}
               onClick={() => {

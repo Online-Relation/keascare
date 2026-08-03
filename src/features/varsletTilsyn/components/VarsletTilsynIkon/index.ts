@@ -1,0 +1,1 @@
+export { VarsletTilsynIkon } from './VarsletTilsynIkon';

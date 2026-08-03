@@ -1,0 +1,1 @@
+export { VarsletTilsynPage } from './VarsletTilsynPage';

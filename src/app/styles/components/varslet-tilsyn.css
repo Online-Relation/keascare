@@ -1,0 +1,64 @@
+/* src/app/styles/components/varslet-tilsyn.css */
+
+/* Side header */
+.varslet-side-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; }
+.varslet-side-ikon { color: #f97316; flex-shrink: 0; margin-top: 3px; }
+.varslet-side-titel { font-size: var(--text-xl); font-weight: var(--fw-semibold); color: var(--color-text-primary); margin: 0 0 0.25rem; }
+.varslet-side-beskrivelse { font-size: var(--text-sm); color: var(--color-text-muted); margin: 0; }
+
+/* Ingen varslinger */
+.varslet-ingen { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; padding: 3rem 1rem; text-align: center; color: var(--color-text-muted); font-size: var(--text-sm); }
+.varslet-ingen-ikon { color: var(--color-border); }
+.varslet-ingen-sub { font-size: var(--text-xs); color: var(--color-text-muted); }
+
+/* Liste */
+.varslet-liste { display: flex; flex-direction: column; gap: 0.5rem; }
+.varslet-kort { display: flex; align-items: stretch; background: var(--color-card); border: 1px solid var(--color-border); border-radius: 10px; overflow: hidden; transition: border-color 0.15s; }
+.varslet-kort:hover { border-color: #f97316; }
+.varslet-kort-link { flex: 1; display: flex; align-items: center; gap: 1rem; padding: 0.875rem 1rem; text-decoration: none; }
+.varslet-kort-info { flex: 1; min-width: 0; }
+.varslet-kort-navn { font-size: var(--text-sm); font-weight: var(--fw-semibold); color: var(--color-text-primary); display: block; }
+.varslet-kort-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+.varslet-kort-meta-item { display: flex; align-items: center; gap: 0.25rem; font-size: var(--text-xs); color: var(--color-text-muted); }
+.varslet-kort-noter { font-size: var(--text-xs); color: var(--color-text-secondary); font-style: italic; }
+.varslet-kort-pil { color: var(--color-text-muted); flex-shrink: 0; }
+.varslet-kort-slet { padding: 0 0.75rem; background: transparent; border: none; border-left: 1px solid var(--color-border); color: var(--color-text-muted); cursor: pointer; transition: color 0.15s, background 0.15s; }
+.varslet-kort-slet:hover { color: #dc2626; background: #fef2f2; }
+
+/* Detalje */
+.varslet-detalje-tilbage { margin-bottom: 1rem; }
+.varslet-tilbage-link { display: inline-flex; align-items: center; gap: 0.375rem; font-size: var(--text-sm); color: var(--color-text-muted); text-decoration: none; }
+.varslet-tilbage-link:hover { color: var(--color-text-primary); }
+.varslet-detalje-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1.5rem; }
+.varslet-detalje-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.25rem; }
+.varslet-fjern-knap { margin-left: auto; color: var(--color-text-muted); flex-shrink: 0; }
+.varslet-fjern-knap:hover { color: #dc2626; }
+.varslet-detalje-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; }
+.varslet-detalje-sektion { background: var(--color-card); border: 1px solid var(--color-border); border-radius: 12px; padding: 1.25rem; }
+.varslet-sektion-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; color: var(--color-text-secondary); }
+.varslet-sektion-titel { font-size: var(--text-base); font-weight: var(--fw-semibold); color: var(--color-text-primary); margin: 0 0 1rem; }
+.varslet-sektion-header + .varslet-sektion-titel { margin-top: 0; }
+
+/* Inspektørliste */
+.varslet-insp-liste { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.75rem; }
+.varslet-insp-kort { display: flex; align-items: center; gap: 0.75rem; padding: 0.625rem 0.75rem; border-radius: 8px; background: var(--color-bg); border: 1px solid var(--color-border); text-decoration: none; transition: border-color 0.15s; }
+.varslet-insp-kort:hover { border-color: var(--color-primary); }
+.varslet-insp-tekst { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.varslet-insp-navn { font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--color-text-primary); }
+.varslet-insp-titel { font-size: var(--text-xs); color: var(--color-text-muted); }
+.varslet-insp-sub { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 1px; }
+.varslet-insp-sandsynlighed { flex-shrink: 0; }
+.varslet-insp-pct { font-size: var(--text-sm); font-weight: var(--fw-semibold); color: var(--color-text-muted); }
+.varslet-insp-forklaring { font-size: var(--text-xs); color: var(--color-text-muted); margin-top: 0.5rem; font-style: italic; }
+.varslet-ingen-inspektoerer { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+/* Noter */
+.varslet-noter-felt { width: 100%; font-size: var(--text-sm); padding: 0.625rem 0.75rem; border: 1px solid var(--color-border); border-radius: 8px; resize: vertical; color: var(--color-text-primary); background: var(--color-bg); font-family: inherit; margin-bottom: 0.75rem; }
+.varslet-noter-felt:focus { outline: none; border-color: var(--color-primary); }
+.varslet-gem-knap { display: flex; align-items: center; gap: 0.375rem; }
+
+@media (max-width: 768px) {
+  .varslet-detalje-grid { grid-template-columns: 1fr; }
+  .varslet-detalje-header { flex-wrap: wrap; }
+  .varslet-fjern-knap { margin-left: 0; }
+}

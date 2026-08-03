@@ -10,6 +10,7 @@ import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { NotifikationsCenter } from '@/features/dashboard/components/NotifikationsCenter';
 import { TidsregistreringWidget } from '@/features/tidsregistrering/components/TidsregistreringWidget';
+import { VarsletTilsynIkon } from '@/features/varsletTilsyn/components/VarsletTilsynIkon';
 
 export function DashboardHeader() {
   return (
@@ -26,6 +27,7 @@ export function DashboardHeader() {
 
       <div className="dashboard-topbar-højre">
         <TidsregistreringWidget />
+        <VarsletTilsynIkon />
         <Link href="/dashboard/favoritter" className="btn btn-ghost btn-sm" aria-label="Fulgte bosteder">
           <Star size={15} />
         </Link>

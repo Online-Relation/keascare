@@ -1,0 +1,1 @@
+export { VarsletTilsynDetalje } from './VarsletTilsynDetalje';

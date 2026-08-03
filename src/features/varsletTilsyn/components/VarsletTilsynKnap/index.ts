@@ -1,0 +1,1 @@
+export { VarsletTilsynKnap } from './VarsletTilsynKnap';

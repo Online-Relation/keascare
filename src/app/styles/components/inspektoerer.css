@@ -179,3 +179,9 @@
 .profil-kollega-navn { font-size: var(--text-sm); font-weight: var(--fw-medium); color: var(--color-text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .profil-kollega-titel { font-size: var(--text-xs); color: var(--color-text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .profil-kollega-antal { font-size: var(--text-sm); font-weight: var(--fw-semibold); color: var(--color-text-muted); white-space: nowrap; }
+
+/* Varslet tilsyn — knap */
+.btn-varslet { background: var(--color-warning-subtle, #fef3c7); color: #92400e; border: 1px solid #fcd34d; }
+.btn-varslet:hover { background: #fde68a; }
+.varslet-knap-spinner { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
