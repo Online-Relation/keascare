@@ -8,8 +8,6 @@ import type { BostedOptagelse } from '@/features/monday/services/MondayProdukter
 import type { BeboerRegistrering } from '@/features/pakker/services/PakkerService';
 import { gemBeboerRegistrering } from '@/features/pakker/services/PakkerService';
 import { BostedHistorik } from './BostedHistorik';
-import { SorBadge } from '@/features/sor/components/SorBadge';
-import type { SorCacheEnhed } from '@/features/sor/services/SorService';
 
 const FAST_PRIS = 1895;
 const BEBOER_PRIS = 289;
@@ -46,7 +44,6 @@ type Props = {
   bosteder: BostedOptagelse[];
   mondayIdMap: Record<string, string>;
   eksisterendeRegistreringer: BeboerRegistrering[];
-  sorMatchMap?: Record<string, SorCacheEnhed | null>;
 };
 
 function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[]; værdiFeltet: (navn: string) => string }) {
@@ -65,7 +62,7 @@ function TotalMrrRække({ bosteder, værdiFeltet }: { bosteder: BostedOptagelse[
   );
 }
 
-export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer, sorMatchMap }: Props) {
+export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreringer }: Props) {
   const standard = nuværendeMåned();
   const [valgtAar, setValgtAar]         = useState(standard.aar);
   const [valgtMaaned, setValgtMaaned]   = useState(standard.maaned);
@@ -180,7 +177,6 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
           <thead>
             <tr>
               <th>Bosted</th>
-              <th>SOR</th>
               <th>Startdato</th>
               <th className="pakker-th-tal">Mdr. aktiv</th>
               <th className="pakker-th-tal">Beboere</th>
@@ -222,12 +218,6 @@ export function MellempakkeTabel({ bosteder, mondayIdMap, eksisterendeRegistreri
                       <ChevronDown size={14} className={`pakker-chevron${historikÅben ? ' åben' : ''}`} />
                       {b.navn}
                     </button>
-                  </td>
-                  <td>
-                    <SorBadge
-                      match={sorMatchMap ? (sorMatchMap[b.navn] ?? null) : undefined}
-                      ikkeIndlæst={!sorMatchMap}
-                    />
                   </td>
                   <td>{b.dato ?? '—'}</td>
                   <td className="pakker-td-tal">{mdr != null ? `${mdr} mdr.` : '—'}</td>
