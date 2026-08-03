@@ -16,11 +16,29 @@ import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAu
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { TidsregistreringWidget } from '@/features/tidsregistrering/components/TidsregistreringWidget';
 
-type Søgeresultat = {
+type BostedResultat = {
   id: string;
   navn: string;
   kommune: string | null;
   fundNiveau: string | null;
+};
+
+type KommuneResultat = {
+  navn: string;
+  slug: string;
+};
+
+type InspektoerResultat = {
+  slug: string;
+  navn: string;
+  titel: string | null;
+  antal: number;
+};
+
+type MobilResultater = {
+  kommuner: KommuneResultat[];
+  bosteder: BostedResultat[];
+  inspektoerer: InspektoerResultat[];
 };
 
 export function MobileNav() {
@@ -41,7 +59,7 @@ export function MobileNav() {
   const [brugerEmail, setBrugerEmail] = useState('');
   const [rolle, setRolle] = useState<string | null>(null);
   const [søgeTekst, setSøgeTekst] = useState('');
-  const [resultater, setResultater] = useState<Søgeresultat[]>([]);
+  const [resultater, setResultater] = useState<MobilResultater>({ kommuner: [], bosteder: [], inspektoerer: [] });
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -61,13 +79,18 @@ export function MobileNav() {
 
   useEffect(() => {
     if (!søgeTekst.trim() || søgeTekst.length < 2) {
-      setResultater([]);
+      setResultater({ kommuner: [], bosteder: [], inspektoerer: [] });
       return;
     }
     const t = setTimeout(async () => {
-      const res = await fetch(`/api/search/bosteder?q=${encodeURIComponent(søgeTekst)}`);
-      const data = await res.json();
-      setResultater(data);
+      const q = encodeURIComponent(søgeTekst);
+      const [bRes, iRes, kRes] = await Promise.all([
+        fetch(`/api/search/bosteder?q=${q}`),
+        fetch(`/api/search/inspektoerer?q=${q}`),
+        fetch(`/api/search/kommuner?q=${q}`),
+      ]);
+      const [bosteder, inspektoerer, kommuner] = await Promise.all([bRes.json(), iRes.json(), kRes.json()]);
+      setResultater({ kommuner, bosteder, inspektoerer });
     }, 280);
     return () => clearTimeout(t);
   }, [søgeTekst]);
@@ -77,12 +100,22 @@ export function MobileNav() {
   function lukSøgning() {
     setSøgningÅben(false);
     setSøgeTekst('');
-    setResultater([]);
+    setResultater({ kommuner: [], bosteder: [], inspektoerer: [] });
   }
 
-  function vælgResultat(id: string) {
+  function vælgBosted(id: string) {
     lukSøgning();
     router.push(`/dashboard/bosteder/${id}`);
+  }
+
+  function vælgKommune(slug: string) {
+    lukSøgning();
+    router.push(`/dashboard/kommuner/${slug}`);
+  }
+
+  function vælgInspektoer(slug: string) {
+    lukSøgning();
+    router.push(`/dashboard/rapporter/inspektoerer/${slug}`);
   }
 
   async function logUd() {
@@ -155,14 +188,40 @@ export function MobileNav() {
         </div>
       )}
 
-      {søgningÅben && resultater.length > 0 && (
+      {søgningÅben && (resultater.kommuner.length > 0 || resultater.bosteder.length > 0 || resultater.inspektoerer.length > 0) && (
         <div className="mobil-søg-resultater">
-          {resultater.map((r) => (
-            <button key={r.id} className="mobil-søg-resultat" onClick={() => vælgResultat(r.id)}>
-              <span className="mobil-søg-navn">{r.navn}</span>
-              {r.kommune && <span className="mobil-søg-kommune">{r.kommune}</span>}
-            </button>
-          ))}
+          {resultater.kommuner.length > 0 && (
+            <>
+              <p className="mobil-søg-sektion">Kommuner</p>
+              {resultater.kommuner.map((r) => (
+                <button key={r.slug} className="mobil-søg-resultat" onClick={() => vælgKommune(r.slug)}>
+                  <span className="mobil-søg-navn">📍 {r.navn.replace(/\s+[Kk]ommune$/, '')} Kommune</span>
+                </button>
+              ))}
+            </>
+          )}
+          {resultater.bosteder.length > 0 && (
+            <>
+              <p className="mobil-søg-sektion">Bosteder</p>
+              {resultater.bosteder.map((r) => (
+                <button key={r.id} className="mobil-søg-resultat" onClick={() => vælgBosted(r.id)}>
+                  <span className="mobil-søg-navn">{r.navn}</span>
+                  {r.kommune && <span className="mobil-søg-kommune">{r.kommune}</span>}
+                </button>
+              ))}
+            </>
+          )}
+          {resultater.inspektoerer.length > 0 && (
+            <>
+              <p className="mobil-søg-sektion">Inspektører</p>
+              {resultater.inspektoerer.map((r) => (
+                <button key={r.slug} className="mobil-søg-resultat" onClick={() => vælgInspektoer(r.slug)}>
+                  <span className="mobil-søg-navn">{r.navn}</span>
+                  {r.titel && <span className="mobil-søg-kommune">{r.titel}</span>}
+                </button>
+              ))}
+            </>
+          )}
         </div>
       )}
 
