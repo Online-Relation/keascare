@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { Building2, Phone, Mail, User, Globe, MapPin, TrendingUp, RefreshCw, Shield, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import { ScraperInfo } from '../ScraperInfo/ScraperInfo';
+import { BostedRedigerCvr } from '../BostedRedigerCvr';
 
 type Props = { bosted: BostedDetail };
 type Felt = { label: string; value: string | null; placeholder?: string };
@@ -87,7 +88,16 @@ export function BostedOrganisationKort({ bosted }: Props) {
           <span className="bosted-detail-kort-titel">Bostedinformation</span>
         </div>
         <div className="bosted-detail-kort-body">
-          <FeltRække label="CVR-nummer" value={bosted.cvr} />
+          <div className="bosted-detail-field">
+            <span className="bosted-detail-field-label">CVR-nummer</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              {bosted.cvr
+                ? <span className="bosted-detail-field-value">{bosted.cvr}</span>
+                : <span className="bosted-detail-placeholder">Mangler data</span>
+              }
+              <BostedRedigerCvr bostedId={bosted.id} nuværendeCvr={bosted.cvr} />
+            </div>
+          </div>
           <div className="bosted-detail-field">
             <span className="bosted-detail-field-label">Sundhedsvæsenets Organisationsregister</span>
             {bosted.sorKode
