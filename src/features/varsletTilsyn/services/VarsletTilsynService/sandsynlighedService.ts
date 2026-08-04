@@ -24,7 +24,7 @@ export async function beregnSandsynligeInspektoerer(kommune: string | null): Pro
     .from('stps_rapporter')
     .select('id, kommune, region, temaer, tilsyn_deltagere_stps')
     .not('tilsyn_deltagere_stps', 'is', null)
-    .or(`kommune.eq.${kommune},kommune.eq.${kortNavn}`);
+    .or(`kommune.eq."${kommune}",kommune.eq."${kortNavn}"`);
 
   const rapporter = (data ?? []) as DbRapport[];
 
