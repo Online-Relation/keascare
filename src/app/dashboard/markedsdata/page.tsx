@@ -3,13 +3,15 @@
 import { MarkedsdataPage } from '@/features/markedsdata/components/MarkedsdataPage';
 import { hentDstFraCache, hentDstKommuneData, hentDstÅrligeData } from '@/lib/api/DstClient';
 import { hentMarkedsdataStats } from '@/features/markedsdata/services/MarkedsdataService';
+import { hentSenesteAiAnalyse } from '@/features/markedsdata/services/AiAnalyseService';
 
 export const revalidate = 0;
 
 export default async function MarkedsdataSide() {
-  const [cacheResultat, årligeData] = await Promise.all([
+  const [cacheResultat, årligeData, aiAnalyse] = await Promise.all([
     hentDstFraCache(),
     hentDstÅrligeData(2016).catch(() => []),
+    hentSenesteAiAnalyse('markedsdata').catch(() => null),
   ]);
 
   let dstData = cacheResultat.data;
@@ -27,6 +29,7 @@ export default async function MarkedsdataSide() {
       dstData={dstData}
       årligeData={årligeData}
       kvartal={kvartal}
+      aiAnalyse={aiAnalyse}
     />
   );
 }

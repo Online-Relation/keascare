@@ -1,48 +1,73 @@
 // src/features/markedsdata/components/MarkedsdataPage/sections/MarkedsdataAI/MarkedsdataAI.tsx
 
-import { Sparkles } from 'lucide-react';
-import type { MarkedsdataStats } from '@/features/markedsdata/types/markedsdata.types';
+'use client';
 
-type Props = { stats: MarkedsdataStats };
+import { useState } from 'react';
+import { Sparkles, RefreshCw } from 'lucide-react';
+import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
+import type { AiAnalyse } from '@/features/markedsdata/services/AiAnalyseService';
 
-export function MarkedsdataAI({ stats }: Props) {
-  const topKommuner = stats.kommuner
-    .sort((a, b) => b.borgere - a.borgere)
-    .slice(0, 3)
-    .map((k) => k.kommune)
-    .join(', ');
+type Props = {
+  analyse: AiAnalyse | null;
+};
 
-  const urørtPct = stats.totalBosteder > 0
-    ? Math.round((stats.antalAldrigKontaktet / stats.totalBosteder) * 100)
-    : 0;
+export function MarkedsdataAI({ analyse }: Props) {
+  const { rolle } = useBrugerRolle();
+  const [kører, setKører] = useState(false);
+  const [fejl, setFejl] = useState<string | null>(null);
+
+  const kanOpdatere = rolle === 'development' || rolle === 'direktør';
+
+  async function opdaterAnalyse() {
+    setKører(true);
+    setFejl(null);
+    try {
+      const res = await fetch('/api/markedsdata/ai-analyse', { method: 'POST' });
+      if (!res.ok) throw new Error('Serverfejl');
+      window.location.reload();
+    } catch {
+      setFejl('Analyse fejlede – prøv igen om lidt.');
+      setKører(false);
+    }
+  }
+
+  const dato = analyse?.genereret_dato
+    ? new Date(analyse.genereret_dato).toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })
+    : null;
 
   return (
     <div className="md-ai-kort">
       <div className="md-ai-header">
         <Sparkles size={16} />
         <span className="md-ai-label">AI-overblik</span>
-        <span className="md-ai-badge">Kommer snart</span>
+        {dato && <span className="md-ai-dato">Opdateret {dato}</span>}
+        {kanOpdatere && (
+          <button
+            className="md-ai-refresh"
+            onClick={opdaterAnalyse}
+            disabled={kører}
+            title="Generer ny analyse"
+          >
+            <RefreshCw size={13} className={kører ? 'md-ai-spin' : ''} />
+            {kører ? 'Genererer...' : 'Opdater nu'}
+          </button>
+        )}
       </div>
-      <p className="md-ai-tekst">
-        {topKommuner && (
-          <>
-            Kommuner som {topKommuner} har flest borgere i §107/§108 botilbud og er naturlige prioriteter for salgsarbejdet.{' '}
-          </>
-        )}
-        {stats.antalKritiskeEllerStoerre > 0 && (
-          <>
-            {stats.antalKritiskeEllerStoerre.toLocaleString('da-DK')} bosteder har kritiske eller større STPS-fund — disse bosteder har typisk størst behov for ekstern tilsynshjælp og bør kontaktes hurtigt.{' '}
-          </>
-        )}
-        {urørtPct > 50 && (
-          <>
-            {urørtPct}% af markedet er endnu ikke kontaktet — der er betydeligt potentiale i systematisk outreach til disse bosteder.{' '}
-          </>
-        )}
-        En dybere AI-analyse med kommunesammenligninger og salgspotentiale-scoring er planlagt til næste version.
-      </p>
+
+      {analyse ? (
+        <p className="md-ai-tekst">{analyse.tekst}</p>
+      ) : (
+        <p className="md-ai-tekst md-ai-tekst--mangler">
+          Ingen analyse endnu. Analysen genereres automatisk den 1. i hver måned.
+          {kanOpdatere && ' Klik "Opdater nu" for at generere med det samme.'}
+        </p>
+      )}
+
+      {fejl && <p className="md-ai-fejl">{fejl}</p>}
+
       <p className="md-ai-note">
-        Data fra Tilbudsportalen, STPS og Danmarks Statistik · Opdateres dagligt
+        Analyse baseret på STPS-rapporter, Tilbudsportalen og Danmarks Statistik · Opdateres månedligt
+        {analyse?.model ? ` · ${analyse.model}` : ''}
       </p>
     </div>
   );

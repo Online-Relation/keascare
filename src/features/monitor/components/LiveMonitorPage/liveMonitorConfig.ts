@@ -70,6 +70,22 @@ export const SCRAPER_GRUPPER: { label: string; scrapers: ScraperDef[] }[] = [
       { id: 'tp-match',    label: 'TP Matcher',  kørselKl: '05:00', intervalTimer: 24 },
     ],
   },
+  {
+    label: 'AI',
+    scrapers: [
+      {
+        id: 'ai-analyse',
+        label: 'AI Markedsanalyse',
+        kørselKl: '1. i måneden',
+        intervalTimer: 24 * 30,
+        næsteKørselLabel: () => {
+          const nu = new Date();
+          const næste = new Date(nu.getFullYear(), nu.getMonth() + 1, 1, 3, 0, 0);
+          return `1. ${næste.toLocaleDateString('da-DK', { month: 'long' })}`;
+        },
+      },
+    ],
+  },
 ];
 
 export const SCRAPERS: ScraperDef[] = SCRAPER_GRUPPER.flatMap((g) => g.scrapers);

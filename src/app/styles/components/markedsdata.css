@@ -586,6 +586,58 @@
     margin: 0 0 0.75rem;
   }
 
+  .md-ai-dato {
+    font-size: var(--text-xs);
+    color: var(--color-text-muted);
+    margin-left: 0.5rem;
+  }
+
+  .md-ai-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin-left: auto;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    background: var(--color-card);
+    color: var(--color-text-secondary);
+    font-size: var(--text-xs);
+    font-weight: var(--fw-medium);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .md-ai-refresh:hover:not(:disabled) {
+    border-color: #6366f1;
+    color: #6366f1;
+  }
+
+  .md-ai-refresh:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .md-ai-spin {
+    animation: md-spin 1s linear infinite;
+  }
+
+  @keyframes md-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+
+  .md-ai-tekst--mangler {
+    font-style: italic;
+    color: var(--color-text-muted);
+  }
+
+  .md-ai-fejl {
+    font-size: var(--text-xs);
+    color: #dc2626;
+    margin: 0.5rem 0 0;
+  }
+
   .md-ai-note {
     font-size: var(--text-xs);
     color: var(--color-text-muted);
