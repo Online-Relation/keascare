@@ -16,8 +16,14 @@ export function ForløbsansvarligGraf({ kunder }: Props) {
   const data = useMemo<PersonData[]>(() => {
     const map = new Map<string, { aktive: number; nye: number }>();
 
+    const navnMap: Record<string, string> = {
+      'stine@keascare.dk': 'Stine Brænder',
+    };
+
     for (const k of kunder) {
-      const navn = k.forløbsansvarlig?.trim() || 'Ikke tildelt';
+      const råNavn = k.forløbsansvarlig?.trim();
+      if (!råNavn) continue; // skip "Ikke tildelt"
+      const navn = navnMap[råNavn] ?? råNavn;
       if (!map.has(navn)) map.set(navn, { aktive: 0, nye: 0 });
       const entry = map.get(navn)!;
       if (k.gruppe === 'aktive_forloeb') entry.aktive++;
@@ -26,6 +32,7 @@ export function ForløbsansvarligGraf({ kunder }: Props) {
 
     return [...map.entries()]
       .map(([navn, t]) => ({ navn, aktive: t.aktive, nye: t.nye, total: t.aktive + t.nye }))
+      .filter((d) => d.total > 0)
       .sort((a, b) => b.total - a.total);
   }, [kunder]);
 
