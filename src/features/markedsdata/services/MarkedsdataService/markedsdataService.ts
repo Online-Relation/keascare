@@ -2,7 +2,8 @@
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { MarkedsdataStats, MarkedsdataBosted, KommuneMarked, OpmærksomhedSignal } from '@/features/markedsdata/types/markedsdata.types';
-import type { LosFilter } from '@/lib/config/GlobalFilter';
+import type { LosFilter, VisFilter } from '@/lib/config/GlobalFilter';
+import { KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 
 type RåRapport = {
@@ -15,7 +16,7 @@ type RåRapport = {
   los_medlem: boolean | null;
 };
 
-export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: LosFilter = 'ekskluder'): Promise<MarkedsdataStats> {
+export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: LosFilter = 'ekskluder', visFilter: VisFilter = 'alle'): Promise<MarkedsdataStats> {
   const supabase = getSupabaseServerClient();
 
   // Hent STPS-bosteder — filtrer LOS fra hvis ekskluder
@@ -32,8 +33,12 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: 
   const rækker = (data ?? []) as RåRapport[];
 
   // Totalt marked = alle tilbud fra Tilbudsportalen (±LOS)
+  let tpQuery = supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true });
+  if (visFilter === 'privat') {
+    tpQuery = tpQuery.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.map((d) => `"${d}"`).join(',')})`);
+  }
   const [{ count: tpCount }, { count: losCount }] = await Promise.all([
-    supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }),
+    tpQuery,
     supabase.from('los_medlemmer').select('*', { count: 'exact', head: true }),
   ]);
 
