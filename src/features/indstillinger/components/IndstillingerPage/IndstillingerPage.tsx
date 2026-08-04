@@ -2,22 +2,21 @@
 // src/features/indstillinger/components/IndstillingerPage/IndstillingerPage.tsx
 
 import { useTransition } from 'react';
-import { Settings, Building2, Check } from 'lucide-react';
-import { setVisFilter } from '@/app/actions/filterActions';
-import type { VisFilter } from '@/lib/config/GlobalFilter';
+import { Settings, Building2, Check, Users } from 'lucide-react';
+import { setVisFilter, setLosFilter } from '@/app/actions/filterActions';
+import type { VisFilter, LosFilter } from '@/lib/config/GlobalFilter';
 
-type Props = { aktivtFilter: VisFilter };
+type Props = {
+  aktivtFilter: VisFilter;
+  losFilter: LosFilter;
+};
 
-export function IndstillingerPage({ aktivtFilter }: Props) {
-  const [pending, startTransition] = useTransition();
-
-  function toggle() {
-    startTransition(async () => {
-      await setVisFilter(aktivtFilter === 'privat' ? 'alle' : 'privat');
-    });
-  }
+export function IndstillingerPage({ aktivtFilter, losFilter }: Props) {
+  const [pendingPrivat, startPrivat] = useTransition();
+  const [pendingLos, startLos] = useTransition();
 
   const erPrivat = aktivtFilter === 'privat';
+  const losInkluderet = losFilter === 'inkluder';
 
   return (
     <div className="dashboard-content">
@@ -32,6 +31,7 @@ export function IndstillingerPage({ aktivtFilter }: Props) {
       <div className="ind-sektion">
         <h2 className="ind-sektion-titel">Datavisning</h2>
 
+        {/* Privat-filter */}
         <div className={`ind-toggle-kort ${erPrivat ? 'ind-toggle-kort--aktiv' : ''}`}>
           <div className="ind-toggle-venstre">
             <Building2 size={18} className="ind-toggle-ikon" />
@@ -51,11 +51,10 @@ export function IndstillingerPage({ aktivtFilter }: Props) {
               </div>
             </div>
           </div>
-
           <button
             className={`ind-toggle-knap ${erPrivat ? 'ind-toggle-knap--til' : ''}`}
-            onClick={toggle}
-            disabled={pending}
+            onClick={() => startPrivat(async () => { await setVisFilter(erPrivat ? 'alle' : 'privat'); })}
+            disabled={pendingPrivat}
             role="switch"
             aria-checked={erPrivat}
           >
@@ -68,6 +67,42 @@ export function IndstillingerPage({ aktivtFilter }: Props) {
         {erPrivat && (
           <p className="ind-aktiv-note">
             Filteret er aktivt. Al data på tværs af dashboardet viser kun private og selvejende bosteder.
+          </p>
+        )}
+
+        {/* LOS-filter */}
+        <div className={`ind-toggle-kort ${losInkluderet ? 'ind-toggle-kort--aktiv' : ''}`} style={{ marginTop: '0.875rem' }}>
+          <div className="ind-toggle-venstre">
+            <Users size={18} className="ind-toggle-ikon" />
+            <div>
+              <p className="ind-toggle-label">Inkluder LOS-medlemmer i markedsdata</p>
+              <p className="ind-toggle-beskrivelse">
+                LOS-medlemmer (Landsorganisationen for sociale tilbud) har typisk eget tilsynssystem og er ikke primære leads.
+                Som standard er de fratrukket markedstallet. Slå til for at inkludere dem i alle tal.
+              </p>
+              <div className="ind-driftsform-chips">
+                <span className={`ind-chip ${losInkluderet ? 'ind-chip--inkluderet' : 'ind-chip--ekskluderet ind-chip--strikethrough'}`}>
+                  LOS-medlemmer
+                </span>
+              </div>
+            </div>
+          </div>
+          <button
+            className={`ind-toggle-knap ${losInkluderet ? 'ind-toggle-knap--til' : ''}`}
+            onClick={() => startLos(async () => { await setLosFilter(losInkluderet ? 'ekskluder' : 'inkluder'); })}
+            disabled={pendingLos}
+            role="switch"
+            aria-checked={losInkluderet}
+          >
+            <span className="ind-toggle-knap-cirkel">
+              {losInkluderet && <Check size={10} strokeWidth={3} />}
+            </span>
+          </button>
+        </div>
+
+        {losInkluderet && (
+          <p className="ind-aktiv-note">
+            LOS-medlemmer er inkluderet. Markedstallet på Markedsdata-siden viser alle tilbud inkl. LOS.
           </p>
         )}
       </div>

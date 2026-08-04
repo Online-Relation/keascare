@@ -3,15 +3,23 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { COOKIE_NAVN } from '@/lib/config/GlobalFilter';
+import { COOKIE_NAVN, COOKIE_LOS } from '@/lib/config/GlobalFilter';
+
+const COOKIE_OPTS = {
+  path: '/',
+  maxAge: 60 * 60 * 24 * 365,
+  httpOnly: false,
+  sameSite: 'lax' as const,
+};
 
 export async function setVisFilter(filter: 'alle' | 'privat') {
   const cookieStore = await cookies();
-  cookieStore.set(COOKIE_NAVN, filter, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365, // 1 år
-    httpOnly: false,
-    sameSite: 'lax',
-  });
+  cookieStore.set(COOKIE_NAVN, filter, COOKIE_OPTS);
+  revalidatePath('/dashboard', 'layout');
+}
+
+export async function setLosFilter(filter: 'ekskluder' | 'inkluder') {
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_LOS, filter, COOKIE_OPTS);
   revalidatePath('/dashboard', 'layout');
 }

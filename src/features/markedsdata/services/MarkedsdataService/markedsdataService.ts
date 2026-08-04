@@ -2,6 +2,7 @@
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { MarkedsdataStats, MarkedsdataBosted, KommuneMarked, OpmærksomhedSignal } from '@/features/markedsdata/types/markedsdata.types';
+import type { LosFilter } from '@/lib/config/GlobalFilter';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 
 type RåRapport = {
@@ -14,24 +15,30 @@ type RåRapport = {
   los_medlem: boolean | null;
 };
 
-export async function hentMarkedsdataStats(dstData: DstKommuneRå[]): Promise<MarkedsdataStats> {
+export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: LosFilter = 'ekskluder'): Promise<MarkedsdataStats> {
   const supabase = getSupabaseServerClient();
 
-  // Hent STPS-bosteder (til tabel, fund, kundestatus m.m.)
-  const { data } = await supabase
+  // Hent STPS-bosteder — filtrer LOS fra hvis ekskluder
+  let query = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, monday_item_id, los_medlem')
     .order('rapport_dato', { ascending: false, nullsFirst: false });
 
+  if (losFilter === 'ekskluder') {
+    query = query.or('los_medlem.is.null,los_medlem.eq.false');
+  }
+
+  const { data } = await query;
   const rækker = (data ?? []) as RåRapport[];
 
-  // Totalt marked = alle tilbud fra Tilbudsportalen minus LOS-medlemmer (ikke primære leads)
+  // Totalt marked = alle tilbud fra Tilbudsportalen (±LOS)
   const [{ count: tpCount }, { count: losCount }] = await Promise.all([
     supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }),
     supabase.from('los_medlemmer').select('*', { count: 'exact', head: true }),
   ]);
 
-  const totalBosteder = (tpCount ?? rækker.length) - (losCount ?? 0);
+  const losSubtrak = losFilter === 'ekskluder' ? (losCount ?? 0) : 0;
+  const totalBosteder = (tpCount ?? rækker.length) - losSubtrak;
   const antalKunder = rækker.filter((r) => !!r.monday_item_id).length;
   const antalKritiskeEllerStoerre = rækker.filter(
     (r) => r.fund_niveau === 'kritisk' || r.fund_niveau === 'stoerre',
