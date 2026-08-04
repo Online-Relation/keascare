@@ -2,9 +2,8 @@
 
 // src/features/dashboard/components/BostedDetailPage/sections/BostedVarsletTilsynBoks/BostedVarsletTilsynBoks.tsx
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { Bell, ExternalLink, Save, Users, Lightbulb } from 'lucide-react';
+import { Bell, ExternalLink, Users, Lightbulb } from 'lucide-react';
 import { InspektoerAvatar } from '@/features/stps/components/InspektoerSide/InspektoerAvatar';
 import type { SandsynligInspektoer } from '@/features/varsletTilsyn/types/varsletTilsyn.types';
 
@@ -13,23 +12,9 @@ type Props = {
   bostedNavn: string;
   kommune: string | null;
   sandsynligeInspektoerer: SandsynligInspektoer[];
-  initialNoter: string | null;
 };
 
-export function BostedVarsletTilsynBoks({ varslingId, bostedNavn, kommune, sandsynligeInspektoerer, initialNoter }: Props) {
-  const [noter, setNoter] = useState(initialNoter ?? '');
-  const [gemt, setGemt] = useState(false);
-
-  async function gemNoter() {
-    await fetch(`/api/varslet-tilsyn/${varslingId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ noter }),
-    });
-    setGemt(true);
-    setTimeout(() => setGemt(false), 2000);
-  }
-
+export function BostedVarsletTilsynBoks({ varslingId, bostedNavn, kommune, sandsynligeInspektoerer }: Props) {
   // Saml unikke fokusområder fra alle sandsynlige inspektører
   const fællesFokus = [
     ...new Set(
@@ -97,23 +82,8 @@ export function BostedVarsletTilsynBoks({ varslingId, bostedNavn, kommune, sands
           </div>
         )}
 
-        {/* Hurtige noter */}
-        <div className="varslet-boks-sektion">
-          <p className="varslet-boks-sektion-titel">Forberedelsesnoter</p>
-          <textarea
-            className="varslet-noter-felt varslet-noter-felt-kompakt"
-            value={noter}
-            onChange={(e) => setNoter(e.target.value)}
-            placeholder="Fx kontaktperson, særlige fokusområder, seneste dialog…"
-            rows={3}
-          />
-          <button className="btn btn-sm btn-ghost varslet-boks-gem" onClick={gemNoter}>
-            <Save size={12} />
-            {gemt ? '✓ Gemt' : 'Gem'}
-          </button>
-        </div>
 
-      </div>
+</div>
     </div>
   );
 }

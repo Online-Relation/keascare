@@ -25,11 +25,10 @@ type BostedDetailPageProps = {
   bosted: BostedDetail;
   pakker?: KundePakke[];
   varslingId?: string | null;
-  varslingNoter?: string | null;
   sandsynligeInspektoerer?: SandsynligInspektoer[];
 };
 
-export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarslingId = null, varslingNoter = null, sandsynligeInspektoerer = [] }: BostedDetailPageProps) {
+export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarslingId = null, sandsynligeInspektoerer = [] }: BostedDetailPageProps) {
   const [historikOpdater, setHistorikOpdater] = useState(0);
   const [varslingId, setVarslingId] = useState<string | null>(initialVarslingId);
 
@@ -54,7 +53,6 @@ export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarsl
           bostedNavn={bosted.navn}
           kommune={bosted.kommune ?? null}
           sandsynligeInspektoerer={sandsynligeInspektoerer}
-          initialNoter={varslingNoter}
         />
       )}
 
