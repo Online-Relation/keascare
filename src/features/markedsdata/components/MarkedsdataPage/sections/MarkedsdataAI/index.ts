@@ -1,0 +1,1 @@
+export { MarkedsdataAI } from './MarkedsdataAI';

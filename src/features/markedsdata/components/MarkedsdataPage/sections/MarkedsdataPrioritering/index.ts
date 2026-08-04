@@ -1,0 +1,1 @@
+export { MarkedsdataPrioritering } from './MarkedsdataPrioritering';

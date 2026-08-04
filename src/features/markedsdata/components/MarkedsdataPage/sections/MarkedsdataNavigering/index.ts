@@ -1,0 +1,1 @@
+export { MarkedsdataNavigering } from './MarkedsdataNavigering';

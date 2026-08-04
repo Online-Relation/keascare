@@ -1,0 +1,1 @@
+export { hentMarkedsdataStats } from './markedsdataService';

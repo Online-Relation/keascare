@@ -1,0 +1,1 @@
+export { MarkedsdataMulighederne } from './MarkedsdataMulighederne';

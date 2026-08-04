@@ -1,0 +1,1 @@
+export { MarkedsdataSalgsarbejdet } from './MarkedsdataSalgsarbejdet';
