@@ -25,12 +25,13 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[]): Promise<Ma
 
   const rækker = (data ?? []) as RåRapport[];
 
-  // Totalt marked = alle tilbud fra Tilbudsportalen (samme tal som Dashboard)
-  const { count: tpCount } = await supabase
-    .from('tilbudsportalen_tilbud')
-    .select('*', { count: 'exact', head: true });
+  // Totalt marked = alle tilbud fra Tilbudsportalen minus LOS-medlemmer (ikke primære leads)
+  const [{ count: tpCount }, { count: losCount }] = await Promise.all([
+    supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true }),
+    supabase.from('los_medlemmer').select('*', { count: 'exact', head: true }),
+  ]);
 
-  const totalBosteder = tpCount ?? rækker.length;
+  const totalBosteder = (tpCount ?? rækker.length) - (losCount ?? 0);
   const antalKunder = rækker.filter((r) => !!r.monday_item_id).length;
   const antalKritiskeEllerStoerre = rækker.filter(
     (r) => r.fund_niveau === 'kritisk' || r.fund_niveau === 'stoerre',
