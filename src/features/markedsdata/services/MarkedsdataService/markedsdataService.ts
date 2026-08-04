@@ -17,6 +17,7 @@ type RåRapport = {
 export async function hentMarkedsdataStats(dstData: DstKommuneRå[]): Promise<MarkedsdataStats> {
   const supabase = getSupabaseServerClient();
 
+  // Hent STPS-bosteder (til tabel, fund, kundestatus m.m.)
   const { data } = await supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, monday_item_id, los_medlem')
@@ -24,12 +25,18 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[]): Promise<Ma
 
   const rækker = (data ?? []) as RåRapport[];
 
-  const totalBosteder = rækker.length;
+  // Totalt marked = alle tilbud fra Tilbudsportalen (samme tal som Dashboard)
+  const { count: tpCount } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .select('*', { count: 'exact', head: true });
+
+  const totalBosteder = tpCount ?? rækker.length;
   const antalKunder = rækker.filter((r) => !!r.monday_item_id).length;
   const antalKritiskeEllerStoerre = rækker.filter(
     (r) => r.fund_niveau === 'kritisk' || r.fund_niveau === 'stoerre',
   ).length;
-  const antalAldrigKontaktet = rækker.filter((r) => !r.monday_item_id).length;
+  // "Aldrig kontaktet" = alle TP-tilbud minus dem vi har kontaktet (monday_item_id)
+  const antalAldrigKontaktet = totalBosteder - antalKunder;
 
   // DST-borgere pr. kommune til opslag
   const dstMap = new Map<string, number>();

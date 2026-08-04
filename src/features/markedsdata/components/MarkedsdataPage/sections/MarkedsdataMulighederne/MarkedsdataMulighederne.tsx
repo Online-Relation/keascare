@@ -37,7 +37,7 @@ function opmærksomhedFarve(type: OpmærksomhedSignal['type']): string {
 
 export function MarkedsdataMulighederne({ stats, dstData, årligeData, kvartal }: Props) {
   const kpis = [
-    { label: 'Relevante bosteder', værdi: stats.totalBosteder.toLocaleString('da-DK'), sub: 'Potentielt relevante i markedet' },
+    { label: 'Relevante bosteder', værdi: stats.totalBosteder.toLocaleString('da-DK'), sub: 'Registrerede §107/§108/§43 tilbud (Tilbudsportalen)' },
     { label: 'KeasCare-kunder', værdi: stats.antalKunder.toLocaleString('da-DK'), sub: 'Allerede aktive kunder' },
     { label: 'Kritiske / større fund', værdi: stats.antalKritiskeEllerStoerre.toLocaleString('da-DK'), sub: 'Bosteder med kritiske eller større fund' },
     { label: 'Aldrig kontaktet', værdi: stats.antalAldrigKontaktet.toLocaleString('da-DK'), sub: 'Aldrig kontaktet af KeasCare' },
