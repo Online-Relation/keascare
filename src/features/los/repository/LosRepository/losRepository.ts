@@ -38,6 +38,9 @@ export async function hentUbehandledeLosItems(max = 200): Promise<LosListeItem[]
 export async function matchLosTilBosted(): Promise<number> {
   const supabase = getSupabaseServerClient();
 
+  // Sæt alle til false først — så "Ikke tjekket" forsvinder efter første match-kørsel
+  await supabase.from('stps_rapporter').update({ los_medlem: false }).neq('id', '');
+
   // Hent alle LOS-medlemmer med CVR
   const { data: losData } = await supabase
     .from('los_medlemmer')
