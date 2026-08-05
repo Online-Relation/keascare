@@ -163,6 +163,13 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
     const finalUrl = detailUrl ||
       `stps://genereret/${encodeURIComponent(navn)}${rapportDato ? `/${rapportDato}` : ''}`;
 
+    // Kun bosteder — spring behandlingssteder, plejeenheder mv. over
+    const erBosted = unikTags.some((t) => t.toLowerCase() === 'bosted');
+    if (!erBosted) {
+      console.log(`[STPS] Springer over "${navn}" — ikke et bosted (tags: ${unikTags.join(', ')})`);
+      return;
+    }
+
     resultater.push({ navn, rapportDato, tags: unikTags, detailUrl: finalUrl, besoegsDato: besoegsDato ? normaliserDato(besoegsDato) : null });
   });
 
