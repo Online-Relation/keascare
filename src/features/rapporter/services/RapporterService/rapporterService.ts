@@ -51,14 +51,26 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (fra) stpsQuery = stpsQuery.gte('rapport_dato', fra);
   stpsQuery = stpsQuery.lte('rapport_dato', til ?? idag);
 
-  // TP-query som base for listen (alle bosteder, uden datofilter)
-  let tpQuery = supabase
-    .from('tilbudsportalen_tilbud')
-    .select('id, navn, cvr, kommune, tilbudstype, driftsform')
-    .limit(8000);
-
-  if (visFilter === 'privat') {
-    tpQuery = tpQuery.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
+  // TP: Supabase returnerer maks 1000 rækker pr. request — hent i batches à 1000
+  async function hentAlleTpTilbud(): Promise<DbTpTilbud[]> {
+    const alle: DbTpTilbud[] = [];
+    const BATCH = 1000;
+    let offset = 0;
+    while (true) {
+      let q = supabase
+        .from('tilbudsportalen_tilbud')
+        .select('id, navn, cvr, kommune, tilbudstype, driftsform')
+        .range(offset, offset + BATCH - 1);
+      if (visFilter === 'privat') {
+        q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
+      }
+      const { data, error } = await q;
+      if (error || !data || data.length === 0) break;
+      alle.push(...(data as DbTpTilbud[]));
+      if (data.length < BATCH) break;
+      offset += BATCH;
+    }
+    return alle;
   }
 
   // Total i database til procentberegning
@@ -75,9 +87,9 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     .select('cvr')
     .not('cvr', 'is', null);
 
-  const [{ data: stpsData, error }, { data: tpData }, { count: dbTotal }, { data: losData }] = await Promise.all([
+  const [{ data: stpsData, error }, tpTilbudRå, { count: dbTotal }, { data: losData }] = await Promise.all([
     stpsQuery,
-    tpQuery,
+    hentAlleTpTilbud(),
     dbTotalQuery,
     losQuery,
   ]);
@@ -85,7 +97,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
   const alle = (stpsData ?? []) as DbRapport[];
-  const tpTilbud = (tpData ?? []) as DbTpTilbud[];
+  const tpTilbud = tpTilbudRå;
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
