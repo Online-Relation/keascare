@@ -301,9 +301,8 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   const idag = new Date().toISOString().slice(0, 10);
   if (fra) query = query.gte('rapport_dato', fra);
-  // Brug aldrig en til-dato fra fortiden — det skærer nye rapporter fra
-  const effektivTil = til && til >= idag ? til : idag;
-  query = query.lte('rapport_dato', effektivTil);
+  // Brug altid til-datoen præcist — fx "Sidste år" har til=2025-12-31 og det må ikke overrides
+  query = query.lte('rapport_dato', til ?? idag);
 
   const { data, error } = await query;
 
