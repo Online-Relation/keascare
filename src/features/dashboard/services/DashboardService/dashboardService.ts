@@ -228,10 +228,15 @@ function beregnTopKommuner(rapporter: DbRapport[]): KommuneStat[] {
     .slice(0, 5);
 }
 
-function beregnTilbudsportalen(rapporter: DbRapport[]) {
-  const matchede = rapporter.filter((r) => r.tp_tilbudstype);
-  const total = rapporter.length;
-  const dækningsgrad = total > 0 ? `${Math.round((matchede.length / total) * 100)}%` : '0%';
+function beregnTilbudsportalenFraTpData(
+  tpTotal: number,
+  tpSidstOpdateret: string | null,
+  rapporter: DbRapport[],
+) {
+  // Dækningsgrad: hvor mange STPS-rapporter har et TP-match (uanset datofilter)
+  const alleMatchede = rapporter.filter((r) => r.tp_tilbudstype).length;
+  const alleTotal = rapporter.length;
+  const dækningsgrad = alleTotal > 0 ? `${Math.round((alleMatchede / alleTotal) * 100)}%` : '0%';
 
   const grænse30 = new Date();
   grænse30.setDate(grænse30.getDate() - 30);
@@ -239,17 +244,12 @@ function beregnTilbudsportalen(rapporter: DbRapport[]) {
     (r) => r.tp_tilbudstype && r.rapport_dato && new Date(r.rapport_dato) >= grænse30
   ).length;
 
-  const senesteScraper = matchede
-    .map((r) => r.scraper_dato)
-    .filter(Boolean)
-    .sort()
-    .at(-1);
-  const sidstOpdateret = senesteScraper
-    ? new Date(senesteScraper).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })
+  const sidstOpdateret = tpSidstOpdateret
+    ? new Date(tpSidstOpdateret).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })
     : '—';
 
   return {
-    total:   matchede.length,
+    total:   tpTotal,
     nyeSidst,
     dækningsgrad,
     sidstOpdateret,
@@ -370,7 +370,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     cvrSignaler,
     stpsFordeling:   beregnFordeling(rapporter),
     topKommuner:     beregnTopKommuner(rapporter),
-    tilbudsportalen: beregnTilbudsportalen(rapporter),
+    tilbudsportalen: beregnTilbudsportalenFraTpData(tpCount.count ?? 0, null, rapporter),
     salgsFunnel:     beregnSalgsFunnel(rapporter),
     datakilder,
     sidstOpdateret,
@@ -394,8 +394,12 @@ async function hentDatakilderStatus(
     .sort()
     .at(-1) ?? null;
 
-  // Tilbudsportalen: tjek om vi har TP-matchede rapporter
-  const tpMatchede = rapporter.filter((r) => r.tp_tilbudstype).length;
+  // Tilbudsportalen: query direkte — uafhængigt af datofilteret på STPS-rapporter
+  const { count: tpMatchede } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .select('*', { count: 'exact', head: true })
+    .not('monday_item_id', 'is', null);
+  const tpAntal = tpMatchede ?? 0;
 
   // Monday: tjek om env-var er sat
   const mondayAktiv = !!process.env.MONDAY_BOARD_ID && !!process.env.MONDAY_API_KEY;
@@ -418,9 +422,9 @@ async function hentDatakilderStatus(
     },
     {
       navn: 'Tilbudsportalen',
-      status: tpMatchede > 0 ? 'aktiv' : 'fejl',
+      status: tpAntal > 0 ? 'aktiv' : 'fejl',
       sidstOpdateret: fmt(stpsSidst),
-      note: `${tpMatchede} bosteder matchet`,
+      note: `${tpAntal} bosteder matchet med Monday`,
     },
     {
       navn: 'Monday CRM',
