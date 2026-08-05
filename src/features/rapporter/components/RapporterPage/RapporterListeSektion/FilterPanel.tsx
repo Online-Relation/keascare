@@ -98,29 +98,42 @@ export function FilterPanel({ filtre, kommuner, subPanel, filterSøgning, onFilt
 
         {/* Header */}
         <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '1.25rem 1.5rem',
           borderBottom: '1px solid var(--color-border)',
           background: '#ffffff',
         }}>
-          {subPanel ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            {subPanel ? (
+              <button
+                onClick={() => onSubPanel(null)}
+                style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)', padding: 0 }}
+              >
+                <ChevronLeft size={18} />
+                {subPanelTitel[subPanel]}
+              </button>
+            ) : (
+              <span style={{ fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)' }}>Filtre</span>
+            )}
             <button
-              onClick={() => onSubPanel(null)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)', padding: 0 }}
+              onClick={onLuk}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '0.25rem', borderRadius: '4px' }}
+              aria-label="Luk"
             >
-              <ChevronLeft size={18} />
-              {subPanelTitel[subPanel]}
+              <X size={18} />
             </button>
-          ) : (
-            <span style={{ fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)' }}>Filtre</span>
-          )}
-          <button
-            onClick={onLuk}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '0.25rem', borderRadius: '4px' }}
-            aria-label="Luk"
-          >
-            <X size={18} />
-          </button>
+          </div>
+          {/* Live-tæller */}
+          <div style={{
+            background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 'var(--radius-md)',
+            padding: '0.6rem 0.875rem', display: 'flex', alignItems: 'baseline', gap: '0.4rem',
+          }}>
+            <span style={{ fontSize: '1.35rem', fontWeight: 'var(--fw-bold)', color: '#0369a1', lineHeight: 1 }}>
+              {antalResultater.toLocaleString('da-DK')}
+            </span>
+            <span style={{ fontSize: 'var(--text-sm)', color: '#0369a1' }}>
+              bosteder matcher
+            </span>
+          </div>
         </div>
 
         {/* Scroll-indhold */}
@@ -256,7 +269,7 @@ export function FilterPanel({ filtre, kommuner, subPanel, filterSøgning, onFilt
               fontWeight: 'var(--fw-semibold)',
             }}
           >
-            Vis {antalResultater} {antalResultater === 1 ? 'rapport' : 'rapporter'}
+            Vis {antalResultater.toLocaleString('da-DK')} {antalResultater === 1 ? 'bosted' : 'bosteder'}
           </button>
         </div>
       </div>
