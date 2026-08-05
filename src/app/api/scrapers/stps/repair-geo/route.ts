@@ -12,7 +12,15 @@ import {
   udtraekRegion,
   udtraekTilsynsform,
 } from '@/features/stps/mappers/StpsFundMapper';
-import { validerScraperSecret } from '@/lib/api/ScraperAuth/scraperAuth';
+
+function validerScraperSecret(req: Request): NextResponse | null {
+  const secret = process.env.SCRAPER_SECRET;
+  const header = req.headers.get('x-scraper-secret');
+  if (!secret || header !== secret) {
+    return NextResponse.json({ ok: false, fejl: 'Ugyldig secret' }, { status: 401 });
+  }
+  return null;
+}
 
 const DELAY_MS = 600;
 
