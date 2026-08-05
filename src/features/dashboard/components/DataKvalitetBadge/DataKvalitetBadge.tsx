@@ -30,11 +30,14 @@ export function DataKvalitetBadge({ dataKvalitet, vis = 'kompakt' }: Props) {
           {score}/{max}
         </div>
         <div className="dkb-kilde-liste">
-          {KILDER.map((kilde, i) => (
-            <span key={kilde} className={`dkb-kilde ${i < score ? 'dkb-kilde-aktiv' : 'dkb-kilde-mangler'}`}>
-              {kilde}
-            </span>
-          ))}
+          {KILDER.map((kilde, i) => {
+            const aktiv = dataKvalitet.aktive ? dataKvalitet.aktive[i] : i < score;
+            return (
+              <span key={kilde} className={`dkb-kilde ${aktiv ? 'dkb-kilde-aktiv' : 'dkb-kilde-mangler'}`}>
+                {kilde}
+              </span>
+            );
+          })}
         </div>
       </div>
     );

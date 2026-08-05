@@ -17,6 +17,7 @@ export type FundItem = {
 export type DataKvalitet = {
   score: number;
   max: number;
+  aktive?: boolean[]; // samme rækkefølge som KILDER i DataKvalitetBadge
 };
 
 export type MondayKundeStatus = 'kunde' | 'ingen' | 'tabt';

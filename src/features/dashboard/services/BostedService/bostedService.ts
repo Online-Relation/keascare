@@ -64,7 +64,7 @@ type DbRapport = {
 };
 
 function beregnDataKvalitet(r: DbRapport): DataKvalitet {
-  const point = [
+  const aktive = [
     !!r.pdf_vurdering,
     !!r.cvr,
     !!r.tp_tilbudstype,
@@ -73,7 +73,7 @@ function beregnDataKvalitet(r: DbRapport): DataKvalitet {
     !!r.tp_website,
     !!(r.tp_pladser || r.pladser),
   ];
-  return { score: point.filter(Boolean).length, max: point.length };
+  return { score: aktive.filter(Boolean).length, max: aktive.length, aktive };
 }
 
 function mapTilBostedDetail(r: DbRapport): BostedDetail {
