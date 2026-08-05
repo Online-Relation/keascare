@@ -5,18 +5,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import type { BrugerRolle } from '@/features/auth/config/roller.config';
 
-async function tjekAdgang(req: NextRequest) {
-  const supabase = getSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  const rolle = user?.user_metadata?.rolle as BrugerRolle | undefined;
-  if (!user || rolle !== 'development') return null;
-  return supabase;
+function tjekAdgang(req: NextRequest) {
+  const secret = req.headers.get('x-scraper-secret') ?? req.nextUrl.searchParams.get('secret') ?? '';
+  if (!secret || secret !== process.env.SCRAPER_SECRET) return null;
+  return getSupabaseServerClient();
 }
 
 export async function GET(req: NextRequest) {
-  const supabase = await tjekAdgang(req);
+  const supabase = tjekAdgang(req);
   if (!supabase) return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
 
   const { count } = await supabase
@@ -35,7 +32,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const supabase = await tjekAdgang(req);
+  const supabase = tjekAdgang(req);
   if (!supabase) return NextResponse.json({ error: 'Ingen adgang' }, { status: 403 });
 
   const { error, count } = await supabase
