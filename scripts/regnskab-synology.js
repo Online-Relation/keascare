@@ -1,10 +1,11 @@
 // Regnskab-scraper til Synology NAS — INGEN npm install nødvendig.
-// Bruger kun Node.js built-in moduler (https + fetch).
+// Bruger kun Node.js built-in moduler (https).
 //
 // Kørsel i Task Scheduler eller terminal:
 //   SUPABASE_URL=https://gclg... SUPABASE_SERVICE_KEY=sb_secret_... node /volume1/scripts/regnskab-synology.js
 
-import https from 'https';
+'use strict';
+const https = require('https');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -215,35 +216,39 @@ async function kørBatch() {
 }
 
 // Kør til alt er behandlet
-console.log(`=== Regnskab-scraper ${new Date().toLocaleString('da-DK')} ===`);
-let runde = 0;
-try {
-  while (true) {
-    runde++;
-    if (runde > 1) console.log(`\nRunde ${runde}...`);
-    const behandlet = await kørBatch();
-    if (behandlet === 0) break;
+async function main() {
+  console.log(`=== Regnskab-scraper ${new Date().toLocaleString('da-DK')} ===`);
+  let runde = 0;
+  try {
+    while (true) {
+      runde++;
+      if (runde > 1) console.log(`\nRunde ${runde}...`);
+      const behandlet = await kørBatch();
+      if (behandlet === 0) break;
 
-    const tjekParams = 'select=id&cvr=not.is.null&regnskab_aar=is.null&regnskab_opdateret=is.null&limit=1';
-    const tilbage = await supabaseSelect('stps_rapporter', tjekParams);
-    if (!Array.isArray(tilbage) || tilbage.length === 0) break;
-    console.log('Flere tilbage...');
+      const tjekParams = 'select=id&cvr=not.is.null&regnskab_aar=is.null&regnskab_opdateret=is.null&limit=1';
+      const tilbage = await supabaseSelect('stps_rapporter', tjekParams);
+      if (!Array.isArray(tilbage) || tilbage.length === 0) break;
+      console.log('Flere tilbage...');
+    }
+
+    console.log('Done ✓');
+    await supabaseInsert('scraper_log', {
+      scraper_id: 'regnskab',
+      ok: true,
+      resultat: { ok: true, runder: runde },
+      kørt_kl: new Date().toISOString(),
+    }).catch(() => {});
+  } catch (err) {
+    console.error('Kritisk fejl:', err.message);
+    await supabaseInsert('scraper_log', {
+      scraper_id: 'regnskab',
+      ok: false,
+      resultat: { error: err.message },
+      kørt_kl: new Date().toISOString(),
+    }).catch(() => {});
+    process.exit(1);
   }
-
-  console.log('Done ✓');
-  await supabaseInsert('scraper_log', {
-    scraper_id: 'regnskab',
-    ok: true,
-    resultat: { ok: true, runder: runde },
-    kørt_kl: new Date().toISOString(),
-  }).catch(() => {});
-} catch (err) {
-  console.error('Kritisk fejl:', err.message);
-  await supabaseInsert('scraper_log', {
-    scraper_id: 'regnskab',
-    ok: false,
-    resultat: { error: err.message },
-    kørt_kl: new Date().toISOString(),
-  }).catch(() => {});
-  process.exit(1);
 }
+
+main();
