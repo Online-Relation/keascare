@@ -46,9 +46,12 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
-  const [{ data: stpsData, error }, { count: dbTotal }] = await Promise.all([
+  const losQuery = supabase.from('los_medlemmer').select('cvr').not('cvr', 'is', null);
+
+  const [{ data: stpsData, error }, { count: dbTotal }, { data: losData }] = await Promise.all([
     stpsQuery,
     dbTotalQuery,
+    losQuery,
   ]);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
@@ -57,6 +60,10 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
+  const losCvrSet = new Set(
+    ((losData ?? []) as { cvr: string }[]).map((r) => r.cvr)
+  );
+
   return {
     kpis:               beregnKpis(alle, totalIDatabase, kritiskeMåneder),
     trend:              beregnTrend(alle),
@@ -64,11 +71,11 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     driftsformKritiske: beregnDriftsformKritiske(alle),
     topKommuner:        beregnTopKommuner(alle),
     temaer:             beregnTemaer(alle),
-    rapporter:          mapStpsRapporter(alle),
+    rapporter:          mapStpsRapporter(alle, losCvrSet),
   };
 }
 
-function mapStpsRapporter(alle: DbRapport[]): RapportRække[] {
+function mapStpsRapporter(alle: DbRapport[], losCvrSet: Set<string>): RapportRække[] {
   return alle.map((r) => ({
     id:             r.id,
     navn:           r.stps_tilbud_navn,
@@ -78,7 +85,7 @@ function mapStpsRapporter(alle: DbRapport[]): RapportRække[] {
     rapportLink:    r.rapport_url ?? null,
     temaer:         r.temaer ?? [],
     paragraf:       udledParagraf(r.tp_tilbudstype),
-    losmedlem:      r.los_medlem === true,
+    losmedlem:      !!r.cvr && losCvrSet.has(r.cvr),
     harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
   }));
 }
