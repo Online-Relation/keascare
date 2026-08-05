@@ -2,13 +2,13 @@
 // src/features/rapporter/components/RapporterPage/RapporterListeSektion/RapporterListeSektion.tsx
 
 import { useState, useMemo } from 'react';
-import { Search, Plus, X, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, X, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { RapportRække } from '@/features/rapporter/types/rapporter.types';
 import { FilterPanel } from './FilterPanel';
 import type { FilterState, SortValg, SubPanel } from './types';
 import { TOMT_FILTER, FUND_CFG, RADIO_FELTER } from './types';
 
-const PR_SIDE = 25;
+const PR_SIDE = 20;
 
 type Chip = { felt: keyof FilterState; label: string; vaerdierLabel: string };
 
@@ -25,7 +25,6 @@ function aktiveChips(filtre: FilterState): Chip[] {
 type Props = { rapporter: RapportRække[] };
 
 export function RapporterListeSektion({ rapporter }: Props) {
-  const [søgning, setSøgning] = useState('');
   const [sortering, setSortering] = useState<SortValg>('nyeste');
   const [filterPanelOpen, setFilterPanelOpen] = useState(false);
   const [subPanel, setSubPanel] = useState<SubPanel>(null);
@@ -54,13 +53,11 @@ export function RapporterListeSektion({ rapporter }: Props) {
     setSide(1);
   }
 
-  // Live-toggle: radio-adfærd for enten/eller-felter, multi-select for resten
   function toggleFilter(felt: keyof FilterState, vaerdi: string) {
     setFiltre((prev) => {
       const arr = prev[felt] as string[];
       const erRadio = RADIO_FELTER.includes(felt);
       if (erRadio) {
-        // Klik på allerede valgt → fravælg. Ellers sæt kun denne.
         return { ...prev, [felt]: arr.includes(vaerdi) ? [] : [vaerdi] };
       }
       return { ...prev, [felt]: arr.includes(vaerdi) ? arr.filter((v) => v !== vaerdi) : [...arr, vaerdi] };
@@ -78,10 +75,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
 
   const filtrerede = useMemo(() => {
     let liste = rapporter;
-    if (søgning.trim()) {
-      const s = søgning.toLowerCase();
-      liste = liste.filter((r) => r.navn.toLowerCase().includes(s) || (r.kommune ?? '').toLowerCase().includes(s));
-    }
     if (filtre.kommuner.length)    liste = liste.filter((r) => r.kommune && filtre.kommuner.includes(r.kommune));
     if (filtre.paragraffer.length) liste = liste.filter((r) => r.paragraf && filtre.paragraffer.includes(r.paragraf));
     if (filtre.los.length)         liste = liste.filter((r) => filtre.los.includes(r.losmedlem ? 'ja' : 'nej'));
@@ -98,7 +91,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
       }
       return 0;
     });
-  }, [rapporter, søgning, filtre, sortering]);
+  }, [rapporter, filtre, sortering]);
 
   const antalSider = Math.max(1, Math.ceil(filtrerede.length / PR_SIDE));
   const sidenummer = Math.min(side, antalSider);
@@ -112,23 +105,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
   return (
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-
-        {/* Søgebar */}
-        <div style={{ position: 'relative' }}>
-          <Search size={14} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
-          <input
-            type="text"
-            placeholder="Søg efter bosted, kommune eller rapport..."
-            value={søgning}
-            onChange={(e) => { setSøgning(e.target.value); setSide(1); }}
-            style={{
-              width: '100%', padding: '0.65rem 0.75rem 0.65rem 2.25rem',
-              border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-              background: 'var(--color-surface)', fontSize: 'var(--text-sm)',
-              color: 'var(--color-text)', boxSizing: 'border-box',
-            }}
-          />
-        </div>
 
         {/* Tilføj filter + Nulstil */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -160,7 +136,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
                   padding: '0.35rem 0.75rem', borderRadius: 'var(--radius-sm)',
-                  border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                  border: '1px solid var(--color-border)', background: '#ffffff',
                   fontSize: 'var(--text-sm)',
                 }}
               >
@@ -180,7 +156,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
         {/* Resultater + sortering */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontWeight: 'var(--fw-medium)' }}>
-            {filtrerede.length} rapporter matcher
+            {filtrerede.length} bosteder
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>Sortér:</span>
@@ -189,12 +165,12 @@ export function RapporterListeSektion({ rapporter }: Props) {
               onChange={(e) => { setSortering(e.target.value as SortValg); setSide(1); }}
               style={{
                 padding: '0.3rem 0.6rem', borderRadius: 'var(--radius-sm)',
-                border: '1px solid var(--color-border)', background: 'var(--color-surface)',
+                border: '1px solid var(--color-border)', background: '#ffffff',
                 fontSize: 'var(--text-sm)', color: 'var(--color-text)', cursor: 'pointer',
               }}
             >
-              <option value="nyeste">Nyeste først</option>
-              <option value="aeldste">Ældste først</option>
+              <option value="nyeste">Nyeste rapport først</option>
+              <option value="aeldste">Ældste rapport først</option>
               <option value="navn">Bostedsnavn A-Z</option>
               <option value="fund">Fund (alvorligste)</option>
             </select>
@@ -203,58 +179,51 @@ export function RapporterListeSektion({ rapporter }: Props) {
 
         {/* Tabel */}
         <div className="dashboard-table-wrapper" style={{ margin: 0 }}>
-          {filtrerede.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-              <Search size={20} />
-              <span>Ingen rapporter matcher</span>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Bosted</th>
-                    <th>Kommune</th>
-                    <th>Paragraf</th>
-                    <th>LOS</th>
-                    <th>STPS-rapport</th>
-                    <th>STPS-fund</th>
-                    <th>Rapportdato</th>
-                    <th>Se rapport</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {synlige.map((r) => {
-                    const cfg = FUND_CFG[r.fundNiveau] ?? FUND_CFG.ukendt;
-                    const harLink = r.rapportLink && !r.rapportLink.startsWith('stps://genereret/');
-                    return (
-                      <tr key={r.id}>
-                        <td className="table-cell-bold">{r.navn}</td>
-                        <td className="table-cell-muted">{r.kommune?.replace(' Kommune', '') ?? '—'}</td>
-                        <td>{r.paragraf ? <span className="badge badge-neutral">{r.paragraf}</span> : <span className="table-cell-muted">—</span>}</td>
-                        <td>{r.losmedlem ? <span className="badge badge-los">Ja</span> : <span className="table-cell-muted">—</span>}</td>
-                        <td>{r.harStpsRapport ? <span className="badge badge-stps">Ja</span> : <span className="table-cell-muted">—</span>}</td>
-                        <td><span className={`badge ${cfg.cls}`}>{cfg.kortLabel}</span></td>
-                        <td className="table-cell-muted" style={{ whiteSpace: 'nowrap' }}>{formatDato(r.rapportDato)}</td>
-                        <td>
-                          {harLink ? (
-                            <a href={r.rapportLink!} target="_blank" rel="noopener noreferrer" style={{
-                              display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
-                              padding: '0.3rem 0.65rem', borderRadius: 'var(--radius-sm)',
-                              border: '1px solid var(--color-border)', background: 'var(--color-surface)',
-                              fontSize: 'var(--text-xs)', color: 'var(--color-primary)', textDecoration: 'none', whiteSpace: 'nowrap',
-                            }}>
-                              <Eye size={12} /> Se rapport
-                            </a>
-                          ) : <span className="table-cell-muted">—</span>}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <div style={{ overflowX: 'auto' }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Bosted</th>
+                  <th>Kommune</th>
+                  <th>Paragraf</th>
+                  <th>LOS</th>
+                  <th>STPS-rapport</th>
+                  <th>STPS-fund</th>
+                  <th>Rapportdato</th>
+                  <th>Se rapport</th>
+                </tr>
+              </thead>
+              <tbody>
+                {synlige.map((r) => {
+                  const cfg = FUND_CFG[r.fundNiveau] ?? FUND_CFG.ukendt;
+                  const harLink = r.rapportLink && !r.rapportLink.startsWith('stps://genereret/');
+                  return (
+                    <tr key={r.id}>
+                      <td className="table-cell-bold">{r.navn}</td>
+                      <td className="table-cell-muted">{r.kommune?.replace(' Kommune', '') ?? '—'}</td>
+                      <td>{r.paragraf ? <span className="badge badge-neutral">{r.paragraf}</span> : <span className="table-cell-muted">—</span>}</td>
+                      <td>{r.losmedlem ? <span className="badge badge-los">Ja</span> : <span className="table-cell-muted">—</span>}</td>
+                      <td>{r.harStpsRapport ? <span className="badge badge-stps">Ja</span> : <span className="table-cell-muted">—</span>}</td>
+                      <td><span className={`badge ${cfg.cls}`}>{cfg.kortLabel}</span></td>
+                      <td className="table-cell-muted" style={{ whiteSpace: 'nowrap' }}>{formatDato(r.rapportDato)}</td>
+                      <td>
+                        {harLink ? (
+                          <a href={r.rapportLink!} target="_blank" rel="noopener noreferrer" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: '0.35rem',
+                            padding: '0.3rem 0.65rem', borderRadius: 'var(--radius-sm)',
+                            border: '1px solid var(--color-border)', background: '#ffffff',
+                            fontSize: 'var(--text-xs)', color: 'var(--color-primary)', textDecoration: 'none', whiteSpace: 'nowrap',
+                          }}>
+                            <Eye size={12} /> Se rapport
+                          </a>
+                        ) : <span className="table-cell-muted">—</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           {antalSider > 1 && (

@@ -56,7 +56,6 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   let tpQuery = supabase
     .from('tilbudsportalen_tilbud')
     .select('id, navn, cvr, kommune, tilbudstype, driftsform, los_medlem')
-    .eq('detaljer_hentet', true)
     .limit(8000);
 
   if (visFilter === 'privat') {
