@@ -1,7 +1,7 @@
 'use client';
-// FilterPanel.tsx — Slide-in overlay panel fra højre
+// FilterPanel.tsx
 
-import { Search, X, ChevronRight, ChevronLeft, Trash2, Pencil } from 'lucide-react';
+import { Search, X, ChevronRight, ChevronLeft, Trash2, Users, MapPin, Hash, FileText, AlertTriangle } from 'lucide-react';
 import type { FilterState, SubPanel } from './types';
 import { FUND_CFG } from './types';
 
@@ -18,31 +18,40 @@ type Props = {
   onLuk: () => void;
 };
 
-const FILTER_GRUPPER = [
+type FilterGruppeItem = {
+  id: SubPanel;
+  Ikon: React.ElementType;
+  label: string;
+  felt: keyof FilterState;
+};
+
+const FILTER_GRUPPER: { titel: string; items: FilterGruppeItem[] }[] = [
   {
     titel: 'Bosted',
     items: [
-      { id: 'los' as SubPanel,       ikon: '👤', label: 'LOS-medlem',   felt: 'los' as keyof FilterState },
-      { id: 'kommune' as SubPanel,   ikon: '📍', label: 'Kommune',      felt: 'kommuner' as keyof FilterState },
-      { id: 'paragraf' as SubPanel,  ikon: '§',  label: 'Paragraf',     felt: 'paragraffer' as keyof FilterState },
+      { id: 'los',          Ikon: Users,         label: 'LOS-medlem',   felt: 'los'         },
+      { id: 'kommune',      Ikon: MapPin,         label: 'Kommune',      felt: 'kommuner'    },
+      { id: 'paragraf',     Ikon: Hash,           label: 'Paragraf',     felt: 'paragraffer' },
     ],
   },
   {
     titel: 'Rapport',
     items: [
-      { id: 'stps-rapport' as SubPanel, ikon: '📄', label: 'STPS-rapport', felt: 'stpsRapport' as keyof FilterState },
-      { id: 'stps-fund' as SubPanel,    ikon: '⚠',  label: 'STPS-fund',    felt: 'stpsFund' as keyof FilterState },
+      { id: 'stps-rapport', Ikon: FileText,       label: 'STPS-rapport', felt: 'stpsRapport' },
+      { id: 'stps-fund',    Ikon: AlertTriangle,  label: 'STPS-fund',    felt: 'stpsFund'    },
     ],
   },
 ];
 
 function antalAktive(kladde: FilterState): number {
-  return Object.values(kladde).filter((v) => v.length > 0).length;
+  return Object.values(kladde).filter((v) => (v as string[]).length > 0).length;
 }
 
-function aktiveChips(kladde: FilterState) {
-  const liste: { felt: keyof FilterState; label: string; vaerdierLabel: string }[] = [];
-  if (kladde.kommuner.length)   liste.push({ felt: 'kommuner',   label: 'Kommune',      vaerdierLabel: kladde.kommuner.map((k) => k.replace(' Kommune', '')).join(', ') });
+type Chip = { felt: keyof FilterState; label: string; vaerdierLabel: string };
+
+function aktiveChips(kladde: FilterState): Chip[] {
+  const liste: Chip[] = [];
+  if (kladde.kommuner.length)    liste.push({ felt: 'kommuner',    label: 'Kommune',      vaerdierLabel: kladde.kommuner.map((k) => k.replace(' Kommune', '')).join(', ') });
   if (kladde.paragraffer.length) liste.push({ felt: 'paragraffer', label: 'Paragraf',     vaerdierLabel: kladde.paragraffer.join(', ') });
   if (kladde.los.length)         liste.push({ felt: 'los',         label: 'LOS-medlem',   vaerdierLabel: kladde.los.map((v) => v === 'ja' ? 'Ja' : 'Nej').join(', ') });
   if (kladde.stpsRapport.length) liste.push({ felt: 'stpsRapport', label: 'STPS-rapport', vaerdierLabel: kladde.stpsRapport.map((v) => v === 'ja' ? 'Ja' : 'Nej').join(', ') });
@@ -50,56 +59,78 @@ function aktiveChips(kladde: FilterState) {
   return liste;
 }
 
+const panelStyle: React.CSSProperties = {
+  position: 'fixed',
+  top: 0,
+  right: 0,
+  bottom: 0,
+  width: '360px',
+  background: 'var(--color-surface)',
+  zIndex: 9999,
+  display: 'flex',
+  flexDirection: 'column',
+  boxShadow: '-8px 0 40px rgba(0,0,0,0.18)',
+  borderLeft: '1px solid var(--color-border)',
+};
+
 export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilterSøgning, onSubPanel, onToggle, onFjern, onAnvend, onLuk }: Props) {
   const antal = antalAktive(kladde);
   const chips = aktiveChips(kladde);
+
+  const subPanelTitel: Record<NonNullable<SubPanel>, string> = {
+    'kommune':      'Kommune',
+    'paragraf':     'Paragraf',
+    'los':          'LOS-medlem',
+    'stps-rapport': 'STPS-rapport',
+    'stps-fund':    'STPS-fund',
+  };
 
   return (
     <>
       {/* Backdrop */}
       <div
         onClick={onLuk}
-        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 40 }}
+        style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 9998 }}
       />
 
       {/* Panel */}
-      <div style={{
-        position: 'fixed', top: 0, right: 0, bottom: 0, width: '340px',
-        background: 'var(--color-surface)', zIndex: 50,
-        display: 'flex', flexDirection: 'column',
-        boxShadow: '-4px 0 32px rgba(0,0,0,0.15)',
-      }}>
+      <div style={panelStyle}>
 
         {/* Header */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '1.25rem 1.25rem 1rem',
+          padding: '1.25rem 1.5rem',
           borderBottom: '1px solid var(--color-border)',
+          background: 'var(--color-surface)',
         }}>
           {subPanel ? (
             <button
               onClick={() => onSubPanel(null)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)', padding: 0 }}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)', padding: 0 }}
             >
               <ChevronLeft size={18} />
-              {subPanel === 'kommune' ? 'Kommune' : subPanel === 'paragraf' ? 'Paragraf' : subPanel === 'los' ? 'LOS-medlem' : subPanel === 'stps-rapport' ? 'STPS-rapport' : 'STPS-fund'}
+              {subPanelTitel[subPanel]}
             </button>
           ) : (
             <span style={{ fontWeight: 'var(--fw-semibold)', fontSize: 'var(--text-base)' }}>Filtre</span>
           )}
-          <button onClick={onLuk} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '0.25rem' }}>
+          <button
+            onClick={onLuk}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex', padding: '0.25rem', borderRadius: '4px' }}
+            aria-label="Luk"
+          >
             <X size={18} />
           </button>
         </div>
 
-        {/* Indhold — scroll */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Scroll-indhold */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '1.25rem 1.5rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
 
           {!subPanel ? (
             <>
-              {/* Søg i filtre */}
+              {/* Søg */}
               <div style={{ position: 'relative' }}>
-                <Search size={13} style={{ position: 'absolute', left: '0.6rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
+                <Search size={13} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)', pointerEvents: 'none' }} />
                 <input
                   type="text"
                   placeholder="Søg efter filter..."
@@ -108,7 +139,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
                   style={{
                     width: '100%', padding: '0.5rem 0.75rem 0.5rem 2rem',
                     border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-                    background: 'var(--color-bg)', fontSize: 'var(--text-sm)',
+                    background: 'var(--color-bg, #f8fafc)', fontSize: 'var(--text-sm)',
                     color: 'var(--color-text)', boxSizing: 'border-box',
                   }}
                 />
@@ -116,33 +147,35 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
 
               {/* Aktive filtre */}
               <div>
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontWeight: 'var(--fw-semibold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
+                <p style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>
                   Aktive filtre ({antal})
                 </p>
                 {chips.length === 0 ? (
-                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>Ingen aktive filtre</p>
+                  <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                    Ingen aktive filtre
+                  </p>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                     {chips.map((chip) => (
-                      <div key={chip.felt} style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '0.6rem 0.75rem', borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--color-border)', background: 'var(--color-bg)',
-                      }}>
-                        <div>
-                          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.15rem' }}>{chip.label}</p>
-                          <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--color-text)' }}>{chip.vaerdierLabel}</p>
+                      <div
+                        key={chip.felt}
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '0.65rem 0.875rem',
+                          border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
+                          background: 'var(--color-bg, #f8fafc)',
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.1rem' }}>{chip.label}</p>
+                          <p style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {chip.vaerdierLabel}
+                          </p>
                         </div>
-                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                          <button
-                            onClick={() => { /* find subpanel for felt */ }}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: '0.2rem', padding: 0 }}
-                          >
-                            <Pencil size={11} /> Redigér
-                          </button>
+                        <div style={{ display: 'flex', gap: '0.875rem', alignItems: 'center', marginLeft: '1rem', flexShrink: 0 }}>
                           <button
                             onClick={() => onFjern(chip.felt)}
-                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger, #dc2626)', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: '0.2rem', padding: 0 }}
+                            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: 'var(--text-xs)', display: 'flex', alignItems: 'center', gap: '0.2rem', padding: 0 }}
                           >
                             <Trash2 size={11} /> Fjern
                           </button>
@@ -155,17 +188,19 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
 
               {/* Tilgængelige filtre */}
               <div>
-                <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', fontWeight: 'var(--fw-semibold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.6rem' }}>
+                <p style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>
                   Tilgængelige filtre
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {FILTER_GRUPPER.map((gruppe) => (
                     <div key={gruppe.titel}>
-                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.3rem' }}>{gruppe.titel}</p>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', marginBottom: '0.25rem', fontWeight: 'var(--fw-medium)' }}>
+                        {gruppe.titel}
+                      </p>
+                      <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
                         {gruppe.items
                           .filter((item) => !filterSøgning || item.label.toLowerCase().includes(filterSøgning.toLowerCase()))
-                          .map((item) => {
+                          .map((item, idx, arr) => {
                             const valgt = (kladde[item.felt] as string[]).length;
                             return (
                               <button
@@ -173,19 +208,25 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
                                 onClick={() => onSubPanel(item.id)}
                                 style={{
                                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                                  padding: '0.65rem 0.5rem', background: 'none', border: 'none',
-                                  borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
-                                  textAlign: 'left', width: '100%',
+                                  width: '100%', padding: '0.75rem 0.875rem',
+                                  background: 'var(--color-surface)', border: 'none',
+                                  borderBottom: idx < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
+                                  cursor: 'pointer', textAlign: 'left',
                                 }}
                               >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                                  <span style={{ fontSize: '0.9rem', width: '18px', textAlign: 'center', flexShrink: 0 }}>{item.ikon}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                  <item.Ikon size={15} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
                                   <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>{item.label}</span>
                                   {valgt > 0 && (
-                                    <span style={{ fontSize: 'var(--text-xs)', background: 'var(--color-primary)', color: '#fff', borderRadius: '999px', padding: '0 0.4rem', minWidth: '18px', textAlign: 'center' }}>{valgt}</span>
+                                    <span style={{
+                                      fontSize: '0.7rem', background: 'var(--color-primary)', color: '#fff',
+                                      borderRadius: '999px', padding: '0 0.45rem', lineHeight: '1.6',
+                                    }}>
+                                      {valgt}
+                                    </span>
                                   )}
                                 </div>
-                                <ChevronRight size={14} style={{ color: 'var(--color-text-muted)', flexShrink: 0 }} />
+                                <ChevronRight size={14} style={{ color: 'var(--color-text-muted)' }} />
                               </button>
                             );
                           })}
@@ -196,16 +237,16 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
               </div>
             </>
           ) : (
-            /* Sub-panel med valgmuligheder */
-            <SubPanelIndhold subPanel={subPanel} kladde={kladde} kommuner={kommuner} onToggle={onToggle} />
+            <SubPanelIndhold subPanel={subPanel as NonNullable<SubPanel>} kladde={kladde} kommuner={kommuner} onToggle={onToggle} />
           )}
         </div>
 
         {/* Footer */}
         <div style={{
-          padding: '1rem 1.25rem',
+          padding: '1rem 1.5rem',
           borderTop: '1px solid var(--color-border)',
           display: 'flex', gap: '0.75rem',
+          background: 'var(--color-surface)',
         }}>
           <button
             onClick={onLuk}
@@ -213,6 +254,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
               flex: 1, padding: '0.65rem', border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-md)', background: 'transparent',
               fontSize: 'var(--text-sm)', color: 'var(--color-text)', cursor: 'pointer',
+              fontWeight: 'var(--fw-medium)',
             }}
           >
             Luk
@@ -222,7 +264,8 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
             style={{
               flex: 2, padding: '0.65rem', border: 'none',
               borderRadius: 'var(--radius-md)', background: 'var(--color-primary)',
-              fontSize: 'var(--text-sm)', color: '#fff', cursor: 'pointer', fontWeight: 'var(--fw-semibold)',
+              fontSize: 'var(--text-sm)', color: '#fff', cursor: 'pointer',
+              fontWeight: 'var(--fw-semibold)',
             }}
           >
             Anvend filtre
@@ -234,60 +277,53 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
 }
 
 function SubPanelIndhold({ subPanel, kladde, kommuner, onToggle }: {
-  subPanel: SubPanel;
+  subPanel: NonNullable<SubPanel>;
   kladde: FilterState;
   kommuner: string[];
   onToggle: (felt: keyof FilterState, vaerdi: string) => void;
 }) {
-  if (subPanel === 'kommune') {
-    return <ValgListe felt="kommuner" valgmuligheder={kommuner.map((k) => ({ vaerdi: k, label: k.replace(' Kommune', '') }))} kladde={kladde} onToggle={onToggle} />;
-  }
-  if (subPanel === 'paragraf') {
-    return <ValgListe felt="paragraffer" valgmuligheder={[{ vaerdi: '§107', label: '§ 107' }, { vaerdi: '§108', label: '§ 108' }, { vaerdi: '§85', label: '§ 85' }]} kladde={kladde} onToggle={onToggle} />;
-  }
-  if (subPanel === 'los') {
-    return <ValgListe felt="los" valgmuligheder={[{ vaerdi: 'ja', label: 'Ja — LOS-medlem' }, { vaerdi: 'nej', label: 'Nej — ikke LOS-medlem' }]} kladde={kladde} onToggle={onToggle} />;
-  }
-  if (subPanel === 'stps-rapport') {
-    return <ValgListe felt="stpsRapport" valgmuligheder={[{ vaerdi: 'ja', label: 'Har STPS-rapport' }, { vaerdi: 'nej', label: 'Ingen STPS-rapport' }]} kladde={kladde} onToggle={onToggle} />;
-  }
-  if (subPanel === 'stps-fund') {
-    return <ValgListe felt="stpsFund" valgmuligheder={Object.entries(FUND_CFG).map(([v, cfg]) => ({ vaerdi: v, label: cfg.label }))} kladde={kladde} onToggle={onToggle} />;
-  }
-  return null;
-}
+  const config: Record<NonNullable<SubPanel>, { felt: keyof FilterState; valgmuligheder: { vaerdi: string; label: string }[] }> = {
+    'kommune':      { felt: 'kommuner',    valgmuligheder: kommuner.map((k) => ({ vaerdi: k, label: k.replace(' Kommune', '') })) },
+    'paragraf':     { felt: 'paragraffer', valgmuligheder: [{ vaerdi: '§107', label: '§ 107' }, { vaerdi: '§108', label: '§ 108' }, { vaerdi: '§85', label: '§ 85' }] },
+    'los':          { felt: 'los',         valgmuligheder: [{ vaerdi: 'ja', label: 'Ja — LOS-medlem' }, { vaerdi: 'nej', label: 'Nej — ikke LOS-medlem' }] },
+    'stps-rapport': { felt: 'stpsRapport', valgmuligheder: [{ vaerdi: 'ja', label: 'Har STPS-rapport' }, { vaerdi: 'nej', label: 'Ingen STPS-rapport' }] },
+    'stps-fund':    { felt: 'stpsFund',    valgmuligheder: Object.entries(FUND_CFG).map(([v, cfg]) => ({ vaerdi: v, label: cfg.label })) },
+  };
 
-function ValgListe({ felt, valgmuligheder, kladde, onToggle }: {
-  felt: keyof FilterState;
-  valgmuligheder: { vaerdi: string; label: string }[];
-  kladde: FilterState;
-  onToggle: (felt: keyof FilterState, vaerdi: string) => void;
-}) {
+  const { felt, valgmuligheder } = config[subPanel];
   const valgte = kladde[felt] as string[];
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {valgmuligheder.map(({ vaerdi, label }) => {
+    <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
+      {valgmuligheder.map(({ vaerdi, label }: { vaerdi: string; label: string }, idx: number) => {
         const aktiv = valgte.includes(vaerdi);
         return (
           <button
             key={vaerdi}
             onClick={() => onToggle(felt, vaerdi)}
             style={{
-              display: 'flex', alignItems: 'center', gap: '0.75rem',
-              padding: '0.75rem 0.5rem', background: 'none', border: 'none',
-              borderBottom: '1px solid var(--color-border)', cursor: 'pointer',
-              textAlign: 'left', width: '100%',
+              display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%',
+              padding: '0.8rem 0.875rem', background: aktiv ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)' : 'var(--color-surface)',
+              border: 'none', borderBottom: idx < valgmuligheder.length - 1 ? '1px solid var(--color-border)' : 'none',
+              cursor: 'pointer', textAlign: 'left',
             }}
           >
             <span style={{
-              width: '16px', height: '16px', borderRadius: '4px', flexShrink: 0,
-              border: aktiv ? '2px solid var(--color-primary)' : '1px solid var(--color-border)',
+              width: '17px', height: '17px', borderRadius: '4px', flexShrink: 0,
+              border: aktiv ? `2px solid var(--color-primary)` : '1.5px solid var(--color-border)',
               background: aktiv ? 'var(--color-primary)' : 'transparent',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.1s',
             }}>
-              {aktiv && <span style={{ width: '8px', height: '8px', background: '#fff', borderRadius: '2px', display: 'block' }} />}
+              {aktiv && (
+                <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                  <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              )}
             </span>
-            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text)' }}>{label}</span>
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text)', fontWeight: aktiv ? 'var(--fw-medium)' : 'var(--fw-normal)' }}>
+              {label}
+            </span>
           </button>
         );
       })}
