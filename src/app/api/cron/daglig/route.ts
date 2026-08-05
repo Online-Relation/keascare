@@ -56,6 +56,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
+  // Start jobbet i baggrunden og svar 200 OK med det samme
+  // så cron-job.org ikke timeout'er (jobbet kører stadig på Railway)
+  kørBaggrund(secret).catch(console.error);
+  return NextResponse.json({ ok: true, besked: 'Daglig scraper startet i baggrunden', startet: new Date().toISOString() });
+}
+
+async function kørBaggrund(secret: string) {
   const resultater: Record<string, unknown> = {};
   const syncToken = process.env.SYNC_SECRET_TOKEN ?? '';
 
@@ -107,5 +114,5 @@ export async function POST(request: NextRequest) {
   // 11. LOS — match mod bosteder via CVR
   await kør('los-match', () => kald('/api/scrapers/los', { trin: 'match' }, secret), resultater);
 
-  return NextResponse.json({ ok: true, kørt: new Date().toISOString(), ...resultater });
+  await logScraperKørsel('daglig-cron', true, { kørt: new Date().toISOString(), ...resultater });
 }

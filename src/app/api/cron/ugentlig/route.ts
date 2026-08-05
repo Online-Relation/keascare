@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Uautoriseret' }, { status: 401 });
   }
 
+  // Svar 200 OK med det samme — jobbet kører i baggrunden på Railway
+  kørBaggrund(secret).catch(console.error);
+  return NextResponse.json({ ok: true, besked: 'Ugentlig scraper startet i baggrunden', startet: new Date().toISOString() });
+}
+
+async function kørBaggrund(secret: string) {
   const resultater: Record<string, unknown> = {};
 
   // 1. LOS — hent komplet medlemsliste fra los.dk
@@ -50,5 +56,5 @@ export async function POST(request: NextRequest) {
   // 2. Monday — synkroniser kunder
   await kør('monday-match', () => kald('/api/scrapers/monday/match', {}, secret), resultater);
 
-  return NextResponse.json({ ok: true, kørt: new Date().toISOString(), ...resultater });
+  await logScraperKørsel('ugentlig-cron', true, { kørt: new Date().toISOString(), ...resultater });
 }
