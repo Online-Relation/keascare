@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import type { MondayKundeItem } from '@/features/monday/types/monday.types';
+import { formatForløbsansvarlig } from '@/features/monday/utils/formatForløbsansvarlig';
 
 type Props = { kunder: MondayKundeItem[] };
 
@@ -100,7 +101,7 @@ export function AfsluttedeKunderTabel({ kunder }: Props) {
                       <span style={{ color: 'var(--color-text-muted)' }}>{k.navn}</span>
                     )}
                   </td>
-                  <td className="kunder-tabel-muted">{k.forløbsansvarlig ?? '—'}</td>
+                  <td className="kunder-tabel-muted">{formatForløbsansvarlig(k.forløbsansvarlig)}</td>
                   <td className="kunder-tabel-muted">
                     {k.oprettetDato ? new Date(k.oprettetDato).toLocaleDateString('da-DK') : '—'}
                   </td>
