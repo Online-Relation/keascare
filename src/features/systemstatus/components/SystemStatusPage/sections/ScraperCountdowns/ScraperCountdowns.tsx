@@ -1,17 +1,22 @@
 'use client';
 
+// src/features/systemstatus/components/SystemStatusPage/sections/ScraperCountdowns/ScraperCountdowns.tsx
+
 import { useEffect, useState } from 'react';
 import { CheckCircle, XCircle, Clock } from 'lucide-react';
+
+type Kilde = 'railway' | 'cronjobs' | 'synology' | 'lokal' | 'manuel';
 
 type ScraperInfo = {
   id: string;
   navn: string;
-  beskrivelse: string;
-  næsteKørsel: () => Date;
-  kilde: 'railway' | 'lokal';
+  kilde: Kilde;
+  cronTidspunkt: string;
+  logNøgler: string[]; // scraper-id'er fra logs API
+  næsteKørsel: () => Date | null; // null = ingen automatisk kørsel
 };
 
-function næsteDagKl(time: number, minut: number): Date {
+function næsteDagKl(time: number, minut = 0): Date {
   const nu = new Date();
   const næste = new Date();
   næste.setHours(time, minut, 0, 0);
@@ -19,69 +24,173 @@ function næsteDagKl(time: number, minut: number): Date {
   return næste;
 }
 
-function næsteMandag(time: number, minut: number): Date {
+function næsteKvartal(): Date {
   const nu = new Date();
-  const næste = new Date();
-  const dagIUgen = næste.getDay(); // 0=søn, 1=man
-  const dageHen = dagIUgen === 1 && næste.getHours() < time ? 0 : (8 - dagIUgen) % 7 || 7;
-  næste.setDate(næste.getDate() + dageHen);
-  næste.setHours(time, minut, 0, 0);
-  return næste;
+  const kvartalMåneder = [0, 3, 6, 9];
+  for (const m of kvartalMåneder) {
+    const kandidat = new Date(nu.getFullYear(), m, 5, 8, 0, 0);
+    if (kandidat > nu) return kandidat;
+  }
+  return new Date(nu.getFullYear() + 1, 0, 5, 8, 0, 0);
 }
 
-const SCRAPERS: ScraperInfo[] = [
+const SCRAPER_GRUPPER: { gruppe: string; scrapers: ScraperInfo[] }[] = [
   {
-    id: 'stps',
-    navn: 'STPS — Hent nye rapporter',
-    beskrivelse: 'Kører automatisk hver nat og henter nye tilsynsrapporter fra stps.dk.',
-    næsteKørsel: () => næsteDagKl(3, 0),
-    kilde: 'railway',
+    gruppe: 'STPS — Tilsynsrapporter',
+    scrapers: [
+      {
+        id: 'stps-liste',
+        navn: 'Hent nye rapporter',
+        kilde: 'railway',
+        cronTidspunkt: 'Dagligt kl. 20:00',
+        logNøgler: ['stps-liste'],
+        næsteKørsel: () => næsteDagKl(20),
+      },
+      {
+        id: 'stps-detaljer',
+        navn: "Parse PDF'er",
+        kilde: 'railway',
+        cronTidspunkt: 'Dagligt kl. 20:04',
+        logNøgler: ['stps-detaljer'],
+        næsteKørsel: () => næsteDagKl(20, 4),
+      },
+      {
+        id: 'stps-fund-items',
+        navn: 'Udtræk fund-items',
+        kilde: 'railway',
+        cronTidspunkt: 'Dagligt kl. 20:04',
+        logNøgler: ['stps-fund-items'],
+        næsteKørsel: () => næsteDagKl(20, 4),
+      },
+      {
+        id: 'stps-pnummer',
+        navn: 'Udtræk P-numre',
+        kilde: 'railway',
+        cronTidspunkt: 'Dagligt kl. 20:04',
+        logNøgler: ['stps-pnummer'],
+        næsteKørsel: () => næsteDagKl(20, 4),
+      },
+    ],
   },
   {
-    id: 'cvr',
-    navn: 'CVR — Opdater virksomhedsdata',
-    beskrivelse: 'Opdaterer ansatte, branche og CVR-data for alle bosteder.',
-    næsteKørsel: () => næsteDagKl(3, 0),
-    kilde: 'railway',
+    gruppe: 'Tilbudsportalen',
+    scrapers: [
+      {
+        id: 'tp-liste',
+        navn: 'Hent tilbudsliste',
+        kilde: 'synology',
+        cronTidspunkt: 'Dagligt kl. 03:00',
+        logNøgler: ['tp-liste'],
+        næsteKørsel: () => næsteDagKl(3),
+      },
+      {
+        id: 'tp-detaljer',
+        navn: 'Hent detaljer',
+        kilde: 'synology',
+        cronTidspunkt: 'Dagligt kl. 03:00',
+        logNøgler: ['tp-detaljer'],
+        næsteKørsel: () => næsteDagKl(3),
+      },
+      {
+        id: 'tp-match',
+        navn: 'Kør matcher',
+        kilde: 'cronjobs',
+        cronTidspunkt: 'Dagligt kl. 05:00',
+        logNøgler: ['tp-match'],
+        næsteKørsel: () => næsteDagKl(5),
+      },
+    ],
   },
   {
-    id: 'regnskab',
-    navn: 'Regnskab — Hent årsregnskab',
-    beskrivelse: 'Henter nøgletal fra Erhvervsstyrelsens årsrapport-API for bosteder med CVR. Kræver ingen credentials.',
-    næsteKørsel: () => næsteDagKl(4, 0),
-    kilde: 'railway',
+    gruppe: 'CVR-register',
+    scrapers: [
+      {
+        id: 'cvr-ansatte',
+        navn: 'Opdater ansatte og virksomhedsdata',
+        kilde: 'cronjobs',
+        cronTidspunkt: 'Dagligt kl. 03:00',
+        logNøgler: ['cvr-ansatte'],
+        næsteKørsel: () => næsteDagKl(3),
+      },
+      {
+        id: 'cvr-berig',
+        navn: 'Berig med CVR og adresse',
+        kilde: 'manuel',
+        cronTidspunkt: 'Manuel',
+        logNøgler: ['cvr-berig'],
+        næsteKørsel: () => null,
+      },
+    ],
   },
   {
-    id: 'monday-sync',
-    navn: 'Monday — Synkroniser kunder',
-    beskrivelse: 'Henter alle Monday-kunder og cacher dem i Supabase så Kunder-siden loader hurtigt.',
-    næsteKørsel: () => {
-      const nu = new Date();
-      const næste = new Date(nu);
-      næste.setMinutes(0, 0, 0);
-      næste.setHours(næste.getHours() + 1);
-      return næste;
-    },
-    kilde: 'railway',
+    gruppe: 'LOS & Monday',
+    scrapers: [
+      {
+        id: 'monday-match',
+        navn: 'Monday — Synkroniser kunder',
+        kilde: 'manuel',
+        cronTidspunkt: 'Manuel',
+        logNøgler: ['monday-match', 'monday-sync'],
+        næsteKørsel: () => null,
+      },
+      {
+        id: 'los-liste',
+        navn: 'LOS — Hent medlemsliste',
+        kilde: 'railway',
+        cronTidspunkt: 'Manuel',
+        logNøgler: ['los-liste'],
+        næsteKørsel: () => null,
+      },
+    ],
   },
   {
-    id: 'tp',
-    navn: 'Tilbudsportalen — Fuld kørsel',
-    beskrivelse: 'Kører lokalt hver mandag kl. 11:00 og henter detaljer fra Tilbudsportalen.',
-    næsteKørsel: () => næsteMandag(11, 0),
-    kilde: 'lokal',
+    gruppe: 'Geodata & Øvrige',
+    scrapers: [
+      {
+        id: 'dst',
+        navn: 'Danmarks Statistik — HAND01',
+        kilde: 'cronjobs',
+        cronTidspunkt: 'Kvartalsvist — 5. jan/apr/jul/okt',
+        logNøgler: ['dst'],
+        næsteKørsel: næsteKvartal,
+      },
+      {
+        id: 'geocoder',
+        navn: 'Geocoder — Koordinater via DAWA',
+        kilde: 'manuel',
+        cronTidspunkt: 'Manuel',
+        logNøgler: ['geocoder'],
+        næsteKørsel: () => null,
+      },
+    ],
   },
 ];
+
+const KILDE_LABELS: Record<Kilde, string> = {
+  railway:  'Railway',
+  cronjobs: 'cronjobs.org',
+  synology: 'Synology',
+  lokal:    'Lokal',
+  manuel:   'Manuel',
+};
+
+const KILDE_FARVE: Record<Kilde, { bg: string; color: string }> = {
+  railway:  { bg: '#dbeafe', color: '#1e40af' },
+  cronjobs: { bg: '#f3e8ff', color: '#6b21a8' },
+  synology: { bg: '#fef3c7', color: '#92400e' },
+  lokal:    { bg: '#f0fdf4', color: '#166534' },
+  manuel:   { bg: 'var(--color-border-light)', color: 'var(--color-text-muted)' },
+};
 
 function formaterCountdown(ms: number): string {
   const timer = Math.floor(ms / 1000 / 60 / 60);
   const min = Math.floor((ms / 1000 / 60) % 60);
   if (timer >= 24) {
     const dage = Math.floor(timer / 24);
-    const restTimer = timer % 24;
-    return `${dage} dag${dage !== 1 ? 'e' : ''} og ${restTimer} time${restTimer !== 1 ? 'r' : ''}`;
+    return `${dage} dag${dage !== 1 ? 'e' : ''}`;
   }
-  return `${timer} time${timer !== 1 ? 'r' : ''} og ${min} min`;
+  if (timer === 0) return `${min} min`;
+  return `${timer}t ${min}m`;
 }
 
 type LogEntry = { scraperId: string; ok: boolean; kørtKl: string };
@@ -106,49 +215,60 @@ export function ScraperCountdowns() {
       .catch(() => {});
   }, []);
 
-  const logNøgler: Record<string, string[]> = {
-    stps: ['stps-liste', 'stps-detaljer'],
-    cvr: ['cvr-berig', 'cvr-ansatte'],
-    regnskab: ['regnskab'],
-    'monday-sync': ['monday-sync'],
-    tp: ['tp-liste', 'tp-detaljer', 'tp-match'],
-  };
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-      {SCRAPERS.map((s) => {
-        const næste = s.næsteKørsel();
-        const msHen = næste.getTime() - nu.getTime();
-        const nøgler = logNøgler[s.id] ?? [];
-        const seneste = nøgler
-          .map((k) => logs[k])
-          .filter(Boolean)
-          .sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime())[0];
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {SCRAPER_GRUPPER.map((grp) => (
+        <div key={grp.gruppe}>
+          <p style={{ fontSize: 'var(--text-xs)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.5rem' }}>
+            {grp.gruppe}
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {grp.scrapers.map((s) => {
+              const næste = s.næsteKørsel();
+              const msHen = næste ? næste.getTime() - nu.getTime() : null;
+              const seneste = s.logNøgler
+                .map((k) => logs[k])
+                .filter(Boolean)
+                .sort((a, b) => new Date(b.kørtKl).getTime() - new Date(a.kørtKl).getTime())[0];
 
-        return (
-          <div key={s.id} className="dashboard-kort" style={{ padding: '1rem 1.25rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            <p style={{ fontWeight: 'var(--fw-medium)', fontSize: 'var(--text-sm)' }}>{s.navn}</p>
-            <p style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>{s.beskrivelse}</p>
+              const kildeStyle = KILDE_FARVE[s.kilde];
 
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginTop: '0.25rem', alignItems: 'center' }}>
-              {seneste && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--text-xs)', color: seneste.ok ? 'var(--color-success, #16a34a)' : 'var(--color-danger, #dc2626)' }}>
-                  {seneste.ok ? <CheckCircle size={13} /> : <XCircle size={13} />}
-                  Senest {new Date(seneste.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+              return (
+                <div key={s.id} className="dashboard-kort" style={{ padding: '0.875rem 1.125rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 'var(--text-sm)', fontWeight: 'var(--fw-medium)', color: 'var(--color-text-primary)' }}>
+                        {s.navn}
+                      </span>
+                      <span style={{ fontSize: '0.65rem', fontWeight: 'var(--fw-semibold)', padding: '0.1rem 0.5rem', borderRadius: 9999, background: kildeStyle.bg, color: kildeStyle.color }}>
+                        {KILDE_LABELS[s.kilde]}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)' }}>
+                      {s.cronTidspunkt}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+                    {seneste && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: 'var(--text-xs)', color: seneste.ok ? 'var(--color-success, #16a34a)' : '#dc2626' }}>
+                        {seneste.ok ? <CheckCircle size={13} /> : <XCircle size={13} />}
+                        {new Date(seneste.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                    {msHen !== null && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
+                        <Clock size={12} />
+                        om {formaterCountdown(msHen)}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: 'var(--text-xs)', color: 'var(--color-text-secondary)' }}>
-                <Clock size={13} />
-                Om {formaterCountdown(msHen)}
-                <span style={{ marginLeft: '0.25rem', padding: '0.1rem 0.5rem', borderRadius: '999px', background: s.kilde === 'lokal' ? 'var(--color-warning-bg, #fef3c7)' : 'var(--color-border-light)', fontSize: '0.65rem', fontWeight: 'var(--fw-semibold)', textTransform: 'uppercase', color: s.kilde === 'lokal' ? '#92400e' : 'var(--color-text-muted)' }}>
-                  {s.kilde === 'lokal' ? 'Lokal Mac' : 'Railway'}
-                </span>
-              </div>
-            </div>
+              );
+            })}
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 }

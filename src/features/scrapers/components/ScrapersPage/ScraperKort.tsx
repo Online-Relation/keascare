@@ -1,14 +1,11 @@
 // src/features/scrapers/components/ScrapersPage/ScraperKort.tsx
 
 import React from 'react';
-import { AlertTriangle, CheckCircle, Loader, Play, XCircle, RefreshCw } from 'lucide-react';
-import type { ScraperStatus, Scraper } from './ScrapersPage';
+import { AlertTriangle, CheckCircle, Loader, Play, XCircle, RefreshCw, Clock, Server } from 'lucide-react';
+import type { ScraperStatus, Scraper, KørselKilde } from './ScrapersPage';
 import type { ScraperLog } from '@/lib/db/ScraperLog';
 
-type Fremgang = {
-  runder: number;
-  totalBehandlet: number;
-};
+type Fremgang = { runder: number; totalBehandlet: number };
 
 type ScraperKortProps = {
   scraper: Scraper;
@@ -20,14 +17,27 @@ type ScraperKortProps = {
   onKør: () => void;
 };
 
+const KILDE_LABEL: Record<KørselKilde, string> = {
+  railway:   'Railway',
+  synology:  'Synology',
+  cronjobs:  'cronjobs.org',
+  lokal:     'Lokal',
+  manuel:    'Manuel',
+};
+
+const KILDE_FARVE: Record<KørselKilde, string> = {
+  railway:  'scraper-kilde--railway',
+  synology: 'scraper-kilde--synology',
+  cronjobs: 'scraper-kilde--cronjobs',
+  lokal:    'scraper-kilde--lokal',
+  manuel:   'scraper-kilde--manuel',
+};
+
 function formaterDato(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleDateString('da-DK', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   });
 }
 
@@ -39,7 +49,7 @@ export function ScraperKort({ scraper, status, resultat, fremgang, log, badge, o
       <div className="scraper-kort-header">
         <div className="scraper-kort-titel-række">
           <span className="scraper-kort-titel">{scraper.titel}</span>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
             {scraper.loop && (
               <span className="scraper-loop-badge">
                 <RefreshCw size={10} />
@@ -47,10 +57,25 @@ export function ScraperKort({ scraper, status, resultat, fremgang, log, badge, o
               </span>
             )}
             {status === 'kører' && <Loader size={16} className="scraper-ikon-kører" />}
-            {status === 'done' && <CheckCircle size={16} color="var(--color-success, #16a34a)" />}
-            {status === 'fejl' && <XCircle size={16} color="var(--color-danger, #dc2626)" />}
+            {status === 'done'  && <CheckCircle size={16} color="var(--color-success, #16a34a)" />}
+            {status === 'fejl'  && <XCircle size={16} color="var(--color-danger, #dc2626)" />}
           </div>
         </div>
+
+        {/* Kilde- og tidspunkt-badges */}
+        <div className="scraper-meta-badges">
+          <span className={`scraper-kilde-badge ${KILDE_FARVE[scraper.kørselKilde]}`}>
+            <Server size={10} />
+            {KILDE_LABEL[scraper.kørselKilde]}
+          </span>
+          {scraper.cronTidspunkt && (
+            <span className="scraper-tidspunkt-badge">
+              <Clock size={10} />
+              {scraper.cronTidspunkt}
+            </span>
+          )}
+        </div>
+
         <p className="scraper-kort-beskrivelse">{scraper.beskrivelse}</p>
 
         {badge && <div style={{ marginTop: '0.5rem' }}>{badge}</div>}

@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
+import { opdaterScraperStatus } from '@/lib/db/ScraperStatus';
 
 // Simpel nøgle-beskyttelse – sæt SCRAPER_SECRET i .env.local
 function erAutoriseret(request: NextRequest): boolean {
@@ -29,6 +30,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function kørIBaggrunden() {
+  // Sæt live-status til 'kører' så Live Monitor viser aktiv kørsel
+  await opdaterScraperStatus('stps-liste', 'kører', 0, 0);
   try {
     const resultat = await kørStpsScraper({ maxSider: 100 });
     await logScraperKørsel('stps-liste', true, {
@@ -36,9 +39,11 @@ async function kørIBaggrunden() {
       nye: resultat.nye,
       fejl: resultat.fejl.length,
     });
+    await opdaterScraperStatus('stps-liste', 'idle', resultat.fundet, resultat.fundet);
   } catch (err) {
     const besked = err instanceof Error ? err.message : String(err);
     await logScraperKørsel('stps-liste', false, { error: besked });
+    await opdaterScraperStatus('stps-liste', 'fejl', 0, 0);
   }
 }
 
