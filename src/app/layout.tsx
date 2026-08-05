@@ -19,9 +19,9 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: '/images/logo/favicon.png', type: 'image/png' },
+      { url: '/images/icons/keascare.webp', type: 'image/webp' },
     ],
-    apple: '/images/logo/favicon.png',
+    apple: '/images/icons/keascare.webp',
   },
 };
 

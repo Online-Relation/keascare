@@ -12,14 +12,14 @@ type Props = {
 
 const KILDE_META: Record<Tilsynskilde, { ikon: string; label: string; farve: string }> = {
   stps: {
-    ikon:   '/icons/stps.svg',
+    ikon:   '/images/icons/stps-favicon.webp',
     label:  'STPS',
     farve:  '#003057',
   },
   socialtilsyn: {
     ikon:   '/icons/socialtilsyn.svg',
     label:  'Socialtilsyn',
-    farve:  '#1a56a0',
+    farve:  '#032D44',
   },
 };
 
