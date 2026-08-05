@@ -139,12 +139,14 @@ const SCRAPERS: Scraper[] = [
   {
     id: 'regnskab',
     kategori: 'CVR-register',
-    kørselKilde: 'manuel',
+    kørselKilde: 'synology',
+    cronTidspunkt: 'Manuel fra Synology',
     titel: 'CVR — Hent årsregnskab',
-    beskrivelse: 'Henter nøgletal fra Erhvervsstyrelsens årsrapport-API for bosteder med CVR-nummer. Kræver ingen credentials.',
+    beskrivelse: 'Henter nøgletal fra Erhvervsstyrelsens årsrapport-API (regnskab.virk.dk). Railway kan ikke nå domænet — kør fra Synology eller lokalt.',
     endpoint: '/api/scrapers/regnskab',
     body: { batch: 50 },
     loop: true,
+    advarsel: 'regnskab.virk.dk er DNS-blokeret på Railway. Kør fra Synology eller lokalt — samme situation som Tilbudsportalen.',
   },
   {
     id: 'cvr-signaler',
