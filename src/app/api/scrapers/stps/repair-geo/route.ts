@@ -104,7 +104,7 @@ export async function POST(req: Request) {
       if (res.status !== 200) {
         console.warn(`[repair-geo] ${stps_tilbud_navn}: HTTP ${res.status}`);
         // Sæt region='–' så rækken falder ud af køen
-        await supabase.from('stps_rapporter').update({ region: '–' }).eq('id', id).catch(() => {});
+        await supabase.from('stps_rapporter').update({ region: '–' }).eq('id', id);
         fejl++;
         continue;
       }
