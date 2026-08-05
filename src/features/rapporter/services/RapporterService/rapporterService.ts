@@ -6,7 +6,6 @@ import type {
   RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
 
-// STPS-data bruges til KPI'er og grafer
 type DbRapport = {
   id: string;
   stps_tilbud_navn: string;
@@ -22,21 +21,10 @@ type DbRapport = {
   los_medlem: boolean | null;
 };
 
-// TP-data bruges som base for listen (alle bosteder)
-type DbTpTilbud = {
-  id: string;
-  navn: string;
-  cvr: string | null;
-  kommune: string | null;
-  tilbudstype: string | null;
-  driftsform: string | null;
-};
-
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
   const supabase = getSupabaseServerClient();
   const visFilter = await getVisFilter();
 
-  // STPS-query til KPI'er og grafer (med datofilter)
   let stpsQuery = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, cvr, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem')
@@ -51,29 +39,6 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (fra) stpsQuery = stpsQuery.gte('rapport_dato', fra);
   stpsQuery = stpsQuery.lte('rapport_dato', til ?? idag);
 
-  // TP: Supabase returnerer maks 1000 rækker pr. request — hent i batches à 1000
-  async function hentAlleTpTilbud(): Promise<DbTpTilbud[]> {
-    const alle: DbTpTilbud[] = [];
-    const BATCH = 1000;
-    let offset = 0;
-    while (true) {
-      let q = supabase
-        .from('tilbudsportalen_tilbud')
-        .select('id, navn, cvr, kommune, tilbudstype, driftsform')
-        .range(offset, offset + BATCH - 1);
-      if (visFilter === 'privat') {
-        q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
-      }
-      const { data, error } = await q;
-      if (error || !data || data.length === 0) break;
-      alle.push(...(data as DbTpTilbud[]));
-      if (data.length < BATCH) break;
-      offset += BATCH;
-    }
-    return alle;
-  }
-
-  // Total i database til procentberegning
   let dbTotalQuery = supabase
     .from('stps_rapporter')
     .select('*', { count: 'exact', head: true });
@@ -81,26 +46,16 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
-  // LOS-CVR-liste fra los_medlemmer (scraper #1 — los.dk kilden)
-  const losQuery = supabase.from('los_medlemmer').select('cvr').not('cvr', 'is', null);
-
-  const [{ data: stpsData, error }, tpTilbudRå, { count: dbTotal }, { data: losData }] = await Promise.all([
+  const [{ data: stpsData, error }, { count: dbTotal }] = await Promise.all([
     stpsQuery,
-    hentAlleTpTilbud(),
     dbTotalQuery,
-    losQuery,
   ]);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
   const alle = (stpsData ?? []) as DbRapport[];
-  const tpTilbud = tpTilbudRå;
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
-
-  const losCvrSet = new Set(
-    ((losData ?? []) as { cvr: string }[]).map((r) => r.cvr)
-  );
 
   return {
     kpis:               beregnKpis(alle, totalIDatabase, kritiskeMåneder),
@@ -109,8 +64,23 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     driftsformKritiske: beregnDriftsformKritiske(alle),
     topKommuner:        beregnTopKommuner(alle),
     temaer:             beregnTemaer(alle),
-    rapporter:          mapFraTP(tpTilbud, alle, losCvrSet),
+    rapporter:          mapStpsRapporter(alle),
   };
+}
+
+function mapStpsRapporter(alle: DbRapport[]): RapportRække[] {
+  return alle.map((r) => ({
+    id:             r.id,
+    navn:           r.stps_tilbud_navn,
+    kommune:        r.kommune,
+    fundNiveau:     (r.fund_niveau as FundNiveau) ?? 'ukendt',
+    rapportDato:    r.rapport_dato,
+    rapportLink:    r.rapport_url ?? null,
+    temaer:         r.temaer ?? [],
+    paragraf:       udledParagraf(r.tp_tilbudstype),
+    losmedlem:      r.los_medlem === true,
+    harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
+  }));
 }
 
 function beregnKpis(alle: DbRapport[], totalIDatabase: number, kritiskeMåneder: { kritisk: number }[]) {
@@ -248,35 +218,4 @@ function udledParagraf(tilbudstype: string | null): string | null {
   if (tilbudstype.includes('108')) return '§108';
   if (tilbudstype.includes('43')) return '§43';
   return null;
-}
-
-// Byg listen fra TP-bosteder som base, beriget med seneste STPS-rapport per CVR
-function mapFraTP(tpTilbud: DbTpTilbud[], stpsRapporter: DbRapport[], losCvrSet: Set<string>): RapportRække[] {
-  // Byg CVR → seneste STPS-rapport map
-  const cvrTilStps = new Map<string, DbRapport>();
-  for (const r of stpsRapporter) {
-    if (!r.cvr) continue;
-    const existing = cvrTilStps.get(r.cvr);
-    if (!existing || (r.rapport_dato ?? '') > (existing.rapport_dato ?? '')) {
-      cvrTilStps.set(r.cvr, r);
-    }
-  }
-
-  return tpTilbud.map((tp) => {
-    const stps = tp.cvr ? cvrTilStps.get(tp.cvr) : undefined;
-    // LOS: CVR i los_medlemmer-tabellen (scraper #1 fra los.dk) — uafhængigt af STPS
-    const losmedlem = !!tp.cvr && losCvrSet.has(tp.cvr);
-    return {
-      id:             tp.id,
-      navn:           tp.navn,
-      kommune:        tp.kommune,
-      fundNiveau:     (stps?.fund_niveau as FundNiveau | undefined) ?? 'ukendt',
-      rapportDato:    stps?.rapport_dato ?? null,
-      rapportLink:    stps?.rapport_url ?? null,
-      temaer:         stps?.temaer ?? [],
-      paragraf:       udledParagraf(tp.tilbudstype),
-      losmedlem,
-      harStpsRapport: !!stps?.rapport_url && !stps.rapport_url.startsWith('stps://genereret/'),
-    };
-  });
 }
