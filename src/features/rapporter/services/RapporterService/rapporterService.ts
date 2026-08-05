@@ -30,7 +30,6 @@ type DbTpTilbud = {
   kommune: string | null;
   tilbudstype: string | null;
   driftsform: string | null;
-  los_medlem: boolean | null;
 };
 
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
@@ -55,7 +54,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   // TP-query som base for listen (alle bosteder, uden datofilter)
   let tpQuery = supabase
     .from('tilbudsportalen_tilbud')
-    .select('id, navn, cvr, kommune, tilbudstype, driftsform, los_medlem')
+    .select('id, navn, cvr, kommune, tilbudstype, driftsform')
     .limit(8000);
 
   if (visFilter === 'privat') {
@@ -257,7 +256,7 @@ function mapFraTP(tpTilbud: DbTpTilbud[], stpsRapporter: DbRapport[], losCvrSet:
 
   return tpTilbud.map((tp) => {
     const stps = tp.cvr ? cvrTilStps.get(tp.cvr) : undefined;
-    // LOS-match: CVR i los_medlemmer-tabellen (scraper #1), eller stps.los_medlem (scraper #12)
+    // LOS-match via CVR mod los_medlemmer-tabellen, eller stps.los_medlem som fallback
     const losmedlem = (tp.cvr ? losCvrSet.has(tp.cvr) : false) || stps?.los_medlem === true;
     return {
       id:             tp.id,
