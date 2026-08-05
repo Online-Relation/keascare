@@ -18,6 +18,9 @@ export const TOMT_FILTER: FilterState = {
 
 export type SubPanel = null | 'kommune' | 'paragraf' | 'los' | 'stps-rapport' | 'stps-fund';
 
+// Felter der er enten/eller (radio) — ikke multi-select
+export const RADIO_FELTER: (keyof FilterState)[] = ['los', 'stpsRapport'];
+
 export type SortValg = 'nyeste' | 'aeldste' | 'navn' | 'fund';
 
 export const FUND_CFG: Record<string, { label: string; kortLabel: string; cls: string }> = {

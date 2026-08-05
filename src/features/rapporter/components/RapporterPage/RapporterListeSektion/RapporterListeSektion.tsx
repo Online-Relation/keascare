@@ -6,7 +6,7 @@ import { Search, Plus, X, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { RapportRække } from '@/features/rapporter/types/rapporter.types';
 import { FilterPanel } from './FilterPanel';
 import type { FilterState, SortValg, SubPanel } from './types';
-import { TOMT_FILTER, FUND_CFG } from './types';
+import { TOMT_FILTER, FUND_CFG, RADIO_FELTER } from './types';
 
 const PR_SIDE = 25;
 
@@ -54,10 +54,15 @@ export function RapporterListeSektion({ rapporter }: Props) {
     setSide(1);
   }
 
-  // Live-toggle: opdaterer filtre direkte, ingen kladde
+  // Live-toggle: radio-adfærd for enten/eller-felter, multi-select for resten
   function toggleFilter(felt: keyof FilterState, vaerdi: string) {
     setFiltre((prev) => {
       const arr = prev[felt] as string[];
+      const erRadio = RADIO_FELTER.includes(felt);
+      if (erRadio) {
+        // Klik på allerede valgt → fravælg. Ellers sæt kun denne.
+        return { ...prev, [felt]: arr.includes(vaerdi) ? [] : [vaerdi] };
+      }
       return { ...prev, [felt]: arr.includes(vaerdi) ? arr.filter((v) => v !== vaerdi) : [...arr, vaerdi] };
     });
     setSide(1);

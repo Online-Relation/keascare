@@ -3,7 +3,7 @@
 
 import { Search, X, ChevronRight, ChevronLeft, Trash2, Users, MapPin, Hash, FileText, AlertTriangle } from 'lucide-react';
 import type { FilterState, SubPanel } from './types';
-import { FUND_CFG } from './types';
+import { FUND_CFG, RADIO_FELTER } from './types';
 
 type Props = {
   filtre: FilterState;
@@ -280,6 +280,7 @@ function SubPanelIndhold({ subPanel, kladde, kommuner, onToggle }: {
 
   const { felt, valgmuligheder } = config[subPanel];
   const valgte = kladde[felt] as string[];
+  const erRadio = RADIO_FELTER.includes(felt);
 
   return (
     <div style={{ border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
@@ -291,24 +292,36 @@ function SubPanelIndhold({ subPanel, kladde, kommuner, onToggle }: {
             onClick={() => onToggle(felt, vaerdi)}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%',
-              padding: '0.8rem 0.875rem', background: aktiv ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)' : '#ffffff',
+              padding: '0.8rem 0.875rem', background: aktiv ? '#EEF4FB' : '#ffffff',
               border: 'none', borderBottom: idx < valgmuligheder.length - 1 ? '1px solid var(--color-border)' : 'none',
               cursor: 'pointer', textAlign: 'left',
             }}
           >
-            <span style={{
-              width: '17px', height: '17px', borderRadius: '4px', flexShrink: 0,
-              border: aktiv ? `2px solid var(--color-primary)` : '1.5px solid var(--color-border)',
-              background: aktiv ? 'var(--color-primary)' : 'transparent',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'all 0.1s',
-            }}>
-              {aktiv && (
-                <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
-                  <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              )}
-            </span>
+            {erRadio ? (
+              /* Radio-cirkel */
+              <span style={{
+                width: '17px', height: '17px', borderRadius: '50%', flexShrink: 0,
+                border: aktiv ? `2px solid var(--color-primary)` : '1.5px solid var(--color-border)',
+                background: '#ffffff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {aktiv && <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--color-primary)', display: 'block' }} />}
+              </span>
+            ) : (
+              /* Checkbox */
+              <span style={{
+                width: '17px', height: '17px', borderRadius: '4px', flexShrink: 0,
+                border: aktiv ? `2px solid var(--color-primary)` : '1.5px solid var(--color-border)',
+                background: aktiv ? 'var(--color-primary)' : 'transparent',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {aktiv && (
+                  <svg width="9" height="7" viewBox="0 0 9 7" fill="none">
+                    <path d="M1 3.5L3.5 6L8 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </span>
+            )}
             <span style={{ fontSize: 'var(--text-sm)', color: 'var(--color-text)', fontWeight: aktiv ? 'var(--fw-medium)' : 'var(--fw-normal)' }}>
               {label}
             </span>
