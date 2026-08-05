@@ -3,6 +3,14 @@
 // GET /api/scrapers/regnskab/debug?cvr=12345678
 
 import { NextRequest, NextResponse } from 'next/server';
+import axios from 'axios';
+import * as https from 'https';
+
+const HTTP_CLIENT = axios.create({
+  timeout: 15_000,
+  httpsAgent: new https.Agent({ rejectUnauthorized: false }),
+  headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk' },
+});
 
 export async function GET(req: NextRequest) {
   const cvr = req.nextUrl.searchParams.get('cvr');
@@ -11,22 +19,14 @@ export async function GET(req: NextRequest) {
   const url = `https://regnskab.virk.dk/regnskab/xbrl/api/1/regnskab?cvrnummer=${cvr}`;
 
   try {
-    const res = await fetch(url, {
-      headers: { 'User-Agent': 'KeasCare/1.0 mads@onlinerelation.dk' },
-      cache: 'no-store',
-    });
-
-    if (res.status === 404) return NextResponse.json({ cvr, status: 404, besked: 'Ingen regnskab fundet for dette CVR' });
-    if (!res.ok) return NextResponse.json({ cvr, status: res.status, besked: `HTTP ${res.status}` });
-
-    const data = await res.json();
+    const res = await HTTP_CLIENT.get(url);
+    const data = res.data;
 
     if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json({ cvr, status: 200, besked: 'Tom liste — ingen regnskaber', raaData: data });
     }
 
-    // Vis seneste regnskab med fuld struktur
-    const seneste = [...data].sort((a, b) => {
+    const seneste = [...data].sort((a: { regnskabsperiode?: { slutDato?: string }; indsendelsesDato?: string }, b: { regnskabsperiode?: { slutDato?: string }; indsendelsesDato?: string }) => {
       const da = a.regnskabsperiode?.slutDato ?? a.indsendelsesDato ?? '';
       const db = b.regnskabsperiode?.slutDato ?? b.indsendelsesDato ?? '';
       return db.localeCompare(da);
@@ -37,13 +37,14 @@ export async function GET(req: NextRequest) {
       antalRegnskaber: data.length,
       senestePeriode: seneste?.regnskabsperiode,
       indsendt: seneste?.indsendelsesDato,
-      // Vis de første 20 XBRL-felter så vi kan se strukturen
       xbrlUddrag: (seneste?.xbrlData ?? []).slice(0, 20),
       xbrlTotalFelter: (seneste?.xbrlData ?? []).length,
-      // Vis top-niveaunøgler i det seneste regnskab-objekt
       senestNøgler: Object.keys(seneste ?? {}),
     });
   } catch (err) {
+    if (axios.isAxiosError(err) && err.response?.status === 404) {
+      return NextResponse.json({ cvr, besked: 'Ingen regnskab fundet (404)' });
+    }
     return NextResponse.json({ cvr, fejl: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
