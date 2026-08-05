@@ -26,6 +26,7 @@ export type Scraper = {
   kategori: string;
   kørselKilde: KørselKilde;
   cronTidspunkt?: string;
+  cronTrin?: number; // trin-nummer i cron-jobbet
 };
 
 type Fremgang = { runder: number; totalBehandlet: number };
@@ -39,6 +40,7 @@ const SCRAPERS: Scraper[] = [
     id: 'stps-liste',
     kategori: 'STPS — Tilsynsrapporter',
     kørselKilde: 'cronjobs',
+    cronTrin: 2,
     cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig',
     titel: 'STPS — Hent nye rapporter',
     beskrivelse: 'Henter rapportlisten fra stps.dk og gemmer nye i databasen. Kører som trin 2 i det daglige cron-job (cron-job.org kalder /api/cron/daglig kl. 04:00).',
@@ -49,6 +51,7 @@ const SCRAPERS: Scraper[] = [
     id: 'stps-detaljer',
     kategori: 'STPS — Tilsynsrapporter',
     kørselKilde: 'cronjobs',
+    cronTrin: 3,
     cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig',
     titel: "STPS — Parse PDF'er",
     beskrivelse: "Parser PDF'er for rapporter der mangler vurdering og fund-data (batch 50). Kører som trin 3 i det daglige cron-job.",
@@ -60,6 +63,7 @@ const SCRAPERS: Scraper[] = [
     id: 'stps-fund-items',
     kategori: 'STPS — Tilsynsrapporter',
     kørselKilde: 'cronjobs',
+    cronTrin: 4,
     cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig',
     titel: 'STPS — Udtræk strukturerede fund-items',
     beskrivelse: "Parser eksisterende PDF'er og gemmer hvert målepunkt som struktureret data med status (opfyldt/ikke opfyldt/ikke aktuelt). Batch 30. Kører som trin 4 i det daglige cron-job.",
@@ -71,6 +75,7 @@ const SCRAPERS: Scraper[] = [
     id: 'stps-pnummer',
     kategori: 'STPS — Tilsynsrapporter',
     kørselKilde: 'cronjobs',
+    cronTrin: 5,
     cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig',
     titel: 'STPS — Udtræk P-numre fra PDFer',
     beskrivelse: "Gennemgår eksisterende PDF'er og udtrækker P-nummer for rapporter der mangler det. Batch 50. Kører som trin 5 i det daglige cron-job — P-numre bruges til CVR-opslag.",
@@ -119,6 +124,7 @@ const SCRAPERS: Scraper[] = [
     id: 'cvr-berig',
     kategori: 'CVR-register',
     kørselKilde: 'manuel',
+    cronTrin: 6,
     titel: 'CVR — Berig med CVR og adresse',
     beskrivelse: 'Slår P-nummer op i CVR-registret for rapporter der mangler CVR. Henter CVR og adresse.',
     endpoint: '/api/scrapers/cvr',
@@ -129,7 +135,8 @@ const SCRAPERS: Scraper[] = [
     id: 'cvr-ansatte',
     kategori: 'CVR-register',
     kørselKilde: 'cronjobs',
-    cronTidspunkt: 'Dagligt kl. 03:00',
+    cronTrin: 7,
+    cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig',
     titel: 'CVR — Opdater ansatte og virksomhedsdata',
     beskrivelse: 'Henter antal ansatte, branche og virksomhedstype fra CVR for alle bosteder med CVR-nummer. Prioriterer dem der er ældst opdateret.',
     endpoint: '/api/scrapers/cvr/ansatte',
@@ -164,6 +171,7 @@ const SCRAPERS: Scraper[] = [
     id: 'los-liste',
     kategori: 'LOS — Landsorganisationen',
     kørselKilde: 'cronjobs',
+    cronTrin: 1,
     cronTidspunkt: 'Søndag kl. 04:00 via cron-job.org → /api/cron/ugentlig',
     titel: 'LOS — Hent medlemsliste',
     beskrivelse: 'Henter alle §43, §107 og §108-medlemmer fra los.dk og gemmer dem i databasen. Kører som trin 1 i det ugentlige cron-job (cron-job.org kalder /api/cron/ugentlig søndag kl. 04:00). Nye medlemmer fanges inden for 8 dage.',
@@ -174,6 +182,7 @@ const SCRAPERS: Scraper[] = [
     id: 'los-detaljer',
     kategori: 'LOS — Landsorganisationen',
     kørselKilde: 'cronjobs',
+    cronTrin: 11,
     cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig (20 ad gangen)',
     titel: 'LOS — Hent detaljer',
     beskrivelse: 'Henter CVR, kontakt, adresse og accordion-data (ydelser, pladser, priser, ledelse) for hvert LOS-medlem der mangler detaljer. Kører som trin 10 i det daglige cron-job — 20 members pr. dag for ikke at belaste los.dk. Med 233 i backlog tager det ~12 dage at komme igennem.',
@@ -185,6 +194,7 @@ const SCRAPERS: Scraper[] = [
     id: 'los-match',
     kategori: 'LOS — Landsorganisationen',
     kørselKilde: 'cronjobs',
+    cronTrin: 12,
     cronTidspunkt: 'Dagligt kl. 04:00 via cron-job.org → /api/cron/daglig',
     titel: 'LOS — Match mod bosteder',
     beskrivelse: 'Matcher LOS-medlemmer mod STPS-bosteder via CVR-nummer og sætter LOS-medl-badge på matchede bosteder. Kører som trin 11 i det daglige cron-job, lige efter detaljer er hentet.',
@@ -208,6 +218,7 @@ const SCRAPERS: Scraper[] = [
     id: 'geocoder',
     kategori: 'Geodata & Register',
     kørselKilde: 'manuel',
+    cronTrin: 10,
     titel: 'Geocoder — Koordinater via DAWA',
     beskrivelse: 'Slår adresser op i Danmarks Adressers Web API og gemmer lat/lng koordinater til kortvisning. Kør indtil alle bosteder er geocodet.',
     endpoint: '/api/scrapers/geocoder',
@@ -427,6 +438,29 @@ export function ScrapersPage() {
           Overblik over alle dataindsamlinger — hvad der kører automatisk, hvornår, og fra hvilken kilde.
         </p>
       </div>
+
+      {/* Statusoverblik — seneste kørsel for alle cron-scrapers */}
+      {Object.keys(logs).length > 0 && (
+        <div className="scraper-statusoverblik">
+          <h2 className="scraper-statusoverblik-titel">Seneste kørsel</h2>
+          <div className="scraper-statusoverblik-grid">
+            {SCRAPERS.filter((s) => s.cronTrin !== undefined).sort((a, b) => (a.cronTrin ?? 0) - (b.cronTrin ?? 0)).map((s) => {
+              const log = logs[s.id];
+              return (
+                <div key={s.id} className={`scraper-statusoverblik-række ${log ? (log.ok ? 'scraper-statusoverblik-række--ok' : 'scraper-statusoverblik-række--fejl') : 'scraper-statusoverblik-række--ukendt'}`}>
+                  <span className="scraper-statusoverblik-trin">#{s.cronTrin}</span>
+                  <span className="scraper-statusoverblik-navn">{s.titel.replace(/^(STPS|CVR|LOS|Tilbudsportalen|Geocoder) — /, '')}</span>
+                  <span className="scraper-statusoverblik-dato">
+                    {log
+                      ? (log.ok ? '✓ ' : '✗ ') + new Date(log.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                      : 'Aldrig kørt'}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <ScraperFremgang />
       <ScraperHistorik />

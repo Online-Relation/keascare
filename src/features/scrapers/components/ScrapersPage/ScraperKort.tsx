@@ -48,6 +48,9 @@ export function ScraperKort({ scraper, status, resultat, fremgang, log, badge, o
     <div className="scraper-kort">
       <div className="scraper-kort-header">
         <div className="scraper-kort-titel-række">
+          {scraper.cronTrin !== undefined && (
+            <span className="scraper-cron-trin" title={`Trin ${scraper.cronTrin} i cron-jobbet`}>#{scraper.cronTrin}</span>
+          )}
           <span className="scraper-kort-titel">{scraper.titel}</span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
             {scraper.loop && (
