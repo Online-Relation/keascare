@@ -81,10 +81,14 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
-  const [{ data: stpsData, error }, tpTilbudRå, { count: dbTotal }] = await Promise.all([
+  // LOS-CVR-liste fra los_medlemmer (scraper #1 — los.dk kilden)
+  const losQuery = supabase.from('los_medlemmer').select('cvr').not('cvr', 'is', null);
+
+  const [{ data: stpsData, error }, tpTilbudRå, { count: dbTotal }, { data: losData }] = await Promise.all([
     stpsQuery,
     hentAlleTpTilbud(),
     dbTotalQuery,
+    losQuery,
   ]);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
@@ -94,6 +98,10 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
+  const losCvrSet = new Set(
+    ((losData ?? []) as { cvr: string }[]).map((r) => r.cvr)
+  );
+
   return {
     kpis:               beregnKpis(alle, totalIDatabase, kritiskeMåneder),
     trend:              beregnTrend(alle),
@@ -101,7 +109,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     driftsformKritiske: beregnDriftsformKritiske(alle),
     topKommuner:        beregnTopKommuner(alle),
     temaer:             beregnTemaer(alle),
-    rapporter:          mapFraTP(tpTilbud, alle),
+    rapporter:          mapFraTP(tpTilbud, alle, losCvrSet),
   };
 }
 
@@ -243,7 +251,7 @@ function udledParagraf(tilbudstype: string | null): string | null {
 }
 
 // Byg listen fra TP-bosteder som base, beriget med seneste STPS-rapport per CVR
-function mapFraTP(tpTilbud: DbTpTilbud[], stpsRapporter: DbRapport[]): RapportRække[] {
+function mapFraTP(tpTilbud: DbTpTilbud[], stpsRapporter: DbRapport[], losCvrSet: Set<string>): RapportRække[] {
   // Byg CVR → seneste STPS-rapport map
   const cvrTilStps = new Map<string, DbRapport>();
   for (const r of stpsRapporter) {
@@ -256,8 +264,8 @@ function mapFraTP(tpTilbud: DbTpTilbud[], stpsRapporter: DbRapport[]): RapportR�
 
   return tpTilbud.map((tp) => {
     const stps = tp.cvr ? cvrTilStps.get(tp.cvr) : undefined;
-    // LOS: kun baseret på stps_rapporter.los_medlem (sat af scraper #12)
-    const losmedlem = stps?.los_medlem === true;
+    // LOS: CVR i los_medlemmer-tabellen (scraper #1 fra los.dk) — uafhængigt af STPS
+    const losmedlem = !!tp.cvr && losCvrSet.has(tp.cvr);
     return {
       id:             tp.id,
       navn:           tp.navn,
