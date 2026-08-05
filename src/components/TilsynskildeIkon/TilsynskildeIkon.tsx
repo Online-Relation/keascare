@@ -17,7 +17,7 @@ const KILDE_META: Record<Tilsynskilde, { ikon: string; label: string; farve: str
     farve:  '#003057',
   },
   socialtilsyn: {
-    ikon:   '/icons/socialtilsyn.svg',
+    ikon:   '/images/icons/socialtilsyn.svg',
     label:  'Socialtilsyn',
     farve:  '#032D44',
   },
