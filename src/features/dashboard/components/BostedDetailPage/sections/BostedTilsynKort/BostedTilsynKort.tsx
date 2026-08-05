@@ -260,32 +260,43 @@ export function BostedTilsynKort({ bosted }: BostedTilsynKortProps) {
           <HentStpsDetaljerKnap bostedId={bosted.id} />
         )}
 
-        {(bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:')) || bosted.pdfUrl ? (
-          <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border-light)' }}>
-            {bosted.rapportUrl && !bosted.rapportUrl.startsWith('manuel:') && (
-              <a
-                href={bosted.rapportUrl}
-                className="btn btn-outline btn-sm"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <ExternalLink size={13} />
-                Åbn rapport på STPS
-              </a>
-            )}
-            {(bosted.pdfUrl || bosted.pdfStorageUrl) && (
-              <a
-                href={bosted.pdfStorageUrl ?? bosted.pdfUrl ?? ''}
-                className="btn btn-outline btn-sm"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <FileText size={13} />
-                Åbn PDF
-              </a>
-            )}
-          </div>
-        ) : null}
+        {(() => {
+          // Kun vis STPS-link hvis det er en rigtig HTTPS-URL (ikke stps://genereret/...)
+          const visStpsLink = bosted.rapportUrl
+            && !bosted.rapportUrl.startsWith('manuel:')
+            && bosted.rapportUrl.startsWith('http');
+          // Brug storage-URL hvis tilgængelig, ellers STPS direkte (kun HTTP)
+          const pdfHref = bosted.pdfStorageUrl
+            ?? (bosted.pdfUrl?.startsWith('http') ? bosted.pdfUrl : null);
+
+          if (!visStpsLink && !pdfHref) return null;
+          return (
+            <div style={{ display: 'flex', gap: '0.625rem', flexWrap: 'wrap', paddingTop: '0.5rem', borderTop: '1px solid var(--color-border-light)' }}>
+              {visStpsLink && (
+                <a
+                  href={bosted.rapportUrl!}
+                  className="btn btn-outline btn-sm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <ExternalLink size={13} />
+                  Åbn rapport på STPS
+                </a>
+              )}
+              {pdfHref && (
+                <a
+                  href={`/api/pdf?id=${bosted.id}`}
+                  className="btn btn-outline btn-sm"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <FileText size={13} />
+                  Åbn PDF
+                </a>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
