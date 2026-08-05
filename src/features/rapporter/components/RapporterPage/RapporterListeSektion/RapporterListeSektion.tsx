@@ -31,7 +31,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
   const [subPanel, setSubPanel] = useState<SubPanel>(null);
   const [filterSøgning, setFilterSøgning] = useState('');
   const [filtre, setFiltre] = useState<FilterState>(TOMT_FILTER);
-  const [kladde, setKladde] = useState<FilterState>(TOMT_FILTER);
   const [side, setSide] = useState(1);
 
   const kommuner = useMemo(() => {
@@ -40,7 +39,6 @@ export function RapporterListeSektion({ rapporter }: Props) {
   }, [rapporter]);
 
   function åbnPanel() {
-    setKladde({ ...filtre });
     setFilterPanelOpen(true);
     setSubPanel(null);
     setFilterSøgning('');
@@ -51,23 +49,18 @@ export function RapporterListeSektion({ rapporter }: Props) {
     setSubPanel(null);
   }
 
-  function anvendFiltre() {
-    setFiltre({ ...kladde });
-    setSide(1);
-    lukkPanel();
-  }
-
   function nulstil() {
     setFiltre(TOMT_FILTER);
-    setKladde(TOMT_FILTER);
     setSide(1);
   }
 
-  function toggleKladde(felt: keyof FilterState, vaerdi: string) {
-    setKladde((prev) => {
+  // Live-toggle: opdaterer filtre direkte, ingen kladde
+  function toggleFilter(felt: keyof FilterState, vaerdi: string) {
+    setFiltre((prev) => {
       const arr = prev[felt] as string[];
       return { ...prev, [felt]: arr.includes(vaerdi) ? arr.filter((v) => v !== vaerdi) : [...arr, vaerdi] };
     });
+    setSide(1);
   }
 
   function fjernFilter(felt: keyof FilterState) {
@@ -291,16 +284,16 @@ export function RapporterListeSektion({ rapporter }: Props) {
       {/* Filter panel overlay */}
       {filterPanelOpen && (
         <FilterPanel
-          kladde={kladde}
+          filtre={filtre}
           kommuner={kommuner}
           subPanel={subPanel}
           filterSøgning={filterSøgning}
           onFilterSøgning={setFilterSøgning}
           onSubPanel={setSubPanel}
-          onToggle={toggleKladde}
+          onToggle={toggleFilter}
           onFjern={fjernFilter}
-          onAnvend={anvendFiltre}
           onLuk={lukkPanel}
+          antalResultater={filtrerede.length}
         />
       )}
     </>

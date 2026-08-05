@@ -6,7 +6,7 @@ import type { FilterState, SubPanel } from './types';
 import { FUND_CFG } from './types';
 
 type Props = {
-  kladde: FilterState;
+  filtre: FilterState;
   kommuner: string[];
   subPanel: SubPanel;
   filterSøgning: string;
@@ -14,8 +14,8 @@ type Props = {
   onSubPanel: (v: SubPanel) => void;
   onToggle: (felt: keyof FilterState, vaerdi: string) => void;
   onFjern: (felt: keyof FilterState) => void;
-  onAnvend: () => void;
   onLuk: () => void;
+  antalResultater: number;
 };
 
 type FilterGruppeItem = {
@@ -73,9 +73,9 @@ const panelStyle: React.CSSProperties = {
   borderLeft: '1px solid var(--color-border)',
 };
 
-export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilterSøgning, onSubPanel, onToggle, onFjern, onAnvend, onLuk }: Props) {
-  const antal = antalAktive(kladde);
-  const chips = aktiveChips(kladde);
+export function FilterPanel({ filtre, kommuner, subPanel, filterSøgning, onFilterSøgning, onSubPanel, onToggle, onFjern, onLuk, antalResultater }: Props) {
+  const antal = antalAktive(filtre);
+  const chips = aktiveChips(filtre);
 
   const subPanelTitel: Record<NonNullable<SubPanel>, string> = {
     'kommune':      'Kommune',
@@ -201,7 +201,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
                         {gruppe.items
                           .filter((item) => !filterSøgning || item.label.toLowerCase().includes(filterSøgning.toLowerCase()))
                           .map((item, idx, arr) => {
-                            const valgt = (kladde[item.felt] as string[]).length;
+                            const valgt = (filtre[item.felt] as string[]).length;
                             return (
                               <button
                                 key={item.id}
@@ -237,7 +237,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
               </div>
             </>
           ) : (
-            <SubPanelIndhold subPanel={subPanel as NonNullable<SubPanel>} kladde={kladde} kommuner={kommuner} onToggle={onToggle} />
+            <SubPanelIndhold subPanel={subPanel as NonNullable<SubPanel>} kladde={filtre} kommuner={kommuner} onToggle={onToggle} />
           )}
         </div>
 
@@ -245,30 +245,18 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
         <div style={{
           padding: '1rem 1.5rem',
           borderTop: '1px solid var(--color-border)',
-          display: 'flex', gap: '0.75rem',
           background: '#ffffff',
         }}>
           <button
             onClick={onLuk}
             style={{
-              flex: 1, padding: '0.65rem', border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-md)', background: 'transparent',
-              fontSize: 'var(--text-sm)', color: 'var(--color-text)', cursor: 'pointer',
-              fontWeight: 'var(--fw-medium)',
-            }}
-          >
-            Luk
-          </button>
-          <button
-            onClick={onAnvend}
-            style={{
-              flex: 2, padding: '0.65rem', border: 'none',
+              width: '100%', padding: '0.7rem', border: 'none',
               borderRadius: 'var(--radius-md)', background: 'var(--color-primary)',
               fontSize: 'var(--text-sm)', color: '#fff', cursor: 'pointer',
               fontWeight: 'var(--fw-semibold)',
             }}
           >
-            Anvend filtre
+            Vis {antalResultater} {antalResultater === 1 ? 'rapport' : 'rapporter'}
           </button>
         </div>
       </div>
