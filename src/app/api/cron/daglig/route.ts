@@ -108,8 +108,8 @@ async function kørBaggrund(secret: string) {
   // 9. Geocoder — koordinater til kortvisning (batch 100)
   await kør('geocoder', () => kald('/api/scrapers/geocoder', { batch: 100 }, secret), resultater);
 
-  // 10. LOS — hent detaljer for nye medlemmer (batch 100 — klarer backlog hurtigere)
-  await kør('los-detaljer', () => kald('/api/scrapers/los', { trin: 'detaljer', max: 100 }, secret), resultater);
+  // 10. LOS — hent detaljer for nye medlemmer (batch 20)
+  await kør('los-detaljer', () => kald('/api/scrapers/los', { trin: 'detaljer', max: 20 }, secret), resultater);
 
   // 11. LOS — match mod bosteder via CVR
   await kør('los-match', () => kald('/api/scrapers/los', { trin: 'match' }, secret), resultater);

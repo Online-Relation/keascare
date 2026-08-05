@@ -6,7 +6,7 @@ import type { CheerioAPI } from 'cheerio';
 import type { LosMedlem, LosListeItem } from '@/features/los/types/los.types';
 
 const LOS_BASE = 'https://www.los.dk';
-const DELAY_MS = 800;
+const DELAY_MS = 500;
 
 const HEADERS = {
   'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',

@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json().catch(() => ({})) as { trin?: string; max?: number };
     const trin = body.trin ?? 'liste';
-    const max = body.max ?? 100;
+    const max = body.max ?? 20;
 
     if (trin === 'liste') {
       const { scraperLosListe } = await import('@/features/los/scraper/LosListScraper');
