@@ -140,7 +140,7 @@ export async function POST(req: Request) {
     } catch (err) {
       console.error(`[repair-geo] Fejl for ${stps_tilbud_navn}:`, err instanceof Error ? err.message : String(err));
       // Sæt region='–' ved fejl så vi ikke bliver ved med at prøve
-      await supabase.from('stps_rapporter').update({ region: '–' }).eq('id', id).catch(() => {});
+      await supabase.from('stps_rapporter').update({ region: '–' }).eq('id', id);
       fejl++;
     }
 
