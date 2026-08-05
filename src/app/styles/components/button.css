@@ -53,4 +53,16 @@
     border-color: transparent;
   }
   .btn-danger-ghost:hover { background-color: var(--badge-kritisk-bg); }
+
+  /* Nulstil-knap — rød, bruges konsekvent på tværs af sider */
+  .btn-nulstil {
+    background-color: transparent;
+    color: var(--badge-kritisk-text);
+    border-color: var(--badge-kritisk-bg);
+    border: 1px solid var(--badge-kritisk-bg);
+  }
+  .btn-nulstil:hover {
+    background-color: var(--badge-kritisk-bg);
+    color: var(--badge-kritisk-text);
+  }
 }

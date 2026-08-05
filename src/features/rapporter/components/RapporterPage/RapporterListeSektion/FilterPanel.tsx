@@ -272,7 +272,7 @@ function SubPanelIndhold({ subPanel, kladde, kommuner, onToggle }: {
 }) {
   const config: Record<NonNullable<SubPanel>, { felt: keyof FilterState; valgmuligheder: { vaerdi: string; label: string }[] }> = {
     'kommune':      { felt: 'kommuner',    valgmuligheder: kommuner.map((k) => ({ vaerdi: k, label: k.replace(' Kommune', '') })) },
-    'paragraf':     { felt: 'paragraffer', valgmuligheder: [{ vaerdi: '§107', label: '§ 107' }, { vaerdi: '§108', label: '§ 108' }, { vaerdi: '§85', label: '§ 85' }] },
+    'paragraf':     { felt: 'paragraffer', valgmuligheder: [{ vaerdi: '§107', label: '§ 107' }, { vaerdi: '§108', label: '§ 108' }, { vaerdi: '§43', label: '§ 43' }] },
     'los':          { felt: 'los',         valgmuligheder: [{ vaerdi: 'ja', label: 'Ja — LOS-medlem' }, { vaerdi: 'nej', label: 'Nej — ikke LOS-medlem' }] },
     'stps-rapport': { felt: 'stpsRapport', valgmuligheder: [{ vaerdi: 'ja', label: 'Har STPS-rapport' }, { vaerdi: 'nej', label: 'Ingen STPS-rapport' }] },
     'stps-fund':    { felt: 'stpsFund',    valgmuligheder: Object.entries(FUND_CFG).map(([v, cfg]) => ({ vaerdi: v, label: cfg.label })) },

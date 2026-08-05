@@ -199,7 +199,7 @@ function udledParagraf(tilbudstype: string | null): string | null {
   if (!tilbudstype) return null;
   if (tilbudstype.includes('107')) return '§107';
   if (tilbudstype.includes('108')) return '§108';
-  if (tilbudstype.includes('85')) return '§85';
+  if (tilbudstype.includes('43')) return '§43';
   return null;
 }
 

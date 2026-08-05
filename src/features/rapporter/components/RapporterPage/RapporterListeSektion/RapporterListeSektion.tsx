@@ -145,14 +145,7 @@ export function RapporterListeSektion({ rapporter }: Props) {
             Tilføj filter
           </button>
           {harFiltre && (
-            <button
-              onClick={nulstil}
-              style={{
-                padding: '0.5rem 0.875rem', borderRadius: 'var(--radius-md)',
-                border: '1px solid var(--color-border)', background: 'transparent',
-                fontSize: 'var(--text-sm)', color: 'var(--color-text-muted)', cursor: 'pointer',
-              }}
-            >
+            <button onClick={nulstil} className="btn btn-nulstil">
               Nulstil
             </button>
           )}
