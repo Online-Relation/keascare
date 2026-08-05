@@ -6,12 +6,18 @@ import type { StpsRapportInput } from '@/features/stps/types/stps.types';
 export async function upsertStpsRapport(rapport: StpsRapportInput): Promise<boolean> {
   const supabase = getSupabaseServerClient();
 
-  // Check if the row already exists
+  // Check if the row already exists (and fetch existing geo/type data so we don't overwrite with null)
   const { data: existing } = await supabase
     .from('stps_rapporter')
-    .select('id')
+    .select('id, region, tilsynsform, kommune')
     .eq('rapport_url', rapport.rapport_url)
     .maybeSingle();
+
+  // Bevar eksisterende geo/type-data hvis den nye scrape ikke fandt noget
+  // (undgår at scraper overskriver god data med null ved midlertidig HTML-ændring på STPS)
+  const regionFinal     = rapport.region     ?? existing?.region     ?? null;
+  const tilsynsformFinal = rapport.tilsynsform ?? existing?.tilsynsform ?? null;
+  const kommuneFinal    = rapport.kommune     ?? existing?.kommune    ?? null;
 
   const { error } = await supabase
     .from('stps_rapporter')
@@ -26,9 +32,9 @@ export async function upsertStpsRapport(rapport: StpsRapportInput): Promise<bool
         fund_niveau:      rapport.fund_niveau,
         fokus_omraader:   rapport.fokus_omraader,
         raa_tekst:        rapport.raa_tekst,
-        kommune:          rapport.kommune,
-        region:           rapport.region,
-        tilsynsform:      rapport.tilsynsform,
+        kommune:          kommuneFinal,
+        region:           regionFinal,
+        tilsynsform:      tilsynsformFinal,
         temaer:           rapport.temaer,
         besoeg_dato:      rapport.besoegsDato ?? null,
       },

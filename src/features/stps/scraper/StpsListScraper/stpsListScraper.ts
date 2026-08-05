@@ -139,17 +139,31 @@ function parseItemsFromHtml(html: string): StpsListeItem[] {
     console.log(`[STPS] "${navn}": alleDatoer=${JSON.stringify(alleDatoer)} → rapport="${rapportDatoRå}" besøg="${besoegsDato}"`);
 
     const tags: string[] = [];
-    $(el).find('.labels .label, .tags .tag, [class*="label"], [class*="tag"]').each((_, tagEl) => {
+    // STPS bruger både CSS-klasser (.tags .tag) og custom HTML-elementer (<tags><tag>…</tag></tags>)
+    // Vi prøver alle kendte mønstre — bred selector er OK fordi vi filtrerer på tekstlængde
+    $(el).find([
+      '.labels .label',
+      '.tags .tag',
+      '[class*="label"]',
+      '[class*="tag"]',
+      'tags tag',
+      'tags > *',
+      'labels label',
+      'labels > *',
+    ].join(', ')).each((_, tagEl) => {
       const tekst = $(tagEl).text().trim();
       // Undgå at medtage store tekstblokke (kun korte tags)
       if (tekst && tekst.length < 60) tags.push(tekst);
     });
 
+    // Fjern dubletter
+    const unikTags = [...new Set(tags)];
+
     // Brug URL hvis tilgængelig — ellers generer en stabil nøgle fra navn+dato
     const finalUrl = detailUrl ||
       `stps://genereret/${encodeURIComponent(navn)}${rapportDato ? `/${rapportDato}` : ''}`;
 
-    resultater.push({ navn, rapportDato, tags, detailUrl: finalUrl, besoegsDato: besoegsDato ? normaliserDato(besoegsDato) : null });
+    resultater.push({ navn, rapportDato, tags: unikTags, detailUrl: finalUrl, besoegsDato: besoegsDato ? normaliserDato(besoegsDato) : null });
   });
 
   return resultater;
