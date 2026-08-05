@@ -384,41 +384,41 @@ export function ScrapersPage() {
     if (scraper.id === 'cvr-berig' && cvrStatus !== null) {
       return cvrStatus.manglerCvr > 0
         ? <span className="scraper-status-tæller scraper-status-tæller--advarsel">{cvrStatus.manglerCvr} mangler CVR-opslag</span>
-        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle CVR opslået ✓</span>;
+        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle CVR opslået</span>;
     }
     if (scraper.id === 'cvr-ansatte' && cvrStatus !== null) {
       return cvrStatus.manglerData > 0
         ? <span className="scraper-status-tæller scraper-status-tæller--advarsel">{cvrStatus.manglerData} mangler ansatte/branche</span>
-        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle beriget ✓</span>;
+        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle beriget</span>;
     }
     if (scraper.id === 'tp-liste' && tpStatus !== null) {
       return tpStatus.total > 0
-        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{tpStatus.total} tilbud i databasen ✓</span>
+        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{tpStatus.total} tilbud i databasen</span>
         : <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen tilbud hentet endnu</span>;
     }
     if (scraper.id === 'tp-detaljer' && tpStatus !== null) {
       return tpStatus.mangler > 0
         ? <span className="scraper-status-tæller scraper-status-tæller--advarsel">{tpStatus.mangler} tilbud mangler detaljer</span>
-        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet ✓</span>;
+        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet</span>;
     }
     if (scraper.id === 'tp-match' && tpStatus !== null) {
       return tpStatus.matchet > 0
-        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{tpStatus.matchet} tilbud matchet mod STPS ✓</span>
+        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{tpStatus.matchet} tilbud matchet mod STPS</span>
         : <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen matches endnu</span>;
     }
     if (scraper.id === 'los-liste' && losStatus !== null) {
       return losStatus.total > 0
-        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{losStatus.total} LOS-medlemmer i databasen ✓</span>
+        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{losStatus.total} LOS-medlemmer i databasen</span>
         : <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen LOS-medlemmer hentet endnu</span>;
     }
     if (scraper.id === 'los-detaljer' && losStatus !== null) {
       return losStatus.manglerDetaljer > 0
         ? <span className="scraper-status-tæller scraper-status-tæller--advarsel">{losStatus.manglerDetaljer} mangler detaljer</span>
-        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet ✓</span>;
+        : <span className="scraper-status-tæller scraper-status-tæller--ok">Alle detaljer hentet</span>;
     }
     if (scraper.id === 'los-match' && losStatus !== null) {
       return losStatus.matchet > 0
-        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{losStatus.matchet} bosteder matchet ✓</span>
+        ? <span className="scraper-status-tæller scraper-status-tæller--ok">{losStatus.matchet} bosteder matchet</span>
         : <span className="scraper-status-tæller scraper-status-tæller--advarsel">Ingen matches endnu</span>;
     }
     return undefined;
@@ -452,7 +452,7 @@ export function ScrapersPage() {
                   <span className="scraper-statusoverblik-navn">{s.titel.replace(/^(STPS|CVR|LOS|Tilbudsportalen|Geocoder) — /, '')}</span>
                   <span className="scraper-statusoverblik-dato">
                     {log
-                      ? (log.ok ? '✓ ' : '✗ ') + new Date(log.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+                      ? new Date(log.kørtKl).toLocaleDateString('da-DK', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
                       : 'Aldrig kørt'}
                   </span>
                 </div>

@@ -254,7 +254,6 @@ export function NovaBanner({ data }: Props) {
           </ul>
         ) : kritiskeAntal === 0 && ubearbejdede === 0 ? (
           <div className="nova-banner__tomstand">
-            <span className="nova-banner__tomstand-ikon" aria-hidden="true">✅</span>
             <p className="nova-banner__tomstand-tekst">
               Ingen leads eller nyheder.{' '}
               {dageSidenKritisk !== null
