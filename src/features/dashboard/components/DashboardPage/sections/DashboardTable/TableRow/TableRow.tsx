@@ -46,7 +46,7 @@ export function TableRow({ bosted }: TableRowProps) {
           )}
         </div>
       </td>
-      <td className="data-table td table-cell-muted">{bosted.region ?? '—'}</td>
+      <td className="data-table td table-cell-muted">{(bosted.region && bosted.region !== '–') ? bosted.region : '—'}</td>
       <td className="data-table td table-cell-muted">{bosted.tilsynsform ?? '—'}</td>
       <td className="data-table td">
         <span className={`badge ${fundBadgeKlasse[bosted.stpsFund]}`}>
