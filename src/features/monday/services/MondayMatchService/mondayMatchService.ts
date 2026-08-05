@@ -278,15 +278,11 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
     if (r.cvr) stpsCvrMap.set(r.cvr.trim(), r.id);
   }
 
-  // Nulstil eksisterende matches
-  await supabase
-    .from('stps_rapporter')
-    .update({ monday_item_id: null, monday_gruppe: null, monday_match_dato: null })
-    .not('monday_item_id', 'is', null);
-  await supabase
-    .from('tilbudsportalen_tilbud')
-    .update({ monday_item_id: null, monday_gruppe: null, monday_match_dato: null })
-    .not('monday_item_id', 'is', null);
+  // Vi nulstiller IKKE længere eksisterende matches.
+  // Tidligere kørte vi en global reset her, men det overskrev manuelt satte CVR-links.
+  // I stedet: automatisk match opdaterer kun records der endnu ikke har monday_item_id,
+  // eller opdaterer via CVR (som er præcist og sikkert).
+  // Manuelt linkede records rettes aldrig af den automatiske match.
 
   let matchetTilStps = 0;
   let matchetTilTp = 0;
@@ -300,33 +296,33 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
     };
 
     // 1. Forsøg: direkte CVR-match (mest præcist — uafhængig af navneforskelle)
+    // Vi opdaterer KUN records der ikke allerede har et monday_item_id (manuelt sat)
     if (kunde.cvr) {
       const cvrKey = kunde.cvr.trim();
       if (stpsCvrMap.has(cvrKey)) {
-        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', cvrKey);
-        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', cvrKey);
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', cvrKey).is('monday_item_id', null);
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', cvrKey).is('monday_item_id', null);
         matchetTilStps++;
         continue;
       }
-      // Tjek også TP
       const tpCvrMatch = tpTilbud.find((t) => t.cvr?.trim() === cvrKey);
       if (tpCvrMatch) {
-        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', cvrKey);
-        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', cvrKey);
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', cvrKey).is('monday_item_id', null);
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', cvrKey).is('monday_item_id', null);
         matchetTilTp++;
         continue;
       }
     }
 
-    // 2. Forsøg: match mod STPS på navn (fallback når Monday mangler CVR)
+    // 2. Forsøg: match mod STPS på navn
     const stpsMatch = findNavn(kunde.navn, stpsNavnMap);
     if (stpsMatch) {
       const matchetRapport = stpsRapporter.find((r) => r.id === stpsMatch.id);
       if (matchetRapport?.cvr) {
-        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', matchetRapport.cvr);
-        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', matchetRapport.cvr);
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', matchetRapport.cvr).is('monday_item_id', null);
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', matchetRapport.cvr).is('monday_item_id', null);
       } else {
-        await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsMatch.id);
+        await supabase.from('stps_rapporter').update(mondayData).eq('id', stpsMatch.id).is('monday_item_id', null);
       }
       matchetTilStps++;
       continue;
@@ -336,11 +332,11 @@ export async function kørMondayMatch(): Promise<MondayMatchResultat> {
     const tpMatch = findNavn(kunde.navn, tpNavnMap);
     if (tpMatch) {
       if (tpMatch.cvr) {
-        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', tpMatch.cvr.trim());
-        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', tpMatch.cvr.trim());
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('cvr', tpMatch.cvr.trim()).is('monday_item_id', null);
+        await supabase.from('stps_rapporter').update(mondayData).eq('cvr', tpMatch.cvr.trim()).is('monday_item_id', null);
         matchetTilTp++;
       } else {
-        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('id', tpMatch.id);
+        await supabase.from('tilbudsportalen_tilbud').update(mondayData).eq('id', tpMatch.id).is('monday_item_id', null);
         matchetTilTp++;
       }
       continue;

@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink } from 'lucide-react';
 import type { MondayKundeItem } from '@/features/monday/types/monday.types';
@@ -26,6 +27,15 @@ function formaterLevetid(måneder: number | null): string {
 }
 
 export function AfsluttedeKunderTabel({ kunder }: Props) {
+  const [stpsMap, setStpsMap] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    fetch('/api/monday/stps-match')
+      .then((r) => r.json())
+      .then((d) => { if (d && typeof d === 'object') setStpsMap(d); })
+      .catch(() => {});
+  }, []);
+
   const afsluttede = kunder
     .filter((k) => k.gruppe === 'afsluttet_forloeb' || k.status?.toLowerCase() === 'afsluttet')
     .sort((a, b) => {
@@ -70,10 +80,25 @@ export function AfsluttedeKunderTabel({ kunder }: Props) {
           <tbody>
             {afsluttede.map((k) => {
               const levetid = beregnLevetidMåneder(k.oprettetDato, k.afsluttetDato);
+              const stpsId = stpsMap[k.mondayId];
               return (
                 <tr key={k.mondayId}>
                   <td className="kunder-tabel-navn">
-                    <span style={{ color: 'var(--color-text-muted)' }}>{k.navn}</span>
+                    {stpsId ? (
+                      <Link
+                        href={`/dashboard/bosteder/${stpsId}`}
+                        style={{
+                          color: 'var(--color-text-secondary)',
+                          fontWeight: 'var(--fw-medium)',
+                          textDecoration: 'none',
+                        }}
+                        className="kunder-bosted-link"
+                      >
+                        {k.navn}
+                      </Link>
+                    ) : (
+                      <span style={{ color: 'var(--color-text-muted)' }}>{k.navn}</span>
+                    )}
                   </td>
                   <td className="kunder-tabel-muted">{k.forløbsansvarlig ?? '—'}</td>
                   <td className="kunder-tabel-muted">
