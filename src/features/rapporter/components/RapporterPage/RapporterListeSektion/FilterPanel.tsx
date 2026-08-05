@@ -65,7 +65,7 @@ const panelStyle: React.CSSProperties = {
   right: 0,
   bottom: 0,
   width: '360px',
-  background: 'var(--color-surface)',
+  background: '#ffffff',
   zIndex: 9999,
   display: 'flex',
   flexDirection: 'column',
@@ -101,7 +101,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '1.25rem 1.5rem',
           borderBottom: '1px solid var(--color-border)',
-          background: 'var(--color-surface)',
+          background: '#ffffff',
         }}>
           {subPanel ? (
             <button
@@ -139,7 +139,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
                   style={{
                     width: '100%', padding: '0.5rem 0.75rem 0.5rem 2rem',
                     border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-                    background: 'var(--color-bg, #f8fafc)', fontSize: 'var(--text-sm)',
+                    background: '#f8fafc', fontSize: 'var(--text-sm)',
                     color: 'var(--color-text)', boxSizing: 'border-box',
                   }}
                 />
@@ -163,7 +163,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '0.65rem 0.875rem',
                           border: '1px solid var(--color-border)', borderRadius: 'var(--radius-md)',
-                          background: 'var(--color-bg, #f8fafc)',
+                          background: '#f8fafc',
                         }}
                       >
                         <div style={{ minWidth: 0 }}>
@@ -209,7 +209,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
                                 style={{
                                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                                   width: '100%', padding: '0.75rem 0.875rem',
-                                  background: 'var(--color-surface)', border: 'none',
+                                  background: '#ffffff', border: 'none',
                                   borderBottom: idx < arr.length - 1 ? '1px solid var(--color-border)' : 'none',
                                   cursor: 'pointer', textAlign: 'left',
                                 }}
@@ -246,7 +246,7 @@ export function FilterPanel({ kladde, kommuner, subPanel, filterSøgning, onFilt
           padding: '1rem 1.5rem',
           borderTop: '1px solid var(--color-border)',
           display: 'flex', gap: '0.75rem',
-          background: 'var(--color-surface)',
+          background: '#ffffff',
         }}>
           <button
             onClick={onLuk}
@@ -303,7 +303,7 @@ function SubPanelIndhold({ subPanel, kladde, kommuner, onToggle }: {
             onClick={() => onToggle(felt, vaerdi)}
             style={{
               display: 'flex', alignItems: 'center', gap: '0.75rem', width: '100%',
-              padding: '0.8rem 0.875rem', background: aktiv ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)' : 'var(--color-surface)',
+              padding: '0.8rem 0.875rem', background: aktiv ? 'color-mix(in srgb, var(--color-primary) 8%, transparent)' : '#ffffff',
               border: 'none', borderBottom: idx < valgmuligheder.length - 1 ? '1px solid var(--color-border)' : 'none',
               cursor: 'pointer', textAlign: 'left',
             }}
