@@ -6,8 +6,9 @@ import type { MondayKundeItem, MondayMatchResultat, MondayGruppe } from '@/featu
 
 const BOARD_ID = process.env.MONDAY_BOARD_ID;
 
-// Gruppenavne der betragtes som aktive kunder
+// Alle gruppenavne der skal matches (aktive + afsluttede + tabte)
 const AKTIVE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb'];
+const ALLE_GRUPPE_NAVNE = ['nye forløb', 'aktive forløb', 'afsluttede deals', 'tabte deals', 'tabte', 'tabt', 'afsluttede kunder'];
 
 type RåMondayItem = {
   id: string;
@@ -55,6 +56,8 @@ function mapGruppe(gruppeNavn: string): MondayGruppe {
   const norm = gruppeNavn.toLowerCase();
   if (norm.includes('nye')) return 'nye_forloeb';
   if (norm.includes('aktive')) return 'aktive_forloeb';
+  if (norm.includes('tabt')) return 'tabt';
+  if (norm.includes('afsluttet') || norm.includes('afsluttede')) return 'afsluttet_forloeb';
   return 'ukendt';
 }
 
@@ -89,13 +92,16 @@ async function hentAlleMondayBostedItems(): Promise<RåMondayItem[]> {
     }
   `, { boardId: BOARD_ID });
 
+  // Inkludér alle relevante grupper: aktive, afsluttede og tabte
   const aktiveGruppeIds = (gruppeData.boards[0]?.groups ?? [])
-    .filter((g) => AKTIVE_GRUPPE_NAVNE.some((navn) => g.title.toLowerCase() === navn))
+    .filter((g) => {
+      const norm = g.title.toLowerCase().trim();
+      return ALLE_GRUPPE_NAVNE.some((navn) => norm.includes(navn) || norm === navn);
+    })
     .map((g) => g.id);
 
   if (aktiveGruppeIds.length === 0) return [];
 
-  // Hent kun items fra de aktive grupper — undgår Privatforløb og afsluttede/tabte grupper
   const gruppeIdStr = aktiveGruppeIds.map((id) => `"${id}"`).join(', ');
 
   const side1 = await mondayQuery<GruppeItemsPage>(`
