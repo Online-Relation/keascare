@@ -12,7 +12,7 @@ import {
   linkedinDagligData, linkedinKampagner, linkedinFordeling, linkedinMetrikker,
 } from '@/features/markedsforing/data/linkedin.mock';
 
-export function LinkedinPage() {
+export function LinkedinPage({ fra, til }: { fra?: string; til?: string }) {
   return (
     <div className="dashboard-content mf-side">
 
@@ -26,7 +26,7 @@ export function LinkedinPage() {
           <h1 className="mf-platform-titel">LinkedIn Ads</h1>
           <p className="mf-platform-subtitle">Sponsored Content · Lead Gen · Juni 2025 · Dummy data</p>
         </div>
-        <div className="mf-periode-badge">Juni 2025</div>
+        <div className="mf-periode-badge">{fra && til ? `${fra.slice(0,7)} → ${til.slice(0,7)}` : 'Ingen periode'}</div>
       </div>
 
       <div className="mf-metrikker">

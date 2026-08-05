@@ -12,7 +12,7 @@ import {
   googleDagligData, googleKampagner, googleFordeling, googleMetrikker,
 } from '@/features/markedsforing/data/google.mock';
 
-export function GoogleAdsPage() {
+export function GoogleAdsPage({ fra, til }: { fra?: string; til?: string }) {
   return (
     <div className="dashboard-content mf-side">
 
@@ -26,7 +26,7 @@ export function GoogleAdsPage() {
           <h1 className="mf-platform-titel">Google Ads</h1>
           <p className="mf-platform-subtitle">Search · Display · YouTube · Juni 2025 · Dummy data</p>
         </div>
-        <div className="mf-periode-badge">Juni 2025</div>
+        <div className="mf-periode-badge">{fra && til ? `${fra.slice(0,7)} → ${til.slice(0,7)}` : 'Ingen periode'}</div>
       </div>
 
       <div className="mf-metrikker">

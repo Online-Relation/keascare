@@ -12,7 +12,7 @@ import {
   metaDagligData, metaKampagner, metaFordeling, metaMetrikker,
 } from '@/features/markedsforing/data/meta.mock';
 
-export function MetaPage() {
+export function MetaPage({ fra, til }: { fra?: string; til?: string }) {
   return (
     <div className="dashboard-content mf-side">
 
@@ -26,7 +26,7 @@ export function MetaPage() {
           <h1 className="mf-platform-titel">Meta Ads</h1>
           <p className="mf-platform-subtitle">Facebook + Instagram · Juni 2025 · Dummy data</p>
         </div>
-        <div className="mf-periode-badge">Juni 2025</div>
+        <div className="mf-periode-badge">{fra && til ? `${fra.slice(0,7)} → ${til.slice(0,7)}` : 'Ingen periode'}</div>
       </div>
 
       <div className="mf-metrikker">
