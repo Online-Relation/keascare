@@ -29,6 +29,8 @@ type DbRapport = {
   tp_pladser: string | null;
   monday_item_id: string | null;
   monday_gruppe: string | null;
+  tp_tilsynsmyndighed: string | null;
+  sor_kode: string | null;
 };
 
 const NY_RAPPORT_DAGE = 60;
@@ -290,7 +292,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, pladser, tp_adresse, tp_website, tp_pladser, tp_driftsform, monday_item_id, monday_gruppe, sor_kode')
+    .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, pladser, tp_adresse, tp_website, tp_pladser, tp_driftsform, monday_item_id, monday_gruppe, sor_kode, tp_tilsynsmyndighed')
     .not('rapport_dato', 'is', null)
     .order('rapport_dato', { ascending: false })
     .limit(5000);
@@ -308,9 +310,9 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
+  // Filtrer Socialtilsyn-rapporter fra — dashboardet viser kun STPS-tilsyn
   const rapporter = (data ?? []).filter((r: DbRapport) =>
-    // Behold alle rapporter — også dem med begrænset data
-    true
+    !r.tp_tilsynsmyndighed?.toLowerCase().includes('socialtilsyn')
   ) as DbRapport[];
   // Vis alle bosteder inkl. kunder — dashboardet er en oversigt over nyeste rapporter
   const bosteder = rapporter.map(mapTilBosted);

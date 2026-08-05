@@ -15,6 +15,7 @@ type DbRapport = {
   rapport_url: string | null;
   temaer: string[] | null;
   tp_driftsform: string | null;
+  tp_tilsynsmyndighed: string | null;
 };
 
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
@@ -23,7 +24,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform')
+    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed')
     .order('rapport_dato', { ascending: false })
     .limit(5000);
 
@@ -47,7 +48,10 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
-  const alle = (data ?? []) as DbRapport[];
+  // Filtrer Socialtilsyn-rapporter fra — siden viser kun STPS-tilsyn
+  const alle = (data ?? []).filter(
+    (r) => !r.tp_tilsynsmyndighed?.toLowerCase().includes('socialtilsyn')
+  ) as DbRapport[];
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
