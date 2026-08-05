@@ -16,6 +16,8 @@ type DbRapport = {
   temaer: string[] | null;
   tp_driftsform: string | null;
   tp_tilsynsmyndighed: string | null;
+  tp_tilbudstype: string | null;
+  los_medlem: boolean | null;
 };
 
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
@@ -24,7 +26,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed')
+    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem')
     .order('rapport_dato', { ascending: false })
     .limit(5000);
 
@@ -48,10 +50,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
-  // Filtrer Socialtilsyn-rapporter fra — siden viser kun STPS-tilsyn
-  const alle = (data ?? []).filter(
-    (r) => !r.tp_tilsynsmyndighed?.toLowerCase().includes('socialtilsyn')
-  ) as DbRapport[];
+  const alle = (data ?? []) as DbRapport[];
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
@@ -196,14 +195,25 @@ function beregnTemaer(alle: DbRapport[]): TemaStat[] {
     .map(([tema, antal]) => ({ tema, antal, pct: Math.round((antal / total) * 100) }));
 }
 
+function udledParagraf(tilbudstype: string | null): string | null {
+  if (!tilbudstype) return null;
+  if (tilbudstype.includes('107')) return '§107';
+  if (tilbudstype.includes('108')) return '§108';
+  if (tilbudstype.includes('85')) return '§85';
+  return null;
+}
+
 function mapFundRapporter(alle: DbRapport[]): RapportRække[] {
   return alle.map((r) => ({
-    id:          r.id,
-    navn:        r.stps_tilbud_navn,
-    kommune:     r.kommune,
-    fundNiveau:  r.fund_niveau as FundNiveau,
-    rapportDato: r.rapport_dato,
-    rapportLink: r.rapport_url,
-    temaer:      r.temaer ?? [],
+    id:             r.id,
+    navn:           r.stps_tilbud_navn,
+    kommune:        r.kommune,
+    fundNiveau:     r.fund_niveau as FundNiveau,
+    rapportDato:    r.rapport_dato,
+    rapportLink:    r.rapport_url,
+    temaer:         r.temaer ?? [],
+    paragraf:       udledParagraf(r.tp_tilbudstype),
+    losmedlem:      r.los_medlem === true,
+    harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
   }));
 }

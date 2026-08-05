@@ -66,4 +66,20 @@
     color: #15803d;
     font-weight: var(--fw-semibold);
   }
+
+  .badge-neutral {
+    background-color: var(--color-surface-alt, #f1f5f9);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+  }
+
+  .badge-los {
+    background-color: #dcfce7;
+    color: #15803d;
+  }
+
+  .badge-stps {
+    background-color: #dbeafe;
+    color: #1d4ed8;
+  }
 }

@@ -10,6 +10,9 @@ export type RapportRække = {
   rapportDato: string | null;
   rapportLink: string | null;
   temaer: string[];
+  paragraf: string | null;
+  losmedlem: boolean;
+  harStpsRapport: boolean;
 };
 
 export type MånedligTrend = {
