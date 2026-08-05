@@ -309,11 +309,11 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
   const rapporter = (data ?? []).filter((r: DbRapport) =>
-    // Filtrer tomme skaller uden nogen brugbar data fra (fx Sydgården med null overalt)
-    r.fund_niveau || r.kommune || r.tilsynsform
+    // Behold alle rapporter — også dem med begrænset data
+    true
   ) as DbRapport[];
-  // Kunder i Monday er allerede i CRM — vis dem ikke i tabellen (kun leads og ubearbejdede)
-  const bosteder = rapporter.map(mapTilBosted).filter((b) => b.mondayKunde !== 'kunde');
+  // Vis alle bosteder inkl. kunder — dashboardet er en oversigt over nyeste rapporter
+  const bosteder = rapporter.map(mapTilBosted);
 
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
