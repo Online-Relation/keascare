@@ -6,9 +6,11 @@ import type {
   RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
 
+// STPS-data bruges til KPI'er og grafer
 type DbRapport = {
   id: string;
   stps_tilbud_navn: string;
+  cvr: string | null;
   kommune: string | null;
   fund_niveau: string;
   rapport_dato: string | null;
@@ -20,25 +22,48 @@ type DbRapport = {
   los_medlem: boolean | null;
 };
 
+// TP-data bruges som base for listen (alle bosteder)
+type DbTpTilbud = {
+  id: string;
+  navn: string;
+  cvr: string | null;
+  kommune: string | null;
+  tilbudstype: string | null;
+  driftsform: string | null;
+  los_medlem: boolean | null;
+};
+
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
   const supabase = getSupabaseServerClient();
   const visFilter = await getVisFilter();
 
-  let query = supabase
+  // STPS-query til KPI'er og grafer (med datofilter)
+  let stpsQuery = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem')
+    .select('id, stps_tilbud_navn, cvr, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem')
     .order('rapport_dato', { ascending: false })
     .limit(5000);
 
   if (visFilter === 'privat') {
-    query = query.or(privatFilterTpOr()).or(privatFilterCvrOr());
+    stpsQuery = stpsQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
   const idag = new Date().toISOString().slice(0, 10);
-  if (fra) query = query.gte('rapport_dato', fra);
-  query = query.lte('rapport_dato', til ?? idag);
+  if (fra) stpsQuery = stpsQuery.gte('rapport_dato', fra);
+  stpsQuery = stpsQuery.lte('rapport_dato', til ?? idag);
 
-  // Hent total i database (uden datofilter) til procentberegning
+  // TP-query som base for listen (alle bosteder, uden datofilter)
+  let tpQuery = supabase
+    .from('tilbudsportalen_tilbud')
+    .select('id, navn, cvr, kommune, tilbudstype, driftsform, los_medlem')
+    .eq('detaljer_hentet', true)
+    .limit(8000);
+
+  if (visFilter === 'privat') {
+    tpQuery = tpQuery.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
+  }
+
+  // Total i database til procentberegning
   let dbTotalQuery = supabase
     .from('stps_rapporter')
     .select('*', { count: 'exact', head: true });
@@ -46,11 +71,16 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
 
-  const [{ data, error }, { count: dbTotal }] = await Promise.all([query, dbTotalQuery]);
+  const [{ data: stpsData, error }, { data: tpData }, { count: dbTotal }] = await Promise.all([
+    stpsQuery,
+    tpQuery,
+    dbTotalQuery,
+  ]);
 
   if (error) throw new Error(`Supabase fejl: ${error.message}`);
 
-  const alle = (data ?? []) as DbRapport[];
+  const alle = (stpsData ?? []) as DbRapport[];
+  const tpTilbud = (tpData ?? []) as DbTpTilbud[];
   const totalIDatabase = dbTotal ?? alle.length;
   const kritiskeMåneder = beregnKritiskeMåneder(alle);
 
@@ -61,7 +91,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
     driftsformKritiske: beregnDriftsformKritiske(alle),
     topKommuner:        beregnTopKommuner(alle),
     temaer:             beregnTemaer(alle),
-    rapporter:          mapFundRapporter(alle),
+    rapporter:          mapFraTP(tpTilbud, alle),
   };
 }
 
@@ -89,7 +119,6 @@ function beregnKpis(alle: DbRapport[], totalIDatabase: number, kritiskeMåneder:
 function beregnKritiskeMåneder(alle: DbRapport[]): MånedligKritisk[] {
   const nu = new Date();
 
-  // Find ældste rapportdato i data — byg fra den måned frem til i dag
   const datoer = alle
     .map((r) => r.rapport_dato)
     .filter(Boolean) as string[];
@@ -203,17 +232,31 @@ function udledParagraf(tilbudstype: string | null): string | null {
   return null;
 }
 
-function mapFundRapporter(alle: DbRapport[]): RapportRække[] {
-  return alle.map((r) => ({
-    id:             r.id,
-    navn:           r.stps_tilbud_navn,
-    kommune:        r.kommune,
-    fundNiveau:     r.fund_niveau as FundNiveau,
-    rapportDato:    r.rapport_dato,
-    rapportLink:    r.rapport_url,
-    temaer:         r.temaer ?? [],
-    paragraf:       udledParagraf(r.tp_tilbudstype),
-    losmedlem:      r.los_medlem === true,
-    harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
-  }));
+// Byg listen fra TP-bosteder som base, beriget med seneste STPS-rapport per CVR
+function mapFraTP(tpTilbud: DbTpTilbud[], stpsRapporter: DbRapport[]): RapportRække[] {
+  // Byg CVR → seneste STPS-rapport map
+  const cvrTilStps = new Map<string, DbRapport>();
+  for (const r of stpsRapporter) {
+    if (!r.cvr) continue;
+    const existing = cvrTilStps.get(r.cvr);
+    if (!existing || (r.rapport_dato ?? '') > (existing.rapport_dato ?? '')) {
+      cvrTilStps.set(r.cvr, r);
+    }
+  }
+
+  return tpTilbud.map((tp) => {
+    const stps = tp.cvr ? cvrTilStps.get(tp.cvr) : undefined;
+    return {
+      id:             tp.id,
+      navn:           tp.navn,
+      kommune:        tp.kommune,
+      fundNiveau:     (stps?.fund_niveau as FundNiveau | undefined) ?? 'ukendt',
+      rapportDato:    stps?.rapport_dato ?? null,
+      rapportLink:    stps?.rapport_url ?? null,
+      temaer:         stps?.temaer ?? [],
+      paragraf:       udledParagraf(tp.tilbudstype),
+      losmedlem:      tp.los_medlem === true,
+      harStpsRapport: !!stps?.rapport_url && !stps.rapport_url.startsWith('stps://genereret/'),
+    };
+  });
 }

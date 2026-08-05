@@ -16,7 +16,7 @@ export function IndstillingerPage({ aktivtFilter, losFilter }: Props) {
   const [pendingLos, startLos] = useTransition();
 
   const erPrivat = aktivtFilter === 'privat';
-  const losInkluderet = losFilter === 'inkluder';
+  const losEkskluderet = losFilter === 'ekskluder';
 
   return (
     <div className="dashboard-content">
@@ -71,38 +71,38 @@ export function IndstillingerPage({ aktivtFilter, losFilter }: Props) {
         )}
 
         {/* LOS-filter */}
-        <div className={`ind-toggle-kort ${losInkluderet ? 'ind-toggle-kort--aktiv' : ''}`} style={{ marginTop: '0.875rem' }}>
+        <div className={`ind-toggle-kort ${losEkskluderet ? 'ind-toggle-kort--aktiv' : ''}`} style={{ marginTop: '0.875rem' }}>
           <div className="ind-toggle-venstre">
             <Users size={18} className="ind-toggle-ikon" />
             <div>
-              <p className="ind-toggle-label">Inkluder LOS-medlemmer i markedsdata</p>
+              <p className="ind-toggle-label">Ekskluder LOS-medlemmer fra markedsdata</p>
               <p className="ind-toggle-beskrivelse">
                 LOS-medlemmer (Landsorganisationen for sociale tilbud) har typisk eget tilsynssystem og er ikke primære leads.
-                Som standard er de fratrukket markedstallet. Slå til for at inkludere dem i alle tal.
+                Som standard er de inkluderet i markedstallet. Slå til for at fratrække dem fra alle tal.
               </p>
               <div className="ind-driftsform-chips">
-                <span className={`ind-chip ${losInkluderet ? 'ind-chip--inkluderet' : 'ind-chip--ekskluderet ind-chip--strikethrough'}`}>
+                <span className={`ind-chip ${losEkskluderet ? 'ind-chip--ekskluderet ind-chip--strikethrough' : 'ind-chip--inkluderet'}`}>
                   LOS-medlemmer
                 </span>
               </div>
             </div>
           </div>
           <button
-            className={`ind-toggle-knap ${losInkluderet ? 'ind-toggle-knap--til' : ''}`}
-            onClick={() => startLos(async () => { await setLosFilter(losInkluderet ? 'ekskluder' : 'inkluder'); })}
+            className={`ind-toggle-knap ${losEkskluderet ? 'ind-toggle-knap--til' : ''}`}
+            onClick={() => startLos(async () => { await setLosFilter(losEkskluderet ? 'inkluder' : 'ekskluder'); })}
             disabled={pendingLos}
             role="switch"
-            aria-checked={losInkluderet}
+            aria-checked={losEkskluderet}
           >
             <span className="ind-toggle-knap-cirkel">
-              {losInkluderet && <Check size={10} strokeWidth={3} />}
+              {losEkskluderet && <Check size={10} strokeWidth={3} />}
             </span>
           </button>
         </div>
 
-        {losInkluderet && (
+        {losEkskluderet && (
           <p className="ind-aktiv-note">
-            LOS-medlemmer er inkluderet. Markedstallet på Markedsdata-siden viser alle tilbud inkl. LOS.
+            LOS-filteret er aktivt. Markedstallet på Markedsdata-siden viser kun tilbud uden LOS-medlemmer.
           </p>
         )}
       </div>

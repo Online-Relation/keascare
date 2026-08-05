@@ -45,7 +45,7 @@ function byggPrompt(input: AnalyseInput): string {
       const dækning = k.antalBosteder > 0
         ? Math.round((k.antalKunder / k.antalBosteder) * 100)
         : 0;
-      return `  - ${k.kommune}: ${k.borgere.toLocaleString('da-DK')} borgere i §107/§108, ${k.antalBosteder} bosteder, ${k.antalKunder} KeasCare-kunder (${dækning}% dækning)`;
+      return `  - ${k.kommune}: ${k.borgere.toLocaleString('da-DK')} borgere i §107/§108/§43, ${k.antalBosteder} bosteder, ${k.antalKunder} KeasCare-kunder (${dækning}% dækning)`;
     })
     .join('\n');
 
@@ -60,7 +60,7 @@ function byggPrompt(input: AnalyseInput): string {
     .map((d) => `  ${d.år}: §107=${d.p107.toLocaleString('da-DK')}, §108=${d.p108.toLocaleString('da-DK')}`)
     .join('\n');
 
-  return `Du er salgsanalytiker for KeasCare, der sælger tilsynshjælp og fagsystemer til private bosteder i Danmark (§107 og §108 botilbud).
+  return `Du er salgsanalytiker for KeasCare, der sælger tilsynshjælp og fagsystemer til private bosteder i Danmark (§107, §108 og §43 botilbud).
 
 Opgave: Skriv en præcis og handlingsorienteret månedlig analyse for KeasCare's salgsteam. Analysen skal hjælpe dem med at prioritere de 2-3 opkald de foretager i løbet af måneden.
 

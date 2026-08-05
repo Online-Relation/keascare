@@ -27,7 +27,7 @@ export async function getVisFilter(): Promise<VisFilter> {
 export async function getLosFilter(): Promise<LosFilter> {
   const cookieStore = await cookies();
   const val = cookieStore.get(COOKIE_LOS)?.value;
-  return val === 'inkluder' ? 'inkluder' : 'ekskluder';
+  return val === 'ekskluder' ? 'ekskluder' : 'inkluder';
 }
 
 // PostgREST not.in filter-streng til brug i Supabase-queries
