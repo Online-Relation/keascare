@@ -1,6 +1,8 @@
 // src/app/api/scrapers/stps/pnummer/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 300;
 import { kørPNummerScraper } from '@/features/stps/services/StpsPNummerService';
 
 export async function POST(request: NextRequest) {

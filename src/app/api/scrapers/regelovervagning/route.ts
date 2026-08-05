@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { kørRetsinformationImport } from '@/features/regelovervagning/services/RetsinformationService';
 import { kørStpsNyhederImport } from '@/features/regelovervagning/services/StpsNyhederService';
 
+export const maxDuration = 300;
+
 export async function POST(req: NextRequest) {
   const secret = req.headers.get('x-scraper-secret') ?? '';
   if (secret !== process.env.SCRAPER_SECRET) {

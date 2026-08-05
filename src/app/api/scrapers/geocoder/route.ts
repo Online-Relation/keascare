@@ -2,6 +2,8 @@
 // Geocoder alle bosteder der mangler lat/lng via DAWA
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 300;
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { geocodeDawaAdresse } from '@/features/kort/services/GeocoderService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';

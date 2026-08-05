@@ -1,6 +1,8 @@
 // src/app/api/scrapers/stps/fund-items/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const maxDuration = 300;
 import { kørFundItemsScraper } from '@/features/stps/services/StpsFundItemsService';
 
 export async function POST(request: NextRequest) {
