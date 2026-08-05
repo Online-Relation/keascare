@@ -3,17 +3,18 @@
 // Autentificeres med SCRAPER_SECRET headeren.
 //
 // Kørserækkefølge:
-//   1. STPS liste       — hent nye tilsynsrapporter
-//   2. STPS detaljer    — parse PDF'er for rapporter der mangler data
-//   3. STPS fund-items  — udtræk strukturerede målepunkter fra PDF'er
-//   4. STPS P-numre     — udtræk P-numre fra PDF'er
-//   5. CVR berig        — slå P-numre op i CVR og hent CVR-nummer
-//   6. CVR ansatte      — opdater ansatte/branche for kendte CVR-numre
-//   7. CVR signaler     — søg efter nye bosted-registreringer (kræver CVR_USER+CVR_PASS)
-//   8. Regelovervågning — nye love og STPS-nyheder
-//   9. Geocoder         — koordinater til kortvisning
-//  10. LOS detaljer     — hent detaljer for nye LOS-medlemmer der mangler data
-//  11. LOS match        — match LOS-medlemmer mod bosteder via CVR
+//   1. SOR              — synkroniser Sundhedsdatastyrelsens organisationsregister
+//   2. STPS liste       — hent nye tilsynsrapporter
+//   3. STPS detaljer    — parse PDF'er for rapporter der mangler data
+//   4. STPS fund-items  — udtræk strukturerede målepunkter fra PDF'er
+//   5. STPS P-numre     — udtræk P-numre fra PDF'er
+//   6. CVR berig        — slå P-numre op i CVR og hent CVR-nummer
+//   7. CVR ansatte      — opdater ansatte/branche for kendte CVR-numre
+//   8. CVR signaler     — søg efter nye bosted-registreringer (kræver CVR_USER+CVR_PASS)
+//   9. Regelovervågning — nye love og STPS-nyheder
+//  10. Geocoder         — koordinater til kortvisning
+//  11. LOS detaljer     — hent detaljer for nye LOS-medlemmer der mangler data
+//  12. LOS match        — match LOS-medlemmer mod bosteder via CVR
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
@@ -56,8 +57,20 @@ export async function POST(request: NextRequest) {
   }
 
   const resultater: Record<string, unknown> = {};
+  const syncToken = process.env.SYNC_SECRET_TOKEN ?? '';
 
-  // 1. STPS — hent nye tilsynsrapporter
+  // 1. SOR — synkroniser organisationsregister (ingen blokering på Railway)
+  await kør('sor-sync', async () => {
+    const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
+    const res = await fetch(`${base}/api/sor/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-sync-token': syncToken },
+      body: JSON.stringify({}),
+    });
+    return res.json() as Promise<Record<string, unknown>>;
+  }, resultater);
+
+  // 2. STPS — hent nye tilsynsrapporter
   await kør('stps', () => kørStpsScraper({ maxSider: 10 }), resultater);
 
   // 2. STPS — parse PDF'er (batch 50)

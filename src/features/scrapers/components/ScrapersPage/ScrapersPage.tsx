@@ -216,9 +216,10 @@ const SCRAPERS: Scraper[] = [
   {
     id: 'sor-sync',
     kategori: 'Geodata & Register',
-    kørselKilde: 'manuel',
+    kørselKilde: 'railway',
+    cronTidspunkt: 'Dagligt kl. 20:00',
     titel: 'SOR — Synkroniser organisationsregister',
-    beskrivelse: "Henter alle enheder fra NSI's SOR API og gemmer i Supabase-cache. Bruges til SOR-badge på kunder og nye potentielle leads under SOR Register.",
+    beskrivelse: "Henter alle enheder fra Sundhedsdatastyrelsens SOR FHIR API og matcher CVR mod bosteder. Kører på Railway — sundhedsdatastyrelsen.dk er ikke blokeret.",
     endpoint: '/api/sor/sync',
     body: {},
   },
