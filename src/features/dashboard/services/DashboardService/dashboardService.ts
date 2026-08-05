@@ -142,9 +142,9 @@ function beregnKpis(rapporter: DbRapport[], potentieltMarked: number, fordeling?
     },
     {
       id: 'kortlagt-af-nova',
-      label: 'Bosteder fundet',
+      label: 'Med STPS-tilsyn',
       value: String(unikkeVirksomheder),
-      sub: 'Unikke bosteder Nova har registreret via STPS-tilsyn i perioden',
+      sub: 'Unikke bosteder med STPS-tilsynsrapport i perioden',
       ikon: 'kortlagt',
       trendPositive: true,
       sparkPoints: bostedPoints,

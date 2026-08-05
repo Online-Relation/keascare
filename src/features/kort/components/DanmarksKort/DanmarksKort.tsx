@@ -2,7 +2,7 @@
 
 // src/features/kort/components/DanmarksKort/DanmarksKort.tsx
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import type { Map as LeafletMap } from 'leaflet';
 
 export type KortPin = {
@@ -21,11 +21,12 @@ type Props = {
   onVælgKommune: (kommune: string | null) => void;
 };
 
-function pinFarve(fundNiveau: string | null): string {
-  if (fundNiveau === 'kritisk') return '#ef4444';
-  if (fundNiveau === 'stoerre') return '#f97316';
-  if (fundNiveau === 'mindre') return '#eab308';
-  if (fundNiveau === 'ingen') return '#22c55e';
+function pinFarve(pin: KortPin): string {
+  if (pin.erKunde) return '#4f46e5';          // indigo for kunder
+  if (pin.fundNiveau === 'kritisk') return '#ef4444';
+  if (pin.fundNiveau === 'stoerre') return '#f97316';
+  if (pin.fundNiveau === 'mindre')  return '#eab308';
+  if (pin.fundNiveau === 'ingen')   return '#22c55e';
   return '#6b7280';
 }
 
@@ -120,7 +121,7 @@ function opdaterPins(
     const lat = pin.lat + radius * Math.cos(vinkel);
     const lng = pin.lng + radius * Math.sin(vinkel);
 
-    const farve = pinFarve(pin.fundNiveau);
+    const farve = pinFarve(pin);
     const ikon = L.divIcon({
       className: '',
       html: `<div style="
