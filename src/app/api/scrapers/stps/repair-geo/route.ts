@@ -64,13 +64,13 @@ export async function POST(req: Request) {
 
   const supabase = getSupabaseServerClient();
 
-  // Hent rækker med rapport_url men manglende region eller tilsynsform
+  // Hent rækker med rapport_url men manglende region (bruger kun region som markør)
   const { data: rækker, error } = await supabase
     .from('stps_rapporter')
     .select('id, rapport_url, stps_tilbud_navn, region, tilsynsform, kommune')
     .not('rapport_url', 'is', null)
     .not('rapport_url', 'like', 'stps://genereret/%')
-    .or('region.is.null,tilsynsform.is.null')
+    .is('region', null)
     .order('rapport_dato', { ascending: false })
     .limit(batch);
 
@@ -103,6 +103,8 @@ export async function POST(req: Request) {
 
       if (res.status !== 200) {
         console.warn(`[repair-geo] ${stps_tilbud_navn}: HTTP ${res.status}`);
+        // Sæt region='–' så rækken falder ud af køen
+        await supabase.from('stps_rapporter').update({ region: '–' }).eq('id', id).catch(() => {});
         fejl++;
         continue;
       }
@@ -112,15 +114,12 @@ export async function POST(req: Request) {
       const tilsynsform = udtraekTilsynsform(tags);
       const kommune = udtraekKommune(tags);
 
-      if (!region && !tilsynsform && !kommune) {
-        ingenTags++;
-        continue;
-      }
-
-      const opdatering: Record<string, string | null> = {};
-      if (region)      opdatering.region      = region;
-      if (tilsynsform) opdatering.tilsynsform  = tilsynsform;
-      if (kommune)     opdatering.kommune      = kommune;
+      // Sæt altid region (enten fundet værdi eller '–' som markør for "forsøgt")
+      const opdatering: Record<string, string | null> = {
+        region: region ?? '–',
+      };
+      if (tilsynsform) opdatering.tilsynsform = tilsynsform;
+      if (kommune)     opdatering.kommune     = kommune;
 
       const { error: updErr } = await supabase
         .from('stps_rapporter')
@@ -131,11 +130,17 @@ export async function POST(req: Request) {
         console.error(`[repair-geo] Update fejl for ${id}:`, updErr.message);
         fejl++;
       } else {
-        opdateret++;
-        console.log(`[repair-geo] ✓ ${stps_tilbud_navn}: region="${region}" tilsyn="${tilsynsform}"`);
+        if (region || tilsynsform) {
+          opdateret++;
+          console.log(`[repair-geo] ✓ ${stps_tilbud_navn}: region="${region}" tilsyn="${tilsynsform}"`);
+        } else {
+          ingenTags++;
+        }
       }
     } catch (err) {
       console.error(`[repair-geo] Fejl for ${stps_tilbud_navn}:`, err instanceof Error ? err.message : String(err));
+      // Sæt region='–' ved fejl så vi ikke bliver ved med at prøve
+      await supabase.from('stps_rapporter').update({ region: '–' }).eq('id', id).catch(() => {});
       fejl++;
     }
 
