@@ -5,106 +5,143 @@
 import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell, Legend, LineChart, Line,
+  ResponsiveContainer, Legend,
 } from 'recharts';
+import { CheckCircle, XCircle, Clock, Minus } from 'lucide-react';
 import type { ScraperLogHistorik } from '@/lib/db/ScraperLog';
 
-const SCRAPER_LABELS: Record<string, string> = {
-  'stps-liste':       'STPS liste',
-  'stps-detaljer':    'STPS PDF',
-  'stps-fund-items':  'STPS fund-items',
-  'stps-pnummer':     'STPS P-numre',
-  'cvr-berig':        'CVR',
-  'tp-liste':         'TP liste',
-  'tp-detaljer':      'TP detaljer',
-  'tp-match':         'TP match',
-};
+// ── Alle kendte scrapers i kørserækkefølge ──────────────────────────────────
 
-const SCRAPER_FARVER: Record<string, string> = {
-  'stps-liste':       '#6366F1',
-  'stps-detaljer':    '#8B5CF6',
-  'stps-fund-items':  '#A855F7',
-  'stps-pnummer':     '#EC4899',
-  'cvr-berig':        '#F59E0B',
-  'tp-liste':         '#10B981',
-  'tp-detaljer':      '#0EA5E9',
-  'tp-match':         '#14B8A6',
-};
+type ScraperMeta = { id: string; label: string; trin?: number; kategori: string };
 
-function formatTid(iso: string): string {
+const ALLE_SCRAPERS: ScraperMeta[] = [
+  { id: 'sor-sync',          label: 'SOR — Sync',               trin: 1,  kategori: 'SOR'   },
+  { id: 'stps-liste',        label: 'STPS — Hent rapporter',    trin: 2,  kategori: 'STPS'  },
+  { id: 'stps-detaljer',     label: "STPS — Parse PDF'er",      trin: 3,  kategori: 'STPS'  },
+  { id: 'stps-fund-items',   label: 'STPS — Fund-items',        trin: 4,  kategori: 'STPS'  },
+  { id: 'stps-pnummer',      label: 'STPS — P-numre',           trin: 5,  kategori: 'STPS'  },
+  { id: 'cvr-berig',         label: 'CVR — Berig',              trin: 6,  kategori: 'CVR'   },
+  { id: 'cvr-ansatte',       label: 'CVR — Ansatte & data',     trin: 7,  kategori: 'CVR'   },
+  { id: 'cvr-signaler',      label: 'CVR — Signaler',           trin: 8,  kategori: 'CVR'   },
+  { id: 'regelovervagning',  label: 'Regelovervågning',         trin: 9,  kategori: 'Regler'},
+  { id: 'geocoder',          label: 'Geocoder',                 trin: 10, kategori: 'Geo'   },
+  { id: 'los-detaljer',      label: 'LOS — Detaljer',           trin: 11, kategori: 'LOS'   },
+  { id: 'los-match',         label: 'LOS — Match',              trin: 12, kategori: 'LOS'   },
+];
+
+// ── Hjælpefunktioner ────────────────────────────────────────────────────────
+
+function formatDato(iso: string): string {
   return new Date(iso).toLocaleString('da-DK', {
-    month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit',
+    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit',
   });
 }
 
-function formatKort(iso: string): string {
-  return new Date(iso).toLocaleString('da-DK', {
-    hour: '2-digit', minute: '2-digit',
-  });
+function formatDatoKort(iso: string): string {
+  return new Date(iso).toLocaleString('da-DK', { day: 'numeric', month: 'short' });
 }
 
-type AktivitetDatapunkt = {
-  tid: string;
-  tidFull: string;
-  behandlet: number;
-  scraper: string;
-  ok: boolean;
-};
-
-type FundItemDatapunkt = {
-  kørsel: string;
-  fundet: number;
-  behandlet: number;
-  ingenItems: number;
-};
-
-type TpDatapunkt = {
-  kørsel: string;
-  matchet: number;
-  ingenMatch: number;
-};
-
-function bygAktivitetData(logs: ScraperLogHistorik[]): AktivitetDatapunkt[] {
-  return logs.map((log) => ({
-    tid: formatKort(log.kørtKl),
-    tidFull: formatTid(log.kørtKl),
-    behandlet: (log.resultat?.behandlet as number) ?? 0,
-    scraper: log.scraperId,
-    ok: log.ok,
-  }));
+function hvadSkete(resultat: Record<string, unknown> | null): string {
+  if (!resultat) return '—';
+  const r = resultat as Record<string, number | string | undefined>;
+  if (typeof r.behandlet === 'number' && r.behandlet > 0) return `${r.behandlet} behandlet`;
+  if (typeof r.fundet === 'number')   return `${r.fundet} fundet`;
+  if (typeof r.matchet === 'number')  return `${r.matchet} matchet`;
+  if (typeof r.geocodet === 'number') return `${r.geocodet} geocodet`;
+  if (typeof r.hentet === 'number')   return `${r.hentet} hentet`;
+  if (typeof r.fejl === 'string')     return r.fejl.slice(0, 60);
+  if (typeof r.error === 'string')    return r.error.slice(0, 60);
+  if (r.springetOver)                 return 'Sprunget over';
+  return 'Kørte OK';
 }
 
-function bygFundItemData(logs: ScraperLogHistorik[]): FundItemDatapunkt[] {
-  return logs
-    .filter((l) => l.scraperId === 'stps-fund-items')
-    .map((log, i) => ({
-      kørsel: `#${i + 1}`,
-      fundet: (log.resultat?.fundet as number) ?? 0,
-      behandlet: (log.resultat?.behandlet as number) ?? 0,
-      ingenItems: (log.resultat?.ingenItems as number) ?? 0,
+// ── Daglig aktivitet — gruppe logs pr. dato ─────────────────────────────────
+
+type DagDatapunkt = { dato: string; datoFull: string; ok: number; fejl: number };
+
+function bygDagData(logs: ScraperLogHistorik[]): DagDatapunkt[] {
+  // Sidste 30 dage
+  const dagsgrænse = new Date();
+  dagsgrænse.setDate(dagsgrænse.getDate() - 29);
+
+  const map = new Map<string, { ok: number; fejl: number }>();
+
+  for (const log of logs) {
+    const d = new Date(log.kørtKl);
+    if (d < dagsgrænse) continue;
+    const key = d.toISOString().slice(0, 10);
+    const slot = map.get(key) ?? { ok: 0, fejl: 0 };
+    if (log.ok) slot.ok++; else slot.fejl++;
+    map.set(key, slot);
+  }
+
+  return Array.from(map.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, { ok, fejl }]) => ({
+      dato: formatDatoKort(key + 'T12:00:00'),
+      datoFull: key,
+      ok,
+      fejl,
     }));
 }
 
-function bygTpData(logs: ScraperLogHistorik[]): TpDatapunkt[] {
-  return logs
-    .filter((l) => l.scraperId === 'tp-detaljer')
-    .map((log, i) => {
-      const match = log.resultat?.match as Record<string, number> | undefined;
-      return {
-        kørsel: `#${i + 1}`,
-        matchet: match?.matchet ?? 0,
-        ingenMatch: match?.ingenMatch ?? 0,
-      };
-    });
-}
+// ── Systemstatus-tabel ──────────────────────────────────────────────────────
 
 const TOOLTIP_STYLE = {
-  background: '#fff',
-  border: '1px solid #E5E7EB',
+  background: 'var(--color-surface, #fff)',
+  border: '1px solid var(--color-border, #E5E7EB)',
   borderRadius: '8px',
   fontSize: 12,
+  color: 'var(--color-text-primary, #111)',
 };
+
+type SenesteMap = Map<string, ScraperLogHistorik>;
+
+function bygSenesteMap(logs: ScraperLogHistorik[]): SenesteMap {
+  const map = new Map<string, ScraperLogHistorik>();
+  for (const log of [...logs].reverse()) {
+    if (!map.has(log.scraperId)) map.set(log.scraperId, log);
+  }
+  return map;
+}
+
+function SystemstatusRække({ meta, log }: { meta: ScraperMeta; log?: ScraperLogHistorik }) {
+  if (!log) {
+    return (
+      <tr className="scraper-sys-række scraper-sys-række--ukendt">
+        <td className="scraper-sys-trin">{meta.trin !== undefined ? `#${meta.trin}` : '—'}</td>
+        <td className="scraper-sys-navn">{meta.label}</td>
+        <td className="scraper-sys-ikon"><Minus size={14} color="#9CA3AF" /></td>
+        <td className="scraper-sys-tid scraper-sys-ukendt-tekst">Aldrig kørt</td>
+        <td className="scraper-sys-hvad scraper-sys-ukendt-tekst">—</td>
+        <td className="scraper-sys-kat"><span className="scraper-sys-kat-badge">{meta.kategori}</span></td>
+      </tr>
+    );
+  }
+
+  const ok = log.ok;
+  return (
+    <tr className={`scraper-sys-række scraper-sys-række--${ok ? 'ok' : 'fejl'}`}>
+      <td className="scraper-sys-trin">{meta.trin !== undefined ? `#${meta.trin}` : '—'}</td>
+      <td className="scraper-sys-navn">{meta.label}</td>
+      <td className="scraper-sys-ikon">
+        {ok
+          ? <CheckCircle size={14} color="#16a34a" />
+          : <XCircle size={14} color="#dc2626" />}
+      </td>
+      <td className="scraper-sys-tid">
+        <Clock size={10} style={{ marginRight: 4, opacity: 0.5 }} />
+        {formatDato(log.kørtKl)}
+      </td>
+      <td className={`scraper-sys-hvad ${!ok ? 'scraper-sys-fejl-tekst' : ''}`}>
+        {hvadSkete(log.resultat)}
+      </td>
+      <td className="scraper-sys-kat"><span className="scraper-sys-kat-badge">{meta.kategori}</span></td>
+    </tr>
+  );
+}
+
+// ── Hoved-komponent ─────────────────────────────────────────────────────────
 
 export function ScraperHistorik() {
   const [logs, setLogs] = useState<ScraperLogHistorik[]>([]);
@@ -124,152 +161,119 @@ export function ScraperHistorik() {
 
   if (logs.length === 0) return null;
 
-  const totalBehandlet = logs.reduce((s, l) => s + ((l.resultat?.behandlet as number) ?? 0), 0);
-  const successRate = logs.length > 0 ? Math.round((logs.filter((l) => l.ok).length / logs.length) * 100) : 0;
-  const seneste = logs.at(-1);
+  const seneste = bygSenesteMap(logs);
+  const dagData = bygDagData(logs);
 
-  const aktivitetData = bygAktivitetData(logs);
-  const fundItemData = bygFundItemData(logs);
-  const tpData = bygTpData(logs);
-
-  const unikkeScrapere = [...new Set(logs.map((l) => l.scraperId))];
+  const totalKørsler = logs.length;
+  const antalOk = logs.filter((l) => l.ok).length;
+  const succesRate = Math.round((antalOk / totalKørsler) * 100);
+  const sidstKørt = logs.at(-1);
+  const antalFejl = totalKørsler - antalOk;
 
   return (
     <section className="scraper-historik">
-      <div className="scraper-historik-header">
+
+      {/* ── Systemstatus ── */}
+      <div className="scraper-sys-header">
+        <h2 className="scraper-historik-titel">Systemstatus</h2>
+        <p className="scraper-historik-sub">Seneste kørsel per scraper</p>
+      </div>
+
+      <div className="scraper-sys-tabel-wrap">
+        <table className="scraper-sys-tabel">
+          <thead>
+            <tr>
+              <th>Trin</th>
+              <th>Scraper</th>
+              <th>Status</th>
+              <th>Seneste kørsel</th>
+              <th>Resultat</th>
+              <th>Gruppe</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ALLE_SCRAPERS.map((meta) => (
+              <SystemstatusRække key={meta.id} meta={meta} log={seneste.get(meta.id)} />
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Kørselsstatistik ── */}
+      <div className="scraper-sys-header" style={{ marginTop: '2rem' }}>
         <h2 className="scraper-historik-titel">Kørselsoversigt</h2>
-        <p className="scraper-historik-sub">Historik over alle automatiske og manuelle kørsleri</p>
+        <p className="scraper-historik-sub">Daglig aktivitet — antal kørsler OK vs. fejl (30 dage)</p>
       </div>
 
       <div className="scraper-historik-stats">
         <div className="scraper-historik-stat">
-          <span className="scraper-historik-stat-tal">{logs.length}</span>
+          <span className="scraper-historik-stat-tal">{totalKørsler}</span>
           <span className="scraper-historik-stat-label">Kørsler i alt</span>
         </div>
         <div className="scraper-historik-stat">
-          <span className="scraper-historik-stat-tal">{totalBehandlet.toLocaleString('da-DK')}</span>
-          <span className="scraper-historik-stat-label">Rækker behandlet</span>
+          <span className="scraper-historik-stat-tal" style={{ color: '#16a34a' }}>{antalOk}</span>
+          <span className="scraper-historik-stat-label">Lykkedes</span>
         </div>
         <div className="scraper-historik-stat">
-          <span className={`scraper-historik-stat-tal ${successRate === 100 ? 'ok' : 'advarsel'}`}>
-            {successRate}%
+          <span className="scraper-historik-stat-tal" style={{ color: antalFejl > 0 ? '#dc2626' : undefined }}>
+            {antalFejl}
+          </span>
+          <span className="scraper-historik-stat-label">Fejlede</span>
+        </div>
+        <div className="scraper-historik-stat">
+          <span className={`scraper-historik-stat-tal ${succesRate === 100 ? 'ok' : succesRate >= 80 ? '' : 'advarsel'}`}>
+            {succesRate}%
           </span>
           <span className="scraper-historik-stat-label">Succesrate</span>
         </div>
         <div className="scraper-historik-stat">
           <span className="scraper-historik-stat-tal scraper-historik-stat-dato">
-            {seneste ? formatKort(seneste.kørtKl) : '—'}
+            {sidstKørt ? formatDato(sidstKørt.kørtKl) : '—'}
           </span>
           <span className="scraper-historik-stat-label">Seneste kørsel</span>
         </div>
       </div>
 
-      <div className="scraper-historik-kort">
-        <div className="scraper-historik-kort-header">
-          <p className="scraper-historik-kort-titel">Behandlede rækker pr. kørsel</p>
-          <p className="scraper-historik-kort-sub">Hver søjle = én kørsel, farve = scraper-type</p>
+      {dagData.length > 0 && (
+        <div className="scraper-historik-kort">
+          <ResponsiveContainer width="100%" height={180}>
+            <BarChart data={dagData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }} barSize={16}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border-faint, #F3F4F6)" vertical={false} />
+              <XAxis
+                dataKey="dato"
+                tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                tickLine={false}
+                axisLine={false}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                tick={{ fontSize: 10, fill: '#9CA3AF' }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={TOOLTIP_STYLE}
+                formatter={(val, name) => {
+                  const labels: Record<string, string> = { ok: 'Lykkedes', fejl: 'Fejlede' };
+                  return [val, labels[String(name)] ?? String(name)];
+                }}
+                labelFormatter={(label) => `Dato: ${label}`}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
+                formatter={(val) => {
+                  const labels: Record<string, string> = { ok: 'Lykkedes', fejl: 'Fejlede' };
+                  return labels[String(val)] ?? String(val);
+                }}
+              />
+              <Bar dataKey="ok"   stackId="a" fill="#16a34a" radius={[0, 0, 0, 0]} />
+              <Bar dataKey="fejl" stackId="a" fill="#dc2626" radius={[3, 3, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
-        <div className="scraper-historik-legender">
-          {unikkeScrapere.map((sid) => (
-            <span key={sid} className="scraper-historik-legend-item">
-              <span className="scraper-historik-legend-dot" style={{ background: SCRAPER_FARVER[sid] ?? '#999' }} />
-              {SCRAPER_LABELS[sid] ?? sid}
-            </span>
-          ))}
-        </div>
-        <ResponsiveContainer width="100%" height={200}>
-          <BarChart data={aktivitetData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="tid" tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} interval="preserveStartEnd" />
-            <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} axisLine={false} allowDecimals={false} />
-            <Tooltip
-              contentStyle={TOOLTIP_STYLE}
-              content={({ active, payload }) => {
-                if (!active || !payload?.length) return null;
-                const d = payload[0].payload as AktivitetDatapunkt;
-                return (
-                  <div style={{ ...TOOLTIP_STYLE, padding: '8px 12px' }}>
-                    <p style={{ margin: 0, fontWeight: 600, fontSize: 11 }}>{d.tidFull}</p>
-                    <p style={{ margin: '4px 0 0', fontSize: 11, color: '#6B7280' }}>
-                      {SCRAPER_LABELS[d.scraper] ?? d.scraper}
-                    </p>
-                    <p style={{ margin: '2px 0 0', fontSize: 12 }}>
-                      {d.behandlet} rækker · {d.ok ? '✓ OK' : '✗ Fejl'}
-                    </p>
-                  </div>
-                );
-              }}
-            />
-            <Bar dataKey="behandlet" radius={[3, 3, 0, 0]}>
-              {aktivitetData.map((entry, i) => (
-                <Cell key={i} fill={SCRAPER_FARVER[entry.scraper] ?? '#6366F1'} opacity={entry.ok ? 1 : 0.4} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      )}
 
-      <div className="scraper-historik-grid">
-        {fundItemData.length > 0 && (
-          <div className="scraper-historik-kort">
-            <div className="scraper-historik-kort-header">
-              <p className="scraper-historik-kort-titel">STPS fund-items — fundet pr. kørsel</p>
-              <p className="scraper-historik-kort-sub">Strukturerede målepunkter udtrukket fra PDF</p>
-            </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <BarChart data={fundItemData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="kørsel" tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE}
-                  formatter={(val, name) => {
-                    const labels: Record<string, string> = { fundet: 'Fund-items fundet', ingenItems: 'Ingen items', behandlet: 'Behandlet' };
-                    return [val, labels[String(name)] ?? String(name)];
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }}
-                  formatter={(val) => {
-                    const labels: Record<string, string> = { fundet: 'Fund-items fundet', ingenItems: 'Ingen items' };
-                    return labels[String(val)] ?? String(val);
-                  }}
-                />
-                <Bar dataKey="fundet" fill="#A855F7" radius={[3, 3, 0, 0]} />
-                <Bar dataKey="ingenItems" fill="#E5E7EB" radius={[3, 3, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-
-        {tpData.length > 0 && (
-          <div className="scraper-historik-kort">
-            <div className="scraper-historik-kort-header">
-              <p className="scraper-historik-kort-titel">Tilbudsportalen — matchstatus</p>
-              <p className="scraper-historik-kort-sub">Akkumuleret matchet vs. ikke-matchet over kørsler</p>
-            </div>
-            <ResponsiveContainer width="100%" height={180}>
-              <LineChart data={tpData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="kørsel" tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} interval={Math.floor(tpData.length / 6)} />
-                <YAxis tick={{ fontSize: 10, fill: '#9CA3AF' }} tickLine={false} axisLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={TOOLTIP_STYLE}
-                  formatter={(val, name) => {
-                    const labels: Record<string, string> = { matchet: 'Matchet', ingenMatch: 'Ingen match' };
-                    return [val, labels[String(name)] ?? String(name)];
-                  }}
-                />
-                <Legend wrapperStyle={{ fontSize: 11 }}
-                  formatter={(val) => {
-                    const labels: Record<string, string> = { matchet: 'Matchet', ingenMatch: 'Ingen match' };
-                    return labels[String(val)] ?? String(val);
-                  }}
-                />
-                <Line type="monotone" dataKey="matchet" stroke="#0EA5E9" strokeWidth={2} dot={false} />
-                <Line type="monotone" dataKey="ingenMatch" stroke="#F59E0B" strokeWidth={2} dot={false} strokeDasharray="4 2" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        )}
-      </div>
     </section>
   );
 }
