@@ -10,6 +10,7 @@ export type DatoPeriode = {
   fra: string; // ISO date YYYY-MM-DD
   til: string;
   label: string;
+  fastTil?: boolean; // true = opdater IKKE til-dato til idag ved reload (fx "Sidste år")
 };
 
 // Funktioner beregner datoen ved kørselstidspunkt — ikke ved build-tidspunkt
@@ -23,24 +24,39 @@ function dageRetur(dage: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+function åretsFørste(): string {
+  return `${new Date().getFullYear()}-01-01`;
+}
+
+function sidsteÅrFra(): string {
+  return `${new Date().getFullYear() - 1}-01-01`;
+}
+
+function sidsteÅrTil(): string {
+  return `${new Date().getFullYear() - 1}-12-31`;
+}
+
 export function getPresets(): DatoPeriode[] {
   return [
-    { label: 'Seneste 30 dage',    fra: dageRetur(30),  til: idag() },
-    { label: 'Seneste 3 måneder',  fra: dageRetur(90),  til: idag() },
-    { label: 'Seneste 6 måneder',  fra: dageRetur(180), til: idag() },
-    { label: 'Seneste år',         fra: dageRetur(365), til: idag() },
-    { label: 'Alle tid',           fra: '2000-01-01',   til: idag() },
+    { label: 'Seneste 30 dage',   fra: dageRetur(30),  til: idag() },
+    { label: 'Seneste 3 måneder', fra: dageRetur(90),  til: idag() },
+    { label: 'Seneste 6 måneder', fra: dageRetur(180), til: idag() },
+    { label: 'I år',              fra: åretsFørste(),  til: idag() },
+    { label: 'Sidste år',         fra: sidsteÅrFra(),  til: sidsteÅrTil(), fastTil: true },
+    { label: 'Maximum',           fra: '2000-01-01',   til: idag() },
   ];
 }
 
-export const DEFAULT_PRESET_LABEL = 'Seneste år';
+export const DEFAULT_PRESET_LABEL = 'I år';
+
+function findPreset(fra: string | null): DatoPeriode | undefined {
+  if (!fra) return undefined;
+  return getPresets().find((p) => p.fra === fra);
+}
 
 function findPresetLabel(fra: string | null, til: string | null): string {
   if (!fra || !til) return DEFAULT_PRESET_LABEL;
-  const presets = getPresets();
-  // Matcher kun på label — `til` vil aldrig eksakt matche den gemte URL-dato
-  // da idag() ændrer sig dagligt. Vi tjekker i stedet om fra-datoen passer.
-  const match = presets.find((p) => p.fra === fra);
+  const match = findPreset(fra);
   return match?.label ?? `${fra} → ${til}`;
 }
 
@@ -73,7 +89,7 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
     if (!fraParam) {
       const gemetLabel = (() => { try { return localStorage.getItem('keascare-dato-preset'); } catch { return null; } })();
       const presets = getPresets();
-      const valgtPreset = presets.find((p) => p.label === gemetLabel) ?? presets[3]; // Seneste år
+      const valgtPreset = presets.find((p) => p.label === gemetLabel) ?? presets.find((p) => p.label === DEFAULT_PRESET_LABEL) ?? presets[3];
       const sp = new URLSearchParams(params.toString());
       sp.set('fra', valgtPreset.fra);
       sp.set('til', valgtPreset.til);
@@ -82,15 +98,14 @@ export function DatoVælger({ variant = 'desktop', onLuk }: Props) {
   }, [fraParam, params, router]);
 
   // Opdater `til` i URL'en til dags dato ved hvert sidebesøg
-  // så nye rapporter ikke skæres fra af en gammel `til`-dato
+  // så nye rapporter ikke skæres fra af en gammel `til`-dato.
+  // Undtagelse: preset med fastTil=true (fx "Sidste år") skal ikke opdateres.
   useEffect(() => {
     const tilParam = params.get('til');
     const dagensDato = idag();
-    if (tilParam && tilParam !== dagensDato && tilParam !== '2000-01-01') {
-      // Kun opdater hvis det er et preset (ikke en brugerdefineret slutdato)
-      const presets = getPresets();
-      const erPreset = presets.some((p) => p.fra === fraParam);
-      if (erPreset) {
+    if (tilParam && tilParam !== dagensDato) {
+      const matchetPreset = findPreset(fraParam);
+      if (matchetPreset && !matchetPreset.fastTil) {
         const sp = new URLSearchParams(params.toString());
         sp.set('til', dagensDato);
         router.replace(`?${sp.toString()}`, { scroll: false });

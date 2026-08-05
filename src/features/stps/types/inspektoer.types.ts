@@ -38,8 +38,6 @@ export type InspektoerFuldStat = {
   kolleger: InspektoerKollega[];
 };
 
-export type InspektoerPeriode = 'alle' | '30' | '90' | 'aar' | 'sidsteaar';
-
 export type InspektoerSortKey =
   | 'tilsyn'
   | 'bosteder'

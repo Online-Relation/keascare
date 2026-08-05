@@ -3,24 +3,14 @@
 // src/features/stps/components/InspektoerSide/sections/InspektoerSoegFilter/InspektoerSoegFilter.tsx
 
 import { Search } from 'lucide-react';
-import type { InspektoerPeriode, InspektoerSortKey } from '@/features/stps/types/inspektoer.types';
+import type { InspektoerSortKey } from '@/features/stps/types/inspektoer.types';
 
 type Props = {
   søg: string;
-  periode: InspektoerPeriode;
   sorter: InspektoerSortKey;
   onSøg: (v: string) => void;
-  onPeriode: (v: InspektoerPeriode) => void;
   onSorter: (v: InspektoerSortKey) => void;
 };
-
-const PERIODER: { value: InspektoerPeriode; label: string }[] = [
-  { value: 'alle',     label: 'Alle tider' },
-  { value: '30',       label: 'Seneste 30 dage' },
-  { value: '90',       label: 'Seneste 90 dage' },
-  { value: 'aar',      label: 'Indeværende år' },
-  { value: 'sidsteaar', label: 'Sidste år' },
-];
 
 const SORTER: { value: InspektoerSortKey; label: string }[] = [
   { value: 'tilsyn',   label: 'Flest tilsyn' },
@@ -32,12 +22,19 @@ const SORTER: { value: InspektoerSortKey; label: string }[] = [
   { value: 'navn',     label: 'Alfabetisk' },
 ];
 
-export function InspektoerSoegFilter({ periode, sorter, onPeriode, onSorter }: Omit<Props, 'søg' | 'onSøg'>) {
+export function InspektoerSoegFilter({ søg, sorter, onSøg, onSorter }: Props) {
   return (
     <div className="insp-filter-bar">
-      <select className="insp-filter-select" value={periode} onChange={(e) => onPeriode(e.target.value as InspektoerPeriode)}>
-        {PERIODER.map((p) => <option key={p.value} value={p.value}>{p.label}</option>)}
-      </select>
+      <div className="insp-søg-wrap">
+        <Search size={14} className="insp-søg-ikon" />
+        <input
+          className="insp-søg-input"
+          type="text"
+          placeholder="Søg efter inspektør, kommune eller bosted…"
+          value={søg}
+          onChange={(e) => onSøg(e.target.value)}
+        />
+      </div>
       <div className="insp-sorter-wrap">
         <span className="insp-sorter-label">Sorter efter:</span>
         <select className="insp-filter-select" value={sorter} onChange={(e) => onSorter(e.target.value as InspektoerSortKey)}>

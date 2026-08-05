@@ -3,32 +3,23 @@
 // src/features/stps/components/InspektoerSide/InspektoerSide.tsx
 
 import { useState, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { InspektoerKpiGrid } from './sections/InspektoerKpiGrid';
 import { FremhaevetInspektoer } from './sections/FremhaevetInspektoer';
 import { InspektoerListe } from './sections/InspektoerListe';
 import { InspektoerSoegFilter } from './sections/InspektoerSoegFilter';
-import type { InspektoerFuldStat, InspektoerPeriode, InspektoerSortKey } from '@/features/stps/types/inspektoer.types';
+import type { InspektoerFuldStat, InspektoerSortKey } from '@/features/stps/types/inspektoer.types';
 
 type Props = { inspektoerer: InspektoerFuldStat[] };
 
-function filtrerPeriode(ins: InspektoerFuldStat, periode: InspektoerPeriode): InspektoerFuldStat {
-  if (periode === 'alle') return ins;
-  const nu = new Date();
-  let fra: Date;
-  if (periode === '30') {
-    fra = new Date(nu); fra.setDate(nu.getDate() - 30);
-  } else if (periode === '90') {
-    fra = new Date(nu); fra.setDate(nu.getDate() - 90);
-  } else if (periode === 'aar') {
-    fra = new Date(nu.getFullYear(), 0, 1);
-  } else {
-    fra = new Date(nu.getFullYear() - 1, 0, 1);
-    const til = new Date(nu.getFullYear() - 1, 11, 31);
-    const rapporter = ins.rapporter.filter((r) => r.dato && r.dato >= fra.toISOString().slice(0, 10) && r.dato <= til.toISOString().slice(0, 10));
-    return genberegnStat(ins, rapporter);
-  }
-  const fraStr = fra.toISOString().slice(0, 10);
-  const rapporter = ins.rapporter.filter((r) => r.dato && r.dato >= fraStr);
+function filtrerPåDatoInterval(ins: InspektoerFuldStat, fra: string | null, til: string | null): InspektoerFuldStat {
+  if (!fra && !til) return ins;
+  const rapporter = ins.rapporter.filter((r) => {
+    if (!r.dato) return false;
+    if (fra && r.dato < fra) return false;
+    if (til && r.dato > til) return false;
+    return true;
+  });
   return genberegnStat(ins, rapporter);
 }
 
@@ -65,12 +56,15 @@ function sorter(liste: InspektoerFuldStat[], nøgle: InspektoerSortKey): Inspekt
 }
 
 export function InspektoerSide({ inspektoerer: råData }: Props) {
+  const params = useSearchParams();
+  const fra = params.get('fra');
+  const til = params.get('til');
+
   const [søg, setSøg]         = useState('');
-  const [periode, setPeriode] = useState<InspektoerPeriode>('alle');
   const [sortKey, setSortKey] = useState<InspektoerSortKey>('tilsyn');
 
   const behandlet = useMemo(() => {
-    let liste = råData.map((i) => filtrerPeriode(i, periode)).filter((i) => i.antal > 0);
+    let liste = råData.map((i) => filtrerPåDatoInterval(i, fra, til)).filter((i) => i.antal > 0);
     if (søg.trim()) {
       const q = søg.toLowerCase();
       liste = liste.filter((i) =>
@@ -81,7 +75,7 @@ export function InspektoerSide({ inspektoerer: råData }: Props) {
       );
     }
     return sorter(liste, sortKey);
-  }, [råData, søg, periode, sortKey]);
+  }, [råData, søg, fra, til, sortKey]);
 
   const fremhaevetIdx = behandlet.findIndex((i) => i.antal > 0);
   const fremhaevet    = behandlet[fremhaevetIdx] ?? null;
@@ -94,7 +88,7 @@ export function InspektoerSide({ inspektoerer: råData }: Props) {
         <p className="insp-undertekst">Få overblik over hvilke inspektører der fører tilsyn, hvor bredt de arbejder, og se profiler på den enkelte person.</p>
       </div>
 
-      <InspektoerSoegFilter periode={periode} sorter={sortKey} onPeriode={setPeriode} onSorter={setSortKey} />
+      <InspektoerSoegFilter søg={søg} sorter={sortKey} onSøg={setSøg} onSorter={setSortKey} />
 
       <InspektoerKpiGrid inspektoerer={behandlet} />
 

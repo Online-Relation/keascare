@@ -6,14 +6,24 @@ import type { KortPin } from '@/features/kort/components/DanmarksKort';
 
 export const dynamic = 'force-dynamic';
 
-export default async function KortServerPage() {
+type Props = {
+  searchParams: Promise<{ fra?: string; til?: string }>;
+};
+
+export default async function KortServerPage({ searchParams }: Props) {
+  const { fra, til } = await searchParams;
   const supabase = getSupabaseServerClient();
 
-  const { data } = await supabase
+  let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, lat, lng, fund_niveau, kommune, monday_item_id')
+    .select('id, stps_tilbud_navn, lat, lng, fund_niveau, kommune, monday_item_id, rapport_dato')
     .not('lat', 'is', null)
     .neq('lat', 0);
+
+  if (fra) query = query.gte('rapport_dato', fra);
+  if (til) query = query.lte('rapport_dato', til);
+
+  const { data } = await query;
 
   const pins: KortPin[] = (data ?? []).map((r) => ({
     id: r.id,
