@@ -33,15 +33,11 @@ export async function GET(req: NextRequest) {
 
   try {
     if (visRå) {
-      const res = await fetch(pdfUrl, {
-        headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
-      });
-      if (!res.ok) return NextResponse.json({ error: `HTTP ${res.status}` }, { status: 502 });
-      const buf = Buffer.from(await res.arrayBuffer());
+      // pdf-parse v2: PDFParse klasse med url direkte — håndterer fetch internt
+      const { PDFParse } = await import('pdf-parse');
+      const parser = new PDFParse({ url: pdfUrl });
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js') as any;
-      const pdfParse = (typeof pdfParseModule.default === 'function' ? pdfParseModule.default : pdfParseModule) as (buf: Buffer) => Promise<{ text: string }>;
-      const result = await pdfParse(buf);
+      const result = await (parser as any).getText() as { text?: string };
       const tekst: string = result.text ?? '';
       // Find deltager-sektionen og vis 800 tegn rundt om den
       const stpsIdx = tekst.search(/Tilsynet blev foretaget af/i);
