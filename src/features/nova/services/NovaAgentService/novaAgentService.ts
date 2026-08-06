@@ -5,10 +5,11 @@
 // uden at rapportere noget til UI. Hun arbejder bare.
 //
 // Pipeline:
-//   1. STPS × P-nummer → CVR   (rapporter med p_nummer men uden cvr)
-//   2. STPS × CVR → TP         (rapporter med cvr men uden tilbudsportal-data)
-//   3. STPS × CVR → LOS        (sæt los_membre flag korrekt)
-//   4. STPS × CVR → Monday     (opdater monday_kunde flag)
+//   1. STPS × P-nummer → CVR      (rapporter med p_nummer men uden cvr)
+//   2. STPS × CVR → TP            (rapporter med cvr men uden tilbudsportal-data)
+//   3. STPS × CVR → LOS           (sæt los_membre flag korrekt)
+//   4. STPS × CVR → Monday        (opdater monday_kunde flag)
+//   5. TP re-queue                 (sæt detaljer_hentet=false på TP-records >30 dage gamle)
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { slaaPNummerOp } from '@/lib/api/CvrClient';
@@ -50,7 +51,6 @@ async function matchPNummerTilCvr(supabase: ReturnType<typeof getSupabaseServerC
 
 // 2. Find rapporter med cvr men uden tilbudsportal-data — hent fra TP-tabellen
 async function matchCvrTilTilbudsportalen(supabase: ReturnType<typeof getSupabaseServerClient>, batch: number) {
-  // Hent STPS-rapporter med CVR men manglende TP-data
   const { data: stpsRækker } = await supabase
     .from('stps_rapporter')
     .select('id, cvr')
@@ -62,7 +62,6 @@ async function matchCvrTilTilbudsportalen(supabase: ReturnType<typeof getSupabas
 
   const cvrer = [...new Set(stpsRækker.map((r) => r.cvr as string))];
 
-  // Hent TP-data for disse CVR'er
   const { data: tpRækker } = await supabase
     .from('tilbudsportalen_tilbud')
     .select('cvr, tilbudstype, driftsform, kommune, pladser')
@@ -70,7 +69,6 @@ async function matchCvrTilTilbudsportalen(supabase: ReturnType<typeof getSupabas
 
   if (!tpRækker || tpRækker.length === 0) return { behandlet: stpsRækker.length, matchet: 0 };
 
-  // Byg CVR → TP-data map (tag den første match per CVR)
   const cvrMap = new Map<string, typeof tpRækker[0]>();
   for (const tp of tpRækker) {
     if (tp.cvr && !cvrMap.has(tp.cvr)) cvrMap.set(tp.cvr, tp);
@@ -114,42 +112,67 @@ async function synkroniserMondayFlag(supabase: ReturnType<typeof getSupabaseServ
       .map((k) => k.cvr as string)
   );
 
-  // Sæt monday_kunde = true for aktive CVR'er
   if (aktiveCvr.size > 0) {
     await supabase.from('stps_rapporter')
       .update({ monday_kunde: true })
       .in('cvr', [...aktiveCvr]);
   }
 
-  // Sæt monday_kunde = false for resten med CVR (ikke aktive)
   const alleCvr = mondayKunder.map((k) => k.cvr as string);
   const inaktiveCvr = alleCvr.filter((cvr) => !aktiveCvr.has(cvr));
   if (inaktiveCvr.length > 0) {
     await supabase.from('stps_rapporter')
       .update({ monday_kunde: false })
       .in('cvr', inaktiveCvr)
-      .eq('monday_kunde', true); // kun dem der er sat til true
+      .eq('monday_kunde', true);
   }
 
   return { matchet: aktiveCvr.size };
+}
+
+// 5. Re-queue TP-records der er mere end 30 dage gamle — scraperens næste kørsel opdaterer dem
+// Vi sætter detaljer_hentet = false, så hentUbehandledeAfdelinger() plukker dem op igen.
+// Maks 100 ad gangen for ikke at overbelaste scraperens kø med det samme.
+async function reQueueGamleTP(supabase: ReturnType<typeof getSupabaseServerClient>) {
+  const trediveDageSiden = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Hent IDs på records der skal re-queues (limit 100 pr. kørsel)
+  const { data } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .select('id')
+    .lt('tp_opdateret', trediveDageSiden)
+    .eq('detaljer_hentet', true)
+    .limit(100);
+
+  if (!data || data.length === 0) return { reQueued: 0 };
+
+  const ids = data.map((r) => r.id);
+  await supabase
+    .from('tilbudsportalen_tilbud')
+    .update({ detaljer_hentet: false })
+    .in('id', ids);
+
+  return { reQueued: ids.length };
 }
 
 // Hoved-funktion — Nova kører hele pipeline
 export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>> {
   const supabase = getSupabaseServerClient();
 
-  const [pTilCvr, cvrTilTp, losFlag, mondayFlag] = await Promise.allSettled([
+  const [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue] = await Promise.allSettled([
     matchPNummerTilCvr(supabase, batch),
     matchCvrTilTilbudsportalen(supabase, batch),
     synkroniserLosFlag(),
     synkroniserMondayFlag(supabase),
+    reQueueGamleTP(supabase),
   ]);
 
   return {
     ok: true,
-    pNummerTilCvr:      pTilCvr.status      === 'fulfilled' ? pTilCvr.value      : { fejl: String((pTilCvr as PromiseRejectedResult).reason) },
-    cvrTilTilbudsportal: cvrTilTp.status    === 'fulfilled' ? cvrTilTp.value     : { fejl: String((cvrTilTp as PromiseRejectedResult).reason) },
-    losFlag:            losFlag.status       === 'fulfilled' ? losFlag.value      : { fejl: String((losFlag as PromiseRejectedResult).reason) },
-    mondayFlag:         mondayFlag.status    === 'fulfilled' ? mondayFlag.value   : { fejl: String((mondayFlag as PromiseRejectedResult).reason) },
+    pNummerTilCvr:       pTilCvr.status      === 'fulfilled' ? pTilCvr.value      : { fejl: String((pTilCvr as PromiseRejectedResult).reason) },
+    cvrTilTilbudsportal: cvrTilTp.status     === 'fulfilled' ? cvrTilTp.value     : { fejl: String((cvrTilTp as PromiseRejectedResult).reason) },
+    losFlag:             losFlag.status       === 'fulfilled' ? losFlag.value      : { fejl: String((losFlag as PromiseRejectedResult).reason) },
+    mondayFlag:          mondayFlag.status    === 'fulfilled' ? mondayFlag.value   : { fejl: String((mondayFlag as PromiseRejectedResult).reason) },
+    tpReQueue:           tpReQueue.status     === 'fulfilled' ? tpReQueue.value    : { fejl: String((tpReQueue as PromiseRejectedResult).reason) },
   };
 }
