@@ -338,8 +338,14 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
 }
 
 function udtraekDeltagere(tekst: string): { stps: TilsynDeltager[]; bosted: TilsynDeltager[] } {
-  // "Tilsynet blev foretaget af:" = STPS-inspektører
-  const stpsIdx = tekst.search(/Tilsynet blev foretaget af/i);
+  // "Tilsynet blev foretaget af:" = STPS-inspektører.
+  // Teksten står to gange: på forsiden (kun organisationsnavn) og i
+  // Baggrundsoplysninger (de faktiske inspektørnavne) — brug SIDSTE forekomst.
+  let stpsIdx = -1;
+  const stpsMarkoer = /Tilsynet blev foretaget af/gi;
+  for (let m = stpsMarkoer.exec(tekst); m !== null; m = stpsMarkoer.exec(tekst)) {
+    stpsIdx = m.index;
+  }
 
   // Bostedets deltagere — STPS bruger varianter af denne formulering:
   //   "Ved tilsynet og den afsluttende opsamling deltog:"
