@@ -12,7 +12,7 @@
 //   5. TP re-queue                 (sæt detaljer_hentet=false på TP-records >30 dage gamle)
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { slaaPNummerOp } from '@/lib/api/CvrClient';
+import { slaaPNummerOp, slaaCvrOp } from '@/lib/api/CvrClient';
 import { matchLosTilBosted } from '@/features/los/repository/LosRepository';
 import { gemKvalitetSnapshot } from '@/features/nova/services/NovaKvalitetService';
 
@@ -131,7 +131,42 @@ async function synkroniserMondayFlag(supabase: ReturnType<typeof getSupabaseServ
   return { matchet: aktiveCvr.size };
 }
 
-// 5. Re-queue TP-records der er mere end 30 dage gamle — scraperens næste kørsel opdaterer dem
+// 5. Genopslag af CVR-data (ansatte, adresse) for bosteder med ældst cvr_opdateret
+// Tager de 50 bosteder der har CVR men ikke er opdateret i længst tid (NULL tælles som ældst).
+// Kaldes ikke i parallel med matchPNummerTilCvr da begge skriver til stps_rapporter — men de
+// ramler ikke hinanden: denne funktion filtrerer på NOT NULL cvr og NULL cvr_opdateret IS håndteret
+// ved at bruge .order('cvr_opdateret', { ascending: true, nullsFirst: true }).
+async function genopslaCvrData(supabase: ReturnType<typeof getSupabaseServerClient>, batch: number) {
+  const { data } = await supabase
+    .from('stps_rapporter')
+    .select('id, cvr')
+    .not('cvr', 'is', null)
+    .order('cvr_opdateret', { ascending: true, nullsFirst: true })
+    .limit(batch);
+
+  const rækker = data ?? [];
+  let opdateret = 0;
+
+  for (const r of rækker) {
+    if (!r.cvr) continue;
+    try {
+      const opslag = await slaaCvrOp(r.cvr);
+      if (opslag) {
+        await supabase.from('stps_rapporter').update({
+          ansatte:       opslag.ansatte ?? undefined,
+          adresse:       opslag.adresse ?? undefined,
+          cvr_opdateret: new Date().toISOString(),
+        }).eq('id', r.id);
+        opdateret++;
+      }
+      await venteMs(300);
+    } catch { /* fortsæt ved fejl */ }
+  }
+
+  return { behandlet: rækker.length, opdateret };
+}
+
+// 6. Re-queue TP-records der er mere end 30 dage gamle — scraperens næste kørsel opdaterer dem
 // Vi sætter detaljer_hentet = false, så hentUbehandledeAfdelinger() plukker dem op igen.
 // Maks 100 ad gangen for ikke at overbelaste scraperens kø med det samme.
 async function reQueueGamleTP(supabase: ReturnType<typeof getSupabaseServerClient>) {
@@ -160,33 +195,39 @@ async function reQueueGamleTP(supabase: ReturnType<typeof getSupabaseServerClien
 export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>> {
   const supabase = getSupabaseServerClient();
 
-  const [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue, kvalitet] = await Promise.allSettled([
-    matchPNummerTilCvr(supabase, batch),
-    matchCvrTilTilbudsportalen(supabase, batch),
+  // Trin 1+2 kører sekventielt for at undgå race på stps_rapporter-rækker uden cvr endnu.
+  // Trin 3–7 er uafhængige og kører parallelt.
+  const pTilCvr  = await Promise.allSettled([matchPNummerTilCvr(supabase, batch)]).then((r) => r[0]);
+  const cvrTilTp = await Promise.allSettled([matchCvrTilTilbudsportalen(supabase, batch)]).then((r) => r[0]);
+
+  const [losFlag, mondayFlag, tpReQueue, cvrOpdateret, kvalitet] = await Promise.allSettled([
     synkroniserLosFlag(),
     synkroniserMondayFlag(supabase),
     reQueueGamleTP(supabase),
+    genopslaCvrData(supabase, batch),
     gemKvalitetSnapshot(),
   ]);
 
   const resultat = {
     ok: true,
-    pNummerTilCvr:       pTilCvr.status      === 'fulfilled' ? pTilCvr.value      : { fejl: String((pTilCvr as PromiseRejectedResult).reason) },
-    cvrTilTilbudsportal: cvrTilTp.status     === 'fulfilled' ? cvrTilTp.value     : { fejl: String((cvrTilTp as PromiseRejectedResult).reason) },
-    losFlag:             losFlag.status       === 'fulfilled' ? losFlag.value      : { fejl: String((losFlag as PromiseRejectedResult).reason) },
-    mondayFlag:          mondayFlag.status    === 'fulfilled' ? mondayFlag.value   : { fejl: String((mondayFlag as PromiseRejectedResult).reason) },
-    tpReQueue:           tpReQueue.status     === 'fulfilled' ? tpReQueue.value    : { fejl: String((tpReQueue as PromiseRejectedResult).reason) },
-    kvalitetScore:       kvalitet.status      === 'fulfilled' ? { score: kvalitet.value.score, dato: kvalitet.value.dato } : { fejl: String((kvalitet as PromiseRejectedResult).reason) },
+    pNummerTilCvr:       pTilCvr.status        === 'fulfilled' ? pTilCvr.value        : { fejl: String((pTilCvr as PromiseRejectedResult).reason) },
+    cvrTilTilbudsportal: cvrTilTp.status       === 'fulfilled' ? cvrTilTp.value       : { fejl: String((cvrTilTp as PromiseRejectedResult).reason) },
+    losFlag:             losFlag.status         === 'fulfilled' ? losFlag.value        : { fejl: String((losFlag as PromiseRejectedResult).reason) },
+    mondayFlag:          mondayFlag.status      === 'fulfilled' ? mondayFlag.value     : { fejl: String((mondayFlag as PromiseRejectedResult).reason) },
+    tpReQueue:           tpReQueue.status       === 'fulfilled' ? tpReQueue.value      : { fejl: String((tpReQueue as PromiseRejectedResult).reason) },
+    cvrOpdateret:        cvrOpdateret.status    === 'fulfilled' ? cvrOpdateret.value   : { fejl: String((cvrOpdateret as PromiseRejectedResult).reason) },
+    kvalitetScore:       kvalitet.status        === 'fulfilled' ? { score: kvalitet.value.score, dato: kvalitet.value.dato } : { fejl: String((kvalitet as PromiseRejectedResult).reason) },
   };
 
   // Gem natsrapport så banneret kan vise hvad Nova arbejdede på
   try {
-    const cvrBeriget   = pTilCvr.status   === 'fulfilled' ? (pTilCvr.value as { matchet?: number }).matchet ?? 0 : 0;
-    const tpBeriget    = cvrTilTp.status  === 'fulfilled' ? (cvrTilTp.value as { matchet?: number }).matchet ?? 0 : 0;
-    const losMat       = losFlag.status   === 'fulfilled' ? (losFlag.value as { matchet?: number }).matchet ?? 0 : 0;
-    const mondayMat    = mondayFlag.status === 'fulfilled' ? (mondayFlag.value as { matchet?: number }).matchet ?? 0 : 0;
-    const tpRe         = tpReQueue.status === 'fulfilled' ? (tpReQueue.value as { reQueued?: number }).reQueued ?? 0 : 0;
-    const fejlTæller   = [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue].filter((r) => r.status === 'rejected').length;
+    const cvrBeriget   = pTilCvr.status        === 'fulfilled' ? (pTilCvr.value as { matchet?: number }).matchet ?? 0 : 0;
+    const tpBeriget    = cvrTilTp.status       === 'fulfilled' ? (cvrTilTp.value as { matchet?: number }).matchet ?? 0 : 0;
+    const losMat       = losFlag.status        === 'fulfilled' ? (losFlag.value as { matchet?: number }).matchet ?? 0 : 0;
+    const mondayMat    = mondayFlag.status     === 'fulfilled' ? (mondayFlag.value as { matchet?: number }).matchet ?? 0 : 0;
+    const tpRe         = tpReQueue.status      === 'fulfilled' ? (tpReQueue.value as { reQueued?: number }).reQueued ?? 0 : 0;
+    const cvrOpdQt     = cvrOpdateret.status   === 'fulfilled' ? (cvrOpdateret.value as { opdateret?: number }).opdateret ?? 0 : 0;
+    const fejlTæller   = [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue, cvrOpdateret].filter((r) => r.status === 'rejected').length;
 
     await supabase.from('nova_natsrapport').insert({
       cvr_beriget:    cvrBeriget,
@@ -194,6 +235,7 @@ export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>
       tp_requeued:    tpRe,
       los_matchet:    losMat,
       monday_matchet: mondayMat,
+      cvr_opdateret:  cvrOpdQt,
       total_fejl:     fejlTæller,
       radata:         resultat,
     });
