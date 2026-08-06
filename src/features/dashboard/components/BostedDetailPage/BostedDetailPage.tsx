@@ -6,6 +6,7 @@ import { useState, Suspense } from 'react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
 import type { KundePakke } from '@/features/monday/services/MondayProdukterService';
 import type { SandsynligInspektoer } from '@/features/varsletTilsyn/types/varsletTilsyn.types';
+import type { TpÆndring } from '@/features/tilbudsportalen/repository/TilbudsportalenRepository';
 import { NyOprettetBanner } from './sections/NyOprettetBanner';
 import { BostedHeader } from './sections/BostedHeader';
 import { BostedFundsoversigt } from './sections/BostedFundsoversigt';
@@ -26,9 +27,10 @@ type BostedDetailPageProps = {
   pakker?: KundePakke[];
   varslingId?: string | null;
   sandsynligeInspektoerer?: SandsynligInspektoer[];
+  tpÆndringer?: TpÆndring[];
 };
 
-export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarslingId = null, sandsynligeInspektoerer = [] }: BostedDetailPageProps) {
+export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarslingId = null, sandsynligeInspektoerer = [], tpÆndringer = [] }: BostedDetailPageProps) {
   const [historikOpdater, setHistorikOpdater] = useState(0);
   const [varslingId, setVarslingId] = useState<string | null>(initialVarslingId);
 
@@ -44,7 +46,7 @@ export function BostedDetailPage({ bosted, pakker = [], varslingId: initialVarsl
 
       <div className="bosted-detail-grid">
         <BostedTilsynKort bosted={bosted} />
-        <BostedOrganisationKort bosted={bosted} />
+        <BostedOrganisationKort bosted={bosted} tpÆndringer={tpÆndringer} />
       </div>
 
       {varslingId && (

@@ -5,10 +5,12 @@
 import { useState } from 'react';
 import { Building2, Phone, Mail, User, Globe, MapPin, TrendingUp, RefreshCw, Shield, CheckCircle2, XCircle, HelpCircle } from 'lucide-react';
 import type { BostedDetail } from '@/features/dashboard/types/dashboard.types';
+import type { TpÆndring } from '@/features/tilbudsportalen/repository/TilbudsportalenRepository';
 import { ScraperInfo } from '../ScraperInfo/ScraperInfo';
 import { BostedRedigerCvr } from '../BostedRedigerCvr';
+import { ÆndringsHistorik, PladserMedHistorik } from './TpÆndringsvisning';
 
-type Props = { bosted: BostedDetail };
+type Props = { bosted: BostedDetail; tpÆndringer?: TpÆndring[] };
 type Felt = { label: string; value: string | null; placeholder?: string };
 
 function FeltRække({ label, value, placeholder = 'Mangler data' }: Felt) {
@@ -70,7 +72,7 @@ function HentTpKnap({ bostedId, cvr }: { bostedId: string; cvr: string }) {
   );
 }
 
-export function BostedOrganisationKort({ bosted }: Props) {
+export function BostedOrganisationKort({ bosted, tpÆndringer = [] }: Props) {
   const adresse = bosted.tpAdresse ?? bosted.adresse ?? null;
   const pladserVærdi = bosted.tpPladsePrParagraf ?? bosted.tpPladser ?? bosted.pladser ?? null;
   const erTpMatchet = !!bosted.tpTilbudstype || !!bosted.tpPNummer;
@@ -140,7 +142,7 @@ export function BostedOrganisationKort({ bosted }: Props) {
           {!adresse && <FeltRække label="Adresse" value={null} />}
           <FeltRække label="Kommune" value={kommune} />
           {bosted.region && <FeltRække label="Region" value={bosted.region} />}
-          <FeltRække label="Pladser" value={pladserVærdi} placeholder={pladserPlaceholder} />
+          <PladserMedHistorik nuværende={pladserVærdi} ændringer={tpÆndringer} />
           <FeltRække label="Tilbudstype" value={bosted.tpTilbudstype} />
           {bosted.tpVirksomhedsNavn && <FeltRække label="Virksomhed" value={bosted.tpVirksomhedsNavn} />}
           {!erTpMatchet && (
@@ -162,24 +164,36 @@ export function BostedOrganisationKort({ bosted }: Props) {
           {harKontakt ? (
             <>
               {(bosted.tpLeder ?? bosted.tpKontaktperson) && (
-                <FeltRække label="Leder" value={bosted.tpLeder ?? bosted.tpKontaktperson} />
+                <div className="bosted-detail-field">
+                  <span className="bosted-detail-field-label">Leder</span>
+                  <div>
+                    <span className="bosted-detail-field-value">{bosted.tpLeder ?? bosted.tpKontaktperson}</span>
+                    <ÆndringsHistorik ændringer={tpÆndringer} felt="leder" />
+                  </div>
+                </div>
               )}
               {bosted.tpTelefon && (
                 <div className="bosted-detail-field">
                   <span className="bosted-detail-field-label">Telefon</span>
-                  <a href={`tel:${bosted.tpTelefon}`} className="bosted-detail-field-value bosted-kontakt-link">
-                    <Phone size={12} />
-                    {bosted.tpTelefon}
-                  </a>
+                  <div>
+                    <a href={`tel:${bosted.tpTelefon}`} className="bosted-detail-field-value bosted-kontakt-link">
+                      <Phone size={12} />
+                      {bosted.tpTelefon}
+                    </a>
+                    <ÆndringsHistorik ændringer={tpÆndringer} felt="telefon" />
+                  </div>
                 </div>
               )}
               {bosted.tpEmail && (
                 <div className="bosted-detail-field">
                   <span className="bosted-detail-field-label">Email</span>
-                  <a href={`mailto:${bosted.tpEmail}`} className="bosted-detail-field-value bosted-kontakt-link">
-                    <Mail size={12} />
-                    {bosted.tpEmail}
-                  </a>
+                  <div>
+                    <a href={`mailto:${bosted.tpEmail}`} className="bosted-detail-field-value bosted-kontakt-link">
+                      <Mail size={12} />
+                      {bosted.tpEmail}
+                    </a>
+                    <ÆndringsHistorik ændringer={tpÆndringer} felt="email" />
+                  </div>
                 </div>
               )}
               {bosted.tpWebsite && (

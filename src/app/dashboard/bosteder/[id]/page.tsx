@@ -6,6 +6,7 @@ import { hentBostedById } from '@/features/dashboard/services/BostedService';
 import { hentKundePakker } from '@/features/monday/services/MondayProdukterService';
 import { erBostedVarslet } from '@/features/varsletTilsyn/services/VarsletTilsynService';
 import { beregnSandsynligeInspektoerer } from '@/features/varsletTilsyn/services/VarsletTilsynService/sandsynlighedService';
+import { hentÆndringshistorikByCvr } from '@/features/tilbudsportalen/repository/TilbudsportalenRepository';
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -17,9 +18,10 @@ export default async function BostedDetailRoute({ params }: PageProps) {
 
   if (!bosted) notFound();
 
-  const [pakker, varslingId] = await Promise.all([
+  const [pakker, varslingId, tpÆndringer] = await Promise.all([
     bosted.mondayItemId ? hentKundePakker(bosted.mondayItemId).catch(() => []) : Promise.resolve([]),
     erBostedVarslet(id),
+    bosted.cvr ? hentÆndringshistorikByCvr(bosted.cvr).catch(() => []) : Promise.resolve([]),
   ]);
 
   const sandsynligeInspektoerer = varslingId
@@ -32,6 +34,7 @@ export default async function BostedDetailRoute({ params }: PageProps) {
       pakker={pakker}
       varslingId={varslingId}
       sandsynligeInspektoerer={sandsynligeInspektoerer}
+      tpÆndringer={tpÆndringer}
     />
   );
 }

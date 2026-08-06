@@ -145,14 +145,34 @@ export async function hentAntalMangler(): Promise<number> {
   return count ?? 0;
 }
 
-// Hent ændringshistorik for et bosted — bruges på bosteds-siden
-export async function hentÆndringshistorik(afdelingsid: string) {
+// Hent ændringshistorik for et bosted via CVR — bruges på bosteds-siden
+export async function hentÆndringshistorikByCvr(cvr: string) {
   const supabase = getSupabaseServerClient();
+
+  // Find alle afdelingsids for dette CVR
+  const { data: afdelinger } = await supabase
+    .from('tilbudsportalen_tilbud')
+    .select('afdelingsid')
+    .eq('cvr', cvr);
+
+  if (!afdelinger || afdelinger.length === 0) return [];
+
+  const afdelingsids = afdelinger.map((a) => a.afdelingsid);
+
   const { data } = await supabase
     .from('tilbudsportalen_aendringer')
-    .select('felt, gammel, ny, opdaget')
-    .eq('afdelingsid', afdelingsid)
+    .select('afdelingsid, felt, gammel, ny, opdaget')
+    .in('afdelingsid', afdelingsids)
     .order('opdaget', { ascending: false })
-    .limit(50);
+    .limit(100);
+
   return data ?? [];
 }
+
+export type TpÆndring = {
+  afdelingsid: string;
+  felt: string;
+  gammel: string | null;
+  ny: string | null;
+  opdaget: string;
+};
