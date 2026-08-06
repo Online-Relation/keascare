@@ -1,8 +1,9 @@
 // src/features/nova/components/NovaPage/NovaPage.tsx
 
 import Image from 'next/image';
-import type { NatsrapportRad } from '@/app/dashboard/nova/page';
+import type { NatsrapportRad, KvalitetSnapshotRad } from '@/app/dashboard/nova/page';
 import { NovaKvalitetsoversigt } from './sections/NovaKvalitetsoversigt';
+import { NovaKvalitetKurve } from './sections/NovaKvalitetKurve';
 import { NovaArbejdslog } from './sections/NovaArbejdslog';
 
 type Datakvalitet = {
@@ -16,11 +17,12 @@ type Datakvalitet = {
 };
 
 type Props = {
-  natsrapporter: NatsrapportRad[];
-  datakvalitet:  Datakvalitet;
+  natsrapporter:    NatsrapportRad[];
+  datakvalitet:     Datakvalitet;
+  kvalitetSnapshots: KvalitetSnapshotRad[];
 };
 
-export function NovaPage({ natsrapporter, datakvalitet }: Props) {
+export function NovaPage({ natsrapporter, datakvalitet, kvalitetSnapshots }: Props) {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem 1.5rem' }}>
 
@@ -47,7 +49,10 @@ export function NovaPage({ natsrapporter, datakvalitet }: Props) {
         </div>
       </div>
 
-      {/* Datakvalitetsoversigt */}
+      {/* Kvalitetsscore over tid */}
+      <NovaKvalitetKurve snapshots={kvalitetSnapshots} />
+
+      {/* Datakvalitetsoversigt — nuværende breakdown */}
       <NovaKvalitetsoversigt datakvalitet={datakvalitet} />
 
       {/* Arbejdslog */}

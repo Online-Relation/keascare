@@ -6,12 +6,19 @@ import { NovaPage } from '@/features/nova/components/NovaPage';
 export default async function NovaSidePage() {
   const supabase = getSupabaseServerClient();
 
-  // Hent de seneste 30 natsrapporter til kvalitetskurven
+  // Hent de seneste 30 natsrapporter til arbejdsloggen
   const { data: natsrapporter } = await supabase
     .from('nova_natsrapport')
     .select('udfort_dato, cvr_beriget, tp_beriget, tp_requeued, los_matchet, monday_matchet, total_fejl')
     .order('udfort_dato', { ascending: false })
     .limit(30);
+
+  // Hent kvalitetsscore-snapshots til kurven (seneste 90 dage)
+  const { data: kvalitetSnapshots } = await supabase
+    .from('nova_kvalitet_snapshot')
+    .select('snapshot_dato, score')
+    .order('snapshot_dato', { ascending: false })
+    .limit(90);
 
   // Hent datakvalitet — beregnet på tværs af stps_rapporter
   const { count: totalBosteder } = await supabase
@@ -64,9 +71,15 @@ export default async function NovaSidePage() {
     <NovaPage
       natsrapporter={(natsrapporter ?? []) as NatsrapportRad[]}
       datakvalitet={datakvalitet}
+      kvalitetSnapshots={(kvalitetSnapshots ?? []) as KvalitetSnapshotRad[]}
     />
   );
 }
+
+export type KvalitetSnapshotRad = {
+  snapshot_dato: string;
+  score:         number;
+};
 
 export type NatsrapportRad = {
   udfort_dato:    string;

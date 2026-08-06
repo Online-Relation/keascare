@@ -38,9 +38,9 @@ function beregnSamletScore(d: Datakvalitet): number {
 }
 
 function scorefarve(score: number): string {
-  if (score >= 75) return 'var(--color-success)';
-  if (score >= 50) return '#f59e0b';
-  return 'var(--color-accent)';
+  if (score >= 75) return '#16a34a';
+  if (score >= 50) return '#d97706';
+  return '#dc2626';
 }
 
 function DimensionRække({ label, antal, total, beskrivelse }: KvalitetsDimension) {
@@ -75,7 +75,7 @@ function DimensionRække({ label, antal, total, beskrivelse }: KvalitetsDimensio
 
 export function NovaKvalitetsoversigt({ datakvalitet: d }: { datakvalitet: Datakvalitet }) {
   const score = beregnSamletScore(d);
-  const farve = scorefarve(score);
+  const farve = score >= 75 ? '#16a34a' : score >= 50 ? '#d97706' : '#dc2626';
 
   const dimensioner: KvalitetsDimension[] = [
     { label: 'CVR-nummer',      antal: d.medCvr,     total: d.total, beskrivelse: 'Bosteder vi kan slå op i CVR og berige med virksomhedsdata' },

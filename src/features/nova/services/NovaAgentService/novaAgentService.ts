@@ -14,6 +14,7 @@
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { slaaPNummerOp } from '@/lib/api/CvrClient';
 import { matchLosTilBosted } from '@/features/los/repository/LosRepository';
+import { gemKvalitetSnapshot } from '@/features/nova/services/NovaKvalitetService';
 
 function venteMs(ms: number) {
   return new Promise((r) => setTimeout(r, ms));
@@ -159,12 +160,13 @@ async function reQueueGamleTP(supabase: ReturnType<typeof getSupabaseServerClien
 export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>> {
   const supabase = getSupabaseServerClient();
 
-  const [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue] = await Promise.allSettled([
+  const [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue, kvalitet] = await Promise.allSettled([
     matchPNummerTilCvr(supabase, batch),
     matchCvrTilTilbudsportalen(supabase, batch),
     synkroniserLosFlag(),
     synkroniserMondayFlag(supabase),
     reQueueGamleTP(supabase),
+    gemKvalitetSnapshot(),
   ]);
 
   const resultat = {
@@ -174,6 +176,7 @@ export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>
     losFlag:             losFlag.status       === 'fulfilled' ? losFlag.value      : { fejl: String((losFlag as PromiseRejectedResult).reason) },
     mondayFlag:          mondayFlag.status    === 'fulfilled' ? mondayFlag.value   : { fejl: String((mondayFlag as PromiseRejectedResult).reason) },
     tpReQueue:           tpReQueue.status     === 'fulfilled' ? tpReQueue.value    : { fejl: String((tpReQueue as PromiseRejectedResult).reason) },
+    kvalitetScore:       kvalitet.status      === 'fulfilled' ? { score: kvalitet.value.score, dato: kvalitet.value.dato } : { fejl: String((kvalitet as PromiseRejectedResult).reason) },
   };
 
   // Gem natsrapport så banneret kan vise hvad Nova arbejdede på
