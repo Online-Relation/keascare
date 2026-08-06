@@ -256,6 +256,20 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
     if (!linje || linje.length < 3) continue;
 
     // Spring overskrifter og metadata over
+    // Særtilfælde: "Tilsynet blev foretaget af: Navn, titel" — navn kan stå inline på samme linje
+    const foretagetAfInline = linje.match(/^Tilsynet blev foretaget af:\s*(.+)/i);
+    if (foretagetAfInline) {
+      const rest = foretagetAfInline[1].trim();
+      const kommaIdxInline = rest.indexOf(',');
+      if (kommaIdxInline !== -1) {
+        const muligNavn = rest.substring(0, kommaIdxInline).trim();
+        const muligTitel = rest.substring(kommaIdxInline + 1).trim();
+        if (erSandsynligtNavn(muligNavn)) deltagere.push({ navn: muligNavn, titel: muligTitel || null });
+      } else if (erSandsynligtNavn(rest)) {
+        deltagere.push({ navn: rest, titel: null });
+      }
+      continue;
+    }
     if (/^(Tilsynet blev foretaget af|Ved tilsynet|deltog:|afsluttende opsamling)/i.test(linje)) continue;
     if (/\d{2}[-\.]\d{2}[-\.]\d{4}/.test(linje)) continue; // datoer
     if (linje.includes('://') || linje.includes('@')) continue; // URLs, emails
