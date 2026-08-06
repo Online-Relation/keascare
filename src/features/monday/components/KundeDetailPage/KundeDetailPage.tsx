@@ -9,6 +9,7 @@ type Props = {
   navn: string;
   gruppeNavn: string;
   forloebsansvarlig: string | null;
+  primaerSygeplejerske: string | null;
   oprettetDato: string | null;
   status: string | null;
   adresse: string | null;
@@ -21,7 +22,7 @@ type Fase = 'input' | 'bekræft' | 'henter' | 'færdig';
 
 const MONDAY_BOARD_URL = 'https://onlinerelation.monday.com/boards';
 
-export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, oprettetDato, status, adresse, pakker }: Props) {
+export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig, primaerSygeplejerske, oprettetDato, status, adresse, pakker }: Props) {
   const [cvr, setCvr] = useState('');
   const [fase, setFase] = useState<Fase>('input');
   const [cvrOpslag, setCvrOpslag] = useState<CvrOpslag | null>(null);
@@ -149,6 +150,7 @@ export function KundeDetailPage({ mondayId, navn, gruppeNavn, forloebsansvarlig,
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
           {[
             { label: 'Forløbsansvarlig', værdi: forloebsansvarlig ?? '—' },
+            { label: 'Primær sygeplejerske', værdi: primaerSygeplejerske ?? '—' },
             { label: 'Status', værdi: status ?? '—' },
             { label: 'Oprettet', værdi: oprettetDato ? new Date(oprettetDato).toLocaleDateString('da-DK') : '—' },
           ].map((r) => (

@@ -180,6 +180,7 @@ function mapTilKundeItem(item: RåMondayItem): MondayKundeItem {
     website:          findKolonneVærdi(item, 'Forløb Website'),
     oprettetDato:     findKolonneVærdi(item, 'Oprettelsesdato'),
     forløbsansvarlig: findKolonneVærdi(item, 'Forløbsansvarlig'),
+    primærSygeplejerske: findKolonneVærdi(item, 'Primær sygeplejerske'),
     opfølgningsdato:  findKolonneVærdi(item, 'Opfølgningsdato'),
     afsluttetDato:    findKolonneVærdi(item, 'Last updated'),
     status:           findKolonneVærdi(item, 'Status'),

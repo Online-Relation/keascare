@@ -13,6 +13,7 @@ export type MondayKundeItem = {
   website: string | null;
   oprettetDato: string | null;
   forløbsansvarlig: string | null;
+  primærSygeplejerske: string | null;
   opfølgningsdato: string | null;
   afsluttetDato: string | null;
   status: string | null;

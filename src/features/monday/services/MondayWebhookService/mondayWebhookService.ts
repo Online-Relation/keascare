@@ -53,6 +53,7 @@ export async function syncMondayItem(itemId: string): Promise<void> {
     website:            findKolonne(item, 'Forløb Website'),
     oprettet_dato:      findKolonne(item, 'Oprettelsesdato') || null,
     forloebsansvarlig:  findKolonne(item, 'Forløbsansvarlig') || null,
+    primaer_sygeplejerske: findKolonne(item, 'Primær sygeplejerske') || null,
     opfoelgningsdato:   findKolonne(item, 'Opfølgningsdato') || null,
     afsluttet_dato:     findKolonne(item, 'Last updated') || null,
     status:             findKolonne(item, 'Status'),

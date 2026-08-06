@@ -29,6 +29,7 @@ export async function synkroniserMondayKunder(): Promise<MondaySyncResultat> {
     website:            k.website,
     oprettet_dato:      k.oprettetDato || null,
     forloebsansvarlig:  k.forløbsansvarlig || null,
+    primaer_sygeplejerske: k.primærSygeplejerske || null,
     opfoelgningsdato:   k.opfølgningsdato || null,
     afsluttet_dato:     k.afsluttetDato || null,
     status:             k.status,

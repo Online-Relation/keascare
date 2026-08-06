@@ -38,6 +38,7 @@ function mapItem(item: RåItem): MondayKundeItem {
     website:          findKolonne(item, 'Forløb Website'),
     oprettetDato:     findKolonne(item, 'Oprettelsesdato'),
     forløbsansvarlig: findKolonne(item, 'Forløbsansvarlig'),
+    primærSygeplejerske: findKolonne(item, 'Primær sygeplejerske'),
     opfølgningsdato:  findKolonne(item, 'Opfølgningsdato'),
     afsluttetDato:    findKolonne(item, 'Last updated'),
     status:           findKolonne(item, 'Status'),

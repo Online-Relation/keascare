@@ -27,6 +27,7 @@ export default async function KundeDetailRoute({ params }: PageProps) {
       navn={data.navn ?? ''}
       gruppeNavn={data.gruppe_navn ?? ''}
       forloebsansvarlig={data.forloebsansvarlig}
+      primaerSygeplejerske={data.primaer_sygeplejerske}
       oprettetDato={data.oprettet_dato}
       status={data.status}
       adresse={data.adresse || null}

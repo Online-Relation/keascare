@@ -26,6 +26,7 @@ export async function GET() {
       website:          r.website,
       oprettetDato:     r.oprettet_dato,
       forløbsansvarlig: r.forloebsansvarlig,
+      primærSygeplejerske: r.primaer_sygeplejerske,
       opfølgningsdato:  r.opfoelgningsdato,
       afsluttetDato:    r.afsluttet_dato,
       status:           r.status,
