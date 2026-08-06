@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { COOKIE_NAVN, COOKIE_LOS } from '@/lib/config/GlobalFilter';
+import { COOKIE_NAVN, COOKIE_LOS, COOKIE_PARAGRAF43 } from '@/lib/config/GlobalFilter';
 
 const COOKIE_OPTS = {
   path: '/',
@@ -21,5 +21,11 @@ export async function setVisFilter(filter: 'alle' | 'privat') {
 export async function setLosFilter(filter: 'ekskluder' | 'inkluder') {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_LOS, filter, COOKIE_OPTS);
+  revalidatePath('/dashboard', 'layout');
+}
+
+export async function setParagraf43Filter(filter: 'alle' | 'kun_43') {
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_PARAGRAF43, filter, COOKIE_OPTS);
   revalidatePath('/dashboard', 'layout');
 }

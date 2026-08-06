@@ -1,7 +1,7 @@
 // src/features/rapporter/services/RapporterService/rapporterService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, privatFilterTpOr, privatFilterCvrOr, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type {
   RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
@@ -27,8 +27,10 @@ type DbRapport = {
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
   const supabase = getSupabaseServerClient();
   const visFilter = await getVisFilter();
+  const paragraf43Filter = await getParagraf43Filter();
 
-  let stpsQuery = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let stpsQuery: any = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, cvr, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem, monday_item_id, monday_gruppe')
     .order('rapport_dato', { ascending: false })
@@ -37,16 +39,25 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (visFilter === 'privat') {
     stpsQuery = stpsQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
+  if (paragraf43Filter === 'kun_43') {
+    stpsQuery = stpsQuery.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
+    stpsQuery = stpsQuery.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
+  }
 
   const idag = new Date().toISOString().slice(0, 10);
   if (fra) stpsQuery = stpsQuery.gte('rapport_dato', fra);
   stpsQuery = stpsQuery.lte('rapport_dato', til ?? idag);
 
-  let dbTotalQuery = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let dbTotalQuery: any = supabase
     .from('stps_rapporter')
     .select('*', { count: 'exact', head: true });
   if (visFilter === 'privat') {
     dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
+  }
+  if (paragraf43Filter === 'kun_43') {
+    dbTotalQuery = dbTotalQuery.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
+    dbTotalQuery = dbTotalQuery.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
   }
 
   const losQuery = supabase.from('los_medlemmer').select('cvr').not('cvr', 'is', null);

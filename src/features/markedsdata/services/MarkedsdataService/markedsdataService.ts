@@ -2,8 +2,8 @@
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { MarkedsdataStats, MarkedsdataBosted, KommuneMarked, OpmærksomhedSignal } from '@/features/markedsdata/types/markedsdata.types';
-import type { LosFilter, VisFilter } from '@/lib/config/GlobalFilter';
-import { KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import type { LosFilter, VisFilter, ParagrafFilter } from '@/lib/config/GlobalFilter';
+import { KOMMUNALE_DRIFTSFORMER, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER } from '@/lib/config/GlobalFilter';
 import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 
@@ -13,31 +13,47 @@ type RåRapport = {
   kommune: string | null;
   fund_niveau: string | null;
   rapport_dato: string | null;
+  rapport_url: string | null;
+  tp_tilbudstype: string | null;
   monday_item_id: string | null;
   monday_gruppe: string | null;
   los_medlem: boolean | null;
 };
 
-export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: LosFilter = 'ekskluder', visFilter: VisFilter = 'alle'): Promise<MarkedsdataStats> {
+export async function hentMarkedsdataStats(
+  dstData: DstKommuneRå[],
+  losFilter: LosFilter = 'ekskluder',
+  visFilter: VisFilter = 'alle',
+  paragraf43Filter: ParagrafFilter = 'alle',
+): Promise<MarkedsdataStats> {
   const supabase = getSupabaseServerClient();
 
   // Hent STPS-bosteder — filtrer LOS fra hvis ekskluder
-  let query = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, monday_item_id, monday_gruppe, los_medlem')
+    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, rapport_url, tp_tilbudstype, monday_item_id, monday_gruppe, los_medlem')
     .order('rapport_dato', { ascending: false, nullsFirst: false });
 
   if (losFilter === 'ekskluder') {
     query = query.or('los_medlem.is.null,los_medlem.eq.false');
+  }
+  if (paragraf43Filter === 'kun_43') {
+    query = query.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
+    query = query.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
   }
 
   const { data } = await query;
   const rækker = (data ?? []) as RåRapport[];
 
   // Totalt marked = alle tilbud fra Tilbudsportalen (±LOS)
-  let tpQuery = supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let tpQuery: any = supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true });
   if (visFilter === 'privat') {
     tpQuery = tpQuery.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.map((d) => `"${d}"`).join(',')})`);
+  }
+  if (paragraf43Filter === 'kun_43') {
+    tpQuery = tpQuery.ilike('tilbudstype', PARAGRAF_43_MØNSTER);
   }
   const [{ count: tpCount }, { count: losCount }] = await Promise.all([
     tpQuery,

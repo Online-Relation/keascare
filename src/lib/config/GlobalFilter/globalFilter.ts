@@ -4,9 +4,11 @@ import { cookies } from 'next/headers';
 
 export type VisFilter = 'alle' | 'privat';
 export type LosFilter = 'ekskluder' | 'inkluder';
+export type ParagrafFilter = 'alle' | 'kun_43';
 
 export const COOKIE_NAVN = 'keascare-vis-filter';
 export const COOKIE_LOS = 'keascare-los-filter';
+export const COOKIE_PARAGRAF43 = 'keascare-paragraf43-filter';
 
 // Driftsformer der betragtes som kommunale og EKSKLUDERES ved privat-filter
 export const KOMMUNALE_DRIFTSFORMER = [
@@ -29,6 +31,20 @@ export async function getLosFilter(): Promise<LosFilter> {
   const val = cookieStore.get(COOKIE_LOS)?.value;
   return val === 'ekskluder' ? 'ekskluder' : 'inkluder';
 }
+
+export async function getParagraf43Filter(): Promise<ParagrafFilter> {
+  const cookieStore = await cookies();
+  const val = cookieStore.get(COOKIE_PARAGRAF43)?.value;
+  return val === 'kun_43' ? 'kun_43' : 'alle';
+}
+
+// Fælles §43-mønster — hold det ét sted, men anvend det direkte med
+// .ilike(kolonne, PARAGRAF_43_MØNSTER) ved hvert kald (Supabase-query-typen
+// er for dybt genereret til at kunne wrappes generisk uden TS-timeout).
+export const PARAGRAF_43_MØNSTER = '%43%';
+// Markør sat på rapport_url når der IKKE er en ægte STPS-tilsynsrapport —
+// bruges til at kræve en ægte rapport ved siden af §43-mønsteret.
+export const SYNTETISK_RAPPORT_MØNSTER = 'stps://genereret/%';
 
 // PostgREST not.in filter-streng til brug i Supabase-queries
 export function driftsformFilterStreng(): string {

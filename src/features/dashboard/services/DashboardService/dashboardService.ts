@@ -1,7 +1,7 @@
 // src/features/dashboard/services/DashboardService/dashboardService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, privatFilterTpOr, privatFilterCvrOr, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
 import { beregnMondayKundeStatus, erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
@@ -290,8 +290,10 @@ function beregnSalgsFunnel(rapporter: DbRapport[]) {
 export async function hentDashboardData(fra?: string, til?: string): Promise<DashboardData> {
   const supabase = getSupabaseServerClient();
   const visFilter = await getVisFilter();
+  const paragraf43Filter = await getParagraf43Filter();
 
-  let query = supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = supabase
     .from('stps_rapporter')
     .select('id, stps_tilbud_navn, rapport_dato, rapport_url, fund_niveau, fokus_omraader, temaer, kommune, region, tilsynsform, scraper_dato, tp_tilbudstype, cvr, pdf_vurdering, tp_p_nummer, tp_email, tp_telefon, adresse, pladser, tp_adresse, tp_website, tp_pladser, tp_driftsform, monday_item_id, monday_gruppe, sor_kode, tp_tilsynsmyndighed')
     .not('rapport_dato', 'is', null)
@@ -300,6 +302,10 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
 
   if (visFilter === 'privat') {
     query = query.or(privatFilterTpOr()).or(privatFilterCvrOr());
+  }
+  if (paragraf43Filter === 'kun_43') {
+    query = query.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
+    query = query.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
   }
 
   const idag = new Date().toISOString().slice(0, 10);
@@ -331,7 +337,9 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
     if (visFilter === 'privat') {
       q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
     }
-    if (paragraf) {
+    if (paragraf43Filter === 'kun_43') {
+      q = q.ilike('tilbudstype', PARAGRAF_43_MØNSTER);
+    } else if (paragraf) {
       q = q.or(`tilbudstype.ilike.%§ ${paragraf}%,tilbudstype.ilike.%§${paragraf}%`);
     }
     return q;

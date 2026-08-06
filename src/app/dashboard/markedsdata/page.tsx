@@ -4,17 +4,18 @@ import { MarkedsdataPage } from '@/features/markedsdata/components/MarkedsdataPa
 import { hentDstFraCache, hentDstKommuneData, hentDstÅrligeData } from '@/lib/api/DstClient';
 import { hentMarkedsdataStats } from '@/features/markedsdata/services/MarkedsdataService';
 import { hentSenesteAiAnalyse } from '@/features/markedsdata/services/AiAnalyseService';
-import { getLosFilter, getVisFilter } from '@/lib/config/GlobalFilter';
+import { getLosFilter, getVisFilter, getParagraf43Filter } from '@/lib/config/GlobalFilter';
 
 export const revalidate = 0;
 
 export default async function MarkedsdataSide() {
-  const [cacheResultat, årligeData, aiAnalyse, losFilter, visFilter] = await Promise.all([
+  const [cacheResultat, årligeData, aiAnalyse, losFilter, visFilter, paragraf43Filter] = await Promise.all([
     hentDstFraCache(),
     hentDstÅrligeData(2016).catch(() => []),
     hentSenesteAiAnalyse('markedsdata').catch(() => null),
     getLosFilter(),
     getVisFilter(),
+    getParagraf43Filter(),
   ]);
 
   let dstData = cacheResultat.data;
@@ -24,7 +25,7 @@ export default async function MarkedsdataSide() {
     dstData = await hentDstKommuneData();
   }
 
-  const stats = await hentMarkedsdataStats(dstData, losFilter, visFilter);
+  const stats = await hentMarkedsdataStats(dstData, losFilter, visFilter, paragraf43Filter);
 
   return (
     <MarkedsdataPage
