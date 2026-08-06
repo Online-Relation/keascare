@@ -19,9 +19,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
 import { kørDetaljerScraper } from '@/features/stps/scraper/StpsDetaljerScraper';
+import { kørFundItemsScraper } from '@/features/stps/services/StpsFundItemsService';
+import { kørPNummerScraper } from '@/features/stps/services/StpsPNummerService';
 import { opdaterCvrAnsatte } from '@/features/stps/services/CvrAnsatteService';
 import { berigMedCvr } from '@/features/stps/services/CvrEnricherService';
 import { kørCvrSignalScraper } from '@/features/cvr/scraper/CvrSignalScraper/cvrSignalScraper';
+import { kørGeocoderBatch } from '@/features/kort/services/GeocoderService/geocoderBatch';
+import { scraperLosDetaljer } from '@/features/los/scraper/LosDetaljerScraper';
+import { matchLosTilBosted } from '@/features/los/repository/LosRepository';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 async function kald(endpoint: string, body: Record<string, unknown>, secret: string): Promise<Record<string, unknown>> {
@@ -57,7 +62,6 @@ export async function POST(request: NextRequest) {
   }
 
   // Start jobbet i baggrunden og svar 200 OK med det samme
-  // så cron-job.org ikke timeout'er (jobbet kører stadig på Railway)
   kørBaggrund(secret).catch(console.error);
   return NextResponse.json({ ok: true, besked: 'Daglig scraper startet i baggrunden', startet: new Date().toISOString() });
 }
@@ -66,7 +70,7 @@ async function kørBaggrund(secret: string) {
   const resultater: Record<string, unknown> = {};
   const syncToken = process.env.SYNC_SECRET_TOKEN ?? '';
 
-  // 1. SOR — synkroniser organisationsregister (ingen blokering på Railway)
+  // 1. SOR — synkroniser organisationsregister
   await kør('sor-sync', async () => {
     const base = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
     const res = await fetch(`${base}/api/sor/sync`, {
@@ -77,42 +81,45 @@ async function kørBaggrund(secret: string) {
     return res.json() as Promise<Record<string, unknown>>;
   }, resultater);
 
-  // 2. STPS — hent nye tilsynsrapporter
+  // 2. STPS — hent nye tilsynsrapporter (direkte funktionskald)
   await kør('stps', () => kørStpsScraper({ maxSider: 10 }), resultater);
 
-  // 2. STPS — parse PDF'er (batch 50)
+  // 3. STPS — parse PDF'er (direkte funktionskald)
   await kør('stps-detaljer', () => kørDetaljerScraper(50), resultater);
 
-  // 3. STPS — udtræk strukturerede fund-items (batch 30)
-  await kør('stps-fund-items', () => kald('/api/scrapers/stps/fund-items', { batch: 30 }, secret), resultater);
+  // 4. STPS — udtræk strukturerede fund-items (direkte funktionskald)
+  await kør('stps-fund-items', () => kørFundItemsScraper(30), resultater);
 
-  // 4. STPS — udtræk P-numre fra PDF'er (batch 50)
-  await kør('stps-pnummer', () => kald('/api/scrapers/stps/pnummer', { batch: 50 }, secret), resultater);
+  // 5. STPS — udtræk P-numre fra PDF'er (direkte funktionskald)
+  await kør('stps-pnummer', () => kørPNummerScraper(50), resultater);
 
-  // 5. CVR — berig med CVR-nummer via P-nummer (batch 50)
+  // 6. CVR — berig med CVR-nummer via P-nummer (direkte funktionskald)
   await kør('cvr-berig', () => berigMedCvr(50), resultater);
 
-  // 6. CVR — opdater ansatte og virksomhedsdata (batch 200)
+  // 7. CVR — opdater ansatte og virksomhedsdata (direkte funktionskald)
   await kør('cvr-ansatte', () => opdaterCvrAnsatte(200), resultater);
 
-  // 7. CVR signaler — nye bosted-registreringer (kræver CVR_USER + CVR_PASS)
+  // 8. CVR signaler — nye bosted-registreringer (kræver CVR_USER + CVR_PASS)
   if (process.env.CVR_USER && process.env.CVR_PASS) {
     await kør('cvr-signaler', () => kørCvrSignalScraper(2), resultater);
   } else {
     resultater['cvr-signaler'] = { springetOver: 'CVR_USER/CVR_PASS ikke sat' };
   }
 
-  // 8. Regelovervågning — Retsinformation + STPS-nyheder
+  // 9. Regelovervågning — Retsinformation + STPS-nyheder (via HTTP, da den kræver ekstern fetch)
   await kør('regelovervagning', () => kald('/api/scrapers/regelovervagning', {}, secret), resultater);
 
-  // 9. Geocoder — koordinater til kortvisning (batch 100)
-  await kør('geocoder', () => kald('/api/scrapers/geocoder', { batch: 100 }, secret), resultater);
+  // 10. Geocoder — koordinater til kortvisning (direkte funktionskald)
+  await kør('geocoder', () => kørGeocoderBatch(100), resultater);
 
-  // 10. LOS — hent detaljer for nye medlemmer (batch 20)
-  await kør('los-detaljer', () => kald('/api/scrapers/los', { trin: 'detaljer', max: 20 }, secret), resultater);
+  // 11. LOS — hent detaljer for nye medlemmer (direkte funktionskald)
+  await kør('los-detaljer', () => scraperLosDetaljer(20), resultater);
 
-  // 11. LOS — match mod bosteder via CVR
-  await kør('los-match', () => kald('/api/scrapers/los', { trin: 'match' }, secret), resultater);
+  // 12. LOS — match mod bosteder via CVR (direkte funktionskald)
+  await kør('los-match', async () => {
+    const matchet = await matchLosTilBosted();
+    return { ok: true, matchet };
+  }, resultater);
 
   await logScraperKørsel('daglig-cron', true, { kørt: new Date().toISOString(), ...resultater });
 }
