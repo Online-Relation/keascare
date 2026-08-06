@@ -1,11 +1,13 @@
 'use client';
 
 import { CheckCircle2, XCircle } from 'lucide-react';
-import { MENU_PUNKTER, harAdgang, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
+import { MENU_PUNKTER, harDynamiskAdgang, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
+import { useRolleRettigheder } from '@/features/auth/components/RolleRettighederProvider';
 
 type Props = { rolle: BrugerRolle };
 
 export function RolleAdgangOversigt({ rolle }: Props) {
+  const { rettigheder: dbRettigheder } = useRolleRettigheder();
   const grupper = Array.from(new Set(MENU_PUNKTER.map((p) => p.gruppe)));
 
   return (
@@ -23,7 +25,7 @@ export function RolleAdgangOversigt({ rolle }: Props) {
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
                 {punkter.map((punkt) => {
-                  const har = harAdgang(rolle, punkt.href);
+                  const har = harDynamiskAdgang(rolle, punkt.href, dbRettigheder);
                   return (
                     <div key={punkt.href} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                       {har

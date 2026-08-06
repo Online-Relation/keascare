@@ -75,14 +75,37 @@ export const ROLLE_ADGANG: Record<BrugerRolle, string[] | '*'> = {
 // matcher. Tilføj/fjern menupunkter i navigation.config.ts — ikke her.
 export { NAV_GRUPPER as MENU_PUNKTER } from '@/features/dashboard/config/NavigationConfig/navigation.config';
 
+function matcherSti(stier: string[], href: string): boolean {
+  // Eksakt match eller præfiks-match (men kun /dashboard alene matcher ikke /dashboard/xxx)
+  return stier.some((tilladt) =>
+    href === tilladt || (tilladt !== '/dashboard' && href.startsWith(tilladt))
+  );
+}
+
 export function harAdgang(rolle: BrugerRolle | null | undefined, href: string): boolean {
   if (!rolle) return false;
   const adgang = ROLLE_ADGANG[rolle];
   if (adgang === '*') return true;
-  // Eksakt match eller præfiks-match (men kun /dashboard alene matcher ikke /dashboard/xxx)
-  return adgang.some((tilladt) =>
-    href === tilladt || (tilladt !== '/dashboard' && href.startsWith(tilladt))
-  );
+  return matcherSti(adgang, href);
+}
+
+// Samme som harAdgang, men bruger de DB-gemte rettigheder fra
+// RolleRettighederProvider når en rolle har fået gemt en rettighedsliste.
+// Falder tilbage til den statiske ROLLE_ADGANG for roller der aldrig er
+// blevet gemt eksplicit (fx lige efter deploy, før nogen har trykket
+// "Gem rettigheder") — så ingen bliver låst ude ved et uheld.
+export function harDynamiskAdgang(
+  rolle: BrugerRolle | null | undefined,
+  href: string,
+  dbRettigheder: Partial<Record<BrugerRolle, string[]>>,
+): boolean {
+  if (!rolle) return false;
+  if (rolle === 'development') return true;
+
+  const gemteStier = dbRettigheder[rolle];
+  if (gemteStier) return matcherSti(gemteStier, href);
+
+  return harAdgang(rolle, href);
 }
 
 export function kanTildelleRolle(tildelerRolle: BrugerRolle | null | undefined, målRolle: BrugerRolle): boolean {

@@ -15,8 +15,9 @@ import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAu
 import { useRouter } from 'next/navigation';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
-import { harAdgang, ROLLE_LABELS } from '@/features/auth/config/roller.config';
+import { harDynamiskAdgang, ROLLE_LABELS } from '@/features/auth/config/roller.config';
 import { NAV_GRUPPER } from '@/features/dashboard/config/NavigationConfig/navigation.config';
+import { useRolleRettigheder } from '@/features/auth/components/RolleRettighederProvider';
 
 type NavItem = { label: string; href: string; icon: React.ElementType };
 
@@ -93,7 +94,8 @@ export function DashboardSidebar() {
   const erRegelovervagningAktiv = pathname.startsWith('/dashboard/regelovervagning');
   const [regelovervagningÅben, setRegelovervagningÅben] = useState(erRegelovervagningAktiv);
 
-  const vis = (href: string) => !loading && harAdgang(rolle, href);
+  const { rettigheder: dbRettigheder, loading: rettighederLoading } = useRolleRettigheder();
+  const vis = (href: string) => !loading && !rettighederLoading && harDynamiskAdgang(rolle, href, dbRettigheder);
 
   async function logUd() {
     const supabase = getSupabaseAuthBrowserClient();

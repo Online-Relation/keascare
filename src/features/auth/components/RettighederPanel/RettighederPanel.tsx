@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from 'react';
 import { ShieldCheck, Save } from 'lucide-react';
-import { MENU_PUNKTER, type BrugerRolle } from '@/features/auth/config/roller.config';
+import { MENU_PUNKTER, harAdgang, type BrugerRolle } from '@/features/auth/config/roller.config';
 
 const ROLLER: { rolle: BrugerRolle; label: string }[] = [
   { rolle: 'direktør',         label: 'Direktør' },
@@ -24,11 +24,20 @@ export function RettighederPanel() {
     fetch('/api/admin/rolle-rettigheder')
       .then((r) => r.json())
       .then((data) => {
+        const map: Rettigheder = {};
+        const gemteRoller = new Set<string>();
         if (data.ok) {
-          const map: Rettigheder = {};
-          for (const row of data.rettigheder) map[row.rolle] = row.stier;
-          setRettigheder(map);
+          for (const row of data.rettigheder) { map[row.rolle] = row.stier; gemteRoller.add(row.rolle); }
         }
+        // Roller der aldrig er blevet gemt eksplicit skal IKKE vises som "ingen adgang" —
+        // forudfyld med den nuværende reelle adgang (statisk fallback), så et uovervejet
+        // tryk på "Gem rettigheder" ikke låser rollen ude af alt.
+        for (const { rolle } of ROLLER) {
+          if (!gemteRoller.has(rolle)) {
+            map[rolle] = MENU_PUNKTER.filter((p) => harAdgang(rolle, p.href)).map((p) => p.href);
+          }
+        }
+        setRettigheder(map);
         setLoader(false);
       });
   }, []);
