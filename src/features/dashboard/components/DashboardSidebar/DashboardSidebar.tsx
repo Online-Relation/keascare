@@ -8,7 +8,7 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
-  FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
+  FileText, RefreshCw, Megaphone, ChevronDown, ChevronRight,
   Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Bot,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
@@ -16,31 +16,44 @@ import { useRouter } from 'next/navigation';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import { harAdgang, ROLLE_LABELS } from '@/features/auth/config/roller.config';
+import { NAV_GRUPPER } from '@/features/dashboard/config/NavigationConfig/navigation.config';
 
 type NavItem = { label: string; href: string; icon: React.ElementType };
 
-const gruppeOverblik: NavItem[] = [
-  { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-];
+// Ikoner holdes udelukkende her (navigation.config.ts må ikke afhænge af lucide-react).
+// Nyt menupunkt tilføjes i navigation.config.ts — tilføj blot dets ikon her ved siden af.
+const IKON_FOR_HREF: Record<string, React.ElementType> = {
+  '/dashboard':                        LayoutDashboard,
+  '/dashboard/markedspotentiale':      Target,
+  '/dashboard/markedsdata':            BarChart2,
+  '/dashboard/kort':                   Map,
+  '/dashboard/rapporter':              ClipboardList,
+  '/dashboard/alle-rapporter':         FileText,
+  '/dashboard/rapporter/inspektoerer': UserCheck,
+  '/dashboard/kunder':                 Building2,
+  '/dashboard/produkter':              Package,
+  '/dashboard/tidsregistrering':       Timer,
+  '/dashboard/pakker':                 Package,
+  '/dashboard/nova':                   Bot,
+  '/dashboard/monitor':                Activity,
+  '/dashboard/systemstatus':           BarChart2,
+  '/dashboard/scrapers':               RefreshCw,
+  '/dashboard/monday-test':            FlaskConical,
+  '/dashboard/indstillinger':          Settings,
+  '/dashboard/admin/brugere':          Users,
+};
 
-const gruppeMarked: NavItem[] = [
-  { label: 'Markedspotentiale', href: '/dashboard/markedspotentiale', icon: Target },
-  { label: 'Markedsdata',       href: '/dashboard/markedsdata',       icon: BarChart2 },
-  { label: 'Bosteder på kort',  href: '/dashboard/kort',              icon: Map },
-];
+function grupItems(gruppe: string): NavItem[] {
+  return NAV_GRUPPER
+    .filter((p) => p.gruppe === gruppe)
+    .map((p) => ({ label: p.label, href: p.href, icon: IKON_FOR_HREF[p.href] ?? Settings }));
+}
 
-const gruppeTilsyn: NavItem[] = [
-  { label: 'Kritiske rapporter', href: '/dashboard/rapporter',              icon: ClipboardList },
-  { label: 'Alle rapporter',     href: '/dashboard/alle-rapporter',         icon: FileText },
-  { label: 'STPS-inspektører',  href: '/dashboard/rapporter/inspektoerer', icon: UserCheck },
-];
-
-const gruppeCrm: NavItem[] = [
-  { label: 'Kunder',             href: '/dashboard/kunder',            icon: Building2 },
-  { label: 'Produkter',          href: '/dashboard/produkter',         icon: Package },
-  { label: 'Tidsregistrering',   href: '/dashboard/tidsregistrering',  icon: Timer },
-  { label: 'Pakker',             href: '/dashboard/pakker',            icon: Package },
-];
+const gruppeOverblik = grupItems('Overblik');
+const gruppeMarked = grupItems('Marked');
+const gruppeTilsyn = grupItems('Tilsyn');
+const gruppeCrm = grupItems('CRM');
+const gruppeSystem = grupItems('System');
 
 const gruppeMarkedsforing = [
   { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
@@ -52,16 +65,6 @@ const gruppeRegelovervagning: NavItem[] = [
   { label: 'Overblik',        href: '/dashboard/regelovervagning',                icon: ShieldCheck },
   { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation', icon: Scale },
   { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder',    icon: Newspaper },
-];
-
-const gruppeSystem: NavItem[] = [
-  { label: 'Nova',          href: '/dashboard/nova',             icon: Bot },
-  { label: 'Live Monitor',  href: '/dashboard/monitor',          icon: Activity },
-  { label: 'Systemstatus',  href: '/dashboard/systemstatus',     icon: BarChart2 },
-  { label: 'Scrapers',      href: '/dashboard/scrapers',         icon: RefreshCw },
-  { label: 'Monday test',   href: '/dashboard/monday-test',      icon: FlaskConical },
-  { label: 'Indstillinger', href: '/dashboard/indstillinger',    icon: Settings },
-  { label: 'Brugere',       href: '/dashboard/admin/brugere',    icon: Users },
 ];
 
 function NavGruppe({ label, items, pathname }: { label: string; items: NavItem[]; pathname: string }) {
@@ -132,8 +135,12 @@ export function DashboardSidebar() {
           />
         )}
 
-        {vis('/dashboard/kunder') && (
-          <NavGruppe label="CRM" items={gruppeCrm} pathname={pathname} />
+        {gruppeCrm.some((i) => vis(i.href)) && (
+          <NavGruppe
+            label="CRM"
+            items={gruppeCrm.filter((i) => vis(i.href))}
+            pathname={pathname}
+          />
         )}
 
         {vis('/dashboard/markedsforing') && (
