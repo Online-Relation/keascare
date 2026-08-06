@@ -4,6 +4,7 @@ import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { BostedDetail, FundItem, StpsFundNiveau, DataKvalitet } from '@/features/dashboard/types/dashboard.types';
 import type { SalgsAnbefalinger } from '@/features/dashboard/types/salg.types';
 import type { TilsynDeltager } from '@/features/stps/scraper/StpsPdfParser';
+import { beregnMondayKundeStatus } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 
 type DbRapport = {
   id: string;
@@ -124,9 +125,10 @@ function mapTilBostedDetail(r: DbRapport): BostedDetail {
     salgsAnbefalinger: (r.salgs_anbefalinger as SalgsAnbefalinger | null) ?? null,
     tilsynDeltagereStps: null,
     tilsynDeltagereBosted: null,
-    mondayKunde: r.monday_item_id ? 'kunde' : 'ingen',
+    mondayKunde: beregnMondayKundeStatus(r.monday_item_id, r.monday_gruppe),
     mondayGruppe: r.monday_gruppe ?? null,
     mondayItemId: r.monday_item_id ?? null,
+    mondayPrimaerSygeplejerske: null,
     erGigant: r.er_gigant ?? false,
     cvrAntalAfdelinger: null,
     regnskabAar: r.regnskab_aar ?? null,
@@ -193,5 +195,24 @@ export async function hentBostedById(id: string): Promise<BostedDetail | null> {
     // Kolonnerne eksisterer ikke endnu — ignorer
   }
 
-  return { ...mapTilBostedDetail(rapport), cvrAntalAfdelinger, erGigant, tilsynDeltagereStps, tilsynDeltagereBosted };
+  // Hent primær sygeplejerske fra Monday hvis bostedet er matchet — feltet
+  // ligger på monday_kunder, ikke selve STPS-rapporten.
+  let mondayPrimaerSygeplejerske: string | null = null;
+  if (rapport.monday_item_id) {
+    const { data: mondayData } = await supabase
+      .from('monday_kunder')
+      .select('primaer_sygeplejerske')
+      .eq('monday_id', rapport.monday_item_id)
+      .maybeSingle();
+    mondayPrimaerSygeplejerske = (mondayData as { primaer_sygeplejerske: string | null } | null)?.primaer_sygeplejerske ?? null;
+  }
+
+  return {
+    ...mapTilBostedDetail(rapport),
+    cvrAntalAfdelinger,
+    erGigant,
+    tilsynDeltagereStps,
+    tilsynDeltagereBosted,
+    mondayPrimaerSygeplejerske,
+  };
 }

@@ -129,6 +129,7 @@ export type BostedDetail = {
   mondayKunde: MondayKundeStatus;
   mondayGruppe: string | null;
   mondayItemId: string | null;
+  mondayPrimaerSygeplejerske: string | null;
   erGigant: boolean;
   regnskabAar: number | null;
   regnskabNettoomsaetning: number | null;
