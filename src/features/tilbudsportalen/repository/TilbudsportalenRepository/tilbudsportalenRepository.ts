@@ -12,6 +12,7 @@ const SPOREDE_FELTER: Array<{
   { felt: 'pladser',                 kolonneNavn: 'pladser' },
   { felt: 'pladseTotalt',            kolonneNavn: 'pladser_totalt' },
   { felt: 'telefon',                 kolonneNavn: 'telefon' },
+  { felt: 'email',                   kolonneNavn: 'email' },
   { felt: 'driftsform',              kolonneNavn: 'driftsform' },
   { felt: 'aktuelGodkendelsesstatus', kolonneNavn: 'aktuel_godkendelsesstatus' },
 ];
@@ -65,7 +66,7 @@ export async function gemDetaljer(detalje: TilbudsportalenDetalje): Promise<void
   // Hent eksisterende record for at sammenligne sporede felter
   const { data: eksisterende } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('leder, pladser, pladser_totalt, telefon, driftsform, aktuel_godkendelsesstatus, detaljer_hentet')
+    .select('leder, pladser, pladser_totalt, telefon, email, driftsform, aktuel_godkendelsesstatus, detaljer_hentet')
     .eq('afdelingsid', detalje.afdelingsid)
     .maybeSingle();
 
@@ -78,6 +79,7 @@ export async function gemDetaljer(detalje: TilbudsportalenDetalje): Promise<void
       pladser:                  normaliser(eksisterende.pladser),
       pladser_totalt:           normaliser(eksisterende.pladser_totalt),
       telefon:                  normaliser(eksisterende.telefon),
+      email:                    normaliser(eksisterende.email),
       driftsform:               normaliser(eksisterende.driftsform),
       aktuel_godkendelsesstatus: normaliser(eksisterende.aktuel_godkendelsesstatus),
     };
