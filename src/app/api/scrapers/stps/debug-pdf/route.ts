@@ -41,7 +41,9 @@ export async function GET(req: NextRequest) {
       const { createRequire } = await import('module');
       const require = createRequire(import.meta.url);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string }>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdfParseRaw = require('pdf-parse') as any;
+      const pdfParse = (typeof pdfParseRaw === 'function' ? pdfParseRaw : pdfParseRaw.default) as (buf: Buffer) => Promise<{ text: string }>;
       const result = await pdfParse(buf);
       const tekst: string = result.text ?? '';
       // Find deltager-sektionen og vis 800 tegn rundt om den

@@ -45,7 +45,9 @@ export async function GET() {
     const { createRequire } = await import('module');
     const require = createRequire(import.meta.url);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string; numpages: number }>;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParseRaw = require('pdf-parse') as any;
+    const pdfParse = (typeof pdfParseRaw === 'function' ? pdfParseRaw : pdfParseRaw.default) as (buf: Buffer) => Promise<{ text: string; numpages: number }>;
     const result = await pdfParse(buf);
     const tekst: string = result.text ?? '';
 

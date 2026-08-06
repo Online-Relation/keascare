@@ -47,7 +47,11 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
     const { createRequire } = await import('module');
     const require = createRequire(import.meta.url);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParse = require('pdf-parse') as (buf: Buffer) => Promise<{ text: string }>;
+    // pdf-parse er CJS — i produktionsmiljøer eksporteres den som module.exports,
+    // men createRequire kan returnere enten funktionen direkte eller et objekt med .default
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const pdfParseRaw = require('pdf-parse') as any;
+    const pdfParse = (typeof pdfParseRaw === 'function' ? pdfParseRaw : pdfParseRaw.default) as (buf: Buffer) => Promise<{ text: string }>;
     const resultat = await pdfParse(buf);
     const tekst: string = resultat.text ?? '';
 
