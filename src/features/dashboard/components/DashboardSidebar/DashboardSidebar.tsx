@@ -9,7 +9,7 @@ import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, MapPin, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map,
+  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Bot,
 } from 'lucide-react';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { useRouter } from 'next/navigation';
@@ -55,6 +55,7 @@ const gruppeRegelovervagning: NavItem[] = [
 ];
 
 const gruppeSystem: NavItem[] = [
+  { label: 'Nova',          href: '/dashboard/nova',             icon: Bot },
   { label: 'Live Monitor',  href: '/dashboard/monitor',          icon: Activity },
   { label: 'Systemstatus',  href: '/dashboard/systemstatus',     icon: BarChart2 },
   { label: 'Scrapers',      href: '/dashboard/scrapers',         icon: RefreshCw },
