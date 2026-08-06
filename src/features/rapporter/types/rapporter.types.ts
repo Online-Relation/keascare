@@ -13,6 +13,7 @@ export type RapportRække = {
   paragraf: string | null;
   losmedlem: boolean;
   harStpsRapport: boolean;
+  erKunde: boolean;
 };
 
 export type MånedligTrend = {

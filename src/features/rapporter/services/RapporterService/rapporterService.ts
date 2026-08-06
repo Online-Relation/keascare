@@ -77,22 +77,21 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 }
 
 function mapStpsRapporter(alle: DbRapport[], losCvrSet: Set<string>): RapportRække[] {
-  // Kernekravet: vis bosteder med nye STPS-fund, som IKKE allerede er kunde i
-  // Monday. Allerede-matchede kunder er ikke et markedssignal, kun listen —
-  // KPI'erne ovenfor bruger fortsat hele datasættet for det samlede billede.
-  return alle
-    .filter((r) => !r.monday_item_id)
-    .map((r) => ({
-      id:             r.id,
-      navn:           r.stps_tilbud_navn,
-      kommune:        r.kommune,
-      fundNiveau:     (r.fund_niveau as FundNiveau) ?? 'ukendt',
-      rapportDato:    r.rapport_dato,
-      rapportLink:    r.rapport_url ?? null,
-      temaer:         r.temaer ?? [],
-      paragraf:       udledParagraf(r.tp_tilbudstype),
-      losmedlem:      !!r.cvr && losCvrSet.has(r.cvr),
-      harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
+  // Returnerer ALLE rapporter inkl. allerede-matchede kunder — "Alle rapporter"
+  // skal være en komplet oversigt. Sider der kun vil vise markedssignaler
+  // (fx Kritiske rapporter) filtrerer selv på erKunde ved forbrug af listen.
+  return alle.map((r) => ({
+    id:             r.id,
+    navn:           r.stps_tilbud_navn,
+    kommune:        r.kommune,
+    fundNiveau:     (r.fund_niveau as FundNiveau) ?? 'ukendt',
+    rapportDato:    r.rapport_dato,
+    rapportLink:    r.rapport_url ?? null,
+    temaer:         r.temaer ?? [],
+    paragraf:       udledParagraf(r.tp_tilbudstype),
+    losmedlem:      !!r.cvr && losCvrSet.has(r.cvr),
+    harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
+    erKunde:        !!r.monday_item_id,
   }));
 }
 

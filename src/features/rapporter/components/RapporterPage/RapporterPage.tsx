@@ -11,8 +11,13 @@ import type { RapporterData } from '@/features/rapporter/types/rapporter.types';
 type Props = { data: RapporterData };
 
 export function RapporterPage({ data }: Props) {
-  const { kpis, trend, kritiskeMåneder, driftsformKritiske, topKommuner, temaer, rapporter } = data;
+  const { kpis, trend, kritiskeMåneder, driftsformKritiske, topKommuner, temaer, rapporter: alleRapporter } = data;
   const maxTema = temaer[0]?.antal ?? 1;
+
+  // Kernekravet: vis bosteder med nye STPS-fund, som IKKE allerede er kunde i
+  // Monday. KPI'erne ovenfor bruger fortsat hele datasættet for det samlede
+  // billede — kun selve listen nederst er et markedssignal-udvalg.
+  const rapporter = alleRapporter.filter((r) => !r.erKunde);
 
   return (
     <div className="dashboard-content">
