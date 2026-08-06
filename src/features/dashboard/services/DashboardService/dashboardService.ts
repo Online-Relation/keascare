@@ -314,8 +314,12 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   // normalt fører tilsyn, ikke hvem der udstedte denne konkrete STPS-rapport. Filteret fjernede
   // fejlagtigt STPS-rapporter for bosteder der tilfældigvis også er under Socialtilsyn på TP.
   const rapporter = (data ?? []) as DbRapport[];
-  // Vis alle bosteder inkl. kunder — dashboardet er en oversigt over nyeste rapporter
-  const bosteder = rapporter.map(mapTilBosted);
+  // Kernekravet til dashboardet: vis bosteder med nye STPS-tilsynsrapporter,
+  // som IKKE allerede er kunde i Monday. Allerede-matchede kunder er ikke
+  // markedssignaler — de hører til CRM/kundevisning, ikke hovedtabellen.
+  const bosteder = rapporter
+    .map(mapTilBosted)
+    .filter((b) => b.mondayKunde !== 'kunde');
 
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
