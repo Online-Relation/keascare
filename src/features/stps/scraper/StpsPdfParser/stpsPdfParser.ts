@@ -293,6 +293,18 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
       continue;
     }
 
+    // Format 3b: "Lang titel for Sted Fornavn Efternavn" — navn sidst på linjen
+    // fx "Adm. direktør for Piberhus og Lykkegard Signe Brønnum"
+    const titelNavnMatch = linje.match(/^(.+?)\s+([A-ZÆØÅ][a-zæøå\-]+\s+[A-ZÆØÅ][a-zæøå\-]+)$/);
+    if (titelNavnMatch) {
+      const muligTitel = titelNavnMatch[1];
+      const muligNavn = titelNavnMatch[2];
+      if (erSandsynligtNavn(muligNavn) && /direktør|leder|chef|forstander|koordinator|bestyrer|souschef/i.test(muligTitel)) {
+        deltagere.push({ navn: muligNavn, titel: muligTitel });
+        continue;
+      }
+    }
+
     // Format 4: "En sygeplejerske" o.l. — anonym deltager med ukendt navn
     if (TITEL_REGEX.test(linje)) {
       deltagere.push({ navn: linje, titel: null });
