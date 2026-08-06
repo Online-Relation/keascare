@@ -283,7 +283,8 @@
 .salg-signal-header-venstre {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.6rem;
   flex: 1;
   min-width: 0;
 }
@@ -318,6 +319,9 @@
   padding: 2px 8px;
   border-radius: 999px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
   flex-shrink: 0;
 }
 

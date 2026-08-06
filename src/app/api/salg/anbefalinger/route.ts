@@ -33,7 +33,7 @@ Du skal returnere et JSON-objekt med præcis denne struktur (ingen markdown, kun
       "titel": "Kort titel på signalet",
       "observation": "Hvad rapporten konkret viser — baseret på de faktiske fund",
       "relevans": "Hvorfor dette er relevant for bostedet lige nu",
-      "ydelse": "Den KeasCare-ydelse der løser dette",
+      "ydelse": "KUN ét kort navn fra listen ovenfor, uden beskrivelse — fx 'Minitilsyn', 'Kursus', 'Instrukser', 'Abonnement', 'Akuthjælp' eller 'Brand'. Aldrig en hel sætning.",
       "salgspunkt": "Konkret sætning sælgeren kan bruge i opkaldet"
     }
   ],
