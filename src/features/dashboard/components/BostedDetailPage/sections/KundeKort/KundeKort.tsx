@@ -35,6 +35,12 @@ export function KundeKort({ bosted, pakker }: Props) {
       </div>
 
       <div className="bosted-detail-kort-body">
+        {bosted.mondayPrimaerSygeplejerske && (
+          <div className="bosted-detail-field" style={{ marginBottom: '0.75rem' }}>
+            <span className="bosted-detail-field-label">Primær sygeplejerske</span>
+            <span className="bosted-detail-field-value">{bosted.mondayPrimaerSygeplejerske}</span>
+          </div>
+        )}
         {pakker.length > 0 ? (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
             {pakker.map((p, i) => (

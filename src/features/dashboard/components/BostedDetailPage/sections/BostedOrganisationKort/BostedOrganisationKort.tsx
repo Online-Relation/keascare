@@ -80,7 +80,6 @@ export function BostedOrganisationKort({ bosted, tpÆndringer = [] }: Props) {
   const kommune = bosted.tpKommune ?? bosted.kommune ?? null;
 
   const harKontakt = bosted.tpLeder || bosted.tpKontaktperson || bosted.tpTelefon || bosted.tpEmail;
-  const harKeasCareKontakt = !!bosted.mondayPrimaerSygeplejerske;
 
   return (
     <>
@@ -217,19 +216,6 @@ export function BostedOrganisationKort({ bosted, tpÆndringer = [] }: Props) {
           )}
         </div>
       </div>
-
-      {/* KeasCare-tilknytning — primær sygeplejerske fra Monday, kun for kunder */}
-      {harKeasCareKontakt && (
-        <div className="bosted-detail-kort">
-          <div className="bosted-detail-kort-header">
-            <User size={15} />
-            <span className="bosted-detail-kort-titel">KeasCare-tilknytning</span>
-          </div>
-          <div className="bosted-detail-kort-body">
-            <FeltRække label="Primær sygeplejerske" value={bosted.mondayPrimaerSygeplejerske} />
-          </div>
-        </div>
-      )}
 
       {/* Økonomi & virksomhed — CVR-ansatte kl. 03:00 */}
       {bosted.cvr && (
