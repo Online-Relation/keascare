@@ -9,6 +9,7 @@ import Link from 'next/link';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import type { DashboardData } from '@/features/dashboard/types/dashboard.types';
 import type { NovaBesked } from '@/features/nova/types/nova.types';
+import { NovaTablebobel } from './NovaTablebobel';
 
 type NovaStatus = 'aktiv' | 'optaget' | 'fraværende';
 
@@ -320,6 +321,7 @@ export function NovaBanner({ data }: Props) {
           ) : (
             <span className="nova-banner__status">Overvåger +1.200 datakilder døgnet rundt</span>
           )}
+          <NovaTablebobel />
         </div>
       </div>
 

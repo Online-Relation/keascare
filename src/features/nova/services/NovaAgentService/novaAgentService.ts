@@ -167,7 +167,7 @@ export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>
     reQueueGamleTP(supabase),
   ]);
 
-  return {
+  const resultat = {
     ok: true,
     pNummerTilCvr:       pTilCvr.status      === 'fulfilled' ? pTilCvr.value      : { fejl: String((pTilCvr as PromiseRejectedResult).reason) },
     cvrTilTilbudsportal: cvrTilTp.status     === 'fulfilled' ? cvrTilTp.value     : { fejl: String((cvrTilTp as PromiseRejectedResult).reason) },
@@ -175,4 +175,26 @@ export async function kørNovaAgent(batch = 50): Promise<Record<string, unknown>
     mondayFlag:          mondayFlag.status    === 'fulfilled' ? mondayFlag.value   : { fejl: String((mondayFlag as PromiseRejectedResult).reason) },
     tpReQueue:           tpReQueue.status     === 'fulfilled' ? tpReQueue.value    : { fejl: String((tpReQueue as PromiseRejectedResult).reason) },
   };
+
+  // Gem natsrapport så banneret kan vise hvad Nova arbejdede på
+  try {
+    const cvrBeriget   = pTilCvr.status   === 'fulfilled' ? (pTilCvr.value as { matchet?: number }).matchet ?? 0 : 0;
+    const tpBeriget    = cvrTilTp.status  === 'fulfilled' ? (cvrTilTp.value as { matchet?: number }).matchet ?? 0 : 0;
+    const losMat       = losFlag.status   === 'fulfilled' ? (losFlag.value as { matchet?: number }).matchet ?? 0 : 0;
+    const mondayMat    = mondayFlag.status === 'fulfilled' ? (mondayFlag.value as { matchet?: number }).matchet ?? 0 : 0;
+    const tpRe         = tpReQueue.status === 'fulfilled' ? (tpReQueue.value as { reQueued?: number }).reQueued ?? 0 : 0;
+    const fejlTæller   = [pTilCvr, cvrTilTp, losFlag, mondayFlag, tpReQueue].filter((r) => r.status === 'rejected').length;
+
+    await supabase.from('nova_natsrapport').insert({
+      cvr_beriget:    cvrBeriget,
+      tp_beriget:     tpBeriget,
+      tp_requeued:    tpRe,
+      los_matchet:    losMat,
+      monday_matchet: mondayMat,
+      total_fejl:     fejlTæller,
+      radata:         resultat,
+    });
+  } catch { /* gem ikke rapporten hvis DB fejler — cron må ikke stoppe */ }
+
+  return resultat;
 }
