@@ -27,6 +27,7 @@ import { kørCvrSignalScraper } from '@/features/cvr/scraper/CvrSignalScraper/cv
 import { kørGeocoderBatch } from '@/features/kort/services/GeocoderService/geocoderBatch';
 import { scraperLosDetaljer } from '@/features/los/scraper/LosDetaljerScraper';
 import { matchLosTilBosted } from '@/features/los/repository/LosRepository';
+import { kørNovaAgent } from '@/features/nova/services/NovaAgentService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 async function kald(endpoint: string, body: Record<string, unknown>, secret: string): Promise<Record<string, unknown>> {
@@ -120,6 +121,9 @@ async function kørBaggrund(secret: string) {
     const matchet = await matchLosTilBosted();
     return { ok: true, matchet };
   }, resultater);
+
+  // 13. Nova — krydskobling af alle datakilder (P-nummer→CVR, CVR→TP, LOS-flag, Monday-flag)
+  await kør('nova-agent', () => kørNovaAgent(50), resultater);
 
   await logScraperKørsel('daglig-cron', true, { kørt: new Date().toISOString(), ...resultater });
 }
