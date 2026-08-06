@@ -66,9 +66,11 @@ export function MarkedsdataPrioritering({ bosteder, kommuner }: Props) {
   const [aktivFilter, setAktivFilter] = useState<Filter>('alle');
 
   const filtrerede = useMemo(() => {
-    let liste = bosteder;
+    // "Alle" betyder her: alle markedssignaler — dvs. bosteder der IKKE allerede
+    // er kunde i Monday. Allerede-matchede kunder er ikke et signal, kun
+    // "Kunder"-fanen skal vise dem, samme princip som hovedtabellen på forsiden.
+    let liste = aktivFilter === 'kunder' ? bosteder : bosteder.filter((b) => !b.erKunde);
     if (aktivFilter === 'kritiske') liste = liste.filter((b) => b.fundNiveau === 'kritisk' || b.fundNiveau === 'stoerre');
-    if (aktivFilter === 'aldrig') liste = liste.filter((b) => !b.erKunde);
     if (aktivFilter === 'ikke_los') liste = liste.filter((b) => b.losMedlem === false);
     if (aktivFilter === 'kunder') liste = liste.filter((b) => b.erKunde);
     return liste.slice(0, 200);
