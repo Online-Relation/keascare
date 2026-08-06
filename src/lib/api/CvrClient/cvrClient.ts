@@ -53,9 +53,9 @@ async function slaaCvrViaVirkDk(cvr: string): Promise<CvrOpslag | null> {
       'Vrvirksomhed.cvrNummer',
       'Vrvirksomhed.virksomhedMetadata.nyesteNavn.navn',
       'Vrvirksomhed.virksomhedMetadata.nyesteBeliggenhedsadresse',
-      'Vrvirksomhed.virksomhedMetadata.nyesteAarsbeskaeftigelse.antalAnsatte',
       'Vrvirksomhed.virksomhedMetadata.nyesteHovedbranche.branchetekst',
       'Vrvirksomhed.virksomhedMetadata.nyesteVirksomhedsform.kortBeskrivelse',
+      'Vrvirksomhed.aarsbeskaeftigelse',
       'Vrvirksomhed.livsforloeb',
     ],
     query: { term: { 'Vrvirksomhed.cvrNummer': parseInt(cvr, 10) } },
@@ -83,7 +83,28 @@ async function slaaCvrViaVirkDk(cvr: string): Promise<CvrOpslag | null> {
   const by = adresseObj.postdistrikt ?? null;
   const adresse = vejnavn ? `${vejnavn} ${husnr}`.trim() : null;
 
-  const ansatte = meta.nyesteAarsbeskaeftigelse?.antalAnsatte ?? null;
+  // Hent den seneste månedlige beskæftigelsesopgørelse fra eIndkomst-data.
+  // aarsbeskaeftigelse-arrayet indeholder poster med { aar, kvartal, intervalKode, antalAnsatte }.
+  // intervalKode 'A' = månedligt gennemsnit for hele årets måneder, 'B'–'L' = specifikke måneder.
+  // Vi sorterer på aar desc, derefter intervalKode desc (L > K > ... > A) og tager øverste.
+  const aarsbeskaeftigelse: Array<{
+    aar?: number;
+    kvartal?: number | null;
+    intervalKode?: string;
+    antalAnsatte?: number;
+  }> = hit.aarsbeskaeftigelse ?? [];
+
+  let ansatte: number | null = null;
+  if (aarsbeskaeftigelse.length > 0) {
+    const sorteret = [...aarsbeskaeftigelse].sort((a, b) => {
+      const aarDiff = (b.aar ?? 0) - (a.aar ?? 0);
+      if (aarDiff !== 0) return aarDiff;
+      // Højere intervalKode = mere aktuel måned (L=december, A=årsgennemsnit)
+      return (b.intervalKode ?? '').localeCompare(a.intervalKode ?? '');
+    });
+    const seneste = sorteret[0];
+    ansatte = typeof seneste.antalAnsatte === 'number' ? seneste.antalAnsatte : null;
+  }
   const branche = meta.nyesteHovedbranche?.branchetekst ?? null;
   const virksomhedstype = meta.nyesteVirksomhedsform?.kortBeskrivelse ?? null;
   const startDato = hit.livsforloeb?.[0]?.periode?.gyldigFra ?? null;
