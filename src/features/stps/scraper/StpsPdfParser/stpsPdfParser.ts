@@ -285,10 +285,11 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
       }
     }
 
-    // Format 2: "Titel Fornavn Efternavn" — bostedets format, f.eks. "Områdeleder Lais Wardag"
-    // Kendte titel-præfikser der sidder foran et navn
+    // Format 2: "Titel: Fornavn Efternavn" eller "Titel Fornavn Efternavn"
+    // STPS skriver ofte "Leder: Martin Månsson" med kolon — vi håndterer begge former.
+    const TITEL_PRÆFIKS = 'Områdeleder|Leder|Souschef|Forstander|Centerleder|Afdelingsleder|Teamleder|Daglig leder|Stedfortræder|Sygeplejerske|Oversygeplejerske|Pædagog|Social- og sundhedsassistent|SOSU|SSA|SSH|Ergoterapeut|Fysioterapeut|Psykolog|Læge';
     const titelPræfixMatch = linje.match(
-      /^(Områdeleder|Leder|Souschef|Forstander|Centerleder|Afdelingsleder|Teamleder|Daglig leder|Stedfortræder|Sygeplejerske|Oversygeplejerske|Pædagog|Social- og sundhedsassistent|SOSU|SSA|SSH|Ergoterapeut|Fysioterapeut|Psykolog|Læge)\s+(.+)$/i
+      new RegExp(`^(${TITEL_PRÆFIKS}):?\\s+(.+)$`, 'i')
     );
     if (titelPræfixMatch) {
       const titel = titelPræfixMatch[1];
@@ -305,8 +306,14 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
       continue;
     }
 
-    // Format 4: "En sygeplejerske" o.l. — anonym deltager
+    // Format 4: "En sygeplejerske" o.l. — anonym deltager med ukendt navn
     if (TITEL_REGEX.test(linje)) {
+      deltagere.push({ navn: linje, titel: null });
+      continue;
+    }
+
+    // Format 5: "Tre medarbejdere", "To pædagoger" o.l. — anonym gruppe fra bostedet
+    if (/^(en|to|tre|fire|fem|seks|syv|otte|ni|ti|\d+)\s+(medarbejder|pædagog|ansat|leder|personale|sosu|ssa|ssh)/i.test(linje)) {
       deltagere.push({ navn: linje, titel: null });
     }
   }
@@ -317,8 +324,13 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
 function udtraekDeltagere(tekst: string): { stps: TilsynDeltager[]; bosted: TilsynDeltager[] } {
   // "Tilsynet blev foretaget af:" = STPS-inspektører
   const stpsIdx = tekst.search(/Tilsynet blev foretaget af/i);
-  // "Ved tilsynet og den afsluttende opsamling deltog:" = bostedets personale
-  const bostedIdx = tekst.search(/Ved tilsynet[\s\S]{0,20}deltog/i);
+
+  // Bostedets deltagere — STPS bruger varianter af denne formulering:
+  //   "Ved tilsynet og den afsluttende opsamling deltog:"
+  //   "Ved tilsynet deltog:"
+  //   "Fra tilbuddet deltog:"
+  //   "Fra bostedet deltog:"
+  const bostedIdx = tekst.search(/(?:Ved tilsynet[\s\S]{0,30}deltog|Fra (?:tilbuddet|bostedet|institutionen)[\s\S]{0,10}deltog)/i);
 
   const stps = stpsIdx !== -1 ? parsDeltagereBlok(tekst, stpsIdx) : [];
   const bosted = bostedIdx !== -1 ? parsDeltagereBlok(tekst, bostedIdx) : [];
