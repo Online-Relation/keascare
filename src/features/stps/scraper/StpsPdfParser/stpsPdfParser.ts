@@ -260,13 +260,16 @@ function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
     const foretagetAfInline = linje.match(/^Tilsynet blev foretaget af:\s*(.+)/i);
     if (foretagetAfInline) {
       const rest = foretagetAfInline[1].trim();
-      const kommaIdxInline = rest.indexOf(',');
-      if (kommaIdxInline !== -1) {
-        const muligNavn = rest.substring(0, kommaIdxInline).trim();
-        const muligTitel = rest.substring(kommaIdxInline + 1).trim();
-        if (erSandsynligtNavn(muligNavn)) deltagere.push({ navn: muligNavn, titel: muligTitel || null });
-      } else if (erSandsynligtNavn(rest)) {
-        deltagere.push({ navn: rest, titel: null });
+      // Spring over hvis det er en organisation, ikke et personnavn
+      if (!/Styrelsen|Socialtilsynet|STPS|Tilsyn og Rådgivning/i.test(rest)) {
+        const kommaIdxInline = rest.indexOf(',');
+        if (kommaIdxInline !== -1) {
+          const muligNavn = rest.substring(0, kommaIdxInline).trim();
+          const muligTitel = rest.substring(kommaIdxInline + 1).trim();
+          if (erSandsynligtNavn(muligNavn)) deltagere.push({ navn: muligNavn, titel: muligTitel || null });
+        } else if (erSandsynligtNavn(rest)) {
+          deltagere.push({ navn: rest, titel: null });
+        }
       }
       continue;
     }
