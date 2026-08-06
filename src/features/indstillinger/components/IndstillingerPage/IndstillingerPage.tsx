@@ -122,8 +122,6 @@ export function IndstillingerPage({ aktivtFilter, losFilter, paragraf43Filter }:
                 faktisk har en STPS-tilsynsrapport. Intet fjernes — § 107 og § 108 vises uændret.
               </p>
               <div className="ind-driftsform-chips">
-                <span className="ind-chip ind-chip--inkluderet">§ 107</span>
-                <span className="ind-chip ind-chip--inkluderet">§ 108</span>
                 <span className={`ind-chip ${kun43 ? 'ind-chip--inkluderet' : 'ind-chip--ekskluderet ind-chip--strikethrough'}`}>§ 43</span>
               </div>
             </div>
