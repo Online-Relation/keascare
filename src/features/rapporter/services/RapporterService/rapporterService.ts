@@ -2,6 +2,7 @@
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, privatFilterTpOr, privatFilterCvrOr, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type {
   RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
 } from '@/features/rapporter/types/rapporter.types';
@@ -20,6 +21,7 @@ type DbRapport = {
   tp_tilbudstype: string | null;
   los_medlem: boolean | null;
   monday_item_id: string | null;
+  monday_gruppe: string | null;
 };
 
 export async function hentRapporterData(fra?: string, til?: string): Promise<RapporterData> {
@@ -28,7 +30,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
 
   let stpsQuery = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, cvr, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem, monday_item_id')
+    .select('id, stps_tilbud_navn, cvr, kommune, fund_niveau, rapport_dato, rapport_url, temaer, tp_driftsform, tp_tilsynsmyndighed, tp_tilbudstype, los_medlem, monday_item_id, monday_gruppe')
     .order('rapport_dato', { ascending: false })
     .limit(5000);
 
@@ -91,7 +93,7 @@ function mapStpsRapporter(alle: DbRapport[], losCvrSet: Set<string>): RapportRæ
     paragraf:       udledParagraf(r.tp_tilbudstype),
     losmedlem:      !!r.cvr && losCvrSet.has(r.cvr),
     harStpsRapport: !!r.rapport_url && !r.rapport_url.startsWith('stps://genereret/'),
-    erKunde:        !!r.monday_item_id,
+    erKunde:        !erMarkedssignal(r.monday_item_id, r.monday_gruppe),
   }));
 }
 

@@ -4,6 +4,7 @@ import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { MarkedsdataStats, MarkedsdataBosted, KommuneMarked, OpmærksomhedSignal } from '@/features/markedsdata/types/markedsdata.types';
 import type { LosFilter, VisFilter } from '@/lib/config/GlobalFilter';
 import { KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 
 type RåRapport = {
@@ -13,6 +14,7 @@ type RåRapport = {
   fund_niveau: string | null;
   rapport_dato: string | null;
   monday_item_id: string | null;
+  monday_gruppe: string | null;
   los_medlem: boolean | null;
 };
 
@@ -22,7 +24,7 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: 
   // Hent STPS-bosteder — filtrer LOS fra hvis ekskluder
   let query = supabase
     .from('stps_rapporter')
-    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, monday_item_id, los_medlem')
+    .select('id, stps_tilbud_navn, kommune, fund_niveau, rapport_dato, monday_item_id, monday_gruppe, los_medlem')
     .order('rapport_dato', { ascending: false, nullsFirst: false });
 
   if (losFilter === 'ekskluder') {
@@ -44,7 +46,7 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: 
 
   const losSubtrak = losFilter === 'ekskluder' ? (losCount ?? 0) : 0;
   const totalBosteder = (tpCount ?? rækker.length) - losSubtrak;
-  const antalKunder = rækker.filter((r) => !!r.monday_item_id).length;
+  const antalKunder = rækker.filter((r) => !erMarkedssignal(r.monday_item_id, r.monday_gruppe)).length;
   const antalKritiskeEllerStoerre = rækker.filter(
     (r) => r.fund_niveau === 'kritisk' || r.fund_niveau === 'stoerre',
   ).length;
@@ -72,7 +74,7 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: 
     }
     const km = kommuneMap.get(k)!;
     km.antalBosteder++;
-    if (r.monday_item_id) km.antalKunder++;
+    if (!erMarkedssignal(r.monday_item_id, r.monday_gruppe)) km.antalKunder++;
     else km.antalUrørt++;
     if (r.los_medlem) km.antalLos++;
     if (r.fund_niveau === 'kritisk' || r.fund_niveau === 'stoerre') km.antalKritiske++;
@@ -120,7 +122,7 @@ export async function hentMarkedsdataStats(dstData: DstKommuneRå[], losFilter: 
     kommune: r.kommune,
     fundNiveau: r.fund_niveau,
     rapportDato: r.rapport_dato,
-    erKunde: !!r.monday_item_id,
+    erKunde: !erMarkedssignal(r.monday_item_id, r.monday_gruppe),
     losMedlem: r.los_medlem,
   }));
 

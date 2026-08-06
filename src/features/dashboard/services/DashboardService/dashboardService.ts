@@ -2,6 +2,7 @@
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { getVisFilter, privatFilterTpOr, privatFilterCvrOr, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { beregnMondayKundeStatus, erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
 type DbRapport = {
@@ -74,7 +75,7 @@ function mapTilBosted(row: DbRapport): Bosted {
     rapportLink:  row.rapport_url,
     erNy:         erNyRapport(row.rapport_dato),
     dataKvalitet: beregnDataKvalitet(row),
-    mondayKunde:  row.monday_item_id ? (row.monday_gruppe === 'tabt' ? 'tabt' : 'kunde') : 'ingen',
+    mondayKunde:  beregnMondayKundeStatus(row.monday_item_id, row.monday_gruppe),
     mondayGruppe: row.monday_gruppe ?? null,
     mondayItemId: row.monday_item_id ?? null,
   };
@@ -319,7 +320,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   // markedssignaler — de hører til CRM/kundevisning, ikke hovedtabellen.
   const bosteder = rapporter
     .map(mapTilBosted)
-    .filter((b) => b.mondayKunde !== 'kunde');
+    .filter((b) => erMarkedssignal(b.mondayItemId, b.mondayGruppe));
 
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
