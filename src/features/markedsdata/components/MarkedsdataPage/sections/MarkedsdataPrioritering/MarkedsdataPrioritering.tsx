@@ -119,7 +119,7 @@ export function MarkedsdataPrioritering({ bosteder, kommuner }: Props) {
               return (
                 <tr key={b.id}>
                   <td>
-                    <Link href={`/dashboard/bosted/${b.id}`} className="md-tabel-link">
+                    <Link href={`/dashboard/bosteder/${b.id}`} className="md-tabel-link">
                       {b.navn}
                     </Link>
                   </td>
@@ -136,7 +136,7 @@ export function MarkedsdataPrioritering({ bosteder, kommuner }: Props) {
                     <span className="md-hvorfor">{hvorforNu(b)}</span>
                   </td>
                   <td>
-                    <Link href={`/dashboard/bosted/${b.id}`} className="md-handling-knap">
+                    <Link href={`/dashboard/bosteder/${b.id}`} className="md-handling-knap">
                       Åbn bosted <ExternalLink size={11} />
                     </Link>
                   </td>
