@@ -1,7 +1,7 @@
 // src/features/dashboard/services/DashboardService/dashboardService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, KOMMUNALE_NØGLEORD } from '@/lib/config/GlobalFilter';
+import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, paragraf43InkluderOr, paragraf43EkskluderOr, KOMMUNALE_NØGLEORD } from '@/lib/config/GlobalFilter';
 import { beregnMondayKundeStatus, erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
@@ -303,10 +303,10 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   if (visFilter === 'privat') {
     query = query.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
-  if (paragraf43Filter === 'kun_43') {
-    query = query.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
-    query = query.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
-  }
+  // §43 er som udgangspunkt IKKE relevant og vises ikke. Tændes filteret,
+  // TILFØJES §43-bosteder oveni §107/§108 — men kun dem med en ægte
+  // STPS-tilsynsrapport. §107/§108 påvirkes aldrig af dette filter.
+  query = query.or(paragraf43Filter === 'inkluder_43' ? paragraf43InkluderOr() : paragraf43EkskluderOr());
 
   const idag = new Date().toISOString().slice(0, 10);
   if (fra) query = query.gte('rapport_dato', fra);
@@ -342,9 +342,7 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
         q = q.not('driftsform', 'ilike', `%${ord}%`);
       }
     }
-    if (paragraf43Filter === 'kun_43') {
-      q = q.ilike('tilbudstype', PARAGRAF_43_MØNSTER);
-    } else if (paragraf) {
+    if (paragraf) {
       q = q.or(`tilbudstype.ilike.%§ ${paragraf}%,tilbudstype.ilike.%§${paragraf}%`);
     }
     return q;

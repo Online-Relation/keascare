@@ -19,7 +19,7 @@ export function IndstillingerPage({ aktivtFilter, losFilter, paragraf43Filter }:
 
   const erPrivat = aktivtFilter === 'privat';
   const losEkskluderet = losFilter === 'ekskluder';
-  const kun43 = paragraf43Filter === 'kun_43';
+  const kun43 = paragraf43Filter === 'inkluder_43';
 
   return (
     <div className="dashboard-content">
@@ -114,22 +114,23 @@ export function IndstillingerPage({ aktivtFilter, losFilter, paragraf43Filter }:
           <div className="ind-toggle-venstre">
             <FileText size={18} className="ind-toggle-ikon" />
             <div>
-              <p className="ind-toggle-label">Vis kun § 43 med en STPS-tilsynsrapport</p>
+              <p className="ind-toggle-label">Inkludér § 43 med en STPS-tilsynsrapport</p>
               <p className="ind-toggle-beskrivelse">
-                Når slået til vises på alle sider — dashboard, markedspotentiale, rapporter og
-                markedsdata — udelukkende bosteder med tilbudstype § 43 (Socialtilsynet), og kun
-                dem der rent faktisk har en STPS-tilsynsrapport. Alt andet filtreres fra.
+                § 43 er som udgangspunkt ikke relevant for os og vises ikke. Slås filteret til,
+                TILFØJES § 43-bosteder (Socialtilsynet) oveni § 107 og § 108 på alle sider —
+                dashboard, markedspotentiale, rapporter og markedsdata — men kun dem der rent
+                faktisk har en STPS-tilsynsrapport. Intet fjernes — § 107 og § 108 vises uændret.
               </p>
               <div className="ind-driftsform-chips">
-                <span className="ind-chip ind-chip--inkluderet">§ 43</span>
-                <span className={`ind-chip ind-chip--ekskluderet ${kun43 ? 'ind-chip--strikethrough' : ''}`}>§ 107</span>
-                <span className={`ind-chip ind-chip--ekskluderet ${kun43 ? 'ind-chip--strikethrough' : ''}`}>§ 108</span>
+                <span className="ind-chip ind-chip--inkluderet">§ 107</span>
+                <span className="ind-chip ind-chip--inkluderet">§ 108</span>
+                <span className={`ind-chip ${kun43 ? 'ind-chip--inkluderet' : 'ind-chip--ekskluderet ind-chip--strikethrough'}`}>§ 43</span>
               </div>
             </div>
           </div>
           <button
             className={`ind-toggle-knap ${kun43 ? 'ind-toggle-knap--til' : ''}`}
-            onClick={() => startP43(async () => { await setParagraf43Filter(kun43 ? 'alle' : 'kun_43'); })}
+            onClick={() => startP43(async () => { await setParagraf43Filter(kun43 ? 'alle' : 'inkluder_43'); })}
             disabled={pendingP43}
             role="switch"
             aria-checked={kun43}
@@ -142,7 +143,7 @@ export function IndstillingerPage({ aktivtFilter, losFilter, paragraf43Filter }:
 
         {kun43 && (
           <p className="ind-aktiv-note">
-            §43-filteret er aktivt. Al data på tværs af dashboardet viser kun § 43-bosteder med en ægte STPS-tilsynsrapport.
+            §43-filteret er aktivt. § 43-bosteder med en ægte STPS-tilsynsrapport vises nu oveni § 107 og § 108 på tværs af dashboardet.
           </p>
         )}
       </div>

@@ -1,7 +1,7 @@
 // src/features/rapporter/services/RapporterService/rapporterService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, erKommunalDriftsform } from '@/lib/config/GlobalFilter';
+import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, paragraf43InkluderOr, paragraf43EkskluderOr, erKommunalDriftsform } from '@/lib/config/GlobalFilter';
 import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type {
   RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
@@ -39,10 +39,10 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (visFilter === 'privat') {
     stpsQuery = stpsQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
-  if (paragraf43Filter === 'kun_43') {
-    stpsQuery = stpsQuery.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
-    stpsQuery = stpsQuery.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
-  }
+  // §43 er som udgangspunkt IKKE relevant og vises ikke. Tændes filteret,
+  // TILFØJES §43-bosteder oveni §107/§108 — men kun dem med en ægte
+  // STPS-tilsynsrapport. §107/§108 påvirkes aldrig af dette filter.
+  stpsQuery = stpsQuery.or(paragraf43Filter === 'inkluder_43' ? paragraf43InkluderOr() : paragraf43EkskluderOr());
 
   const idag = new Date().toISOString().slice(0, 10);
   if (fra) stpsQuery = stpsQuery.gte('rapport_dato', fra);
@@ -55,10 +55,7 @@ export async function hentRapporterData(fra?: string, til?: string): Promise<Rap
   if (visFilter === 'privat') {
     dbTotalQuery = dbTotalQuery.or(privatFilterTpOr()).or(privatFilterCvrOr());
   }
-  if (paragraf43Filter === 'kun_43') {
-    dbTotalQuery = dbTotalQuery.ilike('tp_tilbudstype', PARAGRAF_43_MØNSTER);
-    dbTotalQuery = dbTotalQuery.not('rapport_url', 'ilike', SYNTETISK_RAPPORT_MØNSTER);
-  }
+  dbTotalQuery = dbTotalQuery.or(paragraf43Filter === 'inkluder_43' ? paragraf43InkluderOr() : paragraf43EkskluderOr());
 
   const losQuery = supabase.from('los_medlemmer').select('cvr').not('cvr', 'is', null);
 

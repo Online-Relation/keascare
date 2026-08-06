@@ -24,7 +24,7 @@ export async function setLosFilter(filter: 'ekskluder' | 'inkluder') {
   revalidatePath('/dashboard', 'layout');
 }
 
-export async function setParagraf43Filter(filter: 'alle' | 'kun_43') {
+export async function setParagraf43Filter(filter: 'alle' | 'inkluder_43') {
   const cookieStore = await cookies();
   cookieStore.set(COOKIE_PARAGRAF43, filter, COOKIE_OPTS);
   revalidatePath('/dashboard', 'layout');

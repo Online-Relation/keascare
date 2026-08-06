@@ -4,7 +4,11 @@ import { cookies } from 'next/headers';
 
 export type VisFilter = 'alle' | 'privat';
 export type LosFilter = 'ekskluder' | 'inkluder';
-export type ParagrafFilter = 'alle' | 'kun_43';
+// 'alle' = §43 vises IKKE (default) — kun §107/§108 som hidtil.
+// 'inkluder_43' = §43 TILFØJES oveni §107/§108 — men kun §43-rækker der har
+// en ægte STPS-tilsynsrapport. Intet fjernes nogensinde — det er en
+// tilføjelse, ikke et eksklusivt filter.
+export type ParagrafFilter = 'alle' | 'inkluder_43';
 
 export const COOKIE_NAVN = 'keascare-vis-filter';
 export const COOKIE_LOS = 'keascare-los-filter';
@@ -49,16 +53,32 @@ export async function getLosFilter(): Promise<LosFilter> {
 export async function getParagraf43Filter(): Promise<ParagrafFilter> {
   const cookieStore = await cookies();
   const val = cookieStore.get(COOKIE_PARAGRAF43)?.value;
-  return val === 'kun_43' ? 'kun_43' : 'alle';
+  return val === 'inkluder_43' ? 'inkluder_43' : 'alle';
 }
 
-// Fælles §43-mønster — hold det ét sted, men anvend det direkte med
-// .ilike(kolonne, PARAGRAF_43_MØNSTER) ved hvert kald (Supabase-query-typen
-// er for dybt genereret til at kunne wrappes generisk uden TS-timeout).
+// Fælles §43-mønster til brug i .ilike()-kald.
 export const PARAGRAF_43_MØNSTER = '%43%';
 // Markør sat på rapport_url når der IKKE er en ægte STPS-tilsynsrapport —
-// bruges til at kræve en ægte rapport ved siden af §43-mønsteret.
+// bruges til at kræve en ægte rapport for §43-rækker specifikt.
 export const SYNTETISK_RAPPORT_MØNSTER = 'stps://genereret/%';
+
+// .or()-streng der EKSKLUDERER §43 helt — brugt når paragraf43Filter er 'alle'
+// (default). tp_tilbudstype IS NULL bevares altid (ikke TP-matchet endnu).
+export function paragraf43EkskluderOr(): string {
+  return `tp_tilbudstype.is.null,tp_tilbudstype.not.ilike.${PARAGRAF_43_MØNSTER}`;
+}
+
+// .or()-streng der TILFØJER §43 oveni det eksisterende — brugt når
+// paragraf43Filter er 'inkluder_43'. §107/§108/null-rækker påvirkes ikke;
+// §43-rækker kræver en ægte STPS-tilsynsrapport (ikke en syntetisk
+// placeholder-URL) for at blive medtaget.
+export function paragraf43InkluderOr(): string {
+  return [
+    'tp_tilbudstype.is.null',
+    `tp_tilbudstype.not.ilike.${PARAGRAF_43_MØNSTER}`,
+    `and(tp_tilbudstype.ilike.${PARAGRAF_43_MØNSTER},rapport_url.not.ilike.${SYNTETISK_RAPPORT_MØNSTER})`,
+  ].join(',');
+}
 
 // PostgREST not.in filter-streng til brug i Supabase-queries
 export function driftsformFilterStreng(): string {
