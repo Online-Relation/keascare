@@ -31,27 +31,12 @@ export type PdfDetaljer = {
 export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
   const tom: PdfDetaljer = { pdfUrl, vurdering: null, fund: null, cvr: null, adresse: null, pladser: null, pNummer: null, fundItems: [], deltagereStps: [], deltagereBosted: [] };
   try {
-    // Fetch PDF manuelt med browser-headers — STPS blokerer plain Node.js fetch
-    const res = await fetch(pdfUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'application/pdf,*/*',
-        'Accept-Language': 'da-DK,da;q=0.9,en;q=0.8',
-        'Referer': 'https://stps.dk/',
-      },
-    });
-    if (!res.ok) return tom;
-    const buf = Buffer.from(await res.arrayBuffer());
-
-    // pdf-parse's index.js forsøger at loade testfiler som fejler i Next.js production.
-    // Løsning: importer direkte fra lib/pdf-parse.js der springer testfilene over.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js') as any;
-    const pdfParse = (typeof pdfParseModule.default === 'function'
-      ? pdfParseModule.default
-      : pdfParseModule) as (buf: Buffer) => Promise<{ text: string }>;
-    const resultat = await pdfParse(buf);
-    const tekst: string = resultat.text ?? '';
+    // pdf-parse v2 bruger PDFParse-klassen med URL direkte — ingen manuel fetch nødvendig.
+    // v2 API: new PDFParse({ url }).getText() returnerer { text: string }
+    const { PDFParse } = await import('pdf-parse');
+    const parser = new PDFParse({ url: pdfUrl });
+    const resultat = await parser.getText();
+    const tekst: string = (resultat as { text?: string }).text ?? '';
 
     const { stps, bosted } = udtraekDeltagere(tekst);
     return {
