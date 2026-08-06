@@ -6,6 +6,7 @@ import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import { ROLLE_LABELS, ROLLE_HIERARKI, type BrugerRolle } from '@/features/auth/config/roller.config';
 import { RolleAdgangOversigt } from '@/features/auth/components/RolleAdgangOversigt/RolleAdgangOversigt';
 import { RettighederPanel } from '@/features/auth/components/RettighederPanel';
+import { MedarbejderAdminPanel } from '@/features/auth/components/MedarbejderAdminPanel';
 
 type Bruger = {
   id: string;
@@ -199,6 +200,17 @@ export function BrugerAdminPage() {
           </div>
         </div>
 
+      </div>
+
+      {/* Medarbejdere (uden login) */}
+      <div style={{ marginTop: '1.5rem' }}>
+        <h2 className="bruger-admin-titel" style={{ fontSize: 'var(--text-base)', marginBottom: '0.5rem' }}>
+          Medarbejdere
+        </h2>
+        <p className="bruger-admin-undertitel" style={{ marginBottom: '0.75rem' }}>
+          KeasCare-medarbejdere uden systemadgang — bruges til at angive hvem der er ude på et bosted.
+        </p>
+        <MedarbejderAdminPanel />
       </div>
 
       {/* Rollerettigheder */}
