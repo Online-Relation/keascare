@@ -227,7 +227,7 @@ const TITEL_REGEX = /^[Ee]n\s+(sygeplejerske|oversygeplejerske|læge|leder|sousc
 
 function parsDeltagereBlok(tekst: string, startIdx: number): TilsynDeltager[] {
   const efter = tekst.substring(startIdx);
-  const slutIdx = efter.search(/\n(?:Tilsynet blev foretaget af|Ved tilsynet[\s\S]{0,10}deltog|Lovgrundlag|Baggrundsoplysninger|--\s*\d)/i);
+  const slutIdx = efter.search(/\n(?:Tilsynet blev foretaget af|Ved tilsynet[\s\S]{0,10}deltog|Afsluttende opsamling|Lovgrundlag|Baggrundsoplysninger|--\s*\d)/i);
   const blok = slutIdx !== -1 ? efter.substring(0, slutIdx) : efter.substring(0, 1500);
 
   const deltagere: TilsynDeltager[] = [];
