@@ -10,12 +10,26 @@ export const COOKIE_NAVN = 'keascare-vis-filter';
 export const COOKIE_LOS = 'keascare-los-filter';
 export const COOKIE_PARAGRAF43 = 'keascare-paragraf43-filter';
 
-// Driftsformer der betragtes som kommunale og EKSKLUDERES ved privat-filter
+// Driftsformer der betragtes som kommunale og EKSKLUDERES ved privat-filter.
+// Bruges kun til visning (chips i Indstillinger) — selve filtreringen sker
+// via KOMMUNALE_NØGLEORD nedenfor, da Tilbudsportalen skriver driftsformen
+// i flere varianter ("Kommune", "Primærkommune", "Fælleskommunal" osv.), og
+// et eksakt match snød §43-tilbud forbi filteret.
 export const KOMMUNALE_DRIFTSFORMER = [
   'Primærkommune',
   'Region',
   'Statslig administrativ enhed',
 ];
+
+// Nøgleord der matches som substring (case-insensitive) mod tp_driftsform —
+// fanger alle Tilbudsportalens stavevarianter af kommunal/regional/statslig drift.
+export const KOMMUNALE_NØGLEORD = ['kommun', 'region', 'stat'];
+
+export function erKommunalDriftsform(driftsform: string | null | undefined): boolean {
+  if (!driftsform) return false;
+  const norm = driftsform.toLowerCase();
+  return KOMMUNALE_NØGLEORD.some((ord) => norm.includes(ord));
+}
 
 // CVR virksomhedstyper der betragtes som kommunale/offentlige
 export const KOMMUNALE_CVR_TYPER = ['KOM', 'REG', 'STAT'];
@@ -56,7 +70,8 @@ export function driftsformFilterStreng(): string {
 // Resultat: (tp_driftsform IS NULL OR ikke kommunal) AND (cvr_virksomhedstype IS NULL OR ikke kommunal)
 
 export function privatFilterTpOr(): string {
-  const ikkeKommunal = `tp_driftsform.not.in.(${KOMMUNALE_DRIFTSFORMER.join(',')})`;
+  // and(...)-gruppe: driftsformen må IKKE indeholde noget af nøgleordene
+  const ikkeKommunal = `and(${KOMMUNALE_NØGLEORD.map((ord) => `tp_driftsform.not.ilike.%${ord}%`).join(',')})`;
   return `tp_driftsform.is.null,${ikkeKommunal}`;
 }
 

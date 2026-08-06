@@ -3,7 +3,7 @@
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import type { MarkedsdataStats, MarkedsdataBosted, KommuneMarked, OpmærksomhedSignal } from '@/features/markedsdata/types/markedsdata.types';
 import type { LosFilter, VisFilter, ParagrafFilter } from '@/lib/config/GlobalFilter';
-import { KOMMUNALE_DRIFTSFORMER, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER } from '@/lib/config/GlobalFilter';
+import { KOMMUNALE_NØGLEORD, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER } from '@/lib/config/GlobalFilter';
 import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DstKommuneRå } from '@/lib/api/DstClient';
 
@@ -50,7 +50,11 @@ export async function hentMarkedsdataStats(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let tpQuery: any = supabase.from('tilbudsportalen_tilbud').select('*', { count: 'exact', head: true });
   if (visFilter === 'privat') {
-    tpQuery = tpQuery.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.map((d) => `"${d}"`).join(',')})`);
+    // Substring-match (ikke eksakt) — fanger alle Tilbudsportalens
+    // stavevarianter af kommunal/regional/statslig driftsform.
+    for (const ord of KOMMUNALE_NØGLEORD) {
+      tpQuery = tpQuery.not('driftsform', 'ilike', `%${ord}%`);
+    }
   }
   if (paragraf43Filter === 'kun_43') {
     tpQuery = tpQuery.ilike('tilbudstype', PARAGRAF_43_MØNSTER);

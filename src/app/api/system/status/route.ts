@@ -2,15 +2,15 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { KOMMUNALE_DRIFTSFORMER, KOMMUNALE_CVR_TYPER } from '@/lib/config/GlobalFilter';
+import { privatFilterTpOr, privatFilterCvrOr } from '@/lib/config/GlobalFilter';
 
 export async function GET(request: NextRequest) {
   const supabase = getSupabaseServerClient();
   const visFilter = request.nextUrl.searchParams.get('visFilter') ?? 'alle';
   const privat = visFilter === 'privat';
 
-  const tpOrFilter = `tp_driftsform.is.null,tp_driftsform.not.in.(${KOMMUNALE_DRIFTSFORMER.join(',')})`;
-  const cvrOrFilter = `cvr_virksomhedstype.is.null,cvr_virksomhedstype.not.in.(${KOMMUNALE_CVR_TYPER.join(',')})`;
+  const tpOrFilter = privatFilterTpOr();
+  const cvrOrFilter = privatFilterCvrOr();
 
   const igår = new Date();
   igår.setDate(igår.getDate() - 1);

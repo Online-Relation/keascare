@@ -1,7 +1,7 @@
 // src/features/rapporter/services/RapporterService/rapporterService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, erKommunalDriftsform } from '@/lib/config/GlobalFilter';
 import { erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type {
   RapporterData, RapportRække, MånedligTrend, MånedligKritisk, DriftsformKritiskStat, KommuneFundStat, TemaStat, FundNiveau,
@@ -155,14 +155,10 @@ function beregnKritiskeMåneder(alle: DbRapport[]): MånedligKritisk[] {
   return måneder;
 }
 
-function erKommunal(driftsform: string | null): boolean {
-  return !!driftsform && KOMMUNALE_DRIFTSFORMER.includes(driftsform);
-}
-
 function beregnDriftsformKritiske(alle: DbRapport[]): DriftsformKritiskStat[] {
   const grupper = [
-    { navn: 'Privat / selvejende', test: (r: DbRapport) => !erKommunal(r.tp_driftsform) },
-    { navn: 'Kommunal / offentlig', test: (r: DbRapport) => erKommunal(r.tp_driftsform) },
+    { navn: 'Privat / selvejende', test: (r: DbRapport) => !erKommunalDriftsform(r.tp_driftsform) },
+    { navn: 'Kommunal / offentlig', test: (r: DbRapport) => erKommunalDriftsform(r.tp_driftsform) },
   ];
 
   return grupper.map(({ navn, test }) => {

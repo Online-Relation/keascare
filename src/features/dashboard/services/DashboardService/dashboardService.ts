@@ -1,7 +1,7 @@
 // src/features/dashboard/services/DashboardService/dashboardService.ts
 
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
-import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, KOMMUNALE_DRIFTSFORMER } from '@/lib/config/GlobalFilter';
+import { getVisFilter, getParagraf43Filter, privatFilterTpOr, privatFilterCvrOr, PARAGRAF_43_MØNSTER, SYNTETISK_RAPPORT_MØNSTER, KOMMUNALE_NØGLEORD } from '@/lib/config/GlobalFilter';
 import { beregnMondayKundeStatus, erMarkedssignal } from '@/lib/business/MondayKundeRegler/mondayKundeRegler';
 import type { DashboardData, Bosted, KpiItem, StpsFordeling, KommuneStat } from '@/features/dashboard/types/dashboard.types';
 
@@ -331,11 +331,16 @@ export async function hentDashboardData(fra?: string, til?: string): Promise<Das
   const { hentCvrSignaler } = await import('@/features/cvr/services/CvrSignalService/cvrSignalService');
 
   function tpQuery(paragraf?: string) {
-    let q = supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q: any = supabase
       .from('tilbudsportalen_tilbud')
       .select('*', { count: 'exact', head: true });
     if (visFilter === 'privat') {
-      q = q.not('driftsform', 'in', `(${KOMMUNALE_DRIFTSFORMER.join(',')})`);
+      // Substring-match (ikke eksakt) — fanger alle Tilbudsportalens
+      // stavevarianter af kommunal/regional/statslig driftsform.
+      for (const ord of KOMMUNALE_NØGLEORD) {
+        q = q.not('driftsform', 'ilike', `%${ord}%`);
+      }
     }
     if (paragraf43Filter === 'kun_43') {
       q = q.ilike('tilbudstype', PARAGRAF_43_MØNSTER);
