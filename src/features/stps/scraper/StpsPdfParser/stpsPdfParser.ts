@@ -43,15 +43,13 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
     if (!res.ok) return tom;
     const buf = Buffer.from(await res.arrayBuffer());
 
-    // pdf-parse er CJS — brug createRequire for at undgå ESM-importproblemer
-    const { createRequire } = await import('module');
-    const require = createRequire(import.meta.url);
+    // pdf-parse er CJS — dynamic import() håndterer CJS→ESM interop korrekt i Node.js:
+    // CJS module.exports eksponeres som .default ved import()
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    // pdf-parse er CJS — i produktionsmiljøer eksporteres den som module.exports,
-    // men createRequire kan returnere enten funktionen direkte eller et objekt med .default
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParseRaw = require('pdf-parse') as any;
-    const pdfParse = (typeof pdfParseRaw === 'function' ? pdfParseRaw : pdfParseRaw.default) as (buf: Buffer) => Promise<{ text: string }>;
+    const pdfParseModule = await import('pdf-parse') as any;
+    const pdfParse = (typeof pdfParseModule.default === 'function'
+      ? pdfParseModule.default
+      : pdfParseModule) as (buf: Buffer) => Promise<{ text: string }>;
     const resultat = await pdfParse(buf);
     const tekst: string = resultat.text ?? '';
 

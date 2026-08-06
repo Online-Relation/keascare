@@ -38,12 +38,9 @@ export async function GET(req: NextRequest) {
       });
       if (!res.ok) return NextResponse.json({ error: `HTTP ${res.status}` }, { status: 502 });
       const buf = Buffer.from(await res.arrayBuffer());
-      const { createRequire } = await import('module');
-      const require = createRequire(import.meta.url);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParseRaw = require('pdf-parse') as any;
-      const pdfParse = (typeof pdfParseRaw === 'function' ? pdfParseRaw : pdfParseRaw.default) as (buf: Buffer) => Promise<{ text: string }>;
+      const pdfParseModule = await import('pdf-parse') as any;
+      const pdfParse = (typeof pdfParseModule.default === 'function' ? pdfParseModule.default : pdfParseModule) as (buf: Buffer) => Promise<{ text: string }>;
       const result = await pdfParse(buf);
       const tekst: string = result.text ?? '';
       // Find deltager-sektionen og vis 800 tegn rundt om den
