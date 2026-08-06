@@ -43,10 +43,10 @@ export async function parsePdfFraUrl(pdfUrl: string): Promise<PdfDetaljer> {
     if (!res.ok) return tom;
     const buf = Buffer.from(await res.arrayBuffer());
 
-    // pdf-parse er CJS — dynamic import() håndterer CJS→ESM interop korrekt i Node.js:
-    // CJS module.exports eksponeres som .default ved import()
+    // pdf-parse's index.js forsøger at loade testfiler som fejler i Next.js production.
+    // Løsning: importer direkte fra lib/pdf-parse.js der springer testfilene over.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParseModule = await import('pdf-parse') as any;
+    const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js') as any;
     const pdfParse = (typeof pdfParseModule.default === 'function'
       ? pdfParseModule.default
       : pdfParseModule) as (buf: Buffer) => Promise<{ text: string }>;

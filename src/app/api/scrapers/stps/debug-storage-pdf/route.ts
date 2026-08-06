@@ -43,7 +43,7 @@ export async function GET() {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pdfParseModule = await import('pdf-parse') as any;
+    const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js') as any;
     const pdfParse = (typeof pdfParseModule.default === 'function' ? pdfParseModule.default : pdfParseModule) as (buf: Buffer) => Promise<{ text: string; numpages: number }>;
     const result = await pdfParse(buf);
     const tekst: string = result.text ?? '';

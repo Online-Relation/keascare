@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
       if (!res.ok) return NextResponse.json({ error: `HTTP ${res.status}` }, { status: 502 });
       const buf = Buffer.from(await res.arrayBuffer());
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const pdfParseModule = await import('pdf-parse') as any;
+      const pdfParseModule = await import('pdf-parse/lib/pdf-parse.js') as any;
       const pdfParse = (typeof pdfParseModule.default === 'function' ? pdfParseModule.default : pdfParseModule) as (buf: Buffer) => Promise<{ text: string }>;
       const result = await pdfParse(buf);
       const tekst: string = result.text ?? '';
