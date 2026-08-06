@@ -15,6 +15,8 @@
 //  10. Geocoder         — koordinater til kortvisning
 //  11. LOS detaljer     — hent detaljer for nye LOS-medlemmer der mangler data
 //  12. LOS match        — match LOS-medlemmer mod bosteder via CVR
+//  13. Nova agent       — krydskobling: P-nummer→CVR, CVR→TP, LOS/Monday-flag, CVR-opdatering
+//  14. Repars deltagere — genparser tilsyn-deltagere for historiske rapporter (kører til alle er færdige)
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kørStpsScraper } from '@/features/stps/scraper/StpsScraper/stpsScraper';
@@ -28,6 +30,7 @@ import { kørGeocoderBatch } from '@/features/kort/services/GeocoderService/geoc
 import { scraperLosDetaljer } from '@/features/los/scraper/LosDetaljerScraper';
 import { matchLosTilBosted } from '@/features/los/repository/LosRepository';
 import { kørNovaAgent } from '@/features/nova/services/NovaAgentService';
+import { reparsDeltagere } from '@/features/stps/services/StpsDeltagereReparsService/stpsDeltagereReparsService';
 import { logScraperKørsel } from '@/lib/db/ScraperLog';
 
 async function kald(endpoint: string, body: Record<string, unknown>, secret: string): Promise<Record<string, unknown>> {
@@ -124,6 +127,10 @@ async function kørBaggrund(secret: string) {
 
   // 13. Nova — krydskobling af alle datakilder (P-nummer→CVR, CVR→TP, LOS-flag, Monday-flag)
   await kør('nova-agent', () => kørNovaAgent(50), resultater);
+
+  // 14. Genparser deltagerdata for rapporter der mangler tilsyn_deltagere_parset_dato.
+  //     Kører automatisk til alle historiske rapporter er gennemgået — derefter no-op.
+  await kør('stps-repars-deltagere', () => reparsDeltagere(50), resultater);
 
   await logScraperKørsel('daglig-cron', true, { kørt: new Date().toISOString(), ...resultater });
 }
