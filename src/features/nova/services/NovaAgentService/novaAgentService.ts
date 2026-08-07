@@ -21,12 +21,16 @@ function venteMs(ms: number) {
 }
 
 // 1. Find rapporter med p_nummer men uden cvr — slå op og gem
+// Ordnet efter pnummer_match_forsoegt (ældst/aldrig-forsøgt først), og alle
+// behandlede rækker får sat pnummer_match_forsoegt = nu — også ved forgæves
+// opslag. Ellers blokerer rapporter der aldrig finder et CVR køen for evigt.
 async function matchPNummerTilCvr(supabase: ReturnType<typeof getSupabaseServerClient>, batch: number) {
   const { data } = await supabase
     .from('stps_rapporter')
     .select('id, p_nummer, tp_p_nummer')
     .is('cvr', null)
     .or('p_nummer.not.is.null,tp_p_nummer.not.is.null')
+    .order('pnummer_match_forsoegt', { ascending: true, nullsFirst: true })
     .limit(batch);
 
   const rækker = data ?? [];
@@ -39,24 +43,33 @@ async function matchPNummerTilCvr(supabase: ReturnType<typeof getSupabaseServerC
       const opslag = await slaaPNummerOp(pNummer);
       if (opslag?.cvrNummer) {
         await supabase.from('stps_rapporter')
-          .update({ cvr: opslag.cvrNummer, adresse: opslag.adresse ?? undefined })
+          .update({ cvr: opslag.cvrNummer, adresse: opslag.adresse ?? undefined, pnummer_match_forsoegt: new Date().toISOString() })
           .eq('id', r.id);
         matchet++;
+      } else {
+        await supabase.from('stps_rapporter')
+          .update({ pnummer_match_forsoegt: new Date().toISOString() })
+          .eq('id', r.id);
       }
       await venteMs(300);
-    } catch { /* fortsæt */ }
+    } catch { /* fortsæt — forsøgt-tidsstempel sættes ikke ved fejl, prøves igen næste nat */ }
   }
 
   return { behandlet: rækker.length, matchet };
 }
 
 // 2. Find rapporter med cvr men uden tilbudsportal-data — hent fra TP-tabellen
+// Ordnet efter tp_match_forsoegt (ældst/aldrig-forsøgt først), og ALLE
+// behandlede rækker får sat tp_match_forsoegt = nu — også dem der IKKE finder
+// et match. Ellers bliver rækker uden TP-modpart valgt igen og igen i samme
+// batch hver nat og blokerer nyere rækker fra nogensinde at komme til.
 async function matchCvrTilTilbudsportalen(supabase: ReturnType<typeof getSupabaseServerClient>, batch: number) {
   const { data: stpsRækker } = await supabase
     .from('stps_rapporter')
     .select('id, cvr')
     .not('cvr', 'is', null)
     .is('tp_tilbudstype', null)
+    .order('tp_match_forsoegt', { ascending: true, nullsFirst: true })
     .limit(batch);
 
   if (!stpsRækker || stpsRækker.length === 0) return { behandlet: 0, matchet: 0 };
@@ -68,25 +81,29 @@ async function matchCvrTilTilbudsportalen(supabase: ReturnType<typeof getSupabas
     .select('cvr, tilbudstype, driftsform, kommune, pladser')
     .in('cvr', cvrer);
 
-  if (!tpRækker || tpRækker.length === 0) return { behandlet: stpsRækker.length, matchet: 0 };
-
-  const cvrMap = new Map<string, typeof tpRækker[0]>();
-  for (const tp of tpRækker) {
+  const cvrMap = new Map<string, NonNullable<typeof tpRækker>[0]>();
+  for (const tp of tpRækker ?? []) {
     if (tp.cvr && !cvrMap.has(tp.cvr)) cvrMap.set(tp.cvr, tp);
   }
 
+  const nu = new Date().toISOString();
   let matchet = 0;
   for (const r of stpsRækker) {
     if (!r.cvr) continue;
     const tp = cvrMap.get(r.cvr);
-    if (!tp) continue;
 
-    await supabase.from('stps_rapporter').update({
-      tp_tilbudstype: tp.tilbudstype ?? undefined,
-      tp_driftsform:  tp.driftsform ?? undefined,
-      kommune:        tp.kommune ?? undefined,
-    }).eq('id', r.id);
-    matchet++;
+    if (tp) {
+      await supabase.from('stps_rapporter').update({
+        tp_tilbudstype:    tp.tilbudstype ?? undefined,
+        tp_driftsform:     tp.driftsform ?? undefined,
+        kommune:           tp.kommune ?? undefined,
+        tp_match_forsoegt: nu,
+      }).eq('id', r.id);
+      matchet++;
+    } else {
+      // Intet match fundet — marker som forsøgt så rækken ikke blokerer køen
+      await supabase.from('stps_rapporter').update({ tp_match_forsoegt: nu }).eq('id', r.id);
+    }
   }
 
   return { behandlet: stpsRækker.length, matchet };
