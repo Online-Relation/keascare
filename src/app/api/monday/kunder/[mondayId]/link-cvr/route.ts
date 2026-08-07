@@ -3,6 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
+import { slaaCvrOp } from '@/lib/api/CvrClient';
 
 export const dynamic = 'force-dynamic';
 
@@ -57,14 +58,20 @@ export async function POST(req: NextRequest, { params }: Params) {
       .eq('cvr', cvr);
     bostedId = eksisterende.id;
   } else {
-    // Opret en minimal rapport-række så bostedet eksisterer i systemet
+    // Opret en minimal rapport-række så bostedet eksisterer i systemet.
+    // rapport_url bruger 'stps://genereret/'-markøren — samme som resten af
+    // systemet genkender som 'ingen ægte STPS-tilsynsrapport', så bostedet
+    // ikke fejlagtigt vises som om det har haft tilsyn. rapport_dato sættes
+    // IKKE til dagens dato — det ville se ud som en fiktiv rapportdato.
+    const navn = kunde?.navn ?? `CVR ${cvr}`;
     const { data: ny, error } = await supabase
       .from('stps_rapporter')
       .insert({
-        stps_tilbud_navn: kunde?.navn ?? `CVR ${cvr}`,
-        rapport_titel:    kunde?.navn ?? `CVR ${cvr}`,
-        rapport_url:      `manuel:${cvr}:${mondayId}`,
-        rapport_dato:     new Date().toISOString().slice(0, 10),
+        stps_tilbud_navn: navn,
+        rapport_titel:    navn,
+        rapport_url:      `stps://genereret/${encodeURIComponent(navn)}`,
+        rapport_dato:     null,
+        fund_niveau:      'ukendt',
         cvr,
         ...mondayData,
       })
@@ -75,6 +82,40 @@ export async function POST(req: NextRequest, { params }: Params) {
       return NextResponse.json({ ok: false, fejl: error?.message ?? 'Oprettelse fejlede' }, { status: 500 });
     }
     bostedId = ny.id;
+  }
+
+  // Berig med det samme i stedet for at vente på næste nats Nova-kørsel —
+  // CVR-ansatte/branche/type, og et opslag mod Tilbudsportalen for
+  // kommune/tilbudstype hvis vi finder en TP-modpart på samme CVR.
+  try {
+    const [cvrOpslag, { data: tpMatch }] = await Promise.all([
+      slaaCvrOp(cvr).catch(() => null),
+      supabase
+        .from('tilbudsportalen_tilbud')
+        .select('tilbudstype, driftsform, kommune')
+        .eq('cvr', cvr)
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    await supabase.from('stps_rapporter').update({
+      ...(cvrOpslag ? {
+        cvr_ansatte:         cvrOpslag.ansatte,
+        cvr_branche:         cvrOpslag.branche,
+        cvr_virksomhedstype: cvrOpslag.virksomhedstype,
+        cvr_stiftet:         cvrOpslag.stiftet,
+        cvr_opdateret:       new Date().toISOString(),
+      } : {}),
+      ...(tpMatch ? {
+        tp_tilbudstype: tpMatch.tilbudstype,
+        tp_driftsform:  tpMatch.driftsform,
+        kommune:        tpMatch.kommune,
+      } : {}),
+      tp_match_forsoegt: new Date().toISOString(),
+    }).eq('id', bostedId);
+  } catch {
+    // Berigelse fejlede — bostedet er stadig korrekt oprettet/linket,
+    // og bliver fanget af næste nats Nova-kørsel i stedet.
   }
 
   return NextResponse.json({ ok: true, bostedId });
