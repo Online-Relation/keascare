@@ -4,18 +4,21 @@ import { DashboardSidebar } from '@/features/dashboard/components/DashboardSideb
 import { DashboardHeader } from '@/features/dashboard/components/DashboardPage/sections/DashboardHeader';
 import { MobileNav } from '@/features/dashboard/components/MobileNav';
 import { RolleRettighederProvider } from '@/features/auth/components/RolleRettighederProvider';
+import { VisningsRolleProvider } from '@/features/auth/components/VisningsRolleProvider';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <RolleRettighederProvider>
-      <div className="dashboard-layout">
-        <DashboardSidebar />
-        <div className="dashboard-main">
-          <MobileNav />
-          <DashboardHeader />
-          {children}
+      <VisningsRolleProvider>
+        <div className="dashboard-layout">
+          <DashboardSidebar />
+          <div className="dashboard-main">
+            <MobileNav />
+            <DashboardHeader />
+            {children}
+          </div>
         </div>
-      </div>
+      </VisningsRolleProvider>
     </RolleRettighederProvider>
   );
 }

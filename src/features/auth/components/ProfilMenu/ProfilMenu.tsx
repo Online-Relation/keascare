@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation';
 import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
 import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
-import { useVisningsRolle } from '@/features/auth/hooks/useVisningsRolle';
+import { useVisningsRolle } from '@/features/auth/components/VisningsRolleProvider';
 import { ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
 
 type Props = { variant: 'sidebar' | 'header' };

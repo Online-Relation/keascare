@@ -8,13 +8,53 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu, X, LayoutDashboard, ClipboardList,
-  BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, Megaphone, Calendar, Target, LogOut, Building2, ChevronDown, ChevronRight, Activity, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Users,
+  BarChart2, Settings, FileText, RefreshCw, Search, ArrowLeft, Star, Megaphone, Calendar, Target, Building2, ChevronDown, ChevronRight, Activity, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Users, FlaskConical, Bot,
 } from 'lucide-react';
 import { Suspense, useEffect, useState } from 'react';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
-import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
-import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { TidsregistreringWidget } from '@/features/tidsregistrering/components/TidsregistreringWidget';
+import { ProfilMenu } from '@/features/auth/components/ProfilMenu';
+import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
+import { useVisningsRolle } from '@/features/auth/components/VisningsRolleProvider';
+import { useRolleRettigheder } from '@/features/auth/components/RolleRettighederProvider';
+import { harDynamiskAdgang } from '@/features/auth/config/roller.config';
+import { NAV_GRUPPER } from '@/features/dashboard/config/NavigationConfig/navigation.config';
+
+type NavItem = { label: string; href: string; icon: React.ElementType };
+
+// Samme ikon-liste som DashboardSidebar — hold dem i sync ved nye menupunkter.
+const IKON_FOR_HREF: Record<string, React.ElementType> = {
+  '/dashboard':                        LayoutDashboard,
+  '/dashboard/markedspotentiale':      Target,
+  '/dashboard/markedsdata':            BarChart2,
+  '/dashboard/kort':                   Map,
+  '/dashboard/rapporter':              ClipboardList,
+  '/dashboard/alle-rapporter':         FileText,
+  '/dashboard/rapporter/inspektoerer': UserCheck,
+  '/dashboard/kunder':                 Building2,
+  '/dashboard/produkter':              Package,
+  '/dashboard/tidsregistrering':       Timer,
+  '/dashboard/pakker':                 Package,
+  '/dashboard/nova':                   Bot,
+  '/dashboard/monitor':                Activity,
+  '/dashboard/systemstatus':           BarChart2,
+  '/dashboard/scrapers':               RefreshCw,
+  '/dashboard/monday-test':            FlaskConical,
+  '/dashboard/indstillinger':          Settings,
+  '/dashboard/admin/brugere':          Users,
+};
+
+function grupItems(gruppe: string): NavItem[] {
+  return NAV_GRUPPER
+    .filter((p) => p.gruppe === gruppe)
+    .map((p) => ({ label: p.label, href: p.href, icon: IKON_FOR_HREF[p.href] ?? Settings }));
+}
+
+const gruppeOverblik = grupItems('Overblik');
+const gruppeMarked = grupItems('Marked');
+const gruppeTilsyn = grupItems('Tilsyn');
+const gruppeCrm = grupItems('CRM');
+const gruppeSystem = grupItems('System');
 
 type BostedResultat = {
   id: string;
@@ -55,23 +95,16 @@ export function MobileNav() {
 
   const [søgningÅben, setSøgningÅben] = useState(false);
   const [datoÅben, setDatoÅben] = useState(false);
-  const [brugerNavn, setBrugerNavn] = useState('');
-  const [brugerEmail, setBrugerEmail] = useState('');
-  const [rolle, setRolle] = useState<string | null>(null);
   const [søgeTekst, setSøgeTekst] = useState('');
   const [resultater, setResultater] = useState<MobilResultater>({ kommuner: [], bosteder: [], inspektoerer: [] });
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const supabase = getSupabaseAuthBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
-      const user = data.user;
-      if (!user) return;
-      setBrugerNavn(user.user_metadata?.navn ?? '');
-      setBrugerEmail(user.email ?? '');
-      setRolle(user.user_metadata?.rolle ?? null);
-    });
-  }, []);
+  const { rolle, loading } = useBrugerRolle();
+  const { visningRolle } = useVisningsRolle();
+  const { rettigheder: dbRettigheder, loading: rettighederLoading } = useRolleRettigheder();
+  // Rent visuel overlay — samme 'Vis som'-funktion som desktop-sidebaren.
+  const effektivRolle = visningRolle ?? rolle;
+  const vis = (href: string) => !loading && !rettighederLoading && harDynamiskAdgang(effektivRolle, href, dbRettigheder);
 
   useEffect(() => {
     if (søgningÅben) inputRef.current?.focus();
@@ -116,12 +149,6 @@ export function MobileNav() {
   function vælgInspektoer(slug: string) {
     lukSøgning();
     router.push(`/dashboard/rapporter/inspektoerer/${slug}`);
-  }
-
-  async function logUd() {
-    const supabase = getSupabaseAuthBrowserClient();
-    await supabase.auth.signOut();
-    router.push('/login');
   }
 
   function NavLink({ href, icon: Icon, label }: { href: string; icon: React.ElementType; label: string }) {
@@ -259,119 +286,118 @@ export function MobileNav() {
 
         <div style={{ flex: 1, overflowY: 'auto' }}>
           {/* Overblik */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">Overblik</p>
-            <NavLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-          </div>
+          {vis('/dashboard') && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">Overblik</p>
+              {gruppeOverblik.map((i) => (
+                <NavLink key={i.href} href={i.href} icon={i.icon} label={i.label} />
+              ))}
+            </div>
+          )}
 
           {/* Marked */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">Marked</p>
-            <NavLink href="/dashboard/markedspotentiale" icon={Target} label="Markedspotentiale" />
-            <NavLink href="/dashboard/markedsdata" icon={BarChart2} label="Markedsdata" />
-            <NavLink href="/dashboard/kort" icon={Map} label="Bosteder på kort" />
-          </div>
+          {gruppeMarked.some((i) => vis(i.href)) && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">Marked</p>
+              {gruppeMarked.filter((i) => vis(i.href)).map((i) => (
+                <NavLink key={i.href} href={i.href} icon={i.icon} label={i.label} />
+              ))}
+            </div>
+          )}
 
           {/* Tilsyn */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">Tilsyn</p>
-            <NavLink href="/dashboard/rapporter" icon={ClipboardList} label="Kritiske rapporter" />
-            <NavLink href="/dashboard/alle-rapporter" icon={FileText} label="Alle rapporter" />
-            <NavLink href="/dashboard/rapporter/inspektoerer" icon={UserCheck} label="STPS-inspektører" />
-          </div>
+          {gruppeTilsyn.some((i) => vis(i.href)) && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">Tilsyn</p>
+              {gruppeTilsyn.filter((i) => vis(i.href)).map((i) => (
+                <NavLink key={i.href} href={i.href} icon={i.icon} label={i.label} />
+              ))}
+            </div>
+          )}
 
           {/* CRM */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">CRM</p>
-            <NavLink href="/dashboard/kunder" icon={Building2} label="Kunder" />
-            <NavLink href="/dashboard/produkter" icon={Package} label="Produkter" />
-            <NavLink href="/dashboard/tidsregistrering" icon={Timer} label="Tidsregistrering" />
-            <NavLink href="/dashboard/pakker" icon={Package} label="Pakker" />
-          </div>
+          {gruppeCrm.some((i) => vis(i.href)) && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">CRM</p>
+              {gruppeCrm.filter((i) => vis(i.href)).map((i) => (
+                <NavLink key={i.href} href={i.href} icon={i.icon} label={i.label} />
+              ))}
+            </div>
+          )}
 
           {/* Markedsføring — collapsible */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">Markedsføring</p>
-            <button
-              className={`sidebar-nav-item sidebar-nav-gruppe${pathname.startsWith('/dashboard/markedsforing') ? ' active' : ''}`}
-              onClick={() => setMarkedsforingÅben((v) => !v)}
-            >
-              <Megaphone className="sidebar-nav-item-icon" size={16} />
-              <span style={{ flex: 1, textAlign: 'left' }}>Kanaler</span>
-              {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-            {markedsforingÅben && (
-              <div className="sidebar-subnav">
-                {[
-                  { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
-                  { label: 'Google Ads', href: '/dashboard/markedsforing/google' },
-                  { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
-                ].map(({ label, href }) => (
-                  <Link key={href} href={href} className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`} onClick={lukMenu}>
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          {vis('/dashboard/markedsforing') && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">Markedsføring</p>
+              <button
+                className={`sidebar-nav-item sidebar-nav-gruppe${pathname.startsWith('/dashboard/markedsforing') ? ' active' : ''}`}
+                onClick={() => setMarkedsforingÅben((v) => !v)}
+              >
+                <Megaphone className="sidebar-nav-item-icon" size={16} />
+                <span style={{ flex: 1, textAlign: 'left' }}>Kanaler</span>
+                {markedsforingÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {markedsforingÅben && (
+                <div className="sidebar-subnav">
+                  {[
+                    { label: 'Meta',       href: '/dashboard/markedsforing/meta' },
+                    { label: 'Google Ads', href: '/dashboard/markedsforing/google' },
+                    { label: 'LinkedIn',   href: '/dashboard/markedsforing/linkedin' },
+                  ].map(({ label, href }) => (
+                    <Link key={href} href={href} className={`sidebar-subnav-item${pathname === href ? ' active' : ''}`} onClick={lukMenu}>
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Regelovervågning — collapsible */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">Regelovervågning</p>
-            <button
-              className={`sidebar-nav-item sidebar-nav-gruppe${pathname.startsWith('/dashboard/regelovervagning') ? ' active' : ''}`}
-              onClick={() => setRegelovervagningÅben((v) => !v)}
-            >
-              <ShieldCheck className="sidebar-nav-item-icon" size={16} />
-              <span style={{ flex: 1, textAlign: 'left' }}>Regelovervågning</span>
-              {regelovervagningÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-            </button>
-            {regelovervagningÅben && (
-              <div className="sidebar-subnav">
-                {[
-                  { label: 'Overblik',        href: '/dashboard/regelovervagning' },
-                  { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation' },
-                  { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder' },
-                ].map(({ label, href }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`sidebar-subnav-item${pathname === href || (href !== '/dashboard/regelovervagning' && pathname.startsWith(href)) ? ' active' : ''}`}
-                    onClick={lukMenu}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          {vis('/dashboard/regelovervagning') && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">Regelovervågning</p>
+              <button
+                className={`sidebar-nav-item sidebar-nav-gruppe${pathname.startsWith('/dashboard/regelovervagning') ? ' active' : ''}`}
+                onClick={() => setRegelovervagningÅben((v) => !v)}
+              >
+                <ShieldCheck className="sidebar-nav-item-icon" size={16} />
+                <span style={{ flex: 1, textAlign: 'left' }}>Regelovervågning</span>
+                {regelovervagningÅben ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+              </button>
+              {regelovervagningÅben && (
+                <div className="sidebar-subnav">
+                  {[
+                    { label: 'Overblik',        href: '/dashboard/regelovervagning' },
+                    { label: 'Retsinformation', href: '/dashboard/regelovervagning/retsinformation' },
+                    { label: 'STPS-nyheder',   href: '/dashboard/regelovervagning/stps-nyheder' },
+                  ].map(({ label, href }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className={`sidebar-subnav-item${pathname === href || (href !== '/dashboard/regelovervagning' && pathname.startsWith(href)) ? ' active' : ''}`}
+                      onClick={lukMenu}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* System */}
-          <div className="sidebar-nav-gruppe-sektion">
-            <p className="sidebar-section-label">System</p>
-            <NavLink href="/dashboard/monitor" icon={Activity} label="Live Monitor" />
-            <NavLink href="/dashboard/systemstatus" icon={Activity} label="Systemstatus" />
-            <NavLink href="/dashboard/scrapers" icon={RefreshCw} label="Scrapers" />
-            <NavLink href="/dashboard/indstillinger" icon={Settings} label="Indstillinger" />
-            <NavLink href="/dashboard/admin/brugere" icon={Users} label="Brugere" />
-            <NavLink href="/dashboard/monday-test" icon={Settings} label="Monday test" />
-          </div>
+          {gruppeSystem.some((i) => vis(i.href)) && (
+            <div className="sidebar-nav-gruppe-sektion">
+              <p className="sidebar-section-label">System</p>
+              {gruppeSystem.filter((i) => vis(i.href)).map((i) => (
+                <NavLink key={i.href} href={i.href} icon={i.icon} label={i.label} />
+              ))}
+            </div>
+          )}
         </div>
 
-        <Link href="/dashboard/profil" className="sidebar-footer" onClick={lukMenu}>
-          <UserAvatar size={32} fontSize="0.7rem" />
-          <div style={{ flex: 1 }}>
-            <p className="sidebar-user-name">{brugerNavn || brugerEmail || 'Min profil'}</p>
-            <p className="sidebar-user-role">Klik for at redigere</p>
-          </div>
-          <button
-            className="sidebar-logud-knap"
-            onClick={(e) => { e.preventDefault(); logUd(); }}
-            title="Log ud"
-          >
-            <LogOut size={15} />
-          </button>
-        </Link>
+        <ProfilMenu variant="sidebar" />
       </nav>
     </>
   );

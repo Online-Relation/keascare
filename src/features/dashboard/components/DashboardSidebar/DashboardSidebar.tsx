@@ -12,7 +12,7 @@ import {
   Users, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Bot,
 } from 'lucide-react';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
-import { useVisningsRolle } from '@/features/auth/hooks/useVisningsRolle';
+import { useVisningsRolle } from '@/features/auth/components/VisningsRolleProvider';
 import { ProfilMenu } from '@/features/auth/components/ProfilMenu';
 import { harDynamiskAdgang } from '@/features/auth/config/roller.config';
 import { NAV_GRUPPER } from '@/features/dashboard/config/NavigationConfig/navigation.config';
