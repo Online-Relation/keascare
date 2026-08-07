@@ -8,6 +8,7 @@ import axios from 'axios';
 import { load } from 'cheerio';
 import { getSupabaseServerClient } from '@/lib/db/SupabaseClient';
 import { TP_BROWSER_HEADERS } from '@/features/tilbudsportalen/constants/TilbudsportalenConstants';
+import { normaliserNavn, fuzzyScore } from '@/features/tilbudsportalen/matcher/TilbudsportalenMatcher/tilbudsportalenMatcher';
 
 export async function GET(req: NextRequest) {
   const navn = req.nextUrl.searchParams.get('navn');
@@ -93,5 +94,42 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  return NextResponse.json({ fundet: true, køStørrelse, resultater });
+  // Diagnosticér selve STPS↔TP-matchingen — bosted-siden læser tp_kontaktperson
+  // m.fl. fra stps_rapporter, IKKE direkte fra tilbudsportalen_tilbud. Så selvom
+  // TP-detaljerne er korrekt hentet ovenfor, kan de mangle på bosted-siden hvis
+  // matcheren aldrig har koblet STPS-rapporten til denne TP-afdeling.
+  const { data: stpsRækker } = await supabase
+    .from('stps_rapporter')
+    .select('id, stps_tilbud_navn, cvr, kommune, tp_kommune, tp_kontaktperson, tp_telefon, tp_email, tp_tilbudstype')
+    .ilike('stps_tilbud_navn', `%${navn}%`);
+
+  const matchDiagnose = (stpsRækker ?? []).map((s) => {
+    const stpsNorm = normaliserNavn(s.stps_tilbud_navn ?? '');
+    const kandidater = rækker.map((r) => {
+      const tpNorm = normaliserNavn(r.navn ?? '');
+      return {
+        tpNavn: r.navn,
+        tpNormaliseret: tpNorm,
+        præfiksMatch: tpNorm.startsWith(stpsNorm) || stpsNorm.startsWith(tpNorm),
+        fuzzyScore: Math.round(fuzzyScore(s.stps_tilbud_navn ?? '', r.navn ?? '') * 100) / 100,
+      };
+    });
+
+    return {
+      stpsId: s.id,
+      stpsNavn: s.stps_tilbud_navn,
+      stpsNormaliseret: stpsNorm,
+      stpsCvr: s.cvr,
+      stpsKommune: s.kommune,
+      stpsTpKommune: s.tp_kommune,
+      alleredeMatchet: !!(s.tp_kontaktperson || s.tp_telefon || s.tp_email || s.tp_tilbudstype),
+      gemtTpKontaktperson: s.tp_kontaktperson,
+      besked: !s.cvr
+        ? 'STPS-rapporten mangler CVR endnu — CVR-match er eneste matchtype der ikke kræver kommune-match'
+        : 'STPS-rapporten har CVR — tjek om det matcher TP-afdelingens CVR',
+      kandidater,
+    };
+  });
+
+  return NextResponse.json({ fundet: true, køStørrelse, resultater, matchDiagnose });
 }
