@@ -139,16 +139,30 @@ function parseDetalje(html: string, tilbudsid: string, afdelingsid: string): Til
   // Driftsform — "Virksomhedsform" på detaljeside (Primærkommune, Selvejende institution, Privat, Region…)
   const driftsform: string | null = findLabelVærdi($, 'Virksomhedsform');
 
-  // Tilbuddets adresse — div efter h4 "Tilbuddets adresse" (kan indeholde <br>)
+  // Tilbuddets adresse — foretræk det øverste 'Adresse'-felt (afdelingens EGEN
+  // adresse, i Kontakt-boksen). For koncern-tilbud med flere afdelinger findes
+  // også et 'Tilbuddets adresse'-felt nede i det udfoldede
+  // 'Virksomhedsoplysninger'-afsnit — men det beskriver moderselskabet/
+  // koncernen, IKKE denne konkrete afdeling, og må ikke bruges som afdelingens
+  // adresse (gav tidligere forkert adresse på multi-afdelings-tilbud).
   let tilbuddetsAdresse: string | null = null;
-  $('h4').each((_, el) => {
-    if ($(el).text().trim() === 'Tilbuddets adresse') {
-      const div = $(el).next('div');
+  $('*').each((_, el) => {
+    if ($(el).text().trim() === 'Adresse') {
+      const div = $(el).next();
       const linjer = div.text().split('\n').map((l: string) => l.trim()).filter(Boolean);
-      if (linjer.length) tilbuddetsAdresse = linjer.join(', ');
-      return false;
+      if (linjer.length) { tilbuddetsAdresse = linjer.join(', '); return false; }
     }
   });
+  if (!tilbuddetsAdresse) {
+    $('h4').each((_, el) => {
+      if ($(el).text().trim() === 'Tilbuddets adresse') {
+        const div = $(el).next('div');
+        const linjer = div.text().split('\n').map((l: string) => l.trim()).filter(Boolean);
+        if (linjer.length) tilbuddetsAdresse = linjer.join(', ');
+        return false;
+      }
+    });
+  }
 
   // Website — <a> i div.hjemmesideOeverigeOplysninger
   const website: string | null = $('div.hjemmesideOeverigeOplysninger a').first().attr('href') ?? null;
