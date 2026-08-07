@@ -401,69 +401,98 @@ button.sidebar-footer:hover .sidebar-user-name {
   color: #fff;
 }
 
-/* Skjult profil-menu — kun synlig når brugeren selv åbner den */
-.sidebar-footer-wrapper {
+/* Delt profil-menu (sidebar-footer + header-avatar) — skjult indtil brugeren
+   selv åbner den, så 'Vis som'-valget er usynligt for andre ved skærmdeling. */
+.profil-menu-wrapper {
   position: relative;
 }
 
-.sidebar-profil-menu {
+.profil-menu-wrapper--header {
+  display: flex;
+  align-items: center;
+}
+
+.header-avatar-knap {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  border-radius: 9999px;
+  line-height: 0;
+}
+
+.profil-menu-popover {
   position: absolute;
+  background: var(--color-bg-card, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.35rem;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 180px;
+  z-index: 40;
+}
+
+/* Sidebar-variant: popoveret folder op OVER trigger'en, da den sidder nederst */
+.profil-menu-wrapper--sidebar .profil-menu-popover {
   bottom: 100%;
   left: 0.5rem;
   right: 0.5rem;
   margin-bottom: 0.4rem;
-  background: var(--color-sidebar-hover, #1e293b);
-  border: 1px solid var(--color-sidebar-border);
-  border-radius: 8px;
-  padding: 0.35rem;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
 }
 
-.sidebar-profil-menu-item {
+/* Header-variant: popoveret folder ned UNDER avataren, højrestillet */
+.profil-menu-wrapper--header .profil-menu-popover {
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+}
+
+.profil-menu-item {
   background: none;
   border: none;
   width: 100%;
   text-align: left;
   font: inherit;
   font-size: var(--text-xs);
-  color: var(--color-sidebar-text);
+  color: var(--color-text-secondary);
   text-decoration: none;
   padding: 0.45rem 0.6rem;
   border-radius: 5px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.sidebar-profil-menu-item:hover {
-  background: rgba(255,255,255,0.08);
-  color: #fff;
+.profil-menu-item:hover {
+  background: var(--color-bg-hover, rgba(0,0,0,0.05));
+  color: var(--color-text-primary);
 }
 
-.sidebar-profil-menu-item--aktiv {
-  background: rgba(255,255,255,0.1);
-  color: #fff;
+.profil-menu-item--aktiv {
+  background: var(--color-accent-light, rgba(124,58,237,0.1));
+  color: var(--color-text-primary);
   font-weight: var(--fw-medium);
 }
 
-.sidebar-profil-menu-item--nulstil {
+.profil-menu-item--nulstil {
   color: var(--color-accent, #f87171);
   margin-top: 0.15rem;
 }
 
-.sidebar-profil-menu-label {
+.profil-menu-label {
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-sidebar-text);
-  opacity: 0.6;
+  color: var(--color-text-muted);
   padding: 0.4rem 0.6rem 0.1rem;
 }
 
-.sidebar-profil-menu-deler {
+.profil-menu-deler {
   height: 1px;
-  background: var(--color-sidebar-border);
+  background: var(--color-border);
   margin: 0.25rem 0.1rem;
 }
 

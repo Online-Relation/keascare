@@ -5,18 +5,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Settings,
   FileText, RefreshCw, Megaphone, ChevronDown, ChevronRight,
-  Users, LogOut, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Bot,
+  Users, Building2, Target, Activity, FlaskConical, ShieldCheck, Scale, Newspaper, UserCheck, Package, Timer, Map, Bot,
 } from 'lucide-react';
-import { getSupabaseAuthBrowserClient } from '@/lib/db/SupabaseClient/supabaseAuthClient';
-import { useRouter } from 'next/navigation';
-import { UserAvatar } from '@/features/auth/components/UserAvatar';
 import { useBrugerRolle } from '@/features/auth/hooks/useBrugerRolle';
 import { useVisningsRolle } from '@/features/auth/hooks/useVisningsRolle';
-import { harDynamiskAdgang, ROLLE_LABELS, type BrugerRolle } from '@/features/auth/config/roller.config';
+import { ProfilMenu } from '@/features/auth/components/ProfilMenu';
+import { harDynamiskAdgang } from '@/features/auth/config/roller.config';
 import { NAV_GRUPPER } from '@/features/dashboard/config/NavigationConfig/navigation.config';
 import { useRolleRettigheder } from '@/features/auth/components/RolleRettighederProvider';
 
@@ -88,15 +86,12 @@ function NavGruppe({ label, items, pathname }: { label: string; items: NavItem[]
 
 export function DashboardSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
   const { rolle, loading } = useBrugerRolle();
-  const { visningRolle, sætVisningRolle, nulstil } = useVisningsRolle();
+  const { visningRolle } = useVisningsRolle();
   const erMarkedsforingAktiv = pathname.startsWith('/dashboard/markedsforing');
   const [markedsforingÅben, setMarkedsforingÅben] = useState(erMarkedsforingAktiv);
   const erRegelovervagningAktiv = pathname.startsWith('/dashboard/regelovervagning');
   const [regelovervagningÅben, setRegelovervagningÅben] = useState(erRegelovervagningAktiv);
-  const [profilMenuÅben, setProfilMenuÅben] = useState(false);
-  const profilMenuRef = useRef<HTMLDivElement>(null);
 
   // Rent visuel overlay — påvirker kun hvilke menupunkter der vises i denne
   // fane, aldrig faktiske rettigheder eller data.
@@ -104,23 +99,6 @@ export function DashboardSidebar() {
 
   const { rettigheder: dbRettigheder, loading: rettighederLoading } = useRolleRettigheder();
   const vis = (href: string) => !loading && !rettighederLoading && harDynamiskAdgang(effektivRolle, href, dbRettigheder);
-
-  useEffect(() => {
-    function lukVedKlikUdenfor(e: MouseEvent) {
-      if (profilMenuRef.current && !profilMenuRef.current.contains(e.target as Node)) {
-        setProfilMenuÅben(false);
-      }
-    }
-    if (profilMenuÅben) document.addEventListener('mousedown', lukVedKlikUdenfor);
-    return () => document.removeEventListener('mousedown', lukVedKlikUdenfor);
-  }, [profilMenuÅben]);
-
-  async function logUd() {
-    nulstil();
-    const supabase = getSupabaseAuthBrowserClient();
-    await supabase.auth.signOut();
-    router.push('/login');
-  }
 
   return (
     <aside className="sidebar">
@@ -220,47 +198,7 @@ export function DashboardSidebar() {
         )}
       </nav>
 
-      <div className="sidebar-footer-wrapper" ref={profilMenuRef}>
-        {profilMenuÅben && (
-          <div className="sidebar-profil-menu">
-            <Link href="/dashboard/profil" className="sidebar-profil-menu-item" onClick={() => setProfilMenuÅben(false)}>
-              Min profil
-            </Link>
-            {rolle && rolle !== 'development' && (
-              <>
-                <div className="sidebar-profil-menu-deler" />
-                <p className="sidebar-profil-menu-label">Vis som</p>
-                {(['sygeplejerske', 'bostedsansvarlig', 'direktør'] as BrugerRolle[])
-                  .filter((r) => r !== rolle)
-                  .map((r) => (
-                    <button
-                      key={r}
-                      className={`sidebar-profil-menu-item${visningRolle === r ? ' sidebar-profil-menu-item--aktiv' : ''}`}
-                      onClick={() => sætVisningRolle(visningRolle === r ? null : r)}
-                    >
-                      {ROLLE_LABELS[r]}
-                    </button>
-                  ))}
-                {visningRolle && (
-                  <button className="sidebar-profil-menu-item sidebar-profil-menu-item--nulstil" onClick={() => sætVisningRolle(null)}>
-                    Vis min egen adgang
-                  </button>
-                )}
-              </>
-            )}
-          </div>
-        )}
-        <button className="sidebar-footer" onClick={() => setProfilMenuÅben((v) => !v)}>
-          <UserAvatar size={32} fontSize="0.7rem" />
-          <div style={{ flex: 1, textAlign: 'left' }}>
-            <p className="sidebar-user-name">Min profil</p>
-            <p className="sidebar-user-role">{effektivRolle ? ROLLE_LABELS[effektivRolle] : 'Klik for at redigere'}</p>
-          </div>
-          <span className="sidebar-logud-knap" onClick={(e) => { e.stopPropagation(); logUd(); }} title="Log ud" role="button" tabIndex={0}>
-            <LogOut size={15} />
-          </span>
-        </button>
-      </div>
+      <ProfilMenu variant="sidebar" />
     </aside>
   );
 }

@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import { GlobalSearch } from '@/features/dashboard/components/GlobalSearch';
 import { DatoVælger } from '@/features/dashboard/components/DatoVælger';
-import { UserAvatar } from '@/features/auth/components/UserAvatar';
+import { ProfilMenu } from '@/features/auth/components/ProfilMenu';
 import { NotifikationsCenter } from '@/features/dashboard/components/NotifikationsCenter';
 import { TidsregistreringWidget } from '@/features/tidsregistrering/components/TidsregistreringWidget';
 import { VarsletTilsynIkon } from '@/features/varsletTilsyn/components/VarsletTilsynIkon';
@@ -32,9 +32,7 @@ export function DashboardHeader() {
           <Star size={15} />
         </Link>
         <NotifikationsCenter />
-        <Link href="/dashboard/profil" aria-label="Min profil">
-          <UserAvatar size={30} fontSize="0.65rem" />
-        </Link>
+        <ProfilMenu variant="header" />
       </div>
     </header>
   );
