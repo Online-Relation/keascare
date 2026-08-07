@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
 
   const { data: rækker } = await supabase
     .from('tilbudsportalen_tilbud')
-    .select('id, tilbudsid, afdelingsid, navn, tilbudsportalen_url, detaljer_hentet, kontaktperson, telefon, email, scraper_dato, tp_opdateret')
+    .select('id, tilbudsid, afdelingsid, navn, cvr, kommune, tilbudsportalen_url, detaljer_hentet, kontaktperson, telefon, email, scraper_dato, tp_opdateret')
     .ilike('navn', `%${navn}%`);
 
   if (!rækker || rækker.length === 0) {
@@ -84,6 +84,8 @@ export async function GET(req: NextRequest) {
       id: r.id,
       navn: r.navn,
       url: r.tilbudsportalen_url,
+      gemtCvr: r.cvr,
+      gemtKommune: r.kommune,
       detaljerHentet: r.detaljer_hentet,
       gemtKontaktperson: r.kontaktperson,
       gemtTelefon: r.telefon,
@@ -109,6 +111,9 @@ export async function GET(req: NextRequest) {
       const tpNorm = normaliserNavn(r.navn ?? '');
       return {
         tpNavn: r.navn,
+        tpCvr: r.cvr,
+        tpKommune: r.kommune,
+        cvrMatcherPræcist: !!s.cvr && !!r.cvr && s.cvr.trim() === r.cvr.trim(),
         tpNormaliseret: tpNorm,
         præfiksMatch: tpNorm.startsWith(stpsNorm) || stpsNorm.startsWith(tpNorm),
         fuzzyScore: Math.round(fuzzyScore(s.stps_tilbud_navn ?? '', r.navn ?? '') * 100) / 100,
@@ -126,7 +131,9 @@ export async function GET(req: NextRequest) {
       gemtTpKontaktperson: s.tp_kontaktperson,
       besked: !s.cvr
         ? 'STPS-rapporten mangler CVR endnu — CVR-match er eneste matchtype der ikke kræver kommune-match'
-        : 'STPS-rapporten har CVR — tjek om det matcher TP-afdelingens CVR',
+        : kandidater.some((k) => k.cvrMatcherPræcist)
+          ? 'CVR matcher præcist mod mindst én TP-kandidat — matcheren burde have fundet den. Kør matcheren igen.'
+          : 'CVR matcher IKKE nogen TP-kandidat — sammenlign stpsCvr mod tpCvr i kandidater herunder',
       kandidater,
     };
   });
